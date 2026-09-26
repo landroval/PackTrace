@@ -12,8 +12,9 @@ narrower progress and do not close their unchecked parent.
 
 **Current evidence review:** two documentation contracts are complete; no executable
 product capability is qualified for shipping. Internal npm v2/v3 reading, typed
-locked records/requirements, and manifest declarations pass synthetic tests; these milestones, the bounded
-Linux probe, and reviewed design/budget milestones do not establish full product
+locked records/requirements, manifest declarations, and root textual comparisons
+pass synthetic tests; these milestones, the bounded Linux probe, and reviewed
+design/budget milestones do not establish full product
 acceptance.
 
 The first delivery target remains a usable team pilot. Develop the capabilities
@@ -63,7 +64,11 @@ alone does not authorize probes, dependency installation, or publication.
   - [x] [Manifest declarations](increments/04-manifest-declarations.md) now have
     separate raw/typed evidence with four preserved groups, a 2 MiB reader bound,
     and a 20,000-membership projection bound. The root suite passes 181 tests/subtests
-    plus `go vet`; installed observations and reconciliation remain unimplemented.
+    plus `go vet`; installed observations and semantic reconciliation remain unimplemented.
+  - [x] [Root requirement comparison](increments/06-root-comparison.md) retains both
+    source digests, text/presence differences, and indeterminate cases, without
+    collapsing evidence classes. 297 root tests/subtests and vet pass. Neither
+    installed drift, threat findings, nor complete scan coverage is established.
 - [ ] **Installed instances:** retain physical locations and multiple versions or
   copies rather than collapsing all packages with the same identity.
 - [ ] **Dependency relationships:** report logical edges and dependency paths only
@@ -362,7 +367,7 @@ without establishing implemented or validated product support:
   portable privacy, and evidence-bound exceptions are agreed. Complete schemas,
   encodings, worker protocol, and runtime behavior remain to be delivered.
 - Each increment requires its own written-spec, plan, and execution approvals.
-  The first five inventory increments completed that process; further increments and full
+  The first six inventory increments completed that process; further increments and full
   product/release qualification are not implicitly approved.
 
 Resolve remaining details through the roadmap's design and qualification process.

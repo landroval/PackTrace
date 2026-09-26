@@ -1,7 +1,8 @@
 # Increment 6: compare root declarations
 
-Status: written specification approved. The [implementation plan](06-root-comparison-plan.md)
-and execution authorization remain to be approved. Authority: [design decisions](../design-decisions.md).
+Status: specification and [implementation plan](06-root-comparison-plan.md) approved;
+inline execution explicitly authorized and completed. Code `8d5c8077`; 297 passing
+root tests/subtests and `go vet`. This is not scanner or platform qualification. Authority: [design decisions](../design-decisions.md).
 
 ## Deliverable and inputs
 
@@ -96,5 +97,5 @@ All existing root tests/vet must continue passing.
 
 No parser changes, discovery, root/workspace inference, semantic resolver, installed
 reads, advisory matching, CLI/report schemas, network/dependencies, native probes,
-SCALIBR work, or producer/native qualification. Plan and implementation remain gated
-on their own explicit approval after this specification.
+SCALIBR work, or producer/native qualification. Further increments retain their own
+specification, plan, and execution approval gates.

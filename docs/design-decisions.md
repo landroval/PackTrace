@@ -12,7 +12,7 @@ This supersedes earlier statements requiring a complete product-wide specificati
 before any production development. Safety and release requirements remain intact;
 native feasibility still gates the affected native mechanisms, not an in-memory
 parser. Dependency installation, native probes/runners, and publication retain
-their separate authorization boundaries. The first five inventory increments were
+their separate authorization boundaries. The first six inventory increments were
 individually approved and explicitly authorized for inline implementation and
 local synthetic verification. Their authorization does not extend to further
 increments or native probes.
@@ -21,8 +21,9 @@ Implemented bounded deliverables: the
 [npm v3 reader](increments/01-npm-v3-reader.md), its
 [npm v2/v3 extension](increments/02-npm-v2-reader.md),
 [typed locked records](increments/03-npm-locked-records.md),
-[manifest declarations](increments/04-manifest-declarations.md), and
-[locked requirements](increments/05-locked-requirements.md). `ParseNPMLock` retains
+[manifest declarations](increments/04-manifest-declarations.md),
+[locked requirements](increments/05-locked-requirements.md), and
+[root requirement comparison](increments/06-root-comparison.md). `ParseNPMLock` retains
 raw evidence; `ProjectNPMLock` exposes explicit scalar claims and field states,
 without semantic resolution or installed-state inference. The projection has its
 own approved 20,000-record bound, including root/workspace/link entries; this does
@@ -35,6 +36,10 @@ Locked records also expose their own four requirements groups through the shared
 projector. A separate 20,000-membership bound applies across the whole lockfile
 projection, not per record; these claims are not current manifest declarations or
 resolved edges, and the legacy tree remains separate.
+`CompareRootRequirements` compares explicitly paired successful projections at lock
+location `""`, retaining both digests, differences, and indeterminacy. Its at most
+40,000 rows are textual evidence comparisons, not semantic/installed drift or threat
+findings; its completeness says nothing about scan coverage or package safety.
 
 This record carries forward the decisions made after the
 [SCALIBR evaluation](inventory-evaluation-results.md). It supersedes the earlier
