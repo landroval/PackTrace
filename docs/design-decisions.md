@@ -12,12 +12,15 @@ This supersedes earlier statements requiring a complete product-wide specificati
 before any production development. Safety and release requirements remain intact;
 native feasibility still gates the affected native mechanisms, not an in-memory
 parser. Dependency installation, native probes/runners, and publication retain
-their separate authorization boundaries. The first npm v3 reader increment was
-explicitly authorized for inline implementation and local synthetic verification;
-that authorization does not extend to other increments or native probes.
+their separate authorization boundaries. The first two reader increments were
+individually approved and explicitly authorized for inline implementation and
+local synthetic verification. Their authorization does not extend to further
+increments or native probes.
 
-The first bounded deliverable is the
-[npm v3 reader increment](increments/01-npm-v3-reader.md).
+Implemented bounded deliverables: the
+[npm v3 reader](increments/01-npm-v3-reader.md) and its
+[npm v2/v3 extension](increments/02-npm-v2-reader.md). The shared internal entry
+point is now `ParseNPMLock`; raw legacy data is retained, not semantically resolved.
 
 This record carries forward the decisions made after the
 [SCALIBR evaluation](inventory-evaluation-results.md). It supersedes the earlier

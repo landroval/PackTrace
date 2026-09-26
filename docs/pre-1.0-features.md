@@ -11,8 +11,8 @@ gates still require executed acceptance evidence. Checked nested milestones show
 narrower progress and do not close their unchecked parent.
 
 **Current evidence review:** two documentation contracts are complete; no executable
-product capability is qualified for shipping. The first internal npm v3 reader is
-implemented with passing synthetic tests; its narrower milestone, the bounded
+product capability is qualified for shipping. The internal npm v2/v3 reader is
+implemented with passing synthetic tests; its narrower milestones, the bounded
 Linux probe, and reviewed design/budget milestones do not establish full product
 acceptance.
 
@@ -45,6 +45,10 @@ alone does not authorize probes, dependency installation, or publication.
     and `go vet`. See the [increment](increments/01-npm-v3-reader.md). Discovery,
     manager semantics, effective selection, and native/producer qualification
     remain open.
+  - [x] The [v2/v3 extension](increments/02-npm-v2-reader.md) reuses that reader,
+    preserves legacy and location-based data separately, and passes 103 root
+    tests/subtests plus `go vet`. No reconciliation, installed-inventory, or
+    producer/native support claim follows from this internal parser milestone.
 - [ ] **Bun projects:** inspect modern text-based `bun.lock` versions and installed
   layouts in the approved compatibility matrix.
 - [ ] **Workspaces and monorepos:** discover supported workspace structures and
@@ -345,7 +349,7 @@ without establishing implemented or validated product support:
   portable privacy, and evidence-bound exceptions are agreed. Complete schemas,
   encodings, worker protocol, and runtime behavior remain to be delivered.
 - Each increment requires its own written-spec, plan, and execution approvals.
-  The first reader has completed that process; remaining increments and the full
+  The first two reader increments completed that process; further increments and full
   product/release qualification are not implicitly approved.
 
 Resolve remaining details through the roadmap's design and qualification process.

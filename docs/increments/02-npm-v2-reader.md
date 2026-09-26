@@ -1,8 +1,9 @@
 # Increment 2: npm v2/v3 lockfile reader
 
-Status: written specification approved. The
-[implementation plan](02-npm-v2-reader-plan.md) still requires review and explicit
-execution authorization.
+Status: specification and [implementation plan](02-npm-v2-reader-plan.md) approved;
+inline implementation and local synthetic verification explicitly authorized and
+completed. Commit `957f6f08`; 103 passing tests/subtests and root `go vet`.
+This is not producer/native or full-scanner qualification.
 Global constraints remain in [design decisions](../design-decisions.md).
 
 ## Deliverable and API change

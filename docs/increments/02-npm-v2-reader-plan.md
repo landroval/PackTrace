@@ -1,7 +1,8 @@
 # npm v2/v3 reader implementation plan
 
 > **For agentic workers:** use `superpowers:executing-plans` for approved inline
-> execution. This plan awaits review and explicit execution authorization.
+> execution. The user approved the plan and explicitly authorized inline execution
+> in the current jj workspace, local synthetic tests/vet, and scoped code/docs commits.
 
 **Goal:** extend the existing byte reader to npm lockfile versions 2 and 3.
 **Architecture:** reuse its validation and raw projection; one internal entry
@@ -40,7 +41,7 @@ No `go.mod` change or new production file is needed.
 **Consumes:** the existing `Document`/`ParseError` and reader implementation.
 **Produces:** `func ParseNPMLock(data []byte) (Document, error)` for versions 2/3.
 
-- [ ] Add a v2 preservation test against the existing entry point before renaming
+- [x] Add a v2 preservation test against the existing entry point before renaming
   it. Start with this independent conflicting fixture and assertions:
 
 ```go
@@ -66,11 +67,11 @@ func TestParseNPMLockV2PreservesLegacy(t *testing.T) {
 }
 ```
 
-- [ ] Update the old v2-rejection case to version 1 and add version 4. Generalize
+- [x] Update the old v2-rejection case to version 1 and add version 4. Generalize
   existing v3 fixtures to both versions using small version loops, not a new test
   framework. Keep independent expectations and all existing rejection assertions.
   Change the helper's expected error prefix to `npm lockfile: `.
-- [ ] Add these exact legacy/version cases to the tables:
+- [x] Add these exact legacy/version cases to the tables:
 
 | Input condition | Expected |
 | --- | --- |
@@ -84,10 +85,10 @@ func TestParseNPMLockV2PreservesLegacy(t *testing.T) {
   `Packages`, proving no fabricated installed/location records. Exercise size and
   nesting acceptance/rejection for v2 and v3 as well as the existing ownership,
   Unicode, duplicate-key, and trailing-input checks.
-- [ ] Run the tests with the offline environment below. Observe runtime failures:
+- [x] Run the tests with the offline environment below. Observe runtime failures:
   the existing parser rejects valid v2 fixtures with `unsupported-version`, and
   errors still have the old prefix. This is behavioral RED, not just missing symbols.
-- [ ] Rename the production entry point and migrate every test caller. Keep the
+- [x] Rename the production entry point and migrate every test caller. Keep the
   validator/projection unchanged; replace only the version guard and prefix:
 
 ```go
@@ -98,10 +99,10 @@ if string(version) != "2" && string(version) != "3" {
 }
 ```
 
-- [ ] Format both files, run the complete root suite and vet, and inspect the diff
+- [x] Format both files, run the complete root suite and vet, and inspect the diff
   against the spec. Confirm no old production entry point remains, no new module
   requirements, and no probe files changed. Review is inline, not independent.
-- [ ] Commit only the two Go files with jj. Then record evidence and approvals in
+- [x] Commit only the two Go files with jj. Then record evidence and approvals in
   these increment documents and add only a nested shipping-checklist milestone;
   do not check the parent npm-support item. Commit that documentation separately.
 
@@ -123,3 +124,17 @@ jj commit -m "feat: extend lockfile reader to npm v2" internal/inventory/npmlock
 Record actual test results and toolchain;
 do not run the separate SCALIBR module or treat historical probe failures as root
 module failures. Stop on unexpected failures and diagnose before proceeding.
+
+## Execution evidence
+
+- RED: with the original production reader unchanged, the new v2 legacy fixture
+  failed with `unsupported-version`; the selected v3 error case failed its new
+  neutral-prefix assertion. A test-source typo was fixed before behavioral RED.
+- GREEN: 103 passing tests/subtests in the root suite; `go vet ./...` passed.
+  Final verification reran both successfully; `go list -m all` listed only
+  `packtrace`. No old entry point remains in production/tests.
+- Development toolchain: `go1.27.1-X:nodwarf5 linux/amd64`, offline environment as
+  above. No downloads, native qualification, or SCALIBR probe changes/execution.
+- Inline diff/spec review: four production lines changed; existing generic
+  validation and projection were reused unchanged. Review was not independent.
+- Scoped implementation commit: `957f6f08`. Local `.pi/todos` state was excluded.
