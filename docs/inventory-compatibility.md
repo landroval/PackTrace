@@ -1,10 +1,14 @@
 # Inventory compatibility and SCALIBR evaluation
 
-**Status:** package-manager evaluation baseline approved; probe creation and
-execution explicitly on hold. The remaining evaluation design is proposed.
+**Status:** package-manager evaluation baseline and probe A approved, including
+pinned public Go dependency downloads and isolated local Linux execution.
+Production implementation and later qualification remain unapproved.
 **Research date:** 2026-09-26 (UTC).
-**Runtime evidence:** none. No probe code, dependency installation, build, or
-package-manager execution was performed to prepare this document.
+**Extractor runtime evidence:** none at initial approval; see the subsequent
+results document when available. Before probe creation, local checks confirmed
+Go 1.27.1, unprivileged bubblewrap isolation with no external network route, and
+a transient user-service cgroup enforcing MemoryMax=512 MiB and zero swap.
+These prerequisite checks do not validate any extractor or package-manager format.
 
 Related: [roadmap](development-roadmap.md),
 [guidelines](development-guidelines.md),
@@ -388,19 +392,19 @@ managers under the assumption that approving probe A also approves this stage.
 - **Approved:** the npm 8/10/11 and Bun 1.3.2/1.4.2 package-manager evaluation
   baseline. npm 12 remains explicitly deferred; do not apply npm <=11 shrinkwrap
   precedence to it as though it were supported.
-- **Explicitly on hold:** creating and running probe A. The user selected
-  "Do not run yet" when asked to authorize both creation and execution.
-- **Not authorized:** dependency downloads, automatic tooling installation,
-  native-runner execution, production implementation, or publication.
+- **Approved subsequently:** the user lifted the earlier "Do not run yet" hold
+  by selecting "Approve with downloads": create and run only probe A with
+  pinned public Go dependencies, prerequisite verification, and documented limits.
+- **Not authorized:** automatic tooling installation, additional native runners,
+  production implementation, package-manager execution, or publication.
 - **Development practice:** commit approved changes progressively using `jj`.
 
-Before creating or running probe A, obtain explicit approval for its synthetic
-inputs, paths, child-process execution, limits, and measurement outputs. Select
-public dependency downloads or a prepared-cache-only approach at that time.
-Unavailable toolchain/sandbox/native runners remain blockers, not authorization
-to install tools, elevate privileges, or claim support.
+Approval covers the documented synthetic inputs, paths, child-process execution,
+limits, measurements, and local Linux evaluation. Unavailable toolchain/sandbox
+prerequisites remain blockers, not authorization to install tools, elevate
+privileges, or claim support.
 
-Approval of the baseline is not approval of probe execution or production code.
+Probe approval is not approval of production code or later qualification.
 
 ## 9. Primary sources
 
