@@ -141,6 +141,12 @@ application-selected exit codes. Do not promise an instantaneous kernel kill.
 3. Only if that approach is viable, authorize expansion to the remaining native
    rows and the portable memory/termination cases.
 
+**Runner prerequisite blocked:** the user reports no available macOS 15 runner.
+No native execution was attempted. Independent specification work may proceed,
+but this does not authorize substituting Linux, reducing the native matrix, or
+provisioning infrastructure. Source/API feasibility and execution authorization
+also remain prerequisites.
+
 No runners are currently designated or provisioned by this plan. Cross-compilation,
 emulation, or successful execution on only one architecture cannot fill another
 row. Record runner image, kernel, filesystem/mount settings, case sensitivity,

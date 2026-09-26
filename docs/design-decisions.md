@@ -764,8 +764,8 @@ do not guess an effective dependency tree.
   `package-lock.json`.
 - If npm/Bun inputs coexist, or precedence depends on an unknown manager version,
   require `--manager`. Record the selected interpretation and conflicts. The flag
-  cannot make an unsupported format compatible; exact profile syntax remains to
-  be specified.
+  cannot make an unsupported format compatible; section 28 defines the family
+  and explicit-profile syntax.
 - npm 12, Yarn, pnpm, and `bun.lockb` remain outside initial support. Never convert
   files or execute package managers to make them scannable.
 - Validate Bun `lockfileVersion`, `configVersion`, and used structures separately.
@@ -987,8 +987,8 @@ changes.
 without SQLite or a custom binary index.
 
 - Use a user state directory outside the investigated root; allow an explicit
-  `--state-dir` override. Exact platform defaults and full CLI validation remain
-  part of the written specification. Preserve the existing alias/safe-access
+  `--state-dir` override. Section 29 defines platform defaults and CLI path
+  resolution. Preserve the existing alias/safe-access
   requirements; a different path string alone does not establish separation.
 - Store verified artifacts and intelligence blocks under `objects/`, using names
   derived from their digests rather than untrusted feed paths.
@@ -1092,12 +1092,17 @@ written scope, limits, and stop conditions **only**. Prototype creation, runner
 setup, privileged actions, downloads, and execution remain separately gated and
 are not authorized.
 
+The user reports that no macOS 15 runner is available. Native macOS execution is
+blocked by that prerequisite; it was not attempted and did not fail a test.
+Independent design work may continue, without reducing the matrix, changing the
+probe order, or treating another platform as a substitute.
+
 Source inspection identified reasons not to assume feasibility:
 
 - `Lstat` before opening and `Fstat` afterwards can detect a type substitution too
   late to prevent a device-open side effect. Nonblocking/event-only flags are not
   established metadata-only guards. The pinned XNU `spec_open` inspected in the
-  probe draft does not have an `O_EVTONLY` bypass of device driver opening.
+  probe plan does not have an `O_EVTONLY` bypass of device driver opening.
 - Linux cgroup charged memory, Windows Job committed memory, process resident
   samples, and Go soft targets are different quantities. Late placement into a
   cgroup/Job does not establish startup-wide accounting; Linux also documents
@@ -1108,15 +1113,125 @@ that macOS support is impossible. No production mechanisms, build changes, extra
 dependencies, production limits, or strict-mode availability are selected by this
 plan. Keep its approved probe budgets separate from production budgets.
 
-## 28. Remaining design work
+## 28. Core scan command and argument validation
+
+**Approved interface:** `packtrace scan [options] PATH`. This is a command contract,
+not an implemented CLI or approval of the complete specification.
+
+| Option | Values and default |
+| --- | --- |
+| `--manager` | `auto` by default; `npm`, `bun`, or an explicit profile below |
+| `--checks` | Comma-separated `malicious`, `vulnerability`, `integrity`; all three by default |
+| `--fail-on` | `none` or a comma-separated category list; without policy requirements, `none` by default |
+| `--format` | `terminal` by default; `json` or `sarif` |
+| `--privacy` | `portable` by default; `local` if policy permits |
+| `--policy FILE` | Explicit static JSON policy; no automatic discovery |
+| `--state-dir DIR` | Override the external managed-store location from section 29 |
+| `--output FILE` | A new output file; `-` means stdout and is the default |
+
+Inventory remains a prerequisite, not an optional `--checks` category. Separate
+preparation commands and selectors/formats for local references and snapshots
+still require specification; this section does not invent their interfaces.
+
+### Manager selection
+
+- `auto` retains section 19's unique/coherent-interpretation requirement. `npm`
+  and `bun` restrict the family but do not resolve remaining version ambiguity.
+- Explicit interpretation profiles are `npm@8.19.4`, `npm@10.9.4`, `npm@11.6.2`,
+  `bun@1.3.2`, and `bun@1.4.2`. If family selection remains ambiguous, require an
+  explicit supported profile rather than assuming the newest anchor.
+- A profile declares how to interpret evidence. It is not producer proof, a
+  package-manager invocation, a version-resolution request, or an expansion of
+  qualified support. Never download or run that manager.
+- Preserve target `packageManager` hints, observed structure, and conflicts
+  separately from the operator's choice. Selecting a profile cannot make an
+  unsupported format or relevant incompatible semantics supported.
+- Unknown profile values are invocation errors (`2`). Unsupported target input
+  discovered under a valid selection is evidence/coverage failure, not permission
+  to silently change profiles or discard observations.
+
+### Parsing, policy, and output
+
+- Require exactly one `PATH`; never substitute the current directory implicitly.
+  Place options before `PATH`, and support `--` to terminate option parsing.
+- Reject repeated options, unknown values, empty category lists, duplicate list
+  entries, and extra positional arguments. `none` cannot be mixed with enforcement
+  categories. Reject enforcement for checks excluded from the effective scope.
+- Omitted/default values do not disable trusted-policy requirements. An explicit
+  setting that weakens them fails validation with `2`; preserve section 6's
+  policy-authority limitation and provenance rules.
+- `--output FILE` must not overwrite an existing file. Do not add an initial
+  `--overwrite` escape hatch. An existing/unsafe explicit destination is an
+  operational output failure (`2`), not a reason to silently switch to stdout.
+  Safe no-clobber publication under races still requires native qualification.
+- Apply the shared privacy and escaping rules to invocation errors; do not echo
+  raw arguments or unfiltered parser error text into output.
+- No `--online` option exists. `--help` and `--version` do not investigate the
+  target, initialize state, or fetch data. Existing scan exit semantics apply to
+  scans, not to a successful help/version display.
+
+**Required acceptance coverage, not yet executed:** argument count/order, `--`,
+repeated options, invalid/duplicate/empty category lists, unsupported profiles,
+family ambiguity, explicit interpretation without invented producer provenance,
+policy/default precedence, excluded enforcement, protected output destinations,
+no-clobber races, error privacy, and help/version without investigation.
+
+## 29. Default state directory and CLI path resolution
+
+**Approved default:** `os.UserCacheDir()/packtrace`, with explicit `--state-dir`
+override. This uses the Go standard library, not a new path/configuration library.
+
+| OS | Default location |
+| --- | --- |
+| Linux | `$XDG_CACHE_HOME/packtrace`, otherwise `$HOME/.cache/packtrace` |
+| macOS | `$HOME/Library/Caches/packtrace` |
+| Windows | `%LocalAppData%\packtrace` |
+
+- Resolve relative CLI path arguments against the invocation working directory,
+  not the investigated `PATH`. Keep this base stable across worker startup.
+- Require an absolute default path. If the environment cannot supply one, require
+  `--state-dir` rather than falling back to the target, current directory, or a
+  silently chosen temporary store. An explicitly relative override uses the
+  invocation-directory rule above.
+- Lexical normalization is not a safety check. Validate managed state and explicit
+  output destinations against the opened target and native alias protections;
+  reject locations inside it or aliasing back into it. Required safeguards remain
+  blocking when unavailable.
+- A scan does not initialize a missing store or download its missing contents.
+  Preserve observable inventory and represent unavailable intelligence/references
+  as incomplete/not-run checks under the normal report/exit rules.
+- State data does not supply an automatically discovered policy. Do not expand
+  environment variables inside policy contents or execute configuration files.
+  Platform environment variables used by `UserCacheDir` select a location, not
+  policy authority.
+- Verify restrictive permissions and store ownership; being beneath a user cache
+  directory is not sufficient evidence of either. Concrete native checks remain
+  part of the safety/storage specification.
+
+### Retention boundary
+
+PackTrace's active/previous-snapshot, reader, and pin protections constrain its
+own cleanup. They cannot prevent deletion by the OS or unrelated tools. For
+long-lived retention, choose persistent storage explicitly with `--state-dir`;
+do not rely on managed cache as the sole copy of an irreplaceable trusted baseline.
+A missing object remains unavailable, not fresh, safe, or automatically fetched.
+
+**Required acceptance coverage, not yet executed:** platform defaults, missing or
+relative environment paths, relative CLI paths with a different target root,
+overrides, target aliases, missing/corrupt/inaccessible state, permission/ownership
+failures, no configuration discovery, and external deletion without silent repair.
+
+## 30. Remaining design work
 
 The approvals above do not settle the following contracts:
 
-- Per-format schemas, exact manager-profile syntax, and complete typed IPC
-  payloads/lifecycle states.
+- Per-format schemas, exact interpretation-profile behavior, and complete typed
+  IPC payloads/lifecycle states.
 - Exact filesystem, monitoring, termination, and strict-mode OS mechanisms,
   informed by the separately reviewed/authorized native feasibility work.
-- Complete CLI and policy schemas, local-input locations, and validation rules.
+- Preparation/local-input command interfaces, complete policy/reference schemas,
+  and their validation rules. Core scan arguments and default state locations are
+  fixed above; additional selectors and input formats are not yet complete.
 - Qualification of candidate dependencies, exact matching rules and
   source/classification/correction mappings, full licensing/notice review, and
   exact snapshot/update/reconciliation mechanics.
