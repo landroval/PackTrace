@@ -12,8 +12,8 @@ narrower progress and do not close their unchecked parent.
 
 **Current evidence review:** two documentation contracts are complete; no executable
 product capability is qualified for shipping. Internal npm v2/v3 reading, typed
-locked records/requirements, manifest declarations, and root textual comparisons
-pass synthetic tests; these milestones, the bounded Linux probe, and reviewed
+locked records/requirements, manifest declarations, root textual comparisons,
+and bounded advisory JSON reading pass synthetic tests; these milestones, the bounded Linux probe, and reviewed
 design/budget milestones do not establish full product
 acceptance.
 
@@ -97,6 +97,10 @@ and expected optional-package absence is not classified as malware.
   versions against selected malicious-package advisory data.
 - [ ] **Vulnerability matching:** match applicable identities and affected versions
   against selected OSV-format vulnerability intelligence.
+  - [x] [Bounded OSV JSON reader](increments/07-osv-reader.md) preserves raw fields
+    and digests with a minimum envelope, 4 MiB/depth-128 bounds, and shared strict
+    validation. 348 root tests/subtests and vet pass; no schema/date/withdrawal/range
+    qualification, matching, synchronization, or real corpus import is established.
 - [ ] **Ecosystem-correct matching:** handle approved npm version/range semantics,
   including boundary and prerelease cases; disclose unsupported matching cases.
 - [ ] **Distinct categories:** keep malicious-package advisories, vulnerabilities,
@@ -367,7 +371,7 @@ without establishing implemented or validated product support:
   portable privacy, and evidence-bound exceptions are agreed. Complete schemas,
   encodings, worker protocol, and runtime behavior remain to be delivered.
 - Each increment requires its own written-spec, plan, and execution approvals.
-  The first six inventory increments completed that process; further increments and full
+  The first seven implementation increments completed that process; further increments and full
   product/release qualification are not implicitly approved.
 
 Resolve remaining details through the roadmap's design and qualification process.

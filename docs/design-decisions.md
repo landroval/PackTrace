@@ -12,7 +12,7 @@ This supersedes earlier statements requiring a complete product-wide specificati
 before any production development. Safety and release requirements remain intact;
 native feasibility still gates the affected native mechanisms, not an in-memory
 parser. Dependency installation, native probes/runners, and publication retain
-their separate authorization boundaries. The first six inventory increments were
+their separate authorization boundaries. The first seven implementation increments were
 individually approved and explicitly authorized for inline implementation and
 local synthetic verification. Their authorization does not extend to further
 increments or native probes.
@@ -22,8 +22,9 @@ Implemented bounded deliverables: the
 [npm v2/v3 extension](increments/02-npm-v2-reader.md),
 [typed locked records](increments/03-npm-locked-records.md),
 [manifest declarations](increments/04-manifest-declarations.md),
-[locked requirements](increments/05-locked-requirements.md), and
-[root requirement comparison](increments/06-root-comparison.md). `ParseNPMLock` retains
+[locked requirements](increments/05-locked-requirements.md),
+[root requirement comparison](increments/06-root-comparison.md), and
+[bounded OSV record reading](increments/07-osv-reader.md). `ParseNPMLock` retains
 raw evidence; `ProjectNPMLock` exposes explicit scalar claims and field states,
 without semantic resolution or installed-state inference. The projection has its
 own approved 20,000-record bound, including root/workspace/link entries; this does
@@ -40,6 +41,11 @@ resolved edges, and the legacy tree remains separate.
 location `""`, retaining both digests, differences, and indeterminacy. Its at most
 40,000 rows are textual evidence comparisons, not semantic/installed drift or threat
 findings; its completeness says nothing about scan coverage or package safety.
+`ParseOSVRecord` starts the internal intelligence reader with a 4 MiB/128-container
+bound, nonempty string `id`/`modified`, raw fields, and original digest. Shared strict
+validation now lives in `internal/jsoninput`; inventory errors stay unchanged, while
+intel errors use `intel: CODE`. OSV schema/date/range/withdrawal interpretation,
+matching, synchronization, and advisory qualification remain unimplemented.
 
 This record carries forward the decisions made after the
 [SCALIBR evaluation](inventory-evaluation-results.md). It supersedes the earlier

@@ -1,7 +1,8 @@
 # Increment 7: bounded OSV record reader
 
-Status: specification approved. The [implementation plan](07-osv-reader-plan.md)
-and execution authorization remain to be approved. Authority: [design decisions](../design-decisions.md).
+Status: specification and [implementation plan](07-osv-reader-plan.md) approved;
+inline execution explicitly authorized and completed. Code `4e8155f5`; 348 root
+tests/subtests and `go vet` pass. Reading does not qualify advisories for matching. Authority: [design decisions](../design-decisions.md).
 
 ## Deliverable
 
