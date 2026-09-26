@@ -7,7 +7,10 @@ import (
 	"slices"
 )
 
-const maxProjectedRecords = 20_000
+const (
+	maxProjectedRecords   = 20_000
+	maxLockedRequirements = 20_000
+)
 
 // FieldState distinguishes absence, null, a typed value, and a wrong JSON type.
 type FieldState uint8
@@ -35,6 +38,8 @@ type LockedRecord struct {
 	Resolved  LockField[string]
 	Integrity LockField[string]
 	Link      LockField[bool]
+	// Requirements are recorded claims, not current manifest declarations or resolved edges.
+	Requirements []DependencyGroup
 }
 
 // NPMLockProjection links typed claims to the unchanged document's byte digest.
@@ -54,18 +59,25 @@ func ProjectNPMLock(doc Document) (NPMLockProjection, error) {
 		return NPMLockProjection{}, &ParseError{Code: "limit-exceeded"}
 	}
 	records := make([]LockedRecord, 0, len(doc.Packages))
+	remaining := maxLockedRequirements
 	for _, location := range slices.Sorted(maps.Keys(doc.Packages)) {
 		fields := doc.Packages[location]
 		if fields == nil {
 			return NPMLockProjection{}, &ParseError{Code: "invalid-shape"}
 		}
+		groups, used, err := projectDependencyGroups(fields, remaining)
+		if err != nil {
+			return NPMLockProjection{}, err
+		}
+		remaining -= used
 		records = append(records, LockedRecord{
-			Location:  location,
-			Name:      projectField[string](fields, "name"),
-			Version:   projectField[string](fields, "version"),
-			Resolved:  projectField[string](fields, "resolved"),
-			Integrity: projectField[string](fields, "integrity"),
-			Link:      projectField[bool](fields, "link"),
+			Location:     location,
+			Name:         projectField[string](fields, "name"),
+			Version:      projectField[string](fields, "version"),
+			Resolved:     projectField[string](fields, "resolved"),
+			Integrity:    projectField[string](fields, "integrity"),
+			Link:         projectField[bool](fields, "link"),
+			Requirements: groups,
 		})
 	}
 	return NPMLockProjection{SourceSHA256: doc.SHA256, Records: records}, nil

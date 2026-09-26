@@ -58,6 +58,16 @@ func ProjectManifest(doc ManifestDocument) (ManifestProjection, error) {
 	if doc.Fields == nil {
 		return ManifestProjection{}, &ParseError{Code: "invalid-shape"}
 	}
+	groups, _, err := projectDependencyGroups(doc.Fields, maxManifestDeclarations)
+	if err != nil {
+		return ManifestProjection{}, err
+	}
+	return ManifestProjection{SourceSHA256: doc.SHA256, Groups: groups}, nil
+}
+
+// projectDependencyGroups projects recorded requirements without resolving them.
+// Callers supply a remaining whole-document allowance; source class stays with them.
+func projectDependencyGroups(fields map[string]json.RawMessage, allowance int) ([]DependencyGroup, int, error) {
 	groups := []DependencyGroup{
 		{Name: "dependencies"},
 		{Name: "devDependencies"},
@@ -67,7 +77,7 @@ func ProjectManifest(doc ManifestDocument) (ManifestProjection, error) {
 	total := 0
 	for i := range groups {
 		group := &groups[i]
-		raw, present := doc.Fields[group.Name]
+		raw, present := fields[group.Name]
 		if !present {
 			continue
 		}
@@ -80,8 +90,8 @@ func ProjectManifest(doc ManifestDocument) (ManifestProjection, error) {
 			group.State = FieldInvalidType
 			continue
 		}
-		if len(entries) > maxManifestDeclarations-total {
-			return ManifestProjection{}, &ParseError{Code: "limit-exceeded"}
+		if len(entries) > allowance-total {
+			return nil, 0, &ParseError{Code: "limit-exceeded"}
 		}
 		total += len(entries)
 		group.State = FieldValue
@@ -93,5 +103,5 @@ func ProjectManifest(doc ManifestDocument) (ManifestProjection, error) {
 			})
 		}
 	}
-	return ManifestProjection{SourceSHA256: doc.SHA256, Groups: groups}, nil
+	return groups, total, nil
 }
