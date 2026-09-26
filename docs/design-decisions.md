@@ -94,8 +94,8 @@ Each check records its scope, whether policy requires it, evidence, and outcome:
 
 Exclusion does not satisfy a required check. An unreadable directory leaves
 applicable discovery incomplete. Do not claim a completion percentage when the
-total inventory is unknown. Policy aggregation and exit-code precedence remain
-separate decisions to specify before implementation.
+total inventory is unknown. The approved scan defaults and exit-code precedence
+are recorded in section 5 below.
 
 Findings independently reference observations, evidence, advisory/reference
 provenance, and limitations. Missing references or stale intelligence cannot erase
@@ -143,13 +143,107 @@ junctions/reparse points, cycles, special files, changing inputs, archive attack
 worker crashes, and resource limits on every target platform. No protection from
 an attacker controlling the host is claimed.
 
-## 5. Remaining design work
+## 5. Scan defaults and exit codes
+
+**Approved choice:** require all three detection categories by default, with
+explicit narrower scopes rather than silent skipping. These commands and flags
+are design contracts, not implemented commands.
+
+- `packtrace scan PATH` runs offline: inventory, malicious-package matching,
+  vulnerability matching, and integrity comparison using local inputs.
+- Missing intelligence or references never trigger downloads. Applicable checks
+  become incomplete or not run, with recorded reasons.
+- `--checks malicious,vulnerability` explicitly selects an advisory-only
+  investigation. Report integrity as excluded; do not describe the result as a
+  complete three-category investigation.
+- Inventory collection is a prerequisite, not an optional check.
+- Findings alone do not fail a completed scan by default. `--fail-on` enables
+  enforcement for selected finding categories.
+- Reject attempts to disable policy-required checks through project settings or
+  narrower command-line selection.
+
+### Exit contract
+
+| Code | Meaning |
+| --- | --- |
+| `0` | Required checks completed; no enforced, unaccepted findings |
+| `1` | Required checks completed; enforced, unaccepted findings exist |
+| `2` | Invalid invocation/policy or operational failure prevents producing the requested report |
+| `3` | Required coverage is incomplete, regardless of findings |
+| `130` | Interrupted by the user; preserve a partial report where possible |
+
+For ordinary completion, precedence is operational failure, then incomplete
+required coverage, then enforced findings, then success: `2 > 3 > 1 > 0`.
+Interruption has its own outcome. Reports retain all applicable conditions even
+though the process returns one code. No exit value asserts that a target is safe.
+
+A first scan without prepared local intelligence or applicable references will
+usually return `3`. A completed report-first scan may return `0` with findings
+prominently displayed. Check-level failures that can be represented in a report
+remain coverage gaps; they do not automatically prevent report production.
+
+**Required acceptance examples, not yet executed:**
+
+| Scenario | Expected code |
+| --- | --- |
+| Required checks complete; findings present; enforcement disabled | `0` |
+| Required checks complete; unaccepted finding in an enforced category | `1` |
+| Required integrity reference missing; enforced advisory finding also present | `3` |
+| Requested report cannot be written; findings and coverage gaps also present | `2` |
+| Policy requires integrity; invocation attempts to exclude it | `2` |
+| User interrupts scan | `130` |
+
+## 6. Configuration, policy authority, and output
+
+**Approved choice:** explicit static JSON policy selection and no automatic
+project-policy or per-user configuration discovery.
+
+- Ship documented built-in defaults. Accept an optional policy through
+  `--policy FILE`; never execute configuration or load target `.npmrc`
+  credentials.
+- Manifests and lockfiles supply investigation evidence only. Their settings
+  cannot authorize networking, suppress findings, or weaken required coverage.
+- Command-line options select the target, requested checks, enforcement
+  categories, local inputs, and output format. A supplied trusted policy sets
+  constraints: required checks, mandatory enforcement, freshness requirements,
+  resource ceilings, and approved exceptions.
+- Flags may strengthen policy. Conflicting attempts to weaken it fail validation
+  with exit `2`. Invalid policy never silently falls back to built-in defaults.
+- Exceptions come from the explicitly supplied policy and remain visible. They
+  require scoped evidence, a reason, and expiry; they cannot make an unperformed
+  check complete. Exact exception schema and evidence-binding rules remain to be
+  specified under the existing engineering constraints.
+- Record effective settings, their origins, and the policy digest in the result,
+  with sensitive values redacted.
+
+### Authority limitation
+
+`--policy` means the operator explicitly selected a policy. A file is not
+organization-approved merely because it exists outside the project. CI must
+control the policy source and invocation. The local CLI cannot prevent an
+operator from omitting an organization's policy. A policy digest identifies the
+selected bytes; it is not proof of organizational approval.
+
+### Output routing
+
+Use `--format terminal|json|sarif`, with terminal as the default. Machine-readable
+output goes to stdout; diagnostics go to stderr. An explicit output-file option
+must reject unsafe or in-target destinations. Caller-managed shell redirection
+remains the caller's responsibility; application destination checks do not
+control a shell opening redirected stdout before PackTrace starts.
+
+**Required acceptance coverage, not yet executed:** policy precedence, weakening
+conflicts, invalid-policy handling, target configuration unable to grant authority,
+recorded effective policy, visible exceptions, output-channel separation, and
+unsafe explicit output destinations.
+
+## 7. Remaining design work
 
 The approvals above do not settle the following contracts:
 
 - Component/data-flow details, effective-input selection, and per-format schemas.
 - Exact filesystem/worker mechanisms and enforceable per-platform limits.
-- CLI/configuration, required checks, policy precedence, and exit statuses.
+- Complete CLI and policy schemas, local-input locations, and validation rules.
 - Intelligence sources, synchronization, matching, freshness, and licensing.
 - Source classification, network authorization, references, and baseline trust.
 - Report schema, fingerprints, redaction details, and evidence-bound exceptions.
