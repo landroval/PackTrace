@@ -24,8 +24,8 @@ retaining SCALIBR extractors or waiting for upstream extensions.
 
 - Use standard Go JSON decoding for npm lockfiles and manifests, with explicit
   supported-version and shape validation.
-- Evaluate existing JSONC handling for Bun; no dependency has been selected or
-  authorized for production installation.
+- Use the pinned JSONC candidate and qualification requirements in section 24
+  for Bun. No production dependency installation is authorized.
 - Maintain one authoritative projection of required observations. Do not add a
   second lossy extraction path without a demonstrated benefit.
 - Own format compatibility tests and maintenance. Preserve the probe corpus as
@@ -699,9 +699,10 @@ explicitly reviewing limits, not silently increasing them.
 | --- | --- |
 | Total scan duration | 5 minutes |
 | Individual manifest / lockfile | 2 MiB / 64 MiB |
-| Cumulative metadata reads | 256 MiB |
+| Cumulative target manifest/lockfile metadata reads | 256 MiB |
 | Individual content file | 256 MiB, streamed |
 | Total target reads | 16 GiB |
+| Local intelligence reads, including verification and rereads | 8 GiB |
 | Visited entries / installed instances | 500,000 / 20,000 |
 | Path depth / JSON nesting | 64 / 128 |
 | Worker message / cumulative protocol traffic | 1 MiB / 64 MiB |
@@ -717,7 +718,8 @@ termination is not implied.
 
 Synchronization, downloads, and reference-archive expansion have separate budgets
 in sections 20 and 21. Do not accidentally apply a manifest-size cap to a feed
-archive.
+archive. Section 25 clarifies target-metadata versus local-intelligence accounting;
+section 26 counts protocol traffic across both pipe directions.
 
 ### Functional and platform acceptance
 
@@ -924,21 +926,175 @@ The [shipping checklist](pre-1.0-features.md) and
 Preparation retains all approved destination, privacy, trust, and budget controls;
 selecting this workflow does not itself authorize executing network operations.
 
-## 24. Remaining design work
+## 24. Toolchain and dependency baseline
+
+**Approved design baseline:** official Go 1.27.1, pinned for initial qualification,
+with `CGO_ENABLED=0`. The local probe host reports `go1.27.1-X:nodwarf5`; that
+modified toolchain does not establish an official reproducible build. The
+[official Go release catalog](https://go.dev/dl/?mode=json) listed Go 1.27.1 as
+stable when reviewed. Only release metadata was retrieved, not toolchain archives.
+Record actual toolchain artifacts, checksums, build settings, and native results
+when their acquisition and qualification are separately authorized.
+
+Use the standard library for CLI parsing, JSON, HTTP, hashes, and archives. The
+following pinned candidates cover gaps rather than introducing a framework:
+
+| Module | Pin | Intended use | Declared license |
+| --- | --- | --- | --- |
+| `github.com/tidwall/jsonc` | `v0.3.3` | Bun comment/trailing-comma normalization | MIT |
+| `deps.dev/util/semver` | `v0.0.0-20260529052642-cf1e78d92744` | Version parsing and comparison | Apache-2.0 |
+| `golang.org/x/sys` | `v0.44.0` | Native OS controls | BSD-3-Clause |
+
+Their sources were already present in the isolated probe cache; pins and module
+checksums are recorded in the probe's existing `go.mod` and `go.sum`. The three
+candidate `go.mod` files declare no additional module requirements. This is source
+inspection, not a new production build, complete license audit, security approval,
+or proof that every required platform mechanism is available.
+
+### Narrow adapters and contract tests
+
+- JSONC normalization is not original-input validation. Retain the original-byte
+  digest and field provenance, enforce input/depth limits, reject structural
+  ambiguity and relevant duplicate keys, and validate accepted syntax separately.
+- Source inspection of `jsonc.ToJSON` shows that its closing-container comma
+  removal can also remove the comma in `{,}` or `[,]`. Those malformed inputs
+  must not become accepted empty containers. These cases have not been executed
+  in a new probe; require regression tests alongside valid comments, trailing
+  commas, strings/escapes, invalid encodings, and unterminated comments.
+- Parse and validate concrete versions before comparing parsed values. Do not
+  treat `System.Compare` ordering invalid strings as a valid advisory comparison.
+  Wildcards and missing concrete-version information cannot become versions.
+- Neither the accommodating `DefaultSystem` parser nor npm constraint helpers
+  independently define PackTrace's OSV semantics. Own the supported syntax and
+  event evaluation; qualify ordering, prereleases, build metadata, invalid values,
+  boundaries, and unsupported conditions. Do not replace OSV intervals with
+  `MatchVersionPrerelease` or infer installed versions from declared constraints.
+- `os.Root` is a containment building block, not the complete filesystem safety
+  boundary: its documentation explicitly excludes protection against filesystem
+  crossings, Linux bind mounts, `/proc` special files, and Unix device access.
+  Native safeguards and their acceptance tests remain mandatory.
+
+Adoption depends on passing the relevant contract tests and completing license,
+notice, and security review. If a candidate requires excessive compensating code
+or fails qualification, review its replacement rather than weakening contracts.
+Do not add SCALIBR, a CLI framework, YAML, or a database by default. Approval does
+not create a production module or authorize installation, probes, or toolchain
+changes.
+
+## 25. Filesystem-backed snapshot and object layout
+
+**Approved direction:** immutable JSON/JSONL data and SHA-256-addressed objects,
+without SQLite or a custom binary index.
+
+- Use a user state directory outside the investigated root; allow an explicit
+  `--state-dir` override. Exact platform defaults and full CLI validation remain
+  part of the written specification. Preserve the existing alias/safe-access
+  requirements; a different path string alone does not establish separation.
+- Store verified artifacts and intelligence blocks under `objects/`, using names
+  derived from their digests rather than untrusted feed paths.
+- Store small manifests under `snapshots/`; reference objects and record source,
+  hashes, counts, and freshness timestamps. A digest identifies bytes, not
+  publisher authenticity or independent trust.
+- Partition matching projections into 256 JSONL blocks by identity hash. Stream
+  required blocks instead of loading the complete feed into memory. Preserve
+  enough identity information to verify a lookup, not merely a hash prefix.
+- Keep original advisory records separate from matching projections and bind them
+  by digest. Projections cannot discard relevant corrections or uncertainty.
+- Publish the active manifest only after its required objects validate. Qualify
+  native atomic publication, durability, and crash recovery; a generic rename
+  call alone is not evidence that all requirements hold.
+- Permit one writer per store and protect objects used by readers. Cleanup must
+  account for surviving references and pins, not age alone. Apply section 22's
+  preview/authorization and active/previous-snapshot protections.
+- Count objects, indexes, manifests, and staging under the approved 32 GiB global
+  quota. Shared references must not become permission to delete still-used data.
+
+### Explicit scan read accounting
+
+The 256 MiB target-metadata budget covers manifest/lockfile metadata reads, which
+also count toward the 16 GiB target-read budget. Local intelligence is separate:
+**8 GiB of actual reads per scan**, including verification and rereads. Local
+reference reads retain their separate section 21 budget. The scan deadline,
+soft targets, resident guard, and global storage quota continue to apply.
+
+Block scanning trades some I/O for a simpler format. Measure against the existing
+benchmark before changing the index or adding a database. A limit or benchmark
+failure is not authorization to increase budgets silently.
+
+**Required acceptance coverage, not yet executed:** projection/original bindings,
+complete candidate retrieval, identity-hash collisions, required-block corruption,
+read/reread accounting, bounded streaming, interrupted publication, writer/reader
+coordination, and reachable/pinned-object protection. Exact manifest/projection
+schemas, hash encoding, reservations, locks, and recovery mechanisms remain to be
+specified and qualified.
+
+## 26. Supervisor/worker wire contract
+
+**Approved transport:** versioned JSONL over private stdin/stdout pipes. No socket,
+RPC framework, or additional dependency is required.
+
+Each envelope carries protocol version, sequence, message type, and a typed
+payload. Validate the worker's version/build handshake before sending target
+configuration. This consistency check is not binary authentication or a sandbox.
+Use the same trusted executable described in section 16.
+
+Allowed message families are configuration, check start, evidence, observation,
+relationship, finding/candidate, diagnostic, check closure, and run completion.
+The full per-type fields and lifecycle state machine belong in the written spec.
+The channel is internal, not a public extension or generic command interface.
+
+- Enforce 1 MiB per message and 64 MiB cumulative traffic **across both
+  directions**, including separators and actual encoded bytes. Keep captured
+  stderr under its separate 64 KiB cap. Do not allocate from unchecked lengths.
+- Reject duplicate JSON keys, unknown types, unsupported versions, invalid
+  sequences, nonexistent references, and contradictory check closures. Bound
+  decoding before accepting records into the result model.
+- Do not transmit complete original input files or introduce generic fragmentation
+  to bypass message limits. If required evidence cannot be represented within
+  the bounded schema, emit a limit diagnostic and leave affected coverage
+  incomplete rather than silently losing significant data.
+- The worker cannot select output redaction, accept exceptions, decide the public
+  exit code, or instruct the supervisor to download, mutate targets, or delete
+  files. Those actions are not worker message capabilities.
+- Preserve previously validated results only while their supporting evidence
+  remains valid. A later invalidation cannot leave a confirmed result based on
+  evidence that failed verification. Unclosed or invalidly closed checks remain
+  incomplete after truncation, panic, timeout, or protocol failure.
+- Require coherent check closures, a valid run-completion message, EOF, and normal
+  termination before accepting successful execution. Neither a completion message
+  nor process exit `0` independently proves coverage. Preserve independently
+  completed work without disguising an abnormal run as overall completion.
+- With a usable requested report, protocol failure makes required execution
+  coverage incomplete and ordinarily returns `3`; inability to produce the
+  requested report returns `2`. Existing interruption semantics and exit
+  precedence remain unchanged.
+- Never forward raw stderr. Replace error text not certified for output with
+  controlled codes/diagnostics, and apply the common privacy/escaping rules to
+  any rendered error information.
+
+**Required acceptance coverage, not yet executed:** invalid/oversized envelopes,
+partial lines, sequence/reference errors, duplicate keys, mismatched builds,
+contradictory closure, a false completion followed by panic or extra traffic,
+interruption, backpressure, pipe failure, cumulative limits, and sensitive errors.
+
+## 27. Remaining design work
 
 The approvals above do not settle the following contracts:
 
-- Per-format schemas, exact manager-profile syntax, and worker protocol.
+- Per-format schemas, exact manager-profile syntax, and complete typed IPC
+  payloads/lifecycle states.
 - Exact filesystem, monitoring, termination, and strict-mode OS mechanisms.
 - Complete CLI and policy schemas, local-input locations, and validation rules.
-- Concrete matching library/rules and source/classification/correction mappings,
-  licensing review, and exact snapshot/update/reconciliation mechanics.
+- Qualification of candidate dependencies, exact matching rules and
+  source/classification/correction mappings, full licensing/notice review, and
+  exact snapshot/update/reconciliation mechanics.
+- Snapshot/manifest/projection schemas and hash encodings; native publication,
+  quota/reservation/locking/retention/recovery mechanisms.
 - Exact public-fetch requests, origin/mirror rules, DNS/proxy enforcement, baseline
   format, multi-digest handling, and per-layout integrity comparison rules.
 - Concrete JSON/SARIF field mappings, canonical fingerprint encodings, redaction
   field rules, exception schemas, and compatibility fixtures.
-- Exact quota/reservation/retention mechanisms, benchmark corpus, and executable
-  acceptance checks.
+- Fixed benchmark corpus and executable acceptance checks.
 
 These decisions authorize neither live synchronization nor artifact-fetch execution.
 Review the remaining sections before producing the complete written specification.
