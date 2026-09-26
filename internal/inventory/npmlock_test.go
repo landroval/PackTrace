@@ -268,7 +268,7 @@ func assertParseError(t *testing.T, src []byte, code string) {
 	if doc.SHA256 != ([32]byte{}) || doc.Fields != nil || doc.Packages != nil {
 		t.Fatal("failed parsing returned a partial document")
 	}
-	if err.Error() != "npm lockfile: "+code {
+	if err.Error() != "inventory: "+code {
 		t.Fatal("error must contain category only, not input content")
 	}
 }

@@ -212,7 +212,7 @@ func assertProjectionError(t *testing.T, doc Document, code string) {
 	if got.SourceSHA256 != ([32]byte{}) || got.Records != nil {
 		t.Fatal("error returned a partial projection")
 	}
-	if err.Error() != "npm lockfile: "+code {
+	if err.Error() != "inventory: "+code {
 		t.Fatal("error leaked source content")
 	}
 }

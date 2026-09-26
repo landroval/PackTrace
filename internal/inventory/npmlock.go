@@ -26,30 +26,15 @@ type Document struct {
 // ParseError exposes a category without disclosing input contents.
 type ParseError struct{ Code string }
 
-func (e *ParseError) Error() string { return "npm lockfile: " + e.Code }
+func (e *ParseError) Error() string { return "inventory: " + e.Code }
 
 // ParseNPMLock reads one lockfile-version-2 or -3 document from memory. The caller
 // must not mutate data during the call. Successful parsing does not establish
 // producer compatibility, effective-input selection, provenance, or safety.
 func ParseNPMLock(data []byte) (Document, error) {
-	if len(data) > maxLockfileBytes {
-		return Document{}, &ParseError{Code: "limit-exceeded"}
-	}
-	if !utf8.Valid(data) {
-		return Document{}, &ParseError{Code: "invalid-json"}
-	}
-	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.UseNumber()
-	if err := validateValue(decoder, 0); err != nil {
+	fields, err := parseJSONFields(data, maxLockfileBytes)
+	if err != nil {
 		return Document{}, err
-	}
-	if _, err := decoder.Token(); err != io.EOF || !validSurrogates(data) {
-		return Document{}, &ParseError{Code: "invalid-json"}
-	}
-
-	var fields map[string]json.RawMessage
-	if err := json.Unmarshal(data, &fields); err != nil || fields == nil {
-		return Document{}, &ParseError{Code: "invalid-shape"}
 	}
 	version := bytes.TrimSpace(fields["lockfileVersion"])
 	if !integerLiteral(version) {
@@ -71,6 +56,29 @@ func ParseNPMLock(data []byte) (Document, error) {
 		packages[key] = record
 	}
 	return Document{SHA256: sha256.Sum256(data), Fields: fields, Packages: packages}, nil
+}
+
+// parseJSONFields is the shared strict object decoder for manifests and lockfiles.
+func parseJSONFields(data []byte, byteLimit int) (map[string]json.RawMessage, error) {
+	if len(data) > byteLimit {
+		return nil, &ParseError{Code: "limit-exceeded"}
+	}
+	if !utf8.Valid(data) {
+		return nil, &ParseError{Code: "invalid-json"}
+	}
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.UseNumber()
+	if err := validateValue(decoder, 0); err != nil {
+		return nil, err
+	}
+	if _, err := decoder.Token(); err != io.EOF || !validSurrogates(data) {
+		return nil, &ParseError{Code: "invalid-json"}
+	}
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(data, &fields); err != nil || fields == nil {
+		return nil, &ParseError{Code: "invalid-shape"}
+	}
+	return fields, nil
 }
 
 // validateValue combines syntax, depth, and duplicate-key validation so the
