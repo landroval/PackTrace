@@ -625,12 +625,132 @@ unchanged evidence across snapshot refresh, reference-assurance changes,
 missing/added/type-change evidence, accepted findings remaining visible, and
 coverage/enforcement independence.
 
-## 16. Remaining design work
+## 16. Execution architecture
+
+**Approved direction:** a modular monolith with a supervisor and one sequential
+scan worker, both using the same executable. No services, plugin framework, or
+initial database. Create concrete internal modules only as their features are
+implemented, not empty scaffolding.
+
+| Responsibility | Owns |
+| --- | --- |
+| `inventory` | Discovery, effective-input selection, adapters, reconciliation |
+| `intel` | Pinned snapshots and local matching; separate synchronization operation |
+| `integrity` | References, digest validation, comparisons |
+| `policy` | Requirements, exceptions, exit decision |
+| `report` | Privacy and terminal/JSON/SARIF projections |
+| Safe file access and shared types | Small supporting modules without speculative abstractions |
+
+### Supervisor/worker flow
+
+1. The supervisor validates arguments, policy, destinations, and budgets.
+2. It starts the worker with explicit configuration and a reduced environment,
+   not arbitrary inherited target configuration.
+3. The worker keeps the selected root open, observes inventory, and performs local
+   matching/comparisons with inputs pinned for the run.
+4. It sends bounded records and check-completion messages over pipes. The
+   supervisor validates sizes, structure, and references.
+5. The supervisor applies exceptions/enforcement, privacy, and rendering.
+
+Parsing and archive work occur inside this supervised scan worker; the design
+does not require a separate process for every file. A failure can stop the worker,
+so retain already validated results and mark checks lacking a valid completion
+message incomplete. EOF, panic, and timeout never imply success. Capture and bound
+worker stderr rather than forwarding it unfiltered.
+
+Start with one worker and sequential work. Add parallelism only if measurements
+justify its added memory and I/O cost. The worker isolates failures, not security
+privileges: it is not an OS sandbox. Scan paths must not invoke networking or
+execute target code; verify with network-denied runs and inert fixtures.
+
+## 17. Portable and strict memory controls
+
+**Approved default:** portable work limits, Go runtime soft targets, and external
+resident-memory monitoring. Trusted policy may additionally require a qualified
+OS-enforced hard memory limit.
+
+[Go documents SetMemoryLimit as a soft limit](https://pkg.go.dev/runtime/debug#SetMemoryLimit),
+not a hard resident-memory ceiling. Do not conflate the two.
+
+- Enforce byte, entry, depth, message, and time budgets in the portable mode.
+- Set runtime soft targets and monitor supervisor plus worker consumption
+  externally. Stop work on observed threshold violations and preserve a partial
+  report where possible.
+- Record the actual mechanism and limitations. Sampling may detect a peak late
+  and does not guarantee preventing it.
+- If policy requires a hard OS limit and no qualified mechanism is available,
+  refuse the operation before reading the target.
+- Portable operation must not silently depend on systemd, containers, privilege
+  elevation, or extra tools.
+- Filesystem, path, and network safeguards remain mandatory in either mode.
+
+Requiring a hard OS ceiling for every scan was not selected: that alternative
+would make the entire native matrix depend on demonstrating such a mechanism on
+every platform. Exact monitoring, termination, and optional hard-limit mechanisms
+still require platform-specific design and native qualification.
+
+## 18. Initial scan budgets and acceptance targets
+
+**Approved values:** initial design limits for `scan`, not measured capabilities
+or performance guarantees. A failed qualification requires fixing the work or
+explicitly reviewing limits, not silently increasing them.
+
+| Resource | Default |
+| --- | --- |
+| Total scan duration | 5 minutes |
+| Individual manifest / lockfile | 2 MiB / 64 MiB |
+| Cumulative metadata reads | 256 MiB |
+| Individual content file | 256 MiB, streamed |
+| Total target reads | 16 GiB |
+| Visited entries / installed instances | 500,000 / 20,000 |
+| Path depth / JSON nesting | 64 / 128 |
+| Worker message / cumulative protocol traffic | 1 MiB / 64 MiB |
+| Captured worker stderr | 64 KiB |
+| Go soft target: worker / supervisor | 512 MiB / 128 MiB |
+| Observed aggregate resident threshold | 1 GiB, sampled every 100 ms |
+
+Count rereads and do not reset budgets between phases. Budget exhaustion must
+produce diagnostics and incomplete affected coverage, never silent omissions.
+Resident usage can exceed the observed threshold between samples. Deadline,
+termination, and cleanup behavior need native qualification; instantaneous OS
+termination is not implied.
+
+Synchronization, downloads, and reference-archive expansion are distinct
+operations needing their own numeric budgets. Do not accidentally apply a
+manifest-size cap to a feed archive. Those budgets remain unresolved.
+
+### Functional and platform acceptance
+
+- Require exact expected outcomes for inventory, matching, integrity, policy, and
+  privacy fixtures.
+- Exercise adversarial paths, file types, parsers, IPC, and cancellation.
+- Execute on all five approved OS/architecture pairs. Cross-compilation cannot
+  substitute for native execution.
+
+### Performance qualification target
+
+Use a fixed corpus containing 1,000 installed instances, 50,000 files, and 1 GiB
+of content, with prepared local intelligence and references. Record a reference
+environment of 4 vCPU, 8 GiB RAM, and SSD storage.
+
+- Median of five executions: at most 90 seconds.
+- Conservative sum of individual supervisor/worker peak resident-memory values:
+  at most 1 GiB. This is a qualification metric, not a portable hard runtime cap.
+- Record cache conditions and system state; do not disguise a warm-cache result
+  as cold-cache performance.
+- A run skipping work because of limits is not a passing benchmark.
+
+Exact corpus contents, intelligence/reference identities, native measurement
+methods, and reproducible execution instructions belong in the specification and
+acceptance plan before implementation approval. No benchmark or new native probe
+has been authorized or executed by approving these targets.
+
+## 19. Remaining design work
 
 The approvals above do not settle the following contracts:
 
-- Component/data-flow details, effective-input selection, and per-format schemas.
-- Exact filesystem/worker mechanisms and enforceable per-platform limits.
+- Effective-input selection, per-format schemas, and exact worker protocol.
+- Exact filesystem, monitoring, termination, and strict-mode OS mechanisms.
 - Complete CLI and policy schemas, local-input locations, and validation rules.
 - Concrete matching library/rules and source/classification/correction mappings,
   licensing review, and exact snapshot/update/reconciliation mechanics.
@@ -638,7 +758,8 @@ The approvals above do not settle the following contracts:
   format, multi-digest handling, and per-layout integrity comparison rules.
 - Concrete JSON/SARIF field mappings, canonical fingerprint encodings, redaction
   field rules, exception schemas, and compatibility fixtures.
-- Resource/performance thresholds and executable acceptance checks.
+- Synchronization/fetch/reference-expansion budgets, exact benchmark corpus, and
+  executable acceptance checks.
 
 These decisions authorize neither live synchronization nor artifact-fetch execution.
 Review the remaining sections before producing the complete written specification.
