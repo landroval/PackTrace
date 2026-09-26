@@ -1,7 +1,7 @@
 # Increment 7: bounded OSV record reader
 
-Status: scope selected; specification awaiting approval. Plan and execution approval
-remain separate. Authority: [design decisions](../design-decisions.md).
+Status: specification approved. The [implementation plan](07-osv-reader-plan.md)
+and execution authorization remain to be approved. Authority: [design decisions](../design-decisions.md).
 
 ## Deliverable
 
