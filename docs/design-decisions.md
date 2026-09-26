@@ -237,15 +237,143 @@ conflicts, invalid-policy handling, target configuration unable to grant authori
 recorded effective policy, visible exceptions, output-channel separation, and
 unsafe explicit output destinations.
 
-## 7. Remaining design work
+## 7. Intelligence acquisition sources
+
+**Approved choice:** OSV's aggregated npm export is the pilot's single acquisition
+source, including the OpenSSF Malicious Packages records it aggregates. No direct
+OpenSSF synchronization path is planned for the pilot. Match locally; never
+submit the investigated project's package list.
+
+The alternative, OSV plus direct OpenSSF acquisition, could reduce dependence on
+OSV's import delay for malicious-package reports, but requires a second update
+path, duplicate handling, and conflict reconciliation. The selected approach
+accepts the documented aggregator limitations rather than hiding them.
+
+- Record acquisition source separately from advisory publisher, with snapshot
+  identity, timestamps, hashes, and licensing/attribution.
+- Distinguish malicious-package reports from vulnerabilities through supported
+  source metadata, not summary-text heuristics. Ambiguous classification remains
+  a diagnostic; exact source mappings require qualification.
+- Describe detections as advisory matches, not proof of malware execution.
+  OpenSSF permits some borderline reports and acknowledges false positives.
+- Apply withdrawals and corrections to new scans while preserving historical
+  reports' original evidence.
+- Distinguish HTTPS transport, downloaded-byte hashes, and publisher authenticity.
+  Computing a hash does not produce a publisher signature.
+- Do not bundle the full dataset into the binary. Source-specific licensing and
+  attribution obligations still require review.
+
+### Source limitations
+
+[OSV's export documentation](https://google.github.io/osv.dev/data/) lists OpenSSF
+Malicious Packages among its aggregated sources and describes full/per-ecosystem
+exports, including withdrawn records. It also lists source-specific licenses;
+there is no assumption that every publisher shares one license.
+
+[OSV's FAQ](https://google.github.io/osv.dev/faq/) states that deletion handling
+differs by import mechanism. Records deleted from Git/REST sources can remain
+active but orphaned. A recent synchronization cannot guarantee every upstream
+correction has propagated. Full reconciliation against OSV cannot repair facts
+that OSV itself still publishes incorrectly.
+
+[OpenSSF's scope and false-positive guidance](https://github.com/ossf/malicious-packages#scope)
+allows some empty/trivial spam or typosquatting reports and describes withdrawals
+and version-level corrections. The interpretation of supported correction fields
+must be specified and tested; absence of an understood correction is not proof
+that a report is accurate.
+
+## 8. Synchronization and recovery
+
+**Approved direction:** full bootstrap, incremental updates, and periodic full
+reconciliation. Establish full-refresh correctness first; implement incremental
+updates and reconciliation before pilot qualification. This preserves the
+roadmap's incremental-update requirement.
+
+- A separate `packtrace intel sync` command explicitly authorizes fetching the
+  configured public feed. It takes no project target and sends no target-derived
+  package identities. This command is a design contract, not implemented code.
+- Download into staging outside investigated trees. Validate archive structure,
+  resource limits, record identities, supported schemas, and source metadata
+  before publishing.
+- Atomically publish a complete local snapshot. Each scan pins one snapshot for
+  its entire run; synchronization cannot change its evidence midway.
+- Failed updates preserve the last known-good snapshot and do not refresh its
+  successful-check timestamp. Never activate a partially downloaded snapshot.
+- Start from the full npm export. Incremental updates use OSV change listings and
+  track previously known IDs that move outside the npm directory. OSV documents
+  that records without an ecosystem, commonly withdrawn records, are exported
+  under `[EMPTY]`; polling only npm's change listing is insufficient.
+- Commit an update cursor only with its validated snapshot. Handle timestamp
+  ties, duplicate records, retries, and interruptions without losing changes.
+- Periodically reconcile against a full export. A disappeared record is not
+  automatically withdrawn: establish its current disposition. Unresolved
+  disappearance is a data-quality gap, not a silently inferred withdrawal.
+- Retain withdrawal/correction provenance. New reports use the newly selected
+  snapshot; historical reports are not rewritten.
+- Do not follow arbitrary URLs embedded in advisory records.
+
+Exact download/expansion limits, snapshot layout, validation and classification
+rules, cursor semantics, and reconciliation checks remain to be specified and
+qualified. OSV export/change-list behavior is documented in the source link above;
+this approval does not claim a transactional upstream export or guarantee that
+change timestamps alone detect every upstream change.
+
+**Required acceptance coverage, not yet executed:** interrupted and corrupt
+updates, atomic publication, pinned concurrent readers, last-known-good recovery,
+timestamp ties and retries, corrected records, withdrawals moving to `[EMPTY]`,
+record disappearance, and reconciliation. No real feed archive has been imported
+or synchronization implementation authorized by these design decisions.
+
+## 9. Intelligence freshness policy
+
+**Approved defaults:** maximum successful source-check age of 24 hours, plus
+successful full reconciliation at least every seven days.
+
+- Both advisory categories use the same pinned snapshot and acquisition
+  freshness policy.
+- Measure age from the last successful source check establishing the snapshot's
+  currentness, not local file modification/copy time or an individual advisory's
+  `modified` date.
+- Successful unchanged-source revalidation may refresh the check time. Failed or
+  partial updates may not.
+- Copying/importing a snapshot preserves its original provenance and times.
+  Missing, untrustworthy, or future-dated freshness metadata means unknown
+  freshness, not fresh data.
+- Exceeding either the source-check age or full-reconciliation interval makes
+  required intelligence coverage incomplete. Continue matching against usable
+  local data and retain findings; a scan with this gap returns `3` unless a
+  higher-precedence operational failure occurs, or the user interrupts it.
+- Unknown freshness likewise prevents complete required intelligence coverage.
+  Missing/corrupt snapshots make matching unavailable, not successfully empty.
+- Synchronization remains explicit. These intervals do not create a background
+  network task.
+- An explicitly selected trusted policy may set different intervals. Command-line
+  options cannot weaken the selected policy.
+
+Here, fresh means checked against the selected source within policy. It does not
+mean OSV has received every upstream report or correction. Report source/export
+timestamps separately so acquisition freshness does not hide upstream lag.
+
+The offline team workflow is explicit snapshot preparation, distribution without
+resetting its age, and scanning without networking.
+
+**Required acceptance coverage, not yet executed:** freshness boundaries, failed
+updates not renewing age, successful unchanged revalidation, imported/copied
+snapshots retaining age, unknown/future timestamps, overdue full reconciliation,
+and findings retained when coverage becomes incomplete.
+
+## 10. Remaining design work
 
 The approvals above do not settle the following contracts:
 
 - Component/data-flow details, effective-input selection, and per-format schemas.
 - Exact filesystem/worker mechanisms and enforceable per-platform limits.
 - Complete CLI and policy schemas, local-input locations, and validation rules.
-- Intelligence sources, synchronization, matching, freshness, and licensing.
-- Source classification, network authorization, references, and baseline trust.
+- Advisory matching semantics, source/classification/correction mappings,
+  licensing review, and exact snapshot/update/reconciliation mechanics.
+- Source classification, network authorization details, references, and baseline
+  trust. Artifact fetching needs a separate design; these decisions authorize
+  neither live synchronization nor artifact-fetch execution.
 - Report schema, fingerprints, redaction details, and evidence-bound exceptions.
 - Resource/performance thresholds and executable acceptance checks.
 
