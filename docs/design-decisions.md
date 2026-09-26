@@ -362,20 +362,143 @@ updates not renewing age, successful unchanged revalidation, imported/copied
 snapshots retaining age, unknown/future timestamps, overdue full reconciliation,
 and findings retained when coverage becomes incomplete.
 
-## 10. Remaining design work
+## 10. Advisory matching semantics
+
+**Approved direction:** three evaluation outcomes: match, no match, and
+indeterminate. No match requires complete evaluation of the applicable case.
+
+- Compare ecosystem, package identity, concrete version, and supported origin
+  correspondence. Package aliases retain both the local name and target identity.
+- A declaration such as `^1.2.0` does not identify an installed version. Do not
+  resolve it or substitute a minimum version.
+- Follow [OSV's evaluation semantics](https://ossf.github.io/osv-schema/):
+  enumerated affected versions OR affected ranges. Respect `introduced`, `fixed`,
+  `last_affected`, and `limit` boundaries.
+- Use SemVer ordering for `SEMVER` ranges, including prereleases. Do not substitute
+  npm dependency-selection constraint rules for vulnerability-range evaluation.
+- Evaluate `ECOSYSTEM` ranges only with qualified npm semantics. Do not reconstruct
+  Git histories. An unsupported condition that prevents ruling out affectedness
+  makes the result indeterminate, not negative.
+- Preserve valid positive matches even when other conditions remain unevaluated,
+  with the limitations visible. This does not permit ignoring a withdrawal or
+  correction that could invalidate the positive match.
+- Withdrawn records do not generate new active findings. Unknown or contradictory
+  corrections must not be silently ignored.
+- Advisory aliases may group presentation but must not automatically merge ranges,
+  severities, or provenance.
+- Retain the observation supporting each match: locked and observed-installed
+  evidence remain distinct. A match based on a mutable manifest does not
+  authenticate its contents.
+
+Possible matches with ambiguous origin correspondence remain visible candidates,
+not confirmed findings eligible for enforcement. If the required correspondence
+cannot be established, coverage remains incomplete. Here, confirmed means the
+matching conditions were supported, not that malicious behavior or vulnerable
+code execution was independently demonstrated.
+
+**Required acceptance coverage, not yet executed:** inclusive/exclusive boundaries,
+prereleases, invalid versions, package/advisory aliases, withdrawals, corrections,
+partially supported conditions, and ambiguous-origin candidates remaining visible
+without being treated as enforcement-eligible confirmed matches.
+
+## 11. Source classification and network authorization
+
+**Approved direction:** separate observed origin from permission to download.
+Source classification is evidence, not a network grant.
+
+- Record the observed source mechanism: registry, Git, archive URL, local
+  archive/directory, or workspace.
+- Classify origin as public, private, or unknown using explicit rules and validated
+  evidence. Preserve conflicts. A scoped package name or URL containing `npm` is
+  insufficient.
+- Associating a package with public npm advisories requires supported origin
+  correspondence. A private mirror requires an explicit equivalence rule; shared
+  name/version alone does not prove equivalence.
+- A manipulated lockfile cannot authorize queries or downloads. Keep `scan`
+  offline.
+- Prepare public references through a separate operation requiring explicit
+  selection of public requests and authorization to disclose their identities
+  and URLs. Exact request representation and command syntax remain to be specified.
+- Restrict HTTPS to authorized destinations. Validate port, URL, DNS resolution,
+  and the actual connection address. Block local, private, and cloud-metadata
+  destinations in this public-fetch flow.
+- Revalidate each redirect and bound redirect count. Do not accept implicit proxies
+  or project credentials. Any proxy requires explicit trusted configuration.
+- Private or unknown sources use local references or prepared caches without
+  automatic public queries. Authenticated private-registry fetching remains
+  outside the pilot.
+
+Validate the actual destination used, not only a URL before a separate DNS
+resolution chooses the connection address. Proxy handling must preserve the
+approved destination restrictions; its enforcement mechanism requires design and
+qualification rather than an assumed bypass.
+
+**Required acceptance example, not yet executed:** a private package sharing a
+public package's name must not cause a public query or an affectedness assertion
+based only on that name. Additional checks cover conflicting origin evidence,
+mirror equivalence, redirect escapes, DNS changes, reserved destinations, and
+implicit credentials/proxies.
+
+## 12. Integrity references and assurance
+
+**Approved default:** accept `lockfile-consistent` as the minimum assurance level,
+with explicit limitations. A trusted policy may require `independently anchored`.
+
+### Reference provenance
+
+- Lockfile-consistent means the reference artifact matches the project's recorded
+  digest. It cannot resist an attacker changing both installed files and lockfile.
+- Independently anchored means the expected digest comes from an explicitly
+  designated trusted baseline with identity, version, origin, and a reason for
+  trusting it. Merely storing the baseline outside the project is insufficient.
+- Downloaded or cached artifacts gain no trust from their location. Verify their
+  bytes against the applicable expected digest before installation comparison.
+- Admit SHA-256, SHA-384, and SHA-512 for these assurance claims. Preserve weak
+  hashes as evidence but do not use them to declare a verified reference. A weak
+  digest must not compensate for failure of a strong digest.
+- Preserve baseline/lockfile disagreements and distinguish which reference
+  supports each comparison. Never claim both assurance levels were satisfied
+  when their evidence conflicts.
+
+The more restrictive alternative, independently anchored by default, would improve
+resistance to joint lockfile/content manipulation but require baseline preparation
+before complete required coverage. It was not selected as the built-in default.
+
+### Comparison scope
+
+Compare published files for modification, absence, addition, and relevant type or
+link changes. Delimit nested packages, bundled content, and generated metadata
+using specific qualified rules, not blanket exclusions.
+
+Patches and build outputs provide context but are not executed or reconstructed.
+Differences remain integrity drift, not automatic evidence of malware. An integrity
+match likewise does not establish benignness.
+
+A comparison can be complete only for its explicit scope. Unreadable/changing
+files, exclusions without sufficient justification, or inadequate references
+prevent verification of that scope. The selected minimum assurance must be met;
+a weaker comparison does not satisfy a policy requiring an independent baseline.
+
+**Required acceptance coverage, not yet executed:** weak/missing/wrong digests,
+strong-digest failures not rescued by weak digests, baseline/lockfile conflicts,
+mutable caches, identity/source binding, policy-required independent assurance,
+modified/missing/added/type/link changes, nested and bundled ownership, generated
+metadata, patches, and unreadable/changing/excluded content.
+
+## 13. Remaining design work
 
 The approvals above do not settle the following contracts:
 
 - Component/data-flow details, effective-input selection, and per-format schemas.
 - Exact filesystem/worker mechanisms and enforceable per-platform limits.
 - Complete CLI and policy schemas, local-input locations, and validation rules.
-- Advisory matching semantics, source/classification/correction mappings,
+- Concrete matching library/rules and source/classification/correction mappings,
   licensing review, and exact snapshot/update/reconciliation mechanics.
-- Source classification, network authorization details, references, and baseline
-  trust. Artifact fetching needs a separate design; these decisions authorize
-  neither live synchronization nor artifact-fetch execution.
+- Exact public-fetch requests, origin/mirror rules, DNS/proxy enforcement, baseline
+  format, multi-digest handling, and per-layout integrity comparison rules.
 - Report schema, fingerprints, redaction details, and evidence-bound exceptions.
 - Resource/performance thresholds and executable acceptance checks.
 
-Review these sections before producing the complete written specification.
+These decisions authorize neither live synchronization nor artifact-fetch execution.
+Review the remaining sections before producing the complete written specification.
 Written-spec approval then permits implementation planning, not implementation.
