@@ -312,9 +312,9 @@ roadmap's incremental-update requirement.
   snapshot; historical reports are not rewritten.
 - Do not follow arbitrary URLs embedded in advisory records.
 
-Exact download/expansion limits, snapshot layout, validation and classification
-rules, cursor semantics, and reconciliation checks remain to be specified and
-qualified. OSV export/change-list behavior is documented in the source link above;
+Initial download/expansion budgets are recorded in sections 20 and 21. Snapshot
+layout, validation and classification rules, cursor semantics, and reconciliation
+checks remain to be specified and qualified. OSV export/change-list behavior is documented in the source link above;
 this approval does not claim a transactional upstream export or guarantee that
 change timestamps alone detect every upstream change.
 
@@ -715,9 +715,9 @@ Resident usage can exceed the observed threshold between samples. Deadline,
 termination, and cleanup behavior need native qualification; instantaneous OS
 termination is not implied.
 
-Synchronization, downloads, and reference-archive expansion are distinct
-operations needing their own numeric budgets. Do not accidentally apply a
-manifest-size cap to a feed archive. Those budgets remain unresolved.
+Synchronization, downloads, and reference-archive expansion have separate budgets
+in sections 20 and 21. Do not accidentally apply a manifest-size cap to a feed
+archive.
 
 ### Functional and platform acceptance
 
@@ -745,11 +745,142 @@ methods, and reproducible execution instructions belong in the specification and
 acceptance plan before implementation approval. No benchmark or new native probe
 has been authorized or executed by approving these targets.
 
-## 19. Remaining design work
+## 19. Effective-input selection and scope
+
+**Approved direction:** automatic selection only when there is a unique coherent
+interpretation. Otherwise preserve evidence and require an explicit selection;
+do not guess an effective dependency tree.
+
+- `PATH` defines the root. Do not ascend to discover parent projects or
+  automatically include independent nested projects.
+- Retain the approved anchors: npm 8.19.4/10.9.4/11.6.2 and Bun 1.3.2/1.4.2.
+  Recognizing a lockfile version does not expand the support claim.
+- Target `packageManager` metadata is a hint, not independent producer proof or
+  authorization.
+- In the supported npm profile, `npm-shrinkwrap.json` takes precedence. If present
+  but unreadable, invalid, or unsafe to access, do not silently substitute
+  `package-lock.json`.
+- If npm/Bun inputs coexist, or precedence depends on an unknown manager version,
+  require `--manager`. Record the selected interpretation and conflicts. The flag
+  cannot make an unsupported format compatible; exact profile syntax remains to
+  be specified.
+- npm 12, Yarn, pnpm, and `bun.lockb` remain outside initial support. Never convert
+  files or execute package managers to make them scannable.
+- Validate Bun `lockfileVersion`, `configVersion`, and used structures separately.
+- Preserve the workspace baseline: explicit relative paths and `packages/*` /
+  `apps/*` patterns. Overlaps, escapes, and unsupported patterns create coverage
+  or attribution gaps.
+- npm's hidden lockfile is auxiliary evidence, not a substitute for the effective
+  root lockfile or physical observation.
+- Without a usable lockfile, preserve manifests and installed observations; mark
+  checks depending on that lockfile incomplete.
+- Do not reinterpret unreferenced store content as active dependencies. Preserve
+  additional observed packages and bundled content with their context.
+- Reject relevant structural ambiguity, including duplicate JSON keys, rather
+  than silently relying on last-key-wins decoding.
+
+**Required acceptance coverage, not yet executed:** conflicting inputs, unreadable
+and invalid shrinkwrap without fallback, ambiguous manager semantics, unsupported
+formats despite explicit selection, separate Bun version validation, workspace
+boundaries, absent lockfiles, extra/unreferenced/bundled content, and duplicate
+keys. Producer-generated qualification still requires separate authorization.
+
+## 20. Intelligence synchronization budgets
+
+**Approved initial limits for `intel sync`:** qualify against real feed data before
+pilot release; these are design values, not measured consumption.
+
+| Resource | Limit |
+| --- | --- |
+| Operation duration | 15 minutes |
+| Cumulative HTTP response bytes, including retries | 2 GiB |
+| Individual compressed ZIP / change-list CSV | 1 GiB / 256 MiB |
+| Individual advisory record | 4 MiB |
+| Expanded/processed advisory data | 8 GiB |
+| Candidate snapshot entries | 2,000,000 |
+| Simultaneous operation staging occupancy | 16 GiB |
+| Total HTTP requests | 10,000 |
+| Connection / response headers / complete request | 10 s / 30 s / 5 min |
+| Redirects / total attempts per request | 3 / 3 |
+
+- Also apply the approved memory controls; they are not a portable hard ceiling.
+- Count actual received/expanded bytes, not only declared lengths.
+- Do not reset counters during retries or strategy changes.
+- An incremental update may switch to a full update only within the remaining
+  budget. Otherwise fail while preserving the previous snapshot.
+- Exceeding a limit prevents candidate publication and freshness renewal. Never
+  remove records merely to make a snapshot fit.
+- Staging occupancy excludes earlier retained snapshots. It is not a global quota
+  for all retained historical storage; retention remains a separate decision.
+
+### Public metadata observation
+
+Only public object metadata was read during this design review; the archives and
+change listing themselves were not downloaded or processed.
+
+| Object | Declared size in bytes | Observed object generation |
+| --- | --- | --- |
+| npm `all.zip` | 216,647,962 | `1790386541792347` |
+| Global `modified_id.csv` | 131,604,135 | `1790432844955195` |
+
+Sources: [npm ZIP metadata](https://storage.googleapis.com/storage/v1/b/osv-vulnerabilities/o/npm%2Fall.zip)
+and [global change-list metadata](https://storage.googleapis.com/storage/v1/b/osv-vulnerabilities/o/modified_id.csv).
+These observations informed initial caps; they do not measure expansion, memory,
+entry counts, transactional consistency, or future feed sizes.
+
+**Required acceptance coverage, not yet executed:** response and expansion budgets,
+false declared sizes, retries/redirects counted correctly, non-resetting strategy
+changes, staging exhaustion, and no activation or freshness renewal after any
+budget failure. Approval does not authorize live synchronization now.
+
+## 21. Artifact preparation and reference inspection budgets
+
+**Approved direction:** separate online preparation from offline reference
+inspection during `scan`.
+
+| Resource | Initial limit |
+| --- | --- |
+| Public preparation duration / requested artifacts | 30 minutes / 1,000 |
+| Cumulative HTTP response bytes, including retries | 8 GiB |
+| Individual compressed artifact | 512 MiB |
+| Simultaneous preparation staging occupancy | 4 GiB |
+| Reference reads per scan, including rereads | 16 GiB |
+| Expansion per reference archive / aggregate per scan | 2 GiB / 8 GiB |
+| Entries per reference archive | 100,000 |
+| Individual expanded published file | 256 MiB |
+
+Reuse the HTTP connection, header, complete-request, redirect, and attempt limits
+in section 20 without resetting counters. Each scan also retains its own deadline
+and memory controls.
+
+- Inspect reference archives without extracting their paths into the filesystem.
+- Count actual expansion, headers, and entries. Small declared sizes cannot bypass
+  limits.
+- Validate the artifact digest before claiming comparisons are supported by it.
+- Reject unsafe paths, collisions, contradictory entries, and unsupported types;
+  do not skip them and declare equality.
+- Truncated downloads and wrong-digest artifacts are not verified references.
+- Within a preparation batch, retain individually verified artifacts, but report
+  every failure and do not claim complete batch success. This differs deliberately
+  from atomic publication of a complete intelligence snapshot.
+- Inspection limits make the affected comparison incomplete without erasing
+  previous findings.
+- Transfer/staging limits do not impose a global historical-cache quota; retention
+  remains separate.
+
+Private/unknown sources still use local references. These budgets neither widen
+network authorization nor authorize executing artifact downloads now.
+
+**Required acceptance coverage, not yet executed:** compressed/expanded/entry
+limits, repeated reads, truncated downloads, wrong digests, unsafe archive entries,
+partially successful batches, and incomplete comparisons retaining earlier
+findings. Qualify numeric defaults rather than silently increasing them.
+
+## 22. Remaining design work
 
 The approvals above do not settle the following contracts:
 
-- Effective-input selection, per-format schemas, and exact worker protocol.
+- Per-format schemas, exact manager-profile syntax, and worker protocol.
 - Exact filesystem, monitoring, termination, and strict-mode OS mechanisms.
 - Complete CLI and policy schemas, local-input locations, and validation rules.
 - Concrete matching library/rules and source/classification/correction mappings,
@@ -758,8 +889,8 @@ The approvals above do not settle the following contracts:
   format, multi-digest handling, and per-layout integrity comparison rules.
 - Concrete JSON/SARIF field mappings, canonical fingerprint encodings, redaction
   field rules, exception schemas, and compatibility fixtures.
-- Synchronization/fetch/reference-expansion budgets, exact benchmark corpus, and
-  executable acceptance checks.
+- Cache/snapshot retention and overall storage policy, exact benchmark corpus,
+  and executable acceptance checks.
 
 These decisions authorize neither live synchronization nor artifact-fetch execution.
 Review the remaining sections before producing the complete written specification.
