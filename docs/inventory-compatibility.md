@@ -4,11 +4,13 @@
 pinned public Go dependency downloads and isolated local Linux execution.
 Production implementation and later qualification remain unapproved.
 **Research date:** 2026-09-26 (UTC).
-**Extractor runtime evidence:** none at initial approval; see the subsequent
-results document when available. Before probe creation, local checks confirmed
-Go 1.27.1, unprivileged bubblewrap isolation with no external network route, and
-a transient user-service cgroup enforcing MemoryMax=512 MiB and zero swap.
-These prerequisite checks do not validate any extractor or package-manager format.
+**Extractor runtime evidence:** probe A now has a
+[results report](inventory-evaluation-results.md): 73 synthetic Linux cases
+executed, three upstream panics reproduced, and two optional graph cases blocked
+by compilation. Four extractor-harness Go tests and two fixture tests passed;
+the whole-module Go suite did not pass because the graph command does not build.
+No actual npm/Bun producer compatibility or macOS/Windows support is validated.
+The proposal below is preserved as the approved scope, not as an execution log.
 
 Related: [roadmap](development-roadmap.md),
 [guidelines](development-guidelines.md),

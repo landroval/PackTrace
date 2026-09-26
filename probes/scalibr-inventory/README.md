@@ -32,6 +32,7 @@ python3 run.py prepare
 python3 run.py build
 python3 run.py cases
 python3 run.py verify
+python3 collect_evidence.py
 ```
 
 `prepare` is the **only online stage**. It downloads pinned public Go modules and
@@ -79,9 +80,17 @@ review must distinguish executed observations from untested claims in those
 labels. The case harness finishing is not evidence of production compatibility,
 correct package-manager discovery, all-platform support, or safety of a project.
 
-Changing evidence, blocked checks, and all-package compile failures must remain
-visible in the final evaluation report. Results are summarized in
-`docs/inventory-evaluation-results.md` once that report is written.
+Changing evidence, blocked checks, and all-package compile failures remain
+visible in the [evaluation report](../../docs/inventory-evaluation-results.md).
+`collect_evidence.py` writes the bounded committed `evidence/` bundle: final
+observations, exact raw logs keyed by their original filenames, initial failure
+history, selected imports/modules, root-license file hashes, and measurements.
+`SHA256SUMS.json` detects changes to those files; it is not independent authentication.
+
+All executable cases were rerun after a fixture-builder filename bug was fixed.
+The source-review expectations were retained, and `test_fixtures.py` now checks
+those paths and corpus budgets. `cases --group A18` can repeat only that group;
+full native reruns allocate new synthetic target/control paths, without deletion.
 
 ## Footprint and licenses
 

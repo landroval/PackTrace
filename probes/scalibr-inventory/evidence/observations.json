@@ -1,0 +1,3810 @@
+[
+  {
+    "label": "a01-npm1-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a01-npm1"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.303,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a01-npm1-attempt2.stdout",
+    "stderr": "a01-npm1-attempt2.stderr",
+    "group": "A01",
+    "fixture_sha256": "4d643bd135e420407ea67c9064a3552f2e36244f44e5044910ce592b11714675",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 2
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "lock observations only; source/digest/instance fields require supplementation"
+    ],
+    "observation": {
+      "case_id": "a01-npm1",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "a7f53030fe362e3cde014a589bdcbfaa0b5f8deca1e371c826f44eff483b5818",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL"
+          }
+        },
+        {
+          "name": "@packtrace-fixture/b",
+          "version": "2.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a01-npm2-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a01-npm2"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.304,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a01-npm2-attempt2.stdout",
+    "stderr": "a01-npm2-attempt2.stderr",
+    "group": "A01",
+    "fixture_sha256": "dd853804c0fa678fc3f78a5392377acb892ec99871a973917b3e046a073591af",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "lock observations only; source/digest/instance fields require supplementation"
+    ],
+    "observation": {
+      "case_id": "a01-npm2",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "d76eaf288f7768a307d9bcb0a9005712671c369b24f9c308fb748158822cfacd",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a01-npm3-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a01-npm3"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a01-npm3-attempt2.stdout",
+    "stderr": "a01-npm3-attempt2.stderr",
+    "group": "A01",
+    "fixture_sha256": "e32cfff59e19afcaa7dacad3544424d60e50feb919561160f2bf1495d097199f",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "lock observations only; source/digest/instance fields require supplementation"
+    ],
+    "observation": {
+      "case_id": "a01-npm3",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "d76eaf288f7768a307d9bcb0a9005712671c369b24f9c308fb748158822cfacd",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a02-both-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a02-both"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a02-both-attempt2.stdout",
+    "stderr": "a02-both-attempt2.stderr",
+    "group": "A02",
+    "fixture_sha256": "bdd944810b46bf72af2b05ade764f5423d9a2c4818e131fa30115b4aa64042e2",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 0
+    },
+    "deviations": [],
+    "classification": "usable",
+    "limitations": [],
+    "observation": {
+      "case_id": "a02-both",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "d76eaf288f7768a307d9bcb0a9005712671c369b24f9c308fb748158822cfacd",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": []
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a02-shrinkwrap-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a02-shrinkwrap"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.301,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a02-shrinkwrap-attempt2.stdout",
+    "stderr": "a02-shrinkwrap-attempt2.stderr",
+    "group": "A02",
+    "fixture_sha256": "beba8cc0603ee125c6741d00123855e2358c3cb2ee113864e8b36456befab267",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "usable",
+    "limitations": [],
+    "observation": {
+      "case_id": "a02-shrinkwrap",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "d76eaf288f7768a307d9bcb0a9005712671c369b24f9c308fb748158822cfacd",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "npm-shrinkwrap.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a02-unreadable-shrinkwrap-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a02-unreadable-shrinkwrap"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a02-unreadable-shrinkwrap-attempt2.stdout",
+    "stderr": "a02-unreadable-shrinkwrap-attempt2.stderr",
+    "group": "A02",
+    "fixture_sha256": "d97b7d9e237773c1c71ebf55927ec7390ca60ba5727fb43d663b14b1d71f454c",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "upstream fallback hides denied higher-precedence file"
+    ],
+    "observation": {
+      "case_id": "a02-unreadable-shrinkwrap",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "d76eaf288f7768a307d9bcb0a9005712671c369b24f9c308fb748158822cfacd",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "diagnostics": [
+        "injected sibling shrinkwrap Open permission failure"
+      ],
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a03-stat-denied-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a03-stat-denied"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.301,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a03-stat-denied-attempt2.stdout",
+    "stderr": "a03-stat-denied-attempt2.stderr",
+    "group": "A03",
+    "fixture_sha256": "afae30720e924d562b8b71848800715dae41bcb80f4ec1d5b667ae3b4b6272e0",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1,
+      "selected": false
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "selection is false without an error channel; direct extraction still succeeds"
+    ],
+    "observation": {
+      "case_id": "a03-stat-denied",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "ae1376526bb8c8e25117f923de8984b1e2f40e5decee189de9d44af983bd0ff2",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": false,
+      "diagnostics": [
+        "FileRequired=false; direct Extract still exercised deliberately",
+        "injected Stat permission failure"
+      ],
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package.json",
+          "line": 1,
+          "metadata": {}
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a03-reader-denied-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a03-reader-denied"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a03-reader-denied-attempt2.stdout",
+    "stderr": "a03-reader-denied-attempt2.stderr",
+    "group": "A03",
+    "fixture_sha256": "5f6de1ecc44a05575b4affbe4355db025c6484c52edbface4690e33bd672229b",
+    "outcome": "error",
+    "expected": {
+      "outcome": "error",
+      "count": 0
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "unreadable input"
+    ],
+    "observation": {
+      "case_id": "a03-reader-denied",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "d76eaf288f7768a307d9bcb0a9005712671c369b24f9c308fb748158822cfacd",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "error": "could not read: injected read failure",
+      "packages": []
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a03-stat-denied-npm-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a03-stat-denied-npm"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a03-stat-denied-npm-attempt2.stdout",
+    "stderr": "a03-stat-denied-npm-attempt2.stderr",
+    "group": "A03",
+    "fixture_sha256": "2b3cf8870ab79ba830944d9d9835c94065c1d655310c64a78fa7c011fa048162",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1,
+      "selected": false
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "selection diagnostic must be owned by caller"
+    ],
+    "observation": {
+      "case_id": "a03-stat-denied-npm",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "d76eaf288f7768a307d9bcb0a9005712671c369b24f9c308fb748158822cfacd",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": false,
+      "diagnostics": [
+        "FileRequired=false; direct Extract still exercised deliberately",
+        "injected Stat permission failure"
+      ],
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a04-duplicate-instances-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a04-duplicate-instances"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a04-duplicate-instances-attempt2.stdout",
+    "stderr": "a04-duplicate-instances-attempt2.stderr",
+    "group": "A04",
+    "fixture_sha256": "b3a810022dec838f63e37b2ea14d884e69f7a21b8638270b4dabbf89d6eb6509",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 2
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "three locked instances collapse to two identities"
+    ],
+    "observation": {
+      "case_id": "a04-duplicate-instances",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "6cb2dfeb66d6c5ecb691da9e45e27b9ba7911792ac44b06bd68760d2fcbe5c9e",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL"
+          }
+        },
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "2.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a05-alias-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a05-alias"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a05-alias-attempt2.stdout",
+    "stderr": "a05-alias-attempt2.stderr",
+    "group": "A05",
+    "fixture_sha256": "7add4cb0e33e776f2f69a6c19cd5f8bae8487ed2b0cec175fadb76dbe2c355db",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "alias provenance not retained"
+    ],
+    "observation": {
+      "case_id": "a05-alias",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "131066a05a2c9bc43f328c1de611225d1993fcaab8db722070e9e6fc561ca7f8",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "real",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a05-scoped-alias-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a05-scoped-alias"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.301,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a05-scoped-alias-attempt2.stdout",
+    "stderr": "a05-scoped-alias-attempt2.stderr",
+    "group": "A05",
+    "fixture_sha256": "083f179fa252f85fde34038b115825b88771b50f4806e86e688bd4761e7c3484",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "alias provenance not retained"
+    ],
+    "observation": {
+      "case_id": "a05-scoped-alias",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "63b91c02face0430e2ebaf2be20722822abd1e12b368893e33bf3645fff340b6",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/real",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a05-bad-alias-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a05-bad-alias"
+    ],
+    "online": false,
+    "returncode": 2,
+    "elapsed_seconds": 0.303,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a05-bad-alias-attempt2.stdout",
+    "stderr": "a05-bad-alias-attempt2.stderr",
+    "group": "A05",
+    "fixture_sha256": "5a9f16cd55a891a07576e6a8ebaff6a87b638d17546e7aebbd3724671bf0aab6",
+    "outcome": "panic",
+    "expected": {
+      "outcome": "panic"
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "malformed alias may panic"
+    ],
+    "observation": null,
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a05-public-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a05-public"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a05-public-attempt2.stdout",
+    "stderr": "a05-public-attempt2.stderr",
+    "group": "A05",
+    "fixture_sha256": "f9acc527a6989fc4630469fe3f974129d4c75e3647d41fbafda4cc5b8cc5ba72",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "source identity/classification is not fetch authorization; raw URL lost"
+    ],
+    "observation": {
+      "case_id": "a05-public",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "4f3fa228fa4cf684a0a62925475ad3f807aac4197343b4b4290173afae20f6b6",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "PUBLIC_REGISTRY"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a05-private-npm-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a05-private-npm"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.301,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a05-private-npm-attempt2.stdout",
+    "stderr": "a05-private-npm-attempt2.stderr",
+    "group": "A05",
+    "fixture_sha256": "7693fef324b82615a67b724bec1fc2b174ae80bd4c01af830060d0b969791ad7",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "source identity/classification is not fetch authorization; raw URL lost"
+    ],
+    "observation": {
+      "case_id": "a05-private-npm",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "41745ba12d4180afed07807e8396c5da3bded36fd2f6aca907ba37dbe407a5e0",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "PUBLIC_REGISTRY"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a05-file-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a05-file"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a05-file-attempt2.stdout",
+    "stderr": "a05-file-attempt2.stderr",
+    "group": "A05",
+    "fixture_sha256": "b2413b19a3f4f78644373485b71ab4fba4c2f375bacd3e98b8f81e42c23feb7b",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "source identity/classification is not fetch authorization; raw URL lost"
+    ],
+    "observation": {
+      "case_id": "a05-file",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "d67c542be0a1b4d1e2eac78d414b89bc2a42f8af51ed6639b5db9df0eea19909",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a05-git-full-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a05-git-full"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a05-git-full-attempt2.stdout",
+    "stderr": "a05-git-full-attempt2.stderr",
+    "group": "A05",
+    "fixture_sha256": "4aca3a91f983bfeca36f788c9f82b35f7a0fd99b81e217ff8ec3e1b5dcbfa8df",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "source identity/classification is not fetch authorization; raw URL lost"
+    ],
+    "observation": {
+      "case_id": "a05-git-full",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "f1bdc1b1fccc35373bf1d821c357f3eac85eaa453a6c7bee4d2be74c7fe52119",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "https://example.invalid/a",
+            "Commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "metadata": {
+            "source": "OTHER"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a05-git-short-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a05-git-short"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.301,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a05-git-short-attempt2.stdout",
+    "stderr": "a05-git-short-attempt2.stderr",
+    "group": "A05",
+    "fixture_sha256": "bddcd76efee6148594089b57e7b2ba3cf334f02c73a2fdaf7f5d6ca58093b01d",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "source identity/classification is not fetch authorization; raw URL lost"
+    ],
+    "observation": {
+      "case_id": "a05-git-short",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "829c4037ec1a40dee31b29d451b12357bf380c366ac8eaa682e60298c4ca9bec",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "https://example.invalid/a",
+            "Commit": "abcdef0"
+          },
+          "metadata": {
+            "source": "OTHER"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a06-workspace-lock-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a06-workspace-lock"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.301,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a06-workspace-lock-attempt2.stdout",
+    "stderr": "a06-workspace-lock-attempt2.stderr",
+    "group": "A06",
+    "fixture_sha256": "149533d186f63e28cdf1f2aa58455a77a3016c9ffe050195122286387aa0ac6b",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 2
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "root/link ownership and dependency paths omitted"
+    ],
+    "observation": {
+      "case_id": "a06-workspace-lock",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "887d6e78079bf23745442a8cfa49b799ac883d851a3c956e407cfbfbee8763f8",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL"
+          }
+        },
+        {
+          "name": "ui",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a06-workspace-root-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a06-workspace-root"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a06-workspace-root-attempt2.stdout",
+    "stderr": "a06-workspace-root-attempt2.stderr",
+    "group": "A06",
+    "fixture_sha256": "30f3e152612dc95596a2c23d031989fa82d3ddd5c441125613fac52c0e026e74",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "workspace and dev dependency declarations omitted"
+    ],
+    "observation": {
+      "case_id": "a06-workspace-root",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "653f796cecfe057bec00ea88028cb5344761298d4ff456a3c3a659ff898cef13",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "root",
+          "version": "1.0.0",
+          "path": "package.json",
+          "line": 1,
+          "metadata": {
+            "dependencies": {
+              "@packtrace-fixture/a": "^1.0.0"
+            }
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a07-groups-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a07-groups"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.303,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a07-groups-attempt2.stdout",
+    "stderr": "a07-groups-attempt2.stderr",
+    "group": "A07",
+    "fixture_sha256": "c58e02a998303762dde80d1c594c4f42d190d43500a76f25304518c00db3b344",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 3
+    },
+    "deviations": [],
+    "classification": "usable",
+    "limitations": [],
+    "observation": {
+      "case_id": "a07-groups",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "5d4da90af0c879e500251e1d9d10b379e7ed1c2168cbc4e8eed3132bae16e077",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL",
+            "dep_groups": [
+              "dev",
+              "optional"
+            ]
+          }
+        },
+        {
+          "name": "@packtrace-fixture/b",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL",
+            "dep_groups": [
+              "bundled"
+            ]
+          }
+        },
+        {
+          "name": "c",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL",
+            "dep_groups": [
+              "dev",
+              "optional"
+            ]
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a07-optional-peer-absent-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a07-optional-peer-absent"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.301,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a07-optional-peer-absent-attempt2.stdout",
+    "stderr": "a07-optional-peer-absent-attempt2.stderr",
+    "group": "A07",
+    "fixture_sha256": "67383a1839c7ed3045696223c8ec78faf656a6fc1afbb26530281124c8955293",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "locked optional package is not physically installed evidence; platform/peer metadata lost"
+    ],
+    "observation": {
+      "case_id": "a07-optional-peer-absent",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "b49ce7100ba214b6e2c34e2aac49d09bd8e26dea869a17694a2a87521a9e1e8b",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL",
+            "dep_groups": [
+              "optional"
+            ]
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a08-digests-conflict-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a08-digests-conflict"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.301,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a08-digests-conflict-attempt2.stdout",
+    "stderr": "a08-digests-conflict-attempt2.stderr",
+    "group": "A08",
+    "fixture_sha256": "6c5f177e4b4c5b07e236d3a12479c4ccb37327fb8395dedea1441bbe8836f7a6",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "distinct source/digest observations collapsed; integrity omitted"
+    ],
+    "observation": {
+      "case_id": "a08-digests-conflict",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "db92b174d2825be59f051491700622524c08eca3bcc1ea4998dea30571744f01",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "PUBLIC_REGISTRY"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a08-digest-absent-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a08-digest-absent"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.301,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a08-digest-absent-attempt2.stdout",
+    "stderr": "a08-digest-absent-attempt2.stderr",
+    "group": "A08",
+    "fixture_sha256": "7734c005898ca08742d412fc6919e6ac37b0e5ef749bcbf0d688dd6a6d938268",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "reference digest unavailable"
+    ],
+    "observation": {
+      "case_id": "a08-digest-absent",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "d76eaf288f7768a307d9bcb0a9005712671c369b24f9c308fb748158822cfacd",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a09-v0-configNone-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a09-v0-configNone"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.301,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a09-v0-configNone-attempt2.stdout",
+    "stderr": "a09-v0-configNone-attempt2.stderr",
+    "group": "A09",
+    "fixture_sha256": "4af2065ceb0f4b693403749cffddcdbe7623d32e5a8d9ba208d5d044a417ff0d",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "successful tuple parse is not grammar/workspace/config/override validation"
+    ],
+    "observation": {
+      "case_id": "a09-v0-configNone",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "b34160fac976b3bdfedb6bc32053fec8125d560bd748cf88172f069499ecbe1d",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "bun.lock",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "DepGroupVals": []
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a09-v1-configNone-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a09-v1-configNone"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.301,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a09-v1-configNone-attempt2.stdout",
+    "stderr": "a09-v1-configNone-attempt2.stderr",
+    "group": "A09",
+    "fixture_sha256": "55fa86ecdaec8e6e173fc9ee6abb324c8b1b35e4c20a66b3553df34d98d7bcd5",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "successful tuple parse is not grammar/workspace/config/override validation"
+    ],
+    "observation": {
+      "case_id": "a09-v1-configNone",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "b08ad3166e33d0e31a818872ab756b9c0c7ca97038d47c19f34124571afa6953",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "bun.lock",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "DepGroupVals": []
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a09-v1-config0-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a09-v1-config0"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.301,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a09-v1-config0-attempt2.stdout",
+    "stderr": "a09-v1-config0-attempt2.stderr",
+    "group": "A09",
+    "fixture_sha256": "1e5a29fc117465b43cd6b865734e5a83c6c2db0f4393a46be754167c55934bef",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "successful tuple parse is not grammar/workspace/config/override validation"
+    ],
+    "observation": {
+      "case_id": "a09-v1-config0",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "d4a7cf0004bb554575811f8900b8f134fc1c7283fa4f22e0e660e50eba6af95f",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "bun.lock",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "DepGroupVals": []
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a09-v1-config1-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a09-v1-config1"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a09-v1-config1-attempt2.stdout",
+    "stderr": "a09-v1-config1-attempt2.stderr",
+    "group": "A09",
+    "fixture_sha256": "3dc7794119b0e3c6b100e5c3cd2f217a7e7aef155d234470ac0e4e7dab89b3b7",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "successful tuple parse is not grammar/workspace/config/override validation"
+    ],
+    "observation": {
+      "case_id": "a09-v1-config1",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "828d8a6bacab21ea459b0340fb746089accb5566f26afabef7c5cb7ce09c0c8a",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "bun.lock",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "DepGroupVals": []
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a09-v2-config1-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a09-v2-config1"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a09-v2-config1-attempt2.stdout",
+    "stderr": "a09-v2-config1-attempt2.stderr",
+    "group": "A09",
+    "fixture_sha256": "5a2521512f991517988487cd6d22de4a97e90b4c7c2a914759fb2c59bd060996",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "successful tuple parse is not grammar/workspace/config/override validation"
+    ],
+    "observation": {
+      "case_id": "a09-v2-config1",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "e435d839e3601afed5908cf871cdec4392fc00cd882c453956597b753d79832a",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "bun.lock",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "DepGroupVals": []
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a09-v3-config1-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a09-v3-config1"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a09-v3-config1-attempt2.stdout",
+    "stderr": "a09-v3-config1-attempt2.stderr",
+    "group": "A09",
+    "fixture_sha256": "2d35eacf35f772506f0582c741c1dd8c95dffd0b74b5dee21d1b380d11b83dd8",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "successful tuple parse is not grammar/workspace/config/override validation"
+    ],
+    "observation": {
+      "case_id": "a09-v3-config1",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "a628191903664ef116b72b02dbec5ae678da425b1025763e8e161759d824853e",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "bun.lock",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "DepGroupVals": []
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a10-aliases-duplicates-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a10-aliases-duplicates"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.301,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a10-aliases-duplicates-attempt2.stdout",
+    "stderr": "a10-aliases-duplicates-attempt2.stderr",
+    "group": "A10",
+    "fixture_sha256": "729ba1b6cf41c0f22783e59d0223c2b88c089a9f21c87521f2cc99ec88b446c8",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 2
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "alias keys and placement context not preserved as structured output"
+    ],
+    "observation": {
+      "case_id": "a10-aliases-duplicates",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "03459006a130c1e17185942df52a47ae9b62edbc70b518db384042b4c13a8c3e",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "bun.lock",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "DepGroupVals": []
+          }
+        },
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "bun.lock",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "DepGroupVals": []
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a10-sources-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a10-sources"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.301,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a10-sources-attempt2.stdout",
+    "stderr": "a10-sources-attempt2.stderr",
+    "group": "A10",
+    "fixture_sha256": "5277f47bf519a8094f9283ed16ebb008858849769d9a01e9d1c4443755c9c8e8",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 4
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "nonregistry identity/version and source uncertainty; workspace token may survive as version"
+    ],
+    "observation": {
+      "case_id": "a10-sources",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "05af6d4d12883ba0d51c6fa3cffae5c18aee222d37545d75e83c7f5b12e4790f",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "file",
+          "version": "",
+          "path": "bun.lock",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "DepGroupVals": []
+          }
+        },
+        {
+          "name": "git",
+          "version": "",
+          "path": "bun.lock",
+          "line": 1,
+          "source_code": {
+            "Repo": "https://github.com/fixture/repo",
+            "Commit": "abcdef0"
+          },
+          "metadata": {
+            "DepGroupVals": []
+          }
+        },
+        {
+          "name": "ui",
+          "version": "workspace:packages/ui",
+          "path": "bun.lock",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "DepGroupVals": []
+          }
+        },
+        {
+          "name": "url",
+          "version": "",
+          "path": "bun.lock",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "DepGroupVals": []
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a10-scoped-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a10-scoped"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a10-scoped-attempt2.stdout",
+    "stderr": "a10-scoped-attempt2.stderr",
+    "group": "A10",
+    "fixture_sha256": "bcdcf557d1d48b426a1d0817acec0ac39cd485085ca455f3f473f17c4c9bbee1",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "reference digest absent from extractor output"
+    ],
+    "observation": {
+      "case_id": "a10-scoped",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "25c4bda9b5f1b1dc66795f575ffd1d99f527cf5a37fa6bf7fbf0f43a3979bd13",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "bun.lock",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "DepGroupVals": []
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a11-bad-json-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a11-bad-json"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a11-bad-json-attempt2.stdout",
+    "stderr": "a11-bad-json-attempt2.stderr",
+    "group": "A11",
+    "fixture_sha256": "08a259d80d7248dd92e9ccbb8aa578951771aacde9814134d85e9312354b2d50",
+    "outcome": "error",
+    "expected": {
+      "outcome": "error",
+      "count": 0
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "malformed/unsupported input requires explicit validation; observe upstream result"
+    ],
+    "observation": {
+      "case_id": "a11-bad-json",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "021fb596db81e6d02bf3d2586ee3981fe519f275c0ac9ca76bbcf2ebb4097d96",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "error": "could not extract unexpected end of JSON input",
+      "packages": []
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a11-null-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a11-null"
+    ],
+    "online": false,
+    "returncode": 2,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a11-null-attempt2.stdout",
+    "stderr": "a11-null-attempt2.stderr",
+    "group": "A11",
+    "fixture_sha256": "068095ef6a4a11eb4a8d93801e091738945625ad46bc7901288caac9b15e8102",
+    "outcome": "panic",
+    "expected": {
+      "outcome": "panic"
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "malformed/unsupported input requires explicit validation; observe upstream result"
+    ],
+    "observation": null,
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a11-wrong-packages-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a11-wrong-packages"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a11-wrong-packages-attempt2.stdout",
+    "stderr": "a11-wrong-packages-attempt2.stderr",
+    "group": "A11",
+    "fixture_sha256": "78a0d195326b7d5c4bd54398e18a74e9325972c69c095a31eef9a441a0702eb2",
+    "outcome": "error",
+    "expected": {
+      "outcome": "error",
+      "count": 0
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "malformed/unsupported input requires explicit validation; observe upstream result"
+    ],
+    "observation": {
+      "case_id": "a11-wrong-packages",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "f251a533f4bd04a48977784d130de1255d256479ee70b9635fd95edcef1afbb2",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "error": "could not extract json: cannot unmarshal array into Go struct field .packages of type map[string][]interface {}",
+      "packages": []
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a11-empty-tuple-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a11-empty-tuple"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a11-empty-tuple-attempt2.stdout",
+    "stderr": "a11-empty-tuple-attempt2.stderr",
+    "group": "A11",
+    "fixture_sha256": "db54c197aa25ae3a9cf11f430b02ccafc0adef9eec4e0a633729d57df443552f",
+    "outcome": "error",
+    "expected": {
+      "outcome": "error",
+      "count": 0
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "malformed/unsupported input requires explicit validation; observe upstream result"
+    ],
+    "observation": {
+      "case_id": "a11-empty-tuple",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "1a6bbd851c6199c49754ea1b54da548d38efd117170149a0f6275e48d20f06bf",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "error": "could not extract 'a': empty package tuple",
+      "packages": []
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a11-bad-tuple-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a11-bad-tuple"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a11-bad-tuple-attempt2.stdout",
+    "stderr": "a11-bad-tuple-attempt2.stderr",
+    "group": "A11",
+    "fixture_sha256": "11756400f9976ce1c2dd14ec6e1dbc410a2a178543d0416304120dc2a9ae1cdb",
+    "outcome": "error",
+    "expected": {
+      "outcome": "error",
+      "count": 0
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "malformed/unsupported input requires explicit validation; observe upstream result"
+    ],
+    "observation": {
+      "case_id": "a11-bad-tuple",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "e5ad3e9acab5aae037000d21d5fd3939d86d83e43b29d7dda0c37287c870bd30",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "error": "could not extract 'a': first element of package tuple is not a string",
+      "packages": []
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a11-partial-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a11-partial"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a11-partial-attempt2.stdout",
+    "stderr": "a11-partial-attempt2.stderr",
+    "group": "A11",
+    "fixture_sha256": "85c2aacdfc7be37509142e3213da54b30d668344c3383acf182ad0c733bfaa66",
+    "outcome": "error",
+    "expected": {
+      "outcome": "error",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "malformed/unsupported input requires explicit validation; observe upstream result"
+    ],
+    "observation": {
+      "case_id": "a11-partial",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "44615eb3458a688dd558753ffa0c2a72fbc5cde6c41b1c01d5341771a7f02771",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "error": "could not extract 'bad': empty package tuple",
+      "packages": [
+        {
+          "name": "a",
+          "version": "1.0.0",
+          "path": "bun.lock",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "DepGroupVals": []
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a11-negative-version-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a11-negative-version"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a11-negative-version-attempt2.stdout",
+    "stderr": "a11-negative-version-attempt2.stderr",
+    "group": "A11",
+    "fixture_sha256": "ff7412ef69453a63f4c6d58dff3d7b85f9cb0420eaaf47b75af66c9b77a53613",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "malformed/unsupported input requires explicit validation; observe upstream result"
+    ],
+    "observation": {
+      "case_id": "a11-negative-version",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "b98fdeda47af06503b16addd5b9bbfaff405cb1f281f4be2844b38625ca4c6ea",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "bun.lock",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "DepGroupVals": []
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a11-unknown-version-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a11-unknown-version"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a11-unknown-version-attempt2.stdout",
+    "stderr": "a11-unknown-version-attempt2.stderr",
+    "group": "A11",
+    "fixture_sha256": "709962adf72a317168517730a3e1f3068ec01734159ed2909476fb6a20cf576c",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "malformed/unsupported input requires explicit validation; observe upstream result"
+    ],
+    "observation": {
+      "case_id": "a11-unknown-version",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "18200e003277cbce093cfef575fa0d4ece73f011c0a80d261b7b4f889c185ccd",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "bun.lock",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "DepGroupVals": []
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a11-duplicate-key-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a11-duplicate-key"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a11-duplicate-key-attempt2.stdout",
+    "stderr": "a11-duplicate-key-attempt2.stderr",
+    "group": "A11",
+    "fixture_sha256": "f9e163e57ec10f0c859262a3a749ef1b371e16c87c1acf516d45dc6a4f5f7aca",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "malformed/unsupported input requires explicit validation; observe upstream result"
+    ],
+    "observation": {
+      "case_id": "a11-duplicate-key",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "ee56920772cdd67fd374e49464f2dc9f2e54fdb3232714de394d5c73086fdca1",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "a",
+          "version": "2.0.0",
+          "path": "bun.lock",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "DepGroupVals": []
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a11-jsonc-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a11-jsonc"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a11-jsonc-attempt2.stdout",
+    "stderr": "a11-jsonc-attempt2.stderr",
+    "group": "A11",
+    "fixture_sha256": "ac98c241846c683a4d933fd5cb4c9630884421c42e87fbdd4e091a3b2778cd47",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "malformed/unsupported input requires explicit validation; observe upstream result"
+    ],
+    "observation": {
+      "case_id": "a11-jsonc",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "c7933439de3b0bd833749d75258b7595d097a6844589ac07bef5a7346be17f2a",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "a",
+          "version": "1.0.0",
+          "path": "bun.lock",
+          "line": 2,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "DepGroupVals": []
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a11-npm-null-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a11-npm-null"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a11-npm-null-attempt2.stdout",
+    "stderr": "a11-npm-null-attempt2.stderr",
+    "group": "A11",
+    "fixture_sha256": "0cc68ebbd673f11f6d55dd030bd84eb7e82de09c42d38be82d122aec42a4df6e",
+    "outcome": "error",
+    "expected": {
+      "outcome": "error",
+      "count": 0
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "invalid lockfile"
+    ],
+    "observation": {
+      "case_id": "a11-npm-null",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "error": "could not extract: decoded null JSON value",
+      "packages": []
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a11-npm-unknown-version-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a11-npm-unknown-version"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a11-npm-unknown-version-attempt2.stdout",
+    "stderr": "a11-npm-unknown-version-attempt2.stderr",
+    "group": "A11",
+    "fixture_sha256": "558a8f45581050bcd410a99fb8fb49581ae4b69c72e37963d8f0bc73835ca7d2",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "unknown format version accepted"
+    ],
+    "observation": {
+      "case_id": "a11-npm-unknown-version",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "03cff33980a1f6da1a86fa83e3a85987aa4e2cbdc4fd060aeed6cafe6d4065c7",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a11-npm-wrong-type-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a11-npm-wrong-type"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a11-npm-wrong-type-attempt2.stdout",
+    "stderr": "a11-npm-wrong-type-attempt2.stderr",
+    "group": "A11",
+    "fixture_sha256": "b59e20c9cef8cd8f6cde341dba638cb6b9a9b23b0f900cdbed901158e5c5c268",
+    "outcome": "error",
+    "expected": {
+      "outcome": "error",
+      "count": 0
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "invalid package map"
+    ],
+    "observation": {
+      "case_id": "a11-npm-wrong-type",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "f251a533f4bd04a48977784d130de1255d256479ee70b9635fd95edcef1afbb2",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "error": "could not extract: json: cannot unmarshal array into Go struct field .packages of type map[string]packagelockjson.Package",
+      "packages": []
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a12-normal-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a12-normal"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a12-normal-attempt2.stdout",
+    "stderr": "a12-normal-attempt2.stderr",
+    "group": "A12",
+    "fixture_sha256": "49f6b3f18841b87abaf654f0694969dc0a71335b1b799f06723376aea95ed6e5",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "usable",
+    "limitations": [],
+    "observation": {
+      "case_id": "a12-normal",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "ae1376526bb8c8e25117f923de8984b1e2f40e5decee189de9d44af983bd0ff2",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package.json",
+          "line": 1,
+          "metadata": {}
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a12-no-name-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a12-no-name"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a12-no-name-attempt2.stdout",
+    "stderr": "a12-no-name-attempt2.stderr",
+    "group": "A12",
+    "fixture_sha256": "f979496a89ac964ee2c049cfc9941344e1a2e06b0bbea9a61eb5057c65ac4f45",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 0
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "filtered/malformed manifest must not disappear from coverage"
+    ],
+    "observation": {
+      "case_id": "a12-no-name",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "703ac3033ce5306d1e650cb89a90133bb3c0a666f61bf325f5e1314a5316deb2",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": []
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a12-no-version-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a12-no-version"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a12-no-version-attempt2.stdout",
+    "stderr": "a12-no-version-attempt2.stderr",
+    "group": "A12",
+    "fixture_sha256": "980a1e6a6d5368a9ce4f576dc2e13819b62b7a6ac97437c2e15940fe5896a8db",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 0
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "filtered/malformed manifest must not disappear from coverage"
+    ],
+    "observation": {
+      "case_id": "a12-no-version",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "359561f2c560c12af29c6a6fab854ddc4547a8de98a50d1ce5fe6c5f4ca8714e",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": []
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a12-null-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a12-null"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a12-null-attempt2.stdout",
+    "stderr": "a12-null-attempt2.stderr",
+    "group": "A12",
+    "fixture_sha256": "d6ad9fca6d742ee19e6d86c9e110a460e24c299b6ac9a710e2e4603cb8723f1b",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 0
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "filtered/malformed manifest must not disappear from coverage"
+    ],
+    "observation": {
+      "case_id": "a12-null",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": []
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a12-vscode-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a12-vscode"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a12-vscode-attempt2.stdout",
+    "stderr": "a12-vscode-attempt2.stderr",
+    "group": "A12",
+    "fixture_sha256": "c484ddb6cd669f237a27536fcc46bf8e0151592b52009e9be9923d189b273fed",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 0
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "filtered/malformed manifest must not disappear from coverage"
+    ],
+    "observation": {
+      "case_id": "a12-vscode",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "56d72e92b650bf5c6314e04a1da7615db53e7f674a263f214f53315f6bc3031f",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": []
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a12-unity-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a12-unity"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a12-unity-attempt2.stdout",
+    "stderr": "a12-unity-attempt2.stderr",
+    "group": "A12",
+    "fixture_sha256": "5689baacf98640c1015e3937601e47be1894c9099f0d729b5754ab87f30b3525",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 0
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "filtered/malformed manifest must not disappear from coverage"
+    ],
+    "observation": {
+      "case_id": "a12-unity",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "0174082a3e85fc6ca167698d5cf2299dd1b33174ed10d311adc20c678fe17e19",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": []
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a12-null-person-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a12-null-person"
+    ],
+    "online": false,
+    "returncode": 2,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a12-null-person-attempt2.stdout",
+    "stderr": "a12-null-person-attempt2.stderr",
+    "group": "A12",
+    "fixture_sha256": "b613ba3d4285d35e645631948cbca98e9fb3294f15d155cc8fe893f20fd3b753",
+    "outcome": "panic",
+    "expected": {
+      "outcome": "panic"
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "filtered/malformed manifest must not disappear from coverage"
+    ],
+    "observation": null,
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a13-inference-False-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a13-inference-False"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.303,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a13-inference-False-attempt2.stdout",
+    "stderr": "a13-inference-False-attempt2.stderr",
+    "group": "A13",
+    "fixture_sha256": "b048bf5b1784e35736274e6b8573037dce94c9470d3e580b5e0cbb432500ef56",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "usable",
+    "limitations": [],
+    "observation": {
+      "case_id": "a13-inference-False",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "e4a7b4b99f3f8b4a0b229541d733487ed669e0f4c18eb03f7855074089b73a41",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "root",
+          "version": "1.0.0",
+          "path": "package.json",
+          "line": 1,
+          "metadata": {
+            "dependencies": {
+              "@packtrace-fixture/a": "^1.0.0"
+            }
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a13-inference-True-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a13-inference-True"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.301,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a13-inference-True-attempt2.stdout",
+    "stderr": "a13-inference-True-attempt2.stderr",
+    "group": "A13",
+    "fixture_sha256": "c0965a8723b228d6ab15421eb9207b723e2b728726e542d334a7aab7d19bf249",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 2
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "inferred minimum is not resolved/installed version"
+    ],
+    "observation": {
+      "case_id": "a13-inference-True",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "e4a7b4b99f3f8b4a0b229541d733487ed669e0f4c18eb03f7855074089b73a41",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package.json",
+          "line": 1,
+          "metadata": null
+        },
+        {
+          "name": "root",
+          "version": "1.0.0",
+          "path": "package.json",
+          "line": 1,
+          "metadata": {
+            "dependencies": {
+              "@packtrace-fixture/a": "^1.0.0"
+            }
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a14-hoisted-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a14-hoisted"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a14-hoisted-attempt2.stdout",
+    "stderr": "a14-hoisted-attempt2.stderr",
+    "group": "A14",
+    "fixture_sha256": "a43b13f23068fd420d7bcfb69e215576a9bd49e4c4314948a0f76cb2999b6820",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 2
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "authored locations only; not generated manager layout or actual dependency resolution"
+    ],
+    "observation": {
+      "case_id": "a14-hoisted",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": false,
+      "diagnostics": [
+        "Explicit authored file enumeration, not a production discovery walk"
+      ],
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "node_modules/a/package.json",
+          "line": 1,
+          "metadata": {}
+        },
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "node_modules/p/node_modules/a/package.json",
+          "line": 1,
+          "metadata": {}
+        }
+      ],
+      "children": [
+        {
+          "case_id": "a14-hoisted:node_modules/a/package.json",
+          "module": "github.com/google/osv-scalibr@v0.5.3",
+          "input_sha256": "ae1376526bb8c8e25117f923de8984b1e2f40e5decee189de9d44af983bd0ff2",
+          "evidence_class": "extractor-output-not-installation-proof",
+          "selected": true,
+          "packages": [
+            {
+              "name": "@packtrace-fixture/a",
+              "version": "1.0.0",
+              "path": "node_modules/a/package.json",
+              "line": 1,
+              "metadata": {}
+            }
+          ]
+        },
+        {
+          "case_id": "a14-hoisted:node_modules/p/node_modules/a/package.json",
+          "module": "github.com/google/osv-scalibr@v0.5.3",
+          "input_sha256": "ae1376526bb8c8e25117f923de8984b1e2f40e5decee189de9d44af983bd0ff2",
+          "evidence_class": "extractor-output-not-installation-proof",
+          "selected": true,
+          "packages": [
+            {
+              "name": "@packtrace-fixture/a",
+              "version": "1.0.0",
+              "path": "node_modules/p/node_modules/a/package.json",
+              "line": 1,
+              "metadata": {}
+            }
+          ]
+        }
+      ]
+    },
+    "native_before": {
+      "node_modules/a/package.json": "ae1376526bb8c8e25117f923de8984b1e2f40e5decee189de9d44af983bd0ff2",
+      "node_modules/p/node_modules/a/package.json": "ae1376526bb8c8e25117f923de8984b1e2f40e5decee189de9d44af983bd0ff2"
+    },
+    "native_after": {
+      "node_modules/a/package.json": "ae1376526bb8c8e25117f923de8984b1e2f40e5decee189de9d44af983bd0ff2",
+      "node_modules/p/node_modules/a/package.json": "ae1376526bb8c8e25117f923de8984b1e2f40e5decee189de9d44af983bd0ff2"
+    }
+  },
+  {
+    "label": "a14-isolated-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a14-isolated"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.303,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a14-isolated-attempt2.stdout",
+    "stderr": "a14-isolated-attempt2.stderr",
+    "group": "A14",
+    "fixture_sha256": "a0083a5d7175cb2fc6c713941c09763349b5ab095a1e6eeb3b1392f747d81772",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 3
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "authored locations only; not generated manager layout or actual dependency resolution"
+    ],
+    "observation": {
+      "case_id": "a14-isolated",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": false,
+      "diagnostics": [
+        "Explicit authored file enumeration, not a production discovery walk"
+      ],
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "node_modules/.bun/a@1.0.0/node_modules/a/package.json",
+          "line": 1,
+          "metadata": {}
+        },
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "node_modules/.bun/a@1.0.0_peer@2/node_modules/a/package.json",
+          "line": 1,
+          "metadata": {}
+        },
+        {
+          "name": "stale",
+          "version": "1.0.0",
+          "path": "node_modules/.bun/stale@1.0.0/node_modules/stale/package.json",
+          "line": 1,
+          "metadata": {}
+        }
+      ],
+      "children": [
+        {
+          "case_id": "a14-isolated:node_modules/.bun/a@1.0.0/node_modules/a/package.json",
+          "module": "github.com/google/osv-scalibr@v0.5.3",
+          "input_sha256": "ae1376526bb8c8e25117f923de8984b1e2f40e5decee189de9d44af983bd0ff2",
+          "evidence_class": "extractor-output-not-installation-proof",
+          "selected": true,
+          "packages": [
+            {
+              "name": "@packtrace-fixture/a",
+              "version": "1.0.0",
+              "path": "node_modules/.bun/a@1.0.0/node_modules/a/package.json",
+              "line": 1,
+              "metadata": {}
+            }
+          ]
+        },
+        {
+          "case_id": "a14-isolated:node_modules/.bun/a@1.0.0_peer@2/node_modules/a/package.json",
+          "module": "github.com/google/osv-scalibr@v0.5.3",
+          "input_sha256": "ae1376526bb8c8e25117f923de8984b1e2f40e5decee189de9d44af983bd0ff2",
+          "evidence_class": "extractor-output-not-installation-proof",
+          "selected": true,
+          "packages": [
+            {
+              "name": "@packtrace-fixture/a",
+              "version": "1.0.0",
+              "path": "node_modules/.bun/a@1.0.0_peer@2/node_modules/a/package.json",
+              "line": 1,
+              "metadata": {}
+            }
+          ]
+        },
+        {
+          "case_id": "a14-isolated:node_modules/.bun/stale@1.0.0/node_modules/stale/package.json",
+          "module": "github.com/google/osv-scalibr@v0.5.3",
+          "input_sha256": "79da22307044c0dd38770fbbe069aabe252a3c8c151a40d05cd409452f295585",
+          "evidence_class": "extractor-output-not-installation-proof",
+          "selected": true,
+          "packages": [
+            {
+              "name": "stale",
+              "version": "1.0.0",
+              "path": "node_modules/.bun/stale@1.0.0/node_modules/stale/package.json",
+              "line": 1,
+              "metadata": {}
+            }
+          ]
+        }
+      ]
+    },
+    "native_before": {
+      "node_modules/.bun/a@1.0.0/node_modules/a/package.json": "ae1376526bb8c8e25117f923de8984b1e2f40e5decee189de9d44af983bd0ff2",
+      "node_modules/.bun/a@1.0.0_peer@2/node_modules/a/package.json": "ae1376526bb8c8e25117f923de8984b1e2f40e5decee189de9d44af983bd0ff2",
+      "node_modules/.bun/stale@1.0.0/node_modules/stale/package.json": "79da22307044c0dd38770fbbe069aabe252a3c8c151a40d05cd409452f295585"
+    },
+    "native_after": {
+      "node_modules/.bun/a@1.0.0/node_modules/a/package.json": "ae1376526bb8c8e25117f923de8984b1e2f40e5decee189de9d44af983bd0ff2",
+      "node_modules/.bun/a@1.0.0_peer@2/node_modules/a/package.json": "ae1376526bb8c8e25117f923de8984b1e2f40e5decee189de9d44af983bd0ff2",
+      "node_modules/.bun/stale@1.0.0/node_modules/stale/package.json": "79da22307044c0dd38770fbbe069aabe252a3c8c151a40d05cd409452f295585"
+    }
+  },
+  {
+    "label": "a15-root-links-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a15-root-links"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.303,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a15-root-links-attempt2.stdout",
+    "stderr": "a15-root-links-attempt2.stderr",
+    "group": "A15",
+    "fixture_sha256": "8f352a6bb01582c01ba7a2aa903093608a57393d87cb0e5659b4860532bd5b10",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 0
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "Linux os.Root containment only; Windows/junctions and production discovery not tested"
+    ],
+    "observation": {
+      "case_id": "a15-root-links",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": false,
+      "diagnostics": [
+        "Linux-only controlled os.Root check; not Windows/junction or production walker validation"
+      ],
+      "packages": [],
+      "links": {
+        "../outside/sentinel": "openat ../outside/sentinel: path escapes from parent",
+        "C:\\Windows\\synthetic": "openat C:\\Windows\\synthetic: no such file or directory",
+        "Case": "opened-without-reading",
+        "case": "opened-without-reading",
+        "cycle-a": "openat cycle-a: too many levels of symbolic links",
+        "dangling": "openat dangling: no such file or directory",
+        "escape": "openat escape: path escapes from parent",
+        "inside": "opened-without-reading",
+        "regular": "opened-without-reading",
+        "relative-escape": "openat relative-escape: path escapes from parent"
+      }
+    },
+    "native_before": {
+      "Case": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd",
+      "case": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c",
+      "cycle-a": "link:cycle-b",
+      "cycle-b": "link:cycle-a",
+      "dangling": "link:missing",
+      "escape": "link:/outside/sentinel",
+      "inside": "link:regular",
+      "regular": "2e872263e12593bf0c92feeb8cad3a84609a638af7515696ed3356631249a6d8",
+      "relative-escape": "link:../outside/sentinel"
+    },
+    "native_after": {
+      "Case": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd",
+      "case": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c",
+      "cycle-a": "link:cycle-b",
+      "cycle-b": "link:cycle-a",
+      "dangling": "link:missing",
+      "escape": "link:/outside/sentinel",
+      "inside": "link:regular",
+      "regular": "2e872263e12593bf0c92feeb8cad3a84609a638af7515696ed3356631249a6d8",
+      "relative-escape": "link:../outside/sentinel"
+    }
+  },
+  {
+    "label": "a16-canceled-npm-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a16-canceled-npm"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a16-canceled-npm-attempt2.stdout",
+    "stderr": "a16-canceled-npm-attempt2.stderr",
+    "group": "A16",
+    "fixture_sha256": "4c6142584bb01a00646113befa25455e3dc3ef967670825cb5699ce2ec104a2d",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "already-canceled context ignored by extraction path"
+    ],
+    "observation": {
+      "case_id": "a16-canceled-npm",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "d76eaf288f7768a307d9bcb0a9005712671c369b24f9c308fb748158822cfacd",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "diagnostics": [
+        "context canceled before Extract"
+      ],
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a16-canceled-bun-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a16-canceled-bun"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a16-canceled-bun-attempt2.stdout",
+    "stderr": "a16-canceled-bun-attempt2.stderr",
+    "group": "A16",
+    "fixture_sha256": "eaf4c22e70c6b71946fdd4173cfad15733798379435f5d4a5ce82e0804e939ae",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "already-canceled context ignored by extraction path"
+    ],
+    "observation": {
+      "case_id": "a16-canceled-bun",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "25c4bda9b5f1b1dc66795f575ffd1d99f527cf5a37fa6bf7fbf0f43a3979bd13",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "diagnostics": [
+        "context canceled before Extract"
+      ],
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "bun.lock",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "DepGroupVals": []
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a16-canceled-manifest-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a16-canceled-manifest"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a16-canceled-manifest-attempt2.stdout",
+    "stderr": "a16-canceled-manifest-attempt2.stderr",
+    "group": "A16",
+    "fixture_sha256": "221478d42f53562a0a8bc1d85aae0bd8c21ae0089039740ae8105dedc366f767",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "already-canceled context ignored by extraction path"
+    ],
+    "observation": {
+      "case_id": "a16-canceled-manifest",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "ae1376526bb8c8e25117f923de8984b1e2f40e5decee189de9d44af983bd0ff2",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "diagnostics": [
+        "context canceled before Extract"
+      ],
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package.json",
+          "line": 1,
+          "metadata": {}
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a16-reader-midfail-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a16-reader-midfail"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.301,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a16-reader-midfail-attempt2.stdout",
+    "stderr": "a16-reader-midfail-attempt2.stderr",
+    "group": "A16",
+    "fixture_sha256": "991e9d06c1c0e1b46236dd941f455f98c9b01da9f5edfdd365012643ea06a535",
+    "outcome": "error",
+    "expected": {
+      "outcome": "error",
+      "count": 0
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "partial read failure"
+    ],
+    "observation": {
+      "case_id": "a16-reader-midfail",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "25c4bda9b5f1b1dc66795f575ffd1d99f527cf5a37fa6bf7fbf0f43a3979bd13",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "error": "could not extract: injected read failure",
+      "packages": []
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a16-oversize-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a16-oversize"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.301,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a16-oversize-attempt2.stdout",
+    "stderr": "a16-oversize-attempt2.stderr",
+    "group": "A16",
+    "fixture_sha256": "2bc1a1cfd2ae9fbe6b23bc946dff448be42de93522e0366d85bf6b1f7fd648f7",
+    "outcome": "error",
+    "expected": {
+      "outcome": "error",
+      "count": 0
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "probe boundary rejects input before extractor"
+    ],
+    "observation": {
+      "case_id": "a16-oversize",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "ae1376526bb8c8e25117f923de8984b1e2f40e5decee189de9d44af983bd0ff2",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": false,
+      "error": "probe input exceeds 2 MiB",
+      "packages": []
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a16-npm-reported-size-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a16-npm-reported-size"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.301,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a16-npm-reported-size-attempt2.stdout",
+    "stderr": "a16-npm-reported-size-attempt2.stderr",
+    "group": "A16",
+    "fixture_sha256": "da27a7f253ad2377c3418d680dbb2fc5f43d55aacd4f83fe48c5b20451cadc1f",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1,
+      "selected": false
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "FileRequired limit is not enforced by direct Extract"
+    ],
+    "observation": {
+      "case_id": "a16-npm-reported-size",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "d76eaf288f7768a307d9bcb0a9005712671c369b24f9c308fb748158822cfacd",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": false,
+      "diagnostics": [
+        "FileRequired=false; direct Extract still exercised deliberately"
+      ],
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a16-bun-reported-size-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a16-bun-reported-size"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.301,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a16-bun-reported-size-attempt2.stdout",
+    "stderr": "a16-bun-reported-size-attempt2.stderr",
+    "group": "A16",
+    "fixture_sha256": "fc2f10180dfe8afd86b26e7590f031ba772677e592ec514070f931c263caa868",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1,
+      "selected": true
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "Bun ignores configured size limit"
+    ],
+    "observation": {
+      "case_id": "a16-bun-reported-size",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "25c4bda9b5f1b1dc66795f575ffd1d99f527cf5a37fa6bf7fbf0f43a3979bd13",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "bun.lock",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "DepGroupVals": []
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a16-changing-file-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a16-changing-file"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.603,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a16-changing-file-attempt2.stdout",
+    "stderr": "a16-changing-file-attempt2.stderr",
+    "group": "A16",
+    "fixture_sha256": "4493bcd49399b9322db6b30a12a13ba802283a1c6da0bf0c5c3057e9dd40606e",
+    "outcome": "error",
+    "expected": {
+      "outcome": "error",
+      "count": 2
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "controlled before/after mutation detected by probe; no immutable-snapshot guarantee"
+    ],
+    "observation": {
+      "case_id": "a16-changing-file",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": false,
+      "error": "unstable synthetic file: before/after bytes differ",
+      "diagnostics": [
+        "Deliberate external fixture mutation; no immutable-snapshot or race-resistance claim"
+      ],
+      "packages": [
+        {
+          "name": "changing",
+          "version": "1.0.0",
+          "path": "package.json",
+          "line": 1,
+          "metadata": {}
+        },
+        {
+          "name": "changing",
+          "version": "2.0.0",
+          "path": "package.json",
+          "line": 1,
+          "metadata": {}
+        }
+      ],
+      "children": [
+        {
+          "case_id": "a16-changing-file",
+          "module": "github.com/google/osv-scalibr@v0.5.3",
+          "input_sha256": "e2cb60e803dfcd9af25782f0ca323f860e51cbd7d8cc89a1396ccaa820993daa",
+          "evidence_class": "extractor-output-not-installation-proof",
+          "selected": true,
+          "packages": [
+            {
+              "name": "changing",
+              "version": "1.0.0",
+              "path": "package.json",
+              "line": 1,
+              "metadata": {}
+            }
+          ]
+        },
+        {
+          "case_id": "a16-changing-file",
+          "module": "github.com/google/osv-scalibr@v0.5.3",
+          "input_sha256": "b1a4402ba6a22eef7eebc8e7c6035ce3e2f10285025cf0e9d636ad66d75cf2ae",
+          "evidence_class": "extractor-output-not-installation-proof",
+          "selected": true,
+          "packages": [
+            {
+              "name": "changing",
+              "version": "2.0.0",
+              "path": "package.json",
+              "line": 1,
+              "metadata": {}
+            }
+          ]
+        }
+      ]
+    },
+    "native_before": {
+      "package.json": "e2cb60e803dfcd9af25782f0ca323f860e51cbd7d8cc89a1396ccaa820993daa"
+    },
+    "native_after": {
+      "package.json": "b1a4402ba6a22eef7eebc8e7c6035ce3e2f10285025cf0e9d636ad66d75cf2ae"
+    }
+  },
+  {
+    "label": "a03-native-permission-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a03-native-permission"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a03-native-permission-attempt2.stdout",
+    "stderr": "a03-native-permission-attempt2.stderr",
+    "group": "A03",
+    "fixture_sha256": "381d9e3d3467235010d7d492242b3510ae21b1aa7a783a10902433f54eeb46be",
+    "outcome": "error",
+    "expected": {
+      "outcome": "error",
+      "count": 0
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "native Linux permission failure; no privilege elevation"
+    ],
+    "observation": {
+      "case_id": "a03-native-permission",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": false,
+      "error": "openat package.json: permission denied",
+      "diagnostics": [
+        "Explicit authored file enumeration, not a production discovery walk"
+      ],
+      "packages": []
+    },
+    "native_before": {
+      "package.json": "permission-denied"
+    },
+    "native_after": {
+      "package.json": "permission-denied"
+    }
+  },
+  {
+    "label": "a17-ambiguous",
+    "group": "A17",
+    "outcome": "blocked-build",
+    "classification": "blocked",
+    "deviations": [],
+    "expected": {
+      "outcome": "ok",
+      "count": 3
+    },
+    "fixture_sha256": "03dd475a18456247b5189623f57c24d6699b75dffb0b2d26d69a82318fe9e2ed",
+    "limitations": [
+      "constraint candidates are not evidence of physical dependency edges; missing edges need coverage"
+    ],
+    "observation": null,
+    "blocker": {
+      "label": "build-graph-attempt2",
+      "command": [
+        "go",
+        "build",
+        "-trimpath",
+        "-o",
+        "results/graph-probe",
+        "./cmd/graph"
+      ],
+      "online": false,
+      "returncode": 1,
+      "elapsed_seconds": 0.303,
+      "memory_limit": "2G",
+      "deadline_seconds": 900,
+      "budget_failure": null,
+      "stdout": "build-graph-attempt2.stdout",
+      "stderr": "build-graph-attempt2.stderr"
+    }
+  },
+  {
+    "label": "a17-missing",
+    "group": "A17",
+    "outcome": "blocked-build",
+    "classification": "blocked",
+    "deviations": [],
+    "expected": {
+      "outcome": "ok",
+      "count": 3
+    },
+    "fixture_sha256": "28570f477c53c8295c98d2f0d673a28f689dd8f00ffe9c25c69655f9b12fb32f",
+    "limitations": [
+      "constraint candidates are not evidence of physical dependency edges; missing edges need coverage"
+    ],
+    "observation": null,
+    "blocker": {
+      "label": "build-graph-attempt2",
+      "command": [
+        "go",
+        "build",
+        "-trimpath",
+        "-o",
+        "results/graph-probe",
+        "./cmd/graph"
+      ],
+      "online": false,
+      "returncode": 1,
+      "elapsed_seconds": 0.303,
+      "memory_limit": "2G",
+      "deadline_seconds": 900,
+      "budget_failure": null,
+      "stdout": "build-graph-attempt2.stdout",
+      "stderr": "build-graph-attempt2.stderr"
+    }
+  },
+  {
+    "label": "a18-pnpm-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a18-pnpm"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a18-pnpm-attempt2.stdout",
+    "stderr": "a18-pnpm-attempt2.stderr",
+    "group": "A18",
+    "fixture_sha256": "670819b32a547814cbc922da81f4df5410835ab284dc880178b0427b7b311222",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 0,
+      "selected": false
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "FileRequired is not product discovery/unsupported-input reporting; direct Extract exercised"
+    ],
+    "observation": {
+      "case_id": "a18-pnpm",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": false,
+      "diagnostics": [
+        "FileRequired=false; direct Extract still exercised deliberately"
+      ],
+      "packages": []
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a18-yarn-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a18-yarn"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.303,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a18-yarn-attempt2.stdout",
+    "stderr": "a18-yarn-attempt2.stderr",
+    "group": "A18",
+    "fixture_sha256": "6cfab65d9d6a1a908931ad4efa0f1c2a7a45f4b13926180452d6810ff76b7521",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 0,
+      "selected": false
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "FileRequired is not product discovery/unsupported-input reporting; direct Extract exercised"
+    ],
+    "observation": {
+      "case_id": "a18-yarn",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": false,
+      "diagnostics": [
+        "FileRequired=false; direct Extract still exercised deliberately"
+      ],
+      "packages": []
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a18-bun-binary-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a18-bun-binary"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.303,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a18-bun-binary-attempt2.stdout",
+    "stderr": "a18-bun-binary-attempt2.stderr",
+    "group": "A18",
+    "fixture_sha256": "d1dc2a70b7c4f56dd9a71f3bfad00f29e6f46f39312721cdb07c245e9df0ae2a",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 0,
+      "selected": false
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "FileRequired is not product discovery/unsupported-input reporting; direct Extract exercised"
+    ],
+    "observation": {
+      "case_id": "a18-bun-binary",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": false,
+      "diagnostics": [
+        "FileRequired=false; direct Extract still exercised deliberately"
+      ],
+      "packages": []
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a18-hidden-npm-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a18-hidden-npm"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a18-hidden-npm-attempt2.stdout",
+    "stderr": "a18-hidden-npm-attempt2.stderr",
+    "group": "A18",
+    "fixture_sha256": "c197720c64f9210fa79ef5be07d2ba36e3f3b9b08626eb9db379570b2f3f9246",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1,
+      "selected": false
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "FileRequired is not product discovery/unsupported-input reporting; direct Extract exercised"
+    ],
+    "observation": {
+      "case_id": "a18-hidden-npm",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "d76eaf288f7768a307d9bcb0a9005712671c369b24f9c308fb748158822cfacd",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": false,
+      "diagnostics": [
+        "FileRequired=false; direct Extract still exercised deliberately"
+      ],
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "node_modules/.package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a18-nested-npm-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a18-nested-npm"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a18-nested-npm-attempt2.stdout",
+    "stderr": "a18-nested-npm-attempt2.stderr",
+    "group": "A18",
+    "fixture_sha256": "416fb89b00c96598c0b643afba60021900c7854e5e23f27941457c0df17a70e9",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1,
+      "selected": false
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "FileRequired is not product discovery/unsupported-input reporting; direct Extract exercised"
+    ],
+    "observation": {
+      "case_id": "a18-nested-npm",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "d76eaf288f7768a307d9bcb0a9005712671c369b24f9c308fb748158822cfacd",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": false,
+      "diagnostics": [
+        "FileRequired=false; direct Extract still exercised deliberately"
+      ],
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "node_modules/a/package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  },
+  {
+    "label": "a18-mixed-root-attempt2",
+    "command": [
+      "/probe/results/extractors-probe",
+      "a18-mixed-root"
+    ],
+    "online": false,
+    "returncode": 0,
+    "elapsed_seconds": 0.302,
+    "memory_limit": "512M",
+    "deadline_seconds": 5,
+    "budget_failure": null,
+    "stdout": "a18-mixed-root-attempt2.stdout",
+    "stderr": "a18-mixed-root-attempt2.stderr",
+    "group": "A18",
+    "fixture_sha256": "523166ea4df22fc1ba2f20276f4b264a1e8c185b1e1e51eafe7428839dc36c0b",
+    "outcome": "ok",
+    "expected": {
+      "outcome": "ok",
+      "count": 1,
+      "selected": true
+    },
+    "deviations": [],
+    "classification": "gap",
+    "limitations": [
+      "FileRequired is not product discovery/unsupported-input reporting; direct Extract exercised"
+    ],
+    "observation": {
+      "case_id": "a18-mixed-root",
+      "module": "github.com/google/osv-scalibr@v0.5.3",
+      "input_sha256": "d76eaf288f7768a307d9bcb0a9005712671c369b24f9c308fb748158822cfacd",
+      "evidence_class": "extractor-output-not-installation-proof",
+      "selected": true,
+      "packages": [
+        {
+          "name": "@packtrace-fixture/a",
+          "version": "1.0.0",
+          "path": "package-lock.json",
+          "line": 1,
+          "source_code": {
+            "Repo": "",
+            "Commit": ""
+          },
+          "metadata": {
+            "source": "LOCAL"
+          }
+        }
+      ]
+    },
+    "native_before": null,
+    "native_after": null
+  }
+]

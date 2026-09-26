@@ -1,0 +1,24 @@
+{
+  "scope": "synthetic SCALIBR evaluation; not product/package-manager compatibility validation",
+  "cases": 75,
+  "outcomes": {
+    "ok": 58,
+    "error": 12,
+    "panic": 3,
+    "blocked-build": 2
+  },
+  "expectation_deviations": 0,
+  "extractor_binary_bytes": 17970494,
+  "extractor_binary_sha256": "4dd2371a70acef618f012cae673e71d465ce45f52bae5451cff802ac8abfaffa",
+  "module_graph_entries": 244,
+  "extractor_import_packages": 419,
+  "extractor_import_modules": 42,
+  "graph_import_packages": 525,
+  "graph_import_modules": 49,
+  "module_cache_file_bytes": 1021598412,
+  "case_wrapper_elapsed_seconds": 22.338,
+  "case_service_elapsed_seconds_rounded": 1.454,
+  "max_case_cgroup_memory_peak_bytes_rounded": 22649241.6,
+  "memory_measurement": "systemd transient-cgroup MemoryPeak, includes sandbox; not isolated process RSS",
+  "license_modules_without_root_license_file": []
+}

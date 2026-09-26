@@ -1,0 +1,5701 @@
+[
+  {
+    "path": "internal/goarch",
+    "standard": true,
+    "imports": [],
+    "module": null
+  },
+  {
+    "path": "unsafe",
+    "standard": true,
+    "imports": [],
+    "module": null
+  },
+  {
+    "path": "internal/abi",
+    "standard": true,
+    "imports": [
+      "internal/goarch",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/unsafeheader",
+    "standard": true,
+    "imports": [
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/cpu",
+    "standard": true,
+    "imports": [
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/bytealg",
+    "standard": true,
+    "imports": [
+      "internal/cpu",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/byteorder",
+    "standard": true,
+    "imports": [],
+    "module": null
+  },
+  {
+    "path": "internal/chacha8rand",
+    "standard": true,
+    "imports": [
+      "internal/byteorder",
+      "internal/cpu",
+      "internal/goarch",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/coverage/rtcov",
+    "standard": true,
+    "imports": [
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/godebugs",
+    "standard": true,
+    "imports": [],
+    "module": null
+  },
+  {
+    "path": "internal/goexperiment",
+    "standard": true,
+    "imports": [],
+    "module": null
+  },
+  {
+    "path": "internal/goos",
+    "standard": true,
+    "imports": [],
+    "module": null
+  },
+  {
+    "path": "internal/profilerecord",
+    "standard": true,
+    "imports": [],
+    "module": null
+  },
+  {
+    "path": "internal/runtime/atomic",
+    "standard": true,
+    "imports": [
+      "internal/goarch",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/runtime/syscall/linux",
+    "standard": true,
+    "imports": [
+      "internal/goarch",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "math/bits",
+    "standard": true,
+    "imports": [
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/strconv",
+    "standard": true,
+    "imports": [
+      "math/bits",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/runtime/cgroup",
+    "standard": true,
+    "imports": [
+      "internal/bytealg",
+      "internal/runtime/syscall/linux",
+      "internal/strconv",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/runtime/exithook",
+    "standard": true,
+    "imports": [
+      "internal/runtime/atomic",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/runtime/gc",
+    "standard": true,
+    "imports": [
+      "internal/goarch"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/runtime/sys",
+    "standard": true,
+    "imports": [
+      "internal/goarch",
+      "internal/goos"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/runtime/gc/scan",
+    "standard": true,
+    "imports": [
+      "internal/cpu",
+      "internal/goarch",
+      "internal/runtime/gc",
+      "internal/runtime/sys",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/asan",
+    "standard": true,
+    "imports": [
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/msan",
+    "standard": true,
+    "imports": [
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/race",
+    "standard": true,
+    "imports": [
+      "internal/abi",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/runtime/math",
+    "standard": true,
+    "imports": [
+      "internal/goarch"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/runtime/maps",
+    "standard": true,
+    "imports": [
+      "internal/abi",
+      "internal/asan",
+      "internal/byteorder",
+      "internal/cpu",
+      "internal/goarch",
+      "internal/goexperiment",
+      "internal/msan",
+      "internal/race",
+      "internal/runtime/math",
+      "internal/runtime/sys",
+      "math/bits",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/runtime/pprof/label",
+    "standard": true,
+    "imports": [],
+    "module": null
+  },
+  {
+    "path": "internal/stringslite",
+    "standard": true,
+    "imports": [
+      "internal/bytealg",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/trace/tracev2",
+    "standard": true,
+    "imports": [],
+    "module": null
+  },
+  {
+    "path": "runtime",
+    "standard": true,
+    "imports": [
+      "internal/abi",
+      "internal/bytealg",
+      "internal/byteorder",
+      "internal/chacha8rand",
+      "internal/coverage/rtcov",
+      "internal/cpu",
+      "internal/goarch",
+      "internal/godebugs",
+      "internal/goexperiment",
+      "internal/goos",
+      "internal/profilerecord",
+      "internal/runtime/atomic",
+      "internal/runtime/cgroup",
+      "internal/runtime/exithook",
+      "internal/runtime/gc",
+      "internal/runtime/gc/scan",
+      "internal/runtime/maps",
+      "internal/runtime/math",
+      "internal/runtime/pprof/label",
+      "internal/runtime/sys",
+      "internal/runtime/syscall/linux",
+      "internal/strconv",
+      "internal/stringslite",
+      "internal/trace/tracev2",
+      "math/bits",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/reflectlite",
+    "standard": true,
+    "imports": [
+      "internal/abi",
+      "internal/goarch",
+      "internal/unsafeheader",
+      "runtime",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "errors",
+    "standard": true,
+    "imports": [
+      "internal/reflectlite",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "sync/atomic",
+    "standard": true,
+    "imports": [
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/sync",
+    "standard": true,
+    "imports": [
+      "internal/abi",
+      "internal/goarch",
+      "internal/race",
+      "sync/atomic",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/synctest",
+    "standard": true,
+    "imports": [
+      "internal/abi",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "sync",
+    "standard": true,
+    "imports": [
+      "internal/race",
+      "internal/runtime/atomic",
+      "internal/sync",
+      "internal/synctest",
+      "runtime",
+      "sync/atomic",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "io",
+    "standard": true,
+    "imports": [
+      "errors",
+      "sync"
+    ],
+    "module": null
+  },
+  {
+    "path": "iter",
+    "standard": true,
+    "imports": [
+      "internal/race",
+      "runtime",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "unicode",
+    "standard": true,
+    "imports": [],
+    "module": null
+  },
+  {
+    "path": "unicode/utf8",
+    "standard": true,
+    "imports": [],
+    "module": null
+  },
+  {
+    "path": "bytes",
+    "standard": true,
+    "imports": [
+      "errors",
+      "internal/bytealg",
+      "io",
+      "iter",
+      "math/bits",
+      "unicode",
+      "unicode/utf8",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/oserror",
+    "standard": true,
+    "imports": [
+      "errors"
+    ],
+    "module": null
+  },
+  {
+    "path": "cmp",
+    "standard": true,
+    "imports": [],
+    "module": null
+  },
+  {
+    "path": "slices",
+    "standard": true,
+    "imports": [
+      "cmp",
+      "iter",
+      "math/bits",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "syscall",
+    "standard": true,
+    "imports": [
+      "errors",
+      "internal/asan",
+      "internal/bytealg",
+      "internal/byteorder",
+      "internal/goarch",
+      "internal/msan",
+      "internal/oserror",
+      "internal/race",
+      "internal/runtime/syscall/linux",
+      "internal/strconv",
+      "runtime",
+      "slices",
+      "sync",
+      "sync/atomic",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "time",
+    "standard": true,
+    "imports": [
+      "errors",
+      "internal/bytealg",
+      "internal/stringslite",
+      "math/bits",
+      "runtime",
+      "sync",
+      "syscall",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "context",
+    "standard": true,
+    "imports": [
+      "errors",
+      "internal/reflectlite",
+      "sync",
+      "sync/atomic",
+      "time"
+    ],
+    "module": null
+  },
+  {
+    "path": "hash",
+    "standard": true,
+    "imports": [
+      "io"
+    ],
+    "module": null
+  },
+  {
+    "path": "strconv",
+    "standard": true,
+    "imports": [
+      "errors",
+      "internal/bytealg",
+      "internal/strconv",
+      "internal/stringslite",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto",
+    "standard": true,
+    "imports": [
+      "hash",
+      "io",
+      "strconv"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/bisect",
+    "standard": true,
+    "imports": [
+      "runtime",
+      "sync",
+      "sync/atomic"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/godebug",
+    "standard": true,
+    "imports": [
+      "internal/bisect",
+      "internal/godebugs",
+      "sync",
+      "sync/atomic",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140deps/godebug",
+    "standard": true,
+    "imports": [
+      "internal/godebug"
+    ],
+    "module": null
+  },
+  {
+    "path": "strings",
+    "standard": true,
+    "imports": [
+      "errors",
+      "internal/abi",
+      "internal/bytealg",
+      "internal/stringslite",
+      "io",
+      "iter",
+      "math/bits",
+      "sync",
+      "unicode",
+      "unicode/utf8",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140",
+    "standard": true,
+    "imports": [
+      "crypto/internal/fips140deps/godebug",
+      "errors",
+      "runtime",
+      "strings",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/alias",
+    "standard": true,
+    "imports": [
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140deps/byteorder",
+    "standard": true,
+    "imports": [
+      "internal/byteorder"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140deps/cpu",
+    "standard": true,
+    "imports": [
+      "internal/cpu",
+      "internal/goarch"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/impl",
+    "standard": true,
+    "imports": [
+      "strings"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/sha256",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "crypto/internal/fips140",
+      "crypto/internal/fips140deps/byteorder",
+      "crypto/internal/fips140deps/cpu",
+      "crypto/internal/impl",
+      "errors",
+      "hash",
+      "math/bits"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/constanttime",
+    "standard": true,
+    "imports": [],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/subtle",
+    "standard": true,
+    "imports": [
+      "crypto/internal/constanttime",
+      "crypto/internal/fips140/alias",
+      "crypto/internal/fips140deps/byteorder",
+      "math/bits"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/sha3",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "crypto/internal/fips140",
+      "crypto/internal/fips140/subtle",
+      "crypto/internal/fips140deps/byteorder",
+      "crypto/internal/fips140deps/cpu",
+      "errors",
+      "math/bits",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/sha512",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "crypto/internal/fips140",
+      "crypto/internal/fips140deps/byteorder",
+      "crypto/internal/fips140deps/cpu",
+      "crypto/internal/impl",
+      "errors",
+      "hash",
+      "math/bits"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/hmac",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "crypto/internal/fips140",
+      "crypto/internal/fips140/sha256",
+      "crypto/internal/fips140/sha3",
+      "crypto/internal/fips140/sha512",
+      "errors",
+      "hash"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/check",
+    "standard": true,
+    "imports": [
+      "crypto/internal/fips140",
+      "crypto/internal/fips140/hmac",
+      "crypto/internal/fips140/sha256",
+      "crypto/internal/fips140deps/byteorder",
+      "crypto/internal/fips140deps/godebug",
+      "io",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/aes",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "crypto/internal/fips140",
+      "crypto/internal/fips140/alias",
+      "crypto/internal/fips140/check",
+      "crypto/internal/fips140/subtle",
+      "crypto/internal/fips140deps/byteorder",
+      "crypto/internal/fips140deps/cpu",
+      "crypto/internal/fips140deps/godebug",
+      "crypto/internal/impl",
+      "errors",
+      "math/bits",
+      "strconv"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140deps/time",
+    "standard": true,
+    "imports": [
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/entropy/v1.0.0",
+    "standard": true,
+    "imports": [
+      "crypto/internal/fips140deps/time",
+      "errors",
+      "math/bits",
+      "sync/atomic",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/syscall/unix",
+    "standard": true,
+    "imports": [
+      "internal/strconv",
+      "runtime",
+      "sync/atomic",
+      "syscall",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "math",
+    "standard": true,
+    "imports": [
+      "internal/cpu",
+      "math/bits",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "path",
+    "standard": true,
+    "imports": [
+      "errors",
+      "internal/bytealg",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "io/fs",
+    "standard": true,
+    "imports": [
+      "errors",
+      "internal/bytealg",
+      "internal/oserror",
+      "io",
+      "path",
+      "slices",
+      "time",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/filepathlite",
+    "standard": true,
+    "imports": [
+      "errors",
+      "internal/bytealg",
+      "internal/stringslite",
+      "io/fs",
+      "slices"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/poll",
+    "standard": true,
+    "imports": [
+      "errors",
+      "internal/strconv",
+      "internal/syscall/unix",
+      "io",
+      "runtime",
+      "sync",
+      "sync/atomic",
+      "syscall",
+      "time",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/syscall/execenv",
+    "standard": true,
+    "imports": [
+      "syscall"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/testlog",
+    "standard": true,
+    "imports": [
+      "sync",
+      "sync/atomic",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "os",
+    "standard": true,
+    "imports": [
+      "errors",
+      "internal/bytealg",
+      "internal/byteorder",
+      "internal/filepathlite",
+      "internal/goarch",
+      "internal/poll",
+      "internal/strconv",
+      "internal/stringslite",
+      "internal/syscall/execenv",
+      "internal/syscall/unix",
+      "internal/testlog",
+      "io",
+      "io/fs",
+      "runtime",
+      "slices",
+      "sync",
+      "sync/atomic",
+      "syscall",
+      "time",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/sysrand",
+    "standard": true,
+    "imports": [
+      "errors",
+      "internal/syscall/unix",
+      "math",
+      "os",
+      "runtime",
+      "sync",
+      "sync/atomic",
+      "syscall",
+      "time",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/drbg",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "crypto/internal/entropy/v1.0.0",
+      "crypto/internal/fips140",
+      "crypto/internal/fips140/aes",
+      "crypto/internal/fips140/check",
+      "crypto/internal/fips140/subtle",
+      "crypto/internal/fips140deps/byteorder",
+      "crypto/internal/sysrand",
+      "errors",
+      "io",
+      "math/bits",
+      "sync",
+      "sync/atomic"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/aes/gcm",
+    "standard": true,
+    "imports": [
+      "crypto/internal/fips140",
+      "crypto/internal/fips140/aes",
+      "crypto/internal/fips140/alias",
+      "crypto/internal/fips140/check",
+      "crypto/internal/fips140/drbg",
+      "crypto/internal/fips140/subtle",
+      "crypto/internal/fips140deps/byteorder",
+      "crypto/internal/fips140deps/cpu",
+      "crypto/internal/impl",
+      "errors",
+      "math"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/fips140",
+    "standard": true,
+    "imports": [
+      "crypto/internal/fips140",
+      "crypto/internal/fips140/check",
+      "internal/godebug",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140only",
+    "standard": true,
+    "imports": [
+      "crypto/fips140",
+      "crypto/internal/fips140/drbg",
+      "crypto/internal/fips140/sha256",
+      "crypto/internal/fips140/sha3",
+      "crypto/internal/fips140/sha512",
+      "hash",
+      "io"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/subtle",
+    "standard": true,
+    "imports": [
+      "crypto/internal/constanttime",
+      "crypto/internal/fips140/subtle",
+      "internal/runtime/sys",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/cipher",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "crypto/internal/fips140/aes",
+      "crypto/internal/fips140/aes/gcm",
+      "crypto/internal/fips140/alias",
+      "crypto/internal/fips140only",
+      "crypto/subtle",
+      "errors",
+      "internal/byteorder",
+      "io"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/boring/sig",
+    "standard": true,
+    "imports": [],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/boring",
+    "standard": true,
+    "imports": [
+      "crypto",
+      "crypto/cipher",
+      "crypto/internal/boring/sig",
+      "hash"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/sha256",
+    "standard": true,
+    "imports": [
+      "crypto",
+      "crypto/internal/boring",
+      "crypto/internal/fips140/sha256",
+      "hash"
+    ],
+    "module": null
+  },
+  {
+    "path": "encoding",
+    "standard": true,
+    "imports": [],
+    "module": null
+  },
+  {
+    "path": "encoding/json/internal",
+    "standard": true,
+    "imports": [
+      "errors"
+    ],
+    "module": null
+  },
+  {
+    "path": "encoding/json/internal/jsonflags",
+    "standard": true,
+    "imports": [
+      "encoding/json/internal"
+    ],
+    "module": null
+  },
+  {
+    "path": "encoding/json/internal/jsonopts",
+    "standard": true,
+    "imports": [
+      "encoding/json/internal",
+      "encoding/json/internal/jsonflags"
+    ],
+    "module": null
+  },
+  {
+    "path": "unicode/utf16",
+    "standard": true,
+    "imports": [],
+    "module": null
+  },
+  {
+    "path": "encoding/json/internal/jsonwire",
+    "standard": true,
+    "imports": [
+      "cmp",
+      "encoding/json/internal/jsonflags",
+      "errors",
+      "io",
+      "math",
+      "slices",
+      "strconv",
+      "strings",
+      "unicode",
+      "unicode/utf16",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "encoding/json/jsontext",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "encoding/json/internal",
+      "encoding/json/internal/jsonflags",
+      "encoding/json/internal/jsonopts",
+      "encoding/json/internal/jsonwire",
+      "errors",
+      "io",
+      "iter",
+      "math",
+      "math/bits",
+      "slices",
+      "strconv",
+      "strings",
+      "sync",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "encoding/base32",
+    "standard": true,
+    "imports": [
+      "io",
+      "slices",
+      "strconv"
+    ],
+    "module": null
+  },
+  {
+    "path": "encoding/base64",
+    "standard": true,
+    "imports": [
+      "internal/byteorder",
+      "io",
+      "slices",
+      "strconv"
+    ],
+    "module": null
+  },
+  {
+    "path": "reflect",
+    "standard": true,
+    "imports": [
+      "errors",
+      "internal/abi",
+      "internal/bytealg",
+      "internal/goarch",
+      "internal/goexperiment",
+      "internal/race",
+      "internal/runtime/maps",
+      "internal/runtime/sys",
+      "internal/strconv",
+      "internal/unsafeheader",
+      "iter",
+      "math",
+      "runtime",
+      "strconv",
+      "sync",
+      "unicode",
+      "unicode/utf8",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "encoding/binary",
+    "standard": true,
+    "imports": [
+      "errors",
+      "io",
+      "math",
+      "reflect",
+      "slices",
+      "sync"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/fmtsort",
+    "standard": true,
+    "imports": [
+      "cmp",
+      "reflect",
+      "slices"
+    ],
+    "module": null
+  },
+  {
+    "path": "fmt",
+    "standard": true,
+    "imports": [
+      "errors",
+      "internal/fmtsort",
+      "internal/stringslite",
+      "io",
+      "math",
+      "os",
+      "reflect",
+      "slices",
+      "strconv",
+      "sync",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "encoding/hex",
+    "standard": true,
+    "imports": [
+      "errors",
+      "fmt",
+      "io",
+      "slices",
+      "strings"
+    ],
+    "module": null
+  },
+  {
+    "path": "encoding/json/v2",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "cmp",
+      "encoding",
+      "encoding/base32",
+      "encoding/base64",
+      "encoding/binary",
+      "encoding/hex",
+      "encoding/json/internal",
+      "encoding/json/internal/jsonflags",
+      "encoding/json/internal/jsonopts",
+      "encoding/json/internal/jsonwire",
+      "encoding/json/jsontext",
+      "errors",
+      "fmt",
+      "io",
+      "math",
+      "math/bits",
+      "reflect",
+      "slices",
+      "strconv",
+      "strings",
+      "sync",
+      "time",
+      "unicode",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "encoding/json",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "cmp",
+      "encoding",
+      "encoding/json/internal",
+      "encoding/json/internal/jsonflags",
+      "encoding/json/internal/jsonopts",
+      "encoding/json/internal/jsonwire",
+      "encoding/json/jsontext",
+      "encoding/json/v2",
+      "errors",
+      "fmt",
+      "io",
+      "reflect",
+      "strconv",
+      "strings"
+    ],
+    "module": null
+  },
+  {
+    "path": "hash/fnv",
+    "standard": true,
+    "imports": [
+      "errors",
+      "hash",
+      "internal/byteorder",
+      "math/bits"
+    ],
+    "module": null
+  },
+  {
+    "path": "google.golang.org/protobuf/internal/detrand",
+    "standard": false,
+    "imports": [
+      "encoding/binary",
+      "hash/fnv",
+      "os"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/internal/errors",
+    "standard": false,
+    "imports": [
+      "errors",
+      "fmt",
+      "google.golang.org/protobuf/internal/detrand"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/encoding/protowire",
+    "standard": false,
+    "imports": [
+      "google.golang.org/protobuf/internal/errors",
+      "io",
+      "math",
+      "math/bits"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/internal/pragma",
+    "standard": false,
+    "imports": [
+      "sync"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/reflect/protoreflect",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "fmt",
+      "google.golang.org/protobuf/encoding/protowire",
+      "google.golang.org/protobuf/internal/pragma",
+      "math",
+      "reflect",
+      "strconv",
+      "strings",
+      "unsafe"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/internal/descfmt",
+    "standard": false,
+    "imports": [
+      "fmt",
+      "google.golang.org/protobuf/internal/detrand",
+      "google.golang.org/protobuf/internal/pragma",
+      "google.golang.org/protobuf/reflect/protoreflect",
+      "io",
+      "reflect",
+      "strconv",
+      "strings"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/internal/descopts",
+    "standard": false,
+    "imports": [
+      "google.golang.org/protobuf/reflect/protoreflect"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "embed",
+    "standard": true,
+    "imports": [
+      "errors",
+      "internal/bytealg",
+      "internal/stringslite",
+      "io",
+      "io/fs",
+      "time"
+    ],
+    "module": null
+  },
+  {
+    "path": "google.golang.org/protobuf/internal/editiondefaults",
+    "standard": false,
+    "imports": [
+      "embed"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/internal/flags",
+    "standard": false,
+    "imports": [],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "go/token",
+    "standard": true,
+    "imports": [
+      "cmp",
+      "fmt",
+      "iter",
+      "slices",
+      "strconv",
+      "sync",
+      "sync/atomic",
+      "unicode",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "google.golang.org/protobuf/internal/strs",
+    "standard": false,
+    "imports": [
+      "go/token",
+      "google.golang.org/protobuf/internal/flags",
+      "google.golang.org/protobuf/reflect/protoreflect",
+      "strings",
+      "unicode",
+      "unicode/utf8",
+      "unsafe"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/internal/encoding/text",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "fmt",
+      "google.golang.org/protobuf/internal/detrand",
+      "google.golang.org/protobuf/internal/errors",
+      "google.golang.org/protobuf/internal/flags",
+      "google.golang.org/protobuf/internal/strs",
+      "io",
+      "math",
+      "math/bits",
+      "strconv",
+      "strings",
+      "unicode",
+      "unicode/utf16",
+      "unicode/utf8"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/internal/encoding/defval",
+    "standard": false,
+    "imports": [
+      "fmt",
+      "google.golang.org/protobuf/internal/encoding/text",
+      "google.golang.org/protobuf/internal/errors",
+      "google.golang.org/protobuf/reflect/protoreflect",
+      "math",
+      "strconv"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/internal/encoding/messageset",
+    "standard": false,
+    "imports": [
+      "google.golang.org/protobuf/encoding/protowire",
+      "google.golang.org/protobuf/internal/errors",
+      "google.golang.org/protobuf/reflect/protoreflect",
+      "math"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/internal/genid",
+    "standard": false,
+    "imports": [
+      "google.golang.org/protobuf/reflect/protoreflect"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "sort",
+    "standard": true,
+    "imports": [
+      "internal/reflectlite",
+      "math/bits",
+      "slices"
+    ],
+    "module": null
+  },
+  {
+    "path": "google.golang.org/protobuf/internal/order",
+    "standard": false,
+    "imports": [
+      "google.golang.org/protobuf/reflect/protoreflect",
+      "sort",
+      "sync"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/reflect/protoregistry",
+    "standard": false,
+    "imports": [
+      "fmt",
+      "google.golang.org/protobuf/internal/encoding/messageset",
+      "google.golang.org/protobuf/internal/errors",
+      "google.golang.org/protobuf/internal/flags",
+      "google.golang.org/protobuf/reflect/protoreflect",
+      "os",
+      "strings",
+      "sync"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/runtime/protoiface",
+    "standard": false,
+    "imports": [
+      "google.golang.org/protobuf/internal/pragma",
+      "google.golang.org/protobuf/reflect/protoreflect"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/proto",
+    "standard": false,
+    "imports": [
+      "errors",
+      "fmt",
+      "google.golang.org/protobuf/encoding/protowire",
+      "google.golang.org/protobuf/internal/encoding/messageset",
+      "google.golang.org/protobuf/internal/errors",
+      "google.golang.org/protobuf/internal/flags",
+      "google.golang.org/protobuf/internal/genid",
+      "google.golang.org/protobuf/internal/order",
+      "google.golang.org/protobuf/internal/pragma",
+      "google.golang.org/protobuf/internal/strs",
+      "google.golang.org/protobuf/reflect/protoreflect",
+      "google.golang.org/protobuf/reflect/protoregistry",
+      "google.golang.org/protobuf/runtime/protoiface",
+      "math",
+      "reflect",
+      "unicode/utf8"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/internal/filedesc",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "fmt",
+      "google.golang.org/protobuf/encoding/protowire",
+      "google.golang.org/protobuf/internal/descfmt",
+      "google.golang.org/protobuf/internal/descopts",
+      "google.golang.org/protobuf/internal/editiondefaults",
+      "google.golang.org/protobuf/internal/encoding/defval",
+      "google.golang.org/protobuf/internal/encoding/messageset",
+      "google.golang.org/protobuf/internal/errors",
+      "google.golang.org/protobuf/internal/genid",
+      "google.golang.org/protobuf/internal/pragma",
+      "google.golang.org/protobuf/internal/strs",
+      "google.golang.org/protobuf/proto",
+      "google.golang.org/protobuf/reflect/protoreflect",
+      "google.golang.org/protobuf/reflect/protoregistry",
+      "math",
+      "reflect",
+      "sort",
+      "strings",
+      "sync",
+      "sync/atomic"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "bufio",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "errors",
+      "io",
+      "strings",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "compress/flate",
+    "standard": true,
+    "imports": [
+      "bufio",
+      "errors",
+      "fmt",
+      "io",
+      "math",
+      "math/bits",
+      "slices",
+      "strconv",
+      "sync"
+    ],
+    "module": null
+  },
+  {
+    "path": "hash/crc32",
+    "standard": true,
+    "imports": [
+      "errors",
+      "hash",
+      "internal/byteorder",
+      "internal/cpu",
+      "sync",
+      "sync/atomic",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "compress/gzip",
+    "standard": true,
+    "imports": [
+      "bufio",
+      "compress/flate",
+      "encoding/binary",
+      "errors",
+      "fmt",
+      "hash/crc32",
+      "io",
+      "time"
+    ],
+    "module": null
+  },
+  {
+    "path": "google.golang.org/protobuf/internal/set",
+    "standard": false,
+    "imports": [
+      "math/bits"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/encoding/prototext",
+    "standard": false,
+    "imports": [
+      "fmt",
+      "google.golang.org/protobuf/encoding/protowire",
+      "google.golang.org/protobuf/internal/encoding/messageset",
+      "google.golang.org/protobuf/internal/encoding/text",
+      "google.golang.org/protobuf/internal/errors",
+      "google.golang.org/protobuf/internal/flags",
+      "google.golang.org/protobuf/internal/genid",
+      "google.golang.org/protobuf/internal/order",
+      "google.golang.org/protobuf/internal/pragma",
+      "google.golang.org/protobuf/internal/set",
+      "google.golang.org/protobuf/internal/strs",
+      "google.golang.org/protobuf/proto",
+      "google.golang.org/protobuf/reflect/protoreflect",
+      "google.golang.org/protobuf/reflect/protoregistry",
+      "strconv",
+      "unicode/utf8"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/internal/encoding/tag",
+    "standard": false,
+    "imports": [
+      "google.golang.org/protobuf/internal/encoding/defval",
+      "google.golang.org/protobuf/internal/filedesc",
+      "google.golang.org/protobuf/internal/strs",
+      "google.golang.org/protobuf/reflect/protoreflect",
+      "reflect",
+      "strconv",
+      "strings"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/internal/protolazy",
+    "standard": false,
+    "imports": [
+      "errors",
+      "fmt",
+      "google.golang.org/protobuf/encoding/protowire",
+      "google.golang.org/protobuf/runtime/protoiface",
+      "io",
+      "sort",
+      "sync/atomic",
+      "unsafe"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/internal/impl",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "compress/gzip",
+      "encoding/binary",
+      "encoding/json",
+      "fmt",
+      "google.golang.org/protobuf/encoding/prototext",
+      "google.golang.org/protobuf/encoding/protowire",
+      "google.golang.org/protobuf/internal/descopts",
+      "google.golang.org/protobuf/internal/detrand",
+      "google.golang.org/protobuf/internal/encoding/messageset",
+      "google.golang.org/protobuf/internal/encoding/tag",
+      "google.golang.org/protobuf/internal/errors",
+      "google.golang.org/protobuf/internal/filedesc",
+      "google.golang.org/protobuf/internal/flags",
+      "google.golang.org/protobuf/internal/genid",
+      "google.golang.org/protobuf/internal/order",
+      "google.golang.org/protobuf/internal/pragma",
+      "google.golang.org/protobuf/internal/protolazy",
+      "google.golang.org/protobuf/internal/strs",
+      "google.golang.org/protobuf/proto",
+      "google.golang.org/protobuf/reflect/protoreflect",
+      "google.golang.org/protobuf/reflect/protoregistry",
+      "google.golang.org/protobuf/runtime/protoiface",
+      "hash/crc32",
+      "io",
+      "math",
+      "math/bits",
+      "os",
+      "reflect",
+      "sort",
+      "strconv",
+      "strings",
+      "sync",
+      "sync/atomic",
+      "unicode/utf8",
+      "unsafe"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/internal/filetype",
+    "standard": false,
+    "imports": [
+      "google.golang.org/protobuf/internal/descopts",
+      "google.golang.org/protobuf/internal/filedesc",
+      "google.golang.org/protobuf/internal/impl",
+      "google.golang.org/protobuf/reflect/protoreflect",
+      "google.golang.org/protobuf/reflect/protoregistry",
+      "reflect"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/internal/version",
+    "standard": false,
+    "imports": [
+      "fmt",
+      "strings"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/runtime/protoimpl",
+    "standard": false,
+    "imports": [
+      "google.golang.org/protobuf/internal/filedesc",
+      "google.golang.org/protobuf/internal/filetype",
+      "google.golang.org/protobuf/internal/impl",
+      "google.golang.org/protobuf/internal/protolazy",
+      "google.golang.org/protobuf/internal/version"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/binary/proto/config_go_proto",
+    "standard": false,
+    "imports": [
+      "google.golang.org/protobuf/reflect/protoreflect",
+      "google.golang.org/protobuf/runtime/protoimpl",
+      "reflect",
+      "sync",
+      "unsafe"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "google.golang.org/protobuf/types/known/anypb",
+    "standard": false,
+    "imports": [
+      "google.golang.org/protobuf/proto",
+      "google.golang.org/protobuf/reflect/protoreflect",
+      "google.golang.org/protobuf/reflect/protoregistry",
+      "google.golang.org/protobuf/runtime/protoimpl",
+      "reflect",
+      "strings",
+      "sync",
+      "unsafe"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/binary/proto/metadata",
+    "standard": false,
+    "imports": [
+      "errors",
+      "fmt",
+      "google.golang.org/protobuf/proto",
+      "google.golang.org/protobuf/types/known/anypb",
+      "reflect"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "weak",
+    "standard": true,
+    "imports": [
+      "internal/abi",
+      "runtime",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "unique",
+    "standard": true,
+    "imports": [
+      "internal/abi",
+      "internal/goarch",
+      "internal/stringslite",
+      "internal/sync",
+      "runtime",
+      "sync",
+      "sync/atomic",
+      "unsafe",
+      "weak"
+    ],
+    "module": null
+  },
+  {
+    "path": "net/netip",
+    "standard": true,
+    "imports": [
+      "cmp",
+      "errors",
+      "internal/bytealg",
+      "internal/byteorder",
+      "math",
+      "math/bits",
+      "strconv",
+      "unique"
+    ],
+    "module": null
+  },
+  {
+    "path": "net/url",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "errors",
+      "fmt",
+      "internal/godebug",
+      "net/netip",
+      "path",
+      "slices",
+      "strconv",
+      "strings",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "regexp/syntax",
+    "standard": true,
+    "imports": [
+      "slices",
+      "sort",
+      "strconv",
+      "strings",
+      "sync",
+      "unicode",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "regexp",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "io",
+      "iter",
+      "regexp/syntax",
+      "slices",
+      "strconv",
+      "strings",
+      "sync",
+      "unicode",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "github.com/package-url/packageurl-go",
+    "standard": false,
+    "imports": [
+      "errors",
+      "fmt",
+      "net/url",
+      "path",
+      "regexp",
+      "slices",
+      "sort",
+      "strings"
+    ],
+    "module": "github.com/package-url/packageurl-go"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/purl",
+    "standard": false,
+    "imports": [
+      "fmt",
+      "github.com/package-url/packageurl-go",
+      "strings"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/language/erlang/mixlock/purl",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/purl",
+      "strings"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/language/golang/purl",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/purl",
+      "strings"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "deps.dev/util/semver",
+    "standard": false,
+    "imports": [
+      "fmt",
+      "sort",
+      "strconv",
+      "strings",
+      "unicode/utf8"
+    ],
+    "module": "deps.dev/util/semver"
+  },
+  {
+    "path": "encoding/xml",
+    "standard": true,
+    "imports": [
+      "bufio",
+      "bytes",
+      "encoding",
+      "errors",
+      "fmt",
+      "io",
+      "reflect",
+      "runtime",
+      "strconv",
+      "strings",
+      "sync",
+      "unicode",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "deps.dev/util/maven",
+    "standard": false,
+    "imports": [
+      "deps.dev/util/semver",
+      "encoding/xml",
+      "errors",
+      "fmt",
+      "strings"
+    ],
+    "module": "deps.dev/util/maven"
+  },
+  {
+    "path": "google.golang.org/protobuf/internal/encoding/json",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "fmt",
+      "google.golang.org/protobuf/internal/detrand",
+      "google.golang.org/protobuf/internal/errors",
+      "google.golang.org/protobuf/internal/strs",
+      "io",
+      "math",
+      "math/bits",
+      "regexp",
+      "strconv",
+      "strings",
+      "unicode",
+      "unicode/utf16",
+      "unicode/utf8"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/encoding/protojson",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "encoding/base64",
+      "fmt",
+      "google.golang.org/protobuf/encoding/protowire",
+      "google.golang.org/protobuf/internal/encoding/json",
+      "google.golang.org/protobuf/internal/encoding/messageset",
+      "google.golang.org/protobuf/internal/errors",
+      "google.golang.org/protobuf/internal/filedesc",
+      "google.golang.org/protobuf/internal/flags",
+      "google.golang.org/protobuf/internal/genid",
+      "google.golang.org/protobuf/internal/order",
+      "google.golang.org/protobuf/internal/pragma",
+      "google.golang.org/protobuf/internal/set",
+      "google.golang.org/protobuf/internal/strs",
+      "google.golang.org/protobuf/proto",
+      "google.golang.org/protobuf/reflect/protoreflect",
+      "google.golang.org/protobuf/reflect/protoregistry",
+      "math",
+      "strconv",
+      "strings",
+      "time"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/types/known/structpb",
+    "standard": false,
+    "imports": [
+      "encoding/base64",
+      "encoding/json",
+      "google.golang.org/protobuf/encoding/protojson",
+      "google.golang.org/protobuf/reflect/protoreflect",
+      "google.golang.org/protobuf/runtime/protoimpl",
+      "math",
+      "reflect",
+      "sync",
+      "unicode/utf8",
+      "unsafe"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "google.golang.org/protobuf/types/known/timestamppb",
+    "standard": false,
+    "imports": [
+      "google.golang.org/protobuf/reflect/protoreflect",
+      "google.golang.org/protobuf/runtime/protoimpl",
+      "reflect",
+      "sync",
+      "time",
+      "unsafe"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "github.com/ossf/osv-schema/bindings/go/osvschema",
+    "standard": false,
+    "imports": [
+      "google.golang.org/protobuf/reflect/protoreflect",
+      "google.golang.org/protobuf/runtime/protoimpl",
+      "google.golang.org/protobuf/types/known/structpb",
+      "google.golang.org/protobuf/types/known/timestamppb",
+      "reflect",
+      "sync",
+      "unsafe"
+    ],
+    "module": "github.com/ossf/osv-schema/bindings/go"
+  },
+  {
+    "path": "google.golang.org/protobuf/types/known/durationpb",
+    "standard": false,
+    "imports": [
+      "google.golang.org/protobuf/reflect/protoreflect",
+      "google.golang.org/protobuf/runtime/protoimpl",
+      "math",
+      "reflect",
+      "sync",
+      "time",
+      "unsafe"
+    ],
+    "module": "google.golang.org/protobuf"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/binary/proto/scan_result_go_proto",
+    "standard": false,
+    "imports": [
+      "github.com/ossf/osv-schema/bindings/go/osvschema",
+      "google.golang.org/protobuf/reflect/protoreflect",
+      "google.golang.org/protobuf/runtime/protoimpl",
+      "google.golang.org/protobuf/types/known/anypb",
+      "google.golang.org/protobuf/types/known/durationpb",
+      "google.golang.org/protobuf/types/known/timestamppb",
+      "reflect",
+      "sync",
+      "unsafe"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/language/java/javalockfile",
+    "standard": false,
+    "imports": [
+      "deps.dev/util/maven",
+      "github.com/google/osv-scalibr/binary/proto/metadata",
+      "github.com/google/osv-scalibr/binary/proto/scan_result_go_proto"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/language/java/archive/metadata",
+    "standard": false,
+    "imports": [
+      "deps.dev/util/maven",
+      "github.com/google/osv-scalibr/binary/proto/metadata",
+      "github.com/google/osv-scalibr/binary/proto/scan_result_go_proto",
+      "github.com/google/osv-scalibr/extractor/filesystem/language/java/javalockfile"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/misc/bazelmaven/metadata",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/binary/proto/metadata",
+      "github.com/google/osv-scalibr/binary/proto/scan_result_go_proto"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/language/java/purl",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/extractor/filesystem/language/java/archive/metadata",
+      "github.com/google/osv-scalibr/extractor/filesystem/language/java/javalockfile",
+      "github.com/google/osv-scalibr/extractor/filesystem/misc/bazelmaven/metadata",
+      "github.com/google/osv-scalibr/purl",
+      "strings"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/go-git/go-billy/v5",
+    "standard": false,
+    "imports": [
+      "errors",
+      "io",
+      "os",
+      "time"
+    ],
+    "module": "github.com/go-git/go-billy/v5"
+  },
+  {
+    "path": "os/user",
+    "standard": true,
+    "imports": [
+      "bufio",
+      "bytes",
+      "errors",
+      "fmt",
+      "io",
+      "os",
+      "runtime",
+      "strconv",
+      "strings",
+      "sync"
+    ],
+    "module": null
+  },
+  {
+    "path": "github.com/go-git/go-git/v5/internal/path_util",
+    "standard": false,
+    "imports": [
+      "os",
+      "os/user",
+      "strings"
+    ],
+    "module": "github.com/go-git/go-git/v5"
+  },
+  {
+    "path": "internal/saferio",
+    "standard": true,
+    "imports": [
+      "io",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "maps",
+    "standard": true,
+    "imports": [
+      "iter",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "encoding/gob",
+    "standard": true,
+    "imports": [
+      "bufio",
+      "encoding",
+      "encoding/binary",
+      "errors",
+      "fmt",
+      "internal/saferio",
+      "io",
+      "maps",
+      "math",
+      "math/bits",
+      "os",
+      "reflect",
+      "sync",
+      "sync/atomic",
+      "unicode",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "github.com/go-git/gcfg/token",
+    "standard": false,
+    "imports": [
+      "fmt",
+      "sort",
+      "strconv",
+      "sync"
+    ],
+    "module": "github.com/go-git/gcfg"
+  },
+  {
+    "path": "path/filepath",
+    "standard": true,
+    "imports": [
+      "errors",
+      "internal/bytealg",
+      "internal/filepathlite",
+      "io/fs",
+      "os",
+      "runtime",
+      "slices",
+      "strings",
+      "syscall",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "github.com/go-git/gcfg/scanner",
+    "standard": false,
+    "imports": [
+      "fmt",
+      "github.com/go-git/gcfg/token",
+      "io",
+      "path/filepath",
+      "sort",
+      "unicode",
+      "unicode/utf8"
+    ],
+    "module": "github.com/go-git/gcfg"
+  },
+  {
+    "path": "github.com/go-git/gcfg/types",
+    "standard": false,
+    "imports": [
+      "fmt",
+      "io",
+      "reflect",
+      "strings"
+    ],
+    "module": "github.com/go-git/gcfg"
+  },
+  {
+    "path": "gopkg.in/warnings.v0",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "fmt"
+    ],
+    "module": "gopkg.in/warnings.v0"
+  },
+  {
+    "path": "math/rand",
+    "standard": true,
+    "imports": [
+      "internal/godebug",
+      "math",
+      "sync",
+      "sync/atomic",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "math/big",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "errors",
+      "fmt",
+      "internal/byteorder",
+      "internal/cpu",
+      "io",
+      "math",
+      "math/bits",
+      "math/rand",
+      "slices",
+      "strconv",
+      "strings",
+      "sync",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "github.com/go-git/gcfg",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "encoding",
+      "encoding/gob",
+      "fmt",
+      "github.com/go-git/gcfg/scanner",
+      "github.com/go-git/gcfg/token",
+      "github.com/go-git/gcfg/types",
+      "gopkg.in/warnings.v0",
+      "io",
+      "math/big",
+      "os",
+      "reflect",
+      "strings",
+      "unicode",
+      "unicode/utf8"
+    ],
+    "module": "github.com/go-git/gcfg"
+  },
+  {
+    "path": "github.com/go-git/go-git/v5/plumbing/format/config",
+    "standard": false,
+    "imports": [
+      "fmt",
+      "github.com/go-git/gcfg",
+      "io",
+      "strings"
+    ],
+    "module": "github.com/go-git/go-git/v5"
+  },
+  {
+    "path": "golang.org/x/net/context",
+    "standard": false,
+    "imports": [
+      "context",
+      "time"
+    ],
+    "module": "golang.org/x/net"
+  },
+  {
+    "path": "github.com/jbenet/go-context/io",
+    "standard": false,
+    "imports": [
+      "golang.org/x/net/context",
+      "io"
+    ],
+    "module": "github.com/jbenet/go-context"
+  },
+  {
+    "path": "github.com/go-git/go-git/v5/utils/ioutil",
+    "standard": false,
+    "imports": [
+      "bufio",
+      "context",
+      "errors",
+      "github.com/jbenet/go-context/io",
+      "io"
+    ],
+    "module": "github.com/go-git/go-git/v5"
+  },
+  {
+    "path": "github.com/go-git/go-git/v5/plumbing/format/gitignore",
+    "standard": false,
+    "imports": [
+      "bufio",
+      "bytes",
+      "github.com/go-git/go-billy/v5",
+      "github.com/go-git/go-git/v5/internal/path_util",
+      "github.com/go-git/go-git/v5/plumbing/format/config",
+      "github.com/go-git/go-git/v5/utils/ioutil",
+      "io",
+      "os",
+      "path/filepath",
+      "strings"
+    ],
+    "module": "github.com/go-git/go-git/v5"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/fs",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "fmt",
+      "io",
+      "io/fs",
+      "os",
+      "path/filepath"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/fs/diriterate",
+    "standard": false,
+    "imports": [
+      "errors",
+      "github.com/google/osv-scalibr/fs",
+      "io",
+      "io/fs"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/internal",
+    "standard": false,
+    "imports": [
+      "bufio",
+      "errors",
+      "github.com/go-git/go-git/v5/plumbing/format/gitignore",
+      "github.com/google/osv-scalibr/fs",
+      "github.com/google/osv-scalibr/fs/diriterate",
+      "io",
+      "io/fs",
+      "os",
+      "path",
+      "path/filepath",
+      "regexp",
+      "strings"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/osv",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/binary/proto/metadata",
+      "github.com/google/osv-scalibr/binary/proto/scan_result_go_proto"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/language/javascript/metadata",
+    "standard": false,
+    "imports": [
+      "encoding/json",
+      "fmt",
+      "github.com/google/osv-scalibr/binary/proto/metadata",
+      "github.com/google/osv-scalibr/binary/proto/scan_result_go_proto",
+      "github.com/google/osv-scalibr/extractor/filesystem/internal",
+      "github.com/google/osv-scalibr/extractor/filesystem/osv",
+      "regexp",
+      "sort",
+      "strings"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/language/javascript/packagejson/metadata",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/extractor/filesystem/language/javascript/metadata"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/language/javascript/purl",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/extractor/filesystem/language/javascript/packagejson/metadata",
+      "github.com/google/osv-scalibr/purl",
+      "strings"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/language/php/purl",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/purl",
+      "strings"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/language/python/pypipurl",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/purl",
+      "regexp",
+      "strings"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "log/internal",
+    "standard": true,
+    "imports": [],
+    "module": null
+  },
+  {
+    "path": "log",
+    "standard": true,
+    "imports": [
+      "fmt",
+      "io",
+      "log/internal",
+      "os",
+      "runtime",
+      "sync",
+      "sync/atomic",
+      "time"
+    ],
+    "module": null
+  },
+  {
+    "path": "github.com/google/osv-scalibr/log",
+    "standard": false,
+    "imports": [
+      "log"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/os/apk/metadata",
+    "standard": false,
+    "imports": [
+      "fmt",
+      "github.com/google/osv-scalibr/binary/proto/metadata",
+      "github.com/google/osv-scalibr/binary/proto/scan_result_go_proto",
+      "github.com/google/osv-scalibr/log",
+      "strings"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/os/dpkg/metadata",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/binary/proto/metadata",
+      "github.com/google/osv-scalibr/binary/proto/scan_result_go_proto"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/os/kernel/module/metadata",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/binary/proto/metadata",
+      "github.com/google/osv-scalibr/binary/proto/scan_result_go_proto",
+      "github.com/google/osv-scalibr/log"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/os/kernel/vmlinuz/metadata",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/binary/proto/metadata",
+      "github.com/google/osv-scalibr/binary/proto/scan_result_go_proto",
+      "github.com/google/osv-scalibr/log"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/os/pacman/metadata",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/binary/proto/metadata",
+      "github.com/google/osv-scalibr/binary/proto/scan_result_go_proto",
+      "github.com/google/osv-scalibr/log"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/os/portage/metadata",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/binary/proto/metadata",
+      "github.com/google/osv-scalibr/binary/proto/scan_result_go_proto",
+      "github.com/google/osv-scalibr/log"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/os/rpm/metadata",
+    "standard": false,
+    "imports": [
+      "fmt",
+      "github.com/google/osv-scalibr/binary/proto/metadata",
+      "github.com/google/osv-scalibr/binary/proto/scan_result_go_proto",
+      "github.com/google/osv-scalibr/log",
+      "regexp",
+      "strings"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/os/snap/metadata",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/binary/proto/metadata",
+      "github.com/google/osv-scalibr/binary/proto/scan_result_go_proto",
+      "github.com/google/osv-scalibr/log"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/purl/purlproto",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/binary/proto/scan_result_go_proto",
+      "github.com/google/osv-scalibr/log",
+      "github.com/google/osv-scalibr/purl"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/sbom/cdx/metadata",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/binary/proto/metadata",
+      "github.com/google/osv-scalibr/binary/proto/scan_result_go_proto",
+      "github.com/google/osv-scalibr/purl",
+      "github.com/google/osv-scalibr/purl/purlproto"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/sbom/spdx/metadata",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/binary/proto/metadata",
+      "github.com/google/osv-scalibr/binary/proto/scan_result_go_proto",
+      "github.com/google/osv-scalibr/purl",
+      "github.com/google/osv-scalibr/purl/purlproto"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/ossf/osv-schema/bindings/go/osvconstants",
+    "standard": false,
+    "imports": [],
+    "module": "github.com/ossf/osv-schema/bindings/go"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/inventory/osvecosystem",
+    "standard": false,
+    "imports": [
+      "encoding/json",
+      "fmt",
+      "github.com/ossf/osv-schema/bindings/go/osvconstants",
+      "strings"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/purl/ecosystem",
+    "standard": false,
+    "imports": [
+      "fmt",
+      "github.com/google/osv-scalibr/inventory/osvecosystem",
+      "github.com/google/osv-scalibr/purl",
+      "github.com/ossf/osv-schema/bindings/go/osvconstants",
+      "strings"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "golang.org/x/text/internal/tag",
+    "standard": false,
+    "imports": [
+      "sort"
+    ],
+    "module": "golang.org/x/text"
+  },
+  {
+    "path": "golang.org/x/text/internal/language",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "errors",
+      "fmt",
+      "golang.org/x/text/internal/tag",
+      "sort",
+      "strconv",
+      "strings"
+    ],
+    "module": "golang.org/x/text"
+  },
+  {
+    "path": "golang.org/x/text/internal/language/compact",
+    "standard": false,
+    "imports": [
+      "golang.org/x/text/internal/language",
+      "sort",
+      "strings"
+    ],
+    "module": "golang.org/x/text"
+  },
+  {
+    "path": "golang.org/x/text/language",
+    "standard": false,
+    "imports": [
+      "errors",
+      "fmt",
+      "golang.org/x/text/internal/language",
+      "golang.org/x/text/internal/language/compact",
+      "sort",
+      "strconv",
+      "strings"
+    ],
+    "module": "golang.org/x/text"
+  },
+  {
+    "path": "golang.org/x/text/internal",
+    "standard": false,
+    "imports": [
+      "golang.org/x/text/language",
+      "sort"
+    ],
+    "module": "golang.org/x/text"
+  },
+  {
+    "path": "golang.org/x/text/transform",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "errors",
+      "io",
+      "unicode/utf8"
+    ],
+    "module": "golang.org/x/text"
+  },
+  {
+    "path": "golang.org/x/text/unicode/norm",
+    "standard": false,
+    "imports": [
+      "encoding/binary",
+      "fmt",
+      "golang.org/x/text/transform",
+      "io",
+      "sync",
+      "unicode/utf8"
+    ],
+    "module": "golang.org/x/text"
+  },
+  {
+    "path": "golang.org/x/text/cases",
+    "standard": false,
+    "imports": [
+      "golang.org/x/text/internal",
+      "golang.org/x/text/language",
+      "golang.org/x/text/transform",
+      "golang.org/x/text/unicode/norm",
+      "strings",
+      "unicode",
+      "unicode/utf8"
+    ],
+    "module": "golang.org/x/text"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/os/ecosystem",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/extractor/filesystem/os/apk/metadata",
+      "github.com/google/osv-scalibr/extractor/filesystem/os/dpkg/metadata",
+      "github.com/google/osv-scalibr/extractor/filesystem/os/kernel/module/metadata",
+      "github.com/google/osv-scalibr/extractor/filesystem/os/kernel/vmlinuz/metadata",
+      "github.com/google/osv-scalibr/extractor/filesystem/os/pacman/metadata",
+      "github.com/google/osv-scalibr/extractor/filesystem/os/portage/metadata",
+      "github.com/google/osv-scalibr/extractor/filesystem/os/rpm/metadata",
+      "github.com/google/osv-scalibr/extractor/filesystem/os/snap/metadata",
+      "github.com/google/osv-scalibr/extractor/filesystem/sbom/cdx/metadata",
+      "github.com/google/osv-scalibr/extractor/filesystem/sbom/spdx/metadata",
+      "github.com/google/osv-scalibr/inventory/osvecosystem",
+      "github.com/google/osv-scalibr/log",
+      "github.com/google/osv-scalibr/purl/ecosystem",
+      "github.com/ossf/osv-schema/bindings/go/osvconstants",
+      "golang.org/x/text/cases",
+      "golang.org/x/text/language",
+      "strings"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/os/cos/metadata",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/binary/proto/metadata",
+      "github.com/google/osv-scalibr/binary/proto/scan_result_go_proto",
+      "github.com/google/osv-scalibr/log"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/os/flatpak/metadata",
+    "standard": false,
+    "imports": [
+      "fmt",
+      "github.com/google/osv-scalibr/binary/proto/metadata",
+      "github.com/google/osv-scalibr/binary/proto/scan_result_go_proto",
+      "github.com/google/osv-scalibr/log"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/os/nix/metadata",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/binary/proto/metadata",
+      "github.com/google/osv-scalibr/binary/proto/scan_result_go_proto",
+      "github.com/google/osv-scalibr/log"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/os/spack/metadata",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/binary/proto/metadata",
+      "github.com/google/osv-scalibr/binary/proto/scan_result_go_proto"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/os/purl",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/extractor/filesystem/os/apk/metadata",
+      "github.com/google/osv-scalibr/extractor/filesystem/os/cos/metadata",
+      "github.com/google/osv-scalibr/extractor/filesystem/os/dpkg/metadata",
+      "github.com/google/osv-scalibr/extractor/filesystem/os/flatpak/metadata",
+      "github.com/google/osv-scalibr/extractor/filesystem/os/nix/metadata",
+      "github.com/google/osv-scalibr/extractor/filesystem/os/pacman/metadata",
+      "github.com/google/osv-scalibr/extractor/filesystem/os/portage/metadata",
+      "github.com/google/osv-scalibr/extractor/filesystem/os/rpm/metadata",
+      "github.com/google/osv-scalibr/extractor/filesystem/os/snap/metadata",
+      "github.com/google/osv-scalibr/extractor/filesystem/os/spack/metadata",
+      "github.com/google/osv-scalibr/purl",
+      "strconv",
+      "strings"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/sbom/cdx/purl",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/extractor/filesystem/sbom/cdx/metadata",
+      "github.com/google/osv-scalibr/purl"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/sbom/spdx/purl",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/extractor/filesystem/sbom/spdx/metadata",
+      "github.com/google/osv-scalibr/purl"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/standalone/windows/common/metadata",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/binary/proto/metadata",
+      "github.com/google/osv-scalibr/binary/proto/scan_result_go_proto"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/standalone/windows/common/purl",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/extractor/standalone/windows/common/metadata",
+      "github.com/google/osv-scalibr/purl"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/inventory/location",
+    "standard": false,
+    "imports": [],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/inventory/vex",
+    "standard": false,
+    "imports": [
+      "slices"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/plugin",
+    "standard": false,
+    "imports": [
+      "fmt",
+      "github.com/google/osv-scalibr/binary/proto/config_go_proto",
+      "github.com/google/osv-scalibr/log",
+      "slices",
+      "strings"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "crypto/md5",
+    "standard": true,
+    "imports": [
+      "crypto",
+      "crypto/internal/fips140only",
+      "errors",
+      "hash",
+      "internal/byteorder",
+      "math/bits"
+    ],
+    "module": null
+  },
+  {
+    "path": "math/rand/v2",
+    "standard": true,
+    "imports": [
+      "errors",
+      "internal/byteorder",
+      "internal/chacha8rand",
+      "math",
+      "math/bits",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/randutil",
+    "standard": true,
+    "imports": [
+      "io",
+      "math/rand/v2"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/rand",
+    "standard": true,
+    "imports": [
+      "crypto/internal/boring",
+      "crypto/internal/fips140/drbg",
+      "crypto/internal/randutil",
+      "internal/godebug",
+      "io",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/rand",
+    "standard": true,
+    "imports": [
+      "crypto/internal/boring",
+      "crypto/internal/fips140/drbg",
+      "crypto/internal/fips140only",
+      "crypto/internal/rand",
+      "errors",
+      "io",
+      "math/big",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/sha1",
+    "standard": true,
+    "imports": [
+      "crypto",
+      "crypto/internal/boring",
+      "crypto/internal/fips140only",
+      "crypto/internal/impl",
+      "errors",
+      "hash",
+      "internal/byteorder",
+      "internal/cpu",
+      "math/bits"
+    ],
+    "module": null
+  },
+  {
+    "path": "database/sql/internal",
+    "standard": true,
+    "imports": [],
+    "module": null
+  },
+  {
+    "path": "uuid",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "cmp",
+      "crypto/rand",
+      "encoding/binary",
+      "encoding/hex",
+      "errors",
+      "sync",
+      "time"
+    ],
+    "module": null
+  },
+  {
+    "path": "database/sql/driver",
+    "standard": true,
+    "imports": [
+      "context",
+      "database/sql/internal",
+      "errors",
+      "fmt",
+      "reflect",
+      "strconv",
+      "time",
+      "uuid"
+    ],
+    "module": null
+  },
+  {
+    "path": "vendor/golang.org/x/net/dns/dnsmessage",
+    "standard": true,
+    "imports": [
+      "errors",
+      "slices"
+    ],
+    "module": null
+  },
+  {
+    "path": "internal/nettrace",
+    "standard": true,
+    "imports": [],
+    "module": null
+  },
+  {
+    "path": "internal/singleflight",
+    "standard": true,
+    "imports": [
+      "sync"
+    ],
+    "module": null
+  },
+  {
+    "path": "net",
+    "standard": true,
+    "imports": [
+      "cmp",
+      "context",
+      "errors",
+      "vendor/golang.org/x/net/dns/dnsmessage",
+      "internal/bytealg",
+      "internal/godebug",
+      "internal/nettrace",
+      "internal/poll",
+      "internal/singleflight",
+      "internal/strconv",
+      "internal/stringslite",
+      "internal/syscall/unix",
+      "io",
+      "io/fs",
+      "net/netip",
+      "os",
+      "runtime",
+      "slices",
+      "sync",
+      "sync/atomic",
+      "syscall",
+      "time",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "github.com/google/uuid",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "crypto/md5",
+      "crypto/rand",
+      "crypto/sha1",
+      "database/sql/driver",
+      "encoding/binary",
+      "encoding/hex",
+      "encoding/json",
+      "errors",
+      "fmt",
+      "hash",
+      "io",
+      "net",
+      "os",
+      "strings",
+      "sync",
+      "time"
+    ],
+    "module": "github.com/google/uuid"
+  },
+  {
+    "path": "github.com/opencontainers/go-digest",
+    "standard": false,
+    "imports": [
+      "crypto",
+      "fmt",
+      "hash",
+      "io",
+      "regexp",
+      "strings"
+    ],
+    "module": "github.com/opencontainers/go-digest"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor",
+    "standard": false,
+    "imports": [
+      "crypto/sha256",
+      "fmt",
+      "github.com/google/osv-scalibr/binary/proto/metadata",
+      "github.com/google/osv-scalibr/extractor/filesystem/language/erlang/mixlock/purl",
+      "github.com/google/osv-scalibr/extractor/filesystem/language/golang/purl",
+      "github.com/google/osv-scalibr/extractor/filesystem/language/java/purl",
+      "github.com/google/osv-scalibr/extractor/filesystem/language/javascript/purl",
+      "github.com/google/osv-scalibr/extractor/filesystem/language/php/purl",
+      "github.com/google/osv-scalibr/extractor/filesystem/language/python/pypipurl",
+      "github.com/google/osv-scalibr/extractor/filesystem/os/ecosystem",
+      "github.com/google/osv-scalibr/extractor/filesystem/os/purl",
+      "github.com/google/osv-scalibr/extractor/filesystem/sbom/cdx/metadata",
+      "github.com/google/osv-scalibr/extractor/filesystem/sbom/cdx/purl",
+      "github.com/google/osv-scalibr/extractor/filesystem/sbom/spdx/metadata",
+      "github.com/google/osv-scalibr/extractor/filesystem/sbom/spdx/purl",
+      "github.com/google/osv-scalibr/extractor/standalone/windows/common/purl",
+      "github.com/google/osv-scalibr/inventory/location",
+      "github.com/google/osv-scalibr/inventory/osvecosystem",
+      "github.com/google/osv-scalibr/inventory/vex",
+      "github.com/google/osv-scalibr/plugin",
+      "github.com/google/osv-scalibr/purl",
+      "github.com/google/uuid",
+      "github.com/opencontainers/go-digest",
+      "github.com/ossf/osv-schema/bindings/go/osvconstants",
+      "strings",
+      "sync/atomic"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/gobwas/glob/util/runes",
+    "standard": false,
+    "imports": [],
+    "module": "github.com/gobwas/glob"
+  },
+  {
+    "path": "github.com/gobwas/glob/util/strings",
+    "standard": false,
+    "imports": [
+      "strings",
+      "unicode/utf8"
+    ],
+    "module": "github.com/gobwas/glob"
+  },
+  {
+    "path": "github.com/gobwas/glob/match",
+    "standard": false,
+    "imports": [
+      "fmt",
+      "github.com/gobwas/glob/util/runes",
+      "github.com/gobwas/glob/util/strings",
+      "strings",
+      "sync",
+      "unicode/utf8"
+    ],
+    "module": "github.com/gobwas/glob"
+  },
+  {
+    "path": "github.com/gobwas/glob/syntax/lexer",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "fmt",
+      "github.com/gobwas/glob/util/runes",
+      "unicode/utf8"
+    ],
+    "module": "github.com/gobwas/glob"
+  },
+  {
+    "path": "github.com/gobwas/glob/syntax/ast",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "errors",
+      "fmt",
+      "github.com/gobwas/glob/syntax/lexer",
+      "unicode/utf8"
+    ],
+    "module": "github.com/gobwas/glob"
+  },
+  {
+    "path": "github.com/gobwas/glob/compiler",
+    "standard": false,
+    "imports": [
+      "fmt",
+      "github.com/gobwas/glob/match",
+      "github.com/gobwas/glob/syntax/ast",
+      "github.com/gobwas/glob/util/runes",
+      "reflect"
+    ],
+    "module": "github.com/gobwas/glob"
+  },
+  {
+    "path": "github.com/gobwas/glob/syntax",
+    "standard": false,
+    "imports": [
+      "github.com/gobwas/glob/syntax/ast",
+      "github.com/gobwas/glob/syntax/lexer"
+    ],
+    "module": "github.com/gobwas/glob"
+  },
+  {
+    "path": "github.com/gobwas/glob",
+    "standard": false,
+    "imports": [
+      "github.com/gobwas/glob/compiler",
+      "github.com/gobwas/glob/syntax"
+    ],
+    "module": "github.com/gobwas/glob"
+  },
+  {
+    "path": "archive/tar",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "errors",
+      "fmt",
+      "internal/godebug",
+      "io",
+      "io/fs",
+      "maps",
+      "math",
+      "os/user",
+      "path",
+      "path/filepath",
+      "reflect",
+      "runtime",
+      "slices",
+      "strconv",
+      "strings",
+      "sync",
+      "syscall",
+      "time"
+    ],
+    "module": null
+  },
+  {
+    "path": "github.com/diskfs/go-diskfs/backend",
+    "standard": false,
+    "imports": [
+      "errors",
+      "io",
+      "io/fs",
+      "os"
+    ],
+    "module": "github.com/diskfs/go-diskfs"
+  },
+  {
+    "path": "github.com/diskfs/go-diskfs/backend/file",
+    "standard": false,
+    "imports": [
+      "errors",
+      "fmt",
+      "github.com/diskfs/go-diskfs/backend",
+      "io",
+      "io/fs",
+      "os"
+    ],
+    "module": "github.com/diskfs/go-diskfs"
+  },
+  {
+    "path": "github.com/diskfs/go-diskfs/filesystem",
+    "standard": false,
+    "imports": [
+      "errors",
+      "io",
+      "io/fs",
+      "os",
+      "path",
+      "time"
+    ],
+    "module": "github.com/diskfs/go-diskfs"
+  },
+  {
+    "path": "github.com/diskfs/go-diskfs/filesystem/ext4/crc",
+    "standard": false,
+    "imports": [
+      "encoding/binary",
+      "hash/crc32"
+    ],
+    "module": "github.com/diskfs/go-diskfs"
+  },
+  {
+    "path": "github.com/diskfs/go-diskfs/filesystem/ext4/md4",
+    "standard": false,
+    "imports": [],
+    "module": "github.com/diskfs/go-diskfs"
+  },
+  {
+    "path": "github.com/diskfs/go-diskfs/util",
+    "standard": false,
+    "imports": [
+      "fmt"
+    ],
+    "module": "github.com/diskfs/go-diskfs"
+  },
+  {
+    "path": "golang.org/x/sys/unix",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "encoding/binary",
+      "math/bits",
+      "runtime",
+      "slices",
+      "sort",
+      "strconv",
+      "strings",
+      "sync",
+      "syscall",
+      "time",
+      "unsafe"
+    ],
+    "module": "golang.org/x/sys"
+  },
+  {
+    "path": "github.com/diskfs/go-diskfs/filesystem/ext4",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "cmp",
+      "encoding/binary",
+      "errors",
+      "fmt",
+      "github.com/diskfs/go-diskfs/backend",
+      "github.com/diskfs/go-diskfs/filesystem",
+      "github.com/diskfs/go-diskfs/filesystem/ext4/crc",
+      "github.com/diskfs/go-diskfs/filesystem/ext4/md4",
+      "github.com/diskfs/go-diskfs/util",
+      "github.com/google/uuid",
+      "golang.org/x/sys/unix",
+      "io",
+      "io/fs",
+      "math",
+      "os",
+      "path",
+      "reflect",
+      "slices",
+      "sort",
+      "strings",
+      "time"
+    ],
+    "module": "github.com/diskfs/go-diskfs"
+  },
+  {
+    "path": "github.com/elliotwutingfeng/asciiset",
+    "standard": false,
+    "imports": [
+      "unicode/utf8"
+    ],
+    "module": "github.com/elliotwutingfeng/asciiset"
+  },
+  {
+    "path": "github.com/diskfs/go-diskfs/filesystem/fat32",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "encoding/binary",
+      "errors",
+      "fmt",
+      "github.com/diskfs/go-diskfs/backend",
+      "github.com/diskfs/go-diskfs/filesystem",
+      "github.com/elliotwutingfeng/asciiset",
+      "io",
+      "os",
+      "path",
+      "regexp",
+      "slices",
+      "strings",
+      "time"
+    ],
+    "module": "github.com/diskfs/go-diskfs"
+  },
+  {
+    "path": "github.com/diskfs/go-diskfs/partition/part",
+    "standard": false,
+    "imports": [
+      "github.com/diskfs/go-diskfs/backend",
+      "io"
+    ],
+    "module": "github.com/diskfs/go-diskfs"
+  },
+  {
+    "path": "github.com/diskfs/go-diskfs/partition/mbr",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "encoding/binary",
+      "errors",
+      "fmt",
+      "github.com/diskfs/go-diskfs/backend",
+      "github.com/diskfs/go-diskfs/partition/part",
+      "io"
+    ],
+    "module": "github.com/diskfs/go-diskfs"
+  },
+  {
+    "path": "github.com/djherbis/times",
+    "standard": false,
+    "imports": [
+      "errors",
+      "golang.org/x/sys/unix",
+      "os",
+      "sync/atomic",
+      "syscall",
+      "time"
+    ],
+    "module": "github.com/djherbis/times"
+  },
+  {
+    "path": "github.com/diskfs/go-diskfs/filesystem/iso9660",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "encoding/binary",
+      "errors",
+      "fmt",
+      "github.com/diskfs/go-diskfs/backend",
+      "github.com/diskfs/go-diskfs/filesystem",
+      "github.com/diskfs/go-diskfs/partition/mbr",
+      "github.com/diskfs/go-diskfs/util",
+      "github.com/djherbis/times",
+      "io",
+      "io/fs",
+      "os",
+      "path",
+      "path/filepath",
+      "regexp",
+      "sort",
+      "strconv",
+      "strings",
+      "syscall",
+      "time"
+    ],
+    "module": "github.com/diskfs/go-diskfs"
+  },
+  {
+    "path": "hash/adler32",
+    "standard": true,
+    "imports": [
+      "errors",
+      "hash",
+      "internal/byteorder"
+    ],
+    "module": null
+  },
+  {
+    "path": "compress/zlib",
+    "standard": true,
+    "imports": [
+      "bufio",
+      "compress/flate",
+      "encoding/binary",
+      "errors",
+      "fmt",
+      "hash",
+      "hash/adler32",
+      "io"
+    ],
+    "module": null
+  },
+  {
+    "path": "github.com/anchore/go-lzo",
+    "standard": false,
+    "imports": [
+      "encoding/binary",
+      "errors",
+      "io",
+      "runtime"
+    ],
+    "module": "github.com/anchore/go-lzo"
+  },
+  {
+    "path": "github.com/klauspost/compress",
+    "standard": false,
+    "imports": [
+      "math"
+    ],
+    "module": "github.com/klauspost/compress"
+  },
+  {
+    "path": "github.com/klauspost/compress/fse",
+    "standard": false,
+    "imports": [
+      "encoding/binary",
+      "errors",
+      "fmt",
+      "io",
+      "math/bits"
+    ],
+    "module": "github.com/klauspost/compress"
+  },
+  {
+    "path": "github.com/klauspost/compress/internal/cpuinfo",
+    "standard": false,
+    "imports": [],
+    "module": "github.com/klauspost/compress"
+  },
+  {
+    "path": "github.com/klauspost/compress/internal/le",
+    "standard": false,
+    "imports": [
+      "unsafe"
+    ],
+    "module": "github.com/klauspost/compress"
+  },
+  {
+    "path": "github.com/klauspost/compress/huff0",
+    "standard": false,
+    "imports": [
+      "errors",
+      "fmt",
+      "github.com/klauspost/compress/fse",
+      "github.com/klauspost/compress/internal/cpuinfo",
+      "github.com/klauspost/compress/internal/le",
+      "io",
+      "math",
+      "math/bits",
+      "runtime",
+      "sync"
+    ],
+    "module": "github.com/klauspost/compress"
+  },
+  {
+    "path": "github.com/klauspost/compress/internal/snapref",
+    "standard": false,
+    "imports": [
+      "encoding/binary",
+      "errors",
+      "hash/crc32",
+      "io"
+    ],
+    "module": "github.com/klauspost/compress"
+  },
+  {
+    "path": "github.com/klauspost/compress/zstd/internal/xxhash",
+    "standard": false,
+    "imports": [
+      "encoding/binary",
+      "errors",
+      "math/bits"
+    ],
+    "module": "github.com/klauspost/compress"
+  },
+  {
+    "path": "runtime/debug",
+    "standard": true,
+    "imports": [
+      "fmt",
+      "internal/poll",
+      "os",
+      "runtime",
+      "slices",
+      "strconv",
+      "strings",
+      "time",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "github.com/klauspost/compress/zstd",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "context",
+      "crypto/rand",
+      "encoding/binary",
+      "encoding/hex",
+      "errors",
+      "fmt",
+      "github.com/klauspost/compress",
+      "github.com/klauspost/compress/huff0",
+      "github.com/klauspost/compress/internal/cpuinfo",
+      "github.com/klauspost/compress/internal/le",
+      "github.com/klauspost/compress/internal/snapref",
+      "github.com/klauspost/compress/zstd/internal/xxhash",
+      "hash/crc32",
+      "io",
+      "log",
+      "math",
+      "math/bits",
+      "runtime",
+      "runtime/debug",
+      "slices",
+      "sort",
+      "strconv",
+      "strings",
+      "sync",
+      "weak"
+    ],
+    "module": "github.com/klauspost/compress"
+  },
+  {
+    "path": "github.com/pierrec/lz4/v4/internal/lz4errors",
+    "standard": false,
+    "imports": [],
+    "module": "github.com/pierrec/lz4/v4"
+  },
+  {
+    "path": "github.com/pierrec/lz4/v4/internal/lz4block",
+    "standard": false,
+    "imports": [
+      "encoding/binary",
+      "fmt",
+      "github.com/pierrec/lz4/v4/internal/lz4errors",
+      "math/bits",
+      "sync"
+    ],
+    "module": "github.com/pierrec/lz4/v4"
+  },
+  {
+    "path": "github.com/pierrec/lz4/v4/internal/xxh32",
+    "standard": false,
+    "imports": [
+      "encoding/binary"
+    ],
+    "module": "github.com/pierrec/lz4/v4"
+  },
+  {
+    "path": "github.com/pierrec/lz4/v4/internal/lz4stream",
+    "standard": false,
+    "imports": [
+      "encoding/binary",
+      "fmt",
+      "github.com/pierrec/lz4/v4/internal/lz4block",
+      "github.com/pierrec/lz4/v4/internal/lz4errors",
+      "github.com/pierrec/lz4/v4/internal/xxh32",
+      "io",
+      "sync"
+    ],
+    "module": "github.com/pierrec/lz4/v4"
+  },
+  {
+    "path": "github.com/pierrec/lz4/v4",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "errors",
+      "fmt",
+      "github.com/pierrec/lz4/v4/internal/lz4block",
+      "github.com/pierrec/lz4/v4/internal/lz4errors",
+      "github.com/pierrec/lz4/v4/internal/lz4stream",
+      "io",
+      "reflect",
+      "runtime",
+      "strconv"
+    ],
+    "module": "github.com/pierrec/lz4/v4"
+  },
+  {
+    "path": "github.com/pkg/xattr",
+    "standard": false,
+    "imports": [
+      "golang.org/x/sys/unix",
+      "os",
+      "syscall"
+    ],
+    "module": "github.com/pkg/xattr"
+  },
+  {
+    "path": "github.com/ulikunitz/xz/internal/xlog",
+    "standard": false,
+    "imports": [
+      "fmt",
+      "io",
+      "os",
+      "runtime",
+      "sync",
+      "time"
+    ],
+    "module": "github.com/ulikunitz/xz"
+  },
+  {
+    "path": "github.com/ulikunitz/xz/internal/hash",
+    "standard": false,
+    "imports": [],
+    "module": "github.com/ulikunitz/xz"
+  },
+  {
+    "path": "github.com/ulikunitz/xz/lzma",
+    "standard": false,
+    "imports": [
+      "bufio",
+      "bytes",
+      "errors",
+      "fmt",
+      "github.com/ulikunitz/xz/internal/hash",
+      "github.com/ulikunitz/xz/internal/xlog",
+      "io",
+      "unicode"
+    ],
+    "module": "github.com/ulikunitz/xz"
+  },
+  {
+    "path": "hash/crc64",
+    "standard": true,
+    "imports": [
+      "errors",
+      "hash",
+      "internal/byteorder",
+      "sync"
+    ],
+    "module": null
+  },
+  {
+    "path": "github.com/ulikunitz/xz",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "crypto/sha256",
+      "errors",
+      "fmt",
+      "github.com/ulikunitz/xz/internal/xlog",
+      "github.com/ulikunitz/xz/lzma",
+      "hash",
+      "hash/crc32",
+      "hash/crc64",
+      "io"
+    ],
+    "module": "github.com/ulikunitz/xz"
+  },
+  {
+    "path": "github.com/diskfs/go-diskfs/filesystem/squashfs",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "compress/zlib",
+      "encoding/binary",
+      "fmt",
+      "github.com/anchore/go-lzo",
+      "github.com/diskfs/go-diskfs/backend",
+      "github.com/diskfs/go-diskfs/filesystem",
+      "github.com/klauspost/compress/zstd",
+      "github.com/pierrec/lz4/v4",
+      "github.com/pkg/xattr",
+      "github.com/ulikunitz/xz",
+      "github.com/ulikunitz/xz/lzma",
+      "golang.org/x/sys/unix",
+      "io",
+      "io/fs",
+      "math",
+      "os",
+      "path",
+      "path/filepath",
+      "strings",
+      "sync",
+      "time"
+    ],
+    "module": "github.com/diskfs/go-diskfs"
+  },
+  {
+    "path": "github.com/diskfs/go-diskfs/partition/gpt",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "encoding/binary",
+      "fmt",
+      "github.com/diskfs/go-diskfs/backend",
+      "github.com/diskfs/go-diskfs/partition/part",
+      "github.com/google/uuid",
+      "hash/crc32",
+      "io",
+      "reflect",
+      "strings",
+      "unicode/utf16"
+    ],
+    "module": "github.com/diskfs/go-diskfs"
+  },
+  {
+    "path": "github.com/diskfs/go-diskfs/partition",
+    "standard": false,
+    "imports": [
+      "fmt",
+      "github.com/diskfs/go-diskfs/backend",
+      "github.com/diskfs/go-diskfs/partition/gpt",
+      "github.com/diskfs/go-diskfs/partition/mbr",
+      "github.com/diskfs/go-diskfs/partition/part"
+    ],
+    "module": "github.com/diskfs/go-diskfs"
+  },
+  {
+    "path": "github.com/sirupsen/logrus",
+    "standard": false,
+    "imports": [
+      "bufio",
+      "bytes",
+      "context",
+      "encoding/json",
+      "fmt",
+      "golang.org/x/sys/unix",
+      "io",
+      "log",
+      "os",
+      "reflect",
+      "runtime",
+      "sort",
+      "strconv",
+      "strings",
+      "sync",
+      "sync/atomic",
+      "time",
+      "unicode/utf8"
+    ],
+    "module": "github.com/sirupsen/logrus"
+  },
+  {
+    "path": "github.com/diskfs/go-diskfs/disk",
+    "standard": false,
+    "imports": [
+      "errors",
+      "fmt",
+      "github.com/diskfs/go-diskfs/backend",
+      "github.com/diskfs/go-diskfs/filesystem",
+      "github.com/diskfs/go-diskfs/filesystem/ext4",
+      "github.com/diskfs/go-diskfs/filesystem/fat32",
+      "github.com/diskfs/go-diskfs/filesystem/iso9660",
+      "github.com/diskfs/go-diskfs/filesystem/squashfs",
+      "github.com/diskfs/go-diskfs/partition",
+      "github.com/sirupsen/logrus",
+      "golang.org/x/sys/unix",
+      "io",
+      "os"
+    ],
+    "module": "github.com/diskfs/go-diskfs"
+  },
+  {
+    "path": "github.com/diskfs/go-diskfs",
+    "standard": false,
+    "imports": [
+      "errors",
+      "fmt",
+      "github.com/diskfs/go-diskfs/backend",
+      "github.com/diskfs/go-diskfs/backend/file",
+      "github.com/diskfs/go-diskfs/disk",
+      "github.com/sirupsen/logrus",
+      "golang.org/x/sys/unix",
+      "os"
+    ],
+    "module": "github.com/diskfs/go-diskfs"
+  },
+  {
+    "path": "github.com/go-errors/errors",
+    "standard": false,
+    "imports": [
+      "bufio",
+      "bytes",
+      "errors",
+      "fmt",
+      "os",
+      "reflect",
+      "runtime",
+      "strconv",
+      "strings"
+    ],
+    "module": "github.com/go-errors/errors"
+  },
+  {
+    "path": "text/template/parse",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "fmt",
+      "runtime",
+      "strconv",
+      "strings",
+      "unicode",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "text/template",
+    "standard": true,
+    "imports": [
+      "errors",
+      "fmt",
+      "internal/fmtsort",
+      "io",
+      "io/fs",
+      "maps",
+      "net/url",
+      "os",
+      "path",
+      "path/filepath",
+      "reflect",
+      "runtime",
+      "strings",
+      "sync",
+      "text/template/parse",
+      "unicode",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "github.com/dsoprea/go-logging",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "errors",
+      "fmt",
+      "github.com/go-errors/errors",
+      "golang.org/x/net/context",
+      "log",
+      "os",
+      "strings",
+      "sync",
+      "text/template"
+    ],
+    "module": "github.com/dsoprea/go-logging"
+  },
+  {
+    "path": "github.com/go-restruct/restruct/expr",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "errors",
+      "fmt",
+      "io",
+      "reflect",
+      "strconv",
+      "sync",
+      "unicode",
+      "unicode/utf8"
+    ],
+    "module": "github.com/go-restruct/restruct"
+  },
+  {
+    "path": "github.com/pkg/errors",
+    "standard": false,
+    "imports": [
+      "errors",
+      "fmt",
+      "io",
+      "path",
+      "runtime",
+      "strconv",
+      "strings"
+    ],
+    "module": "github.com/pkg/errors"
+  },
+  {
+    "path": "go/scanner",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "fmt",
+      "go/token",
+      "io",
+      "path/filepath",
+      "sort",
+      "strconv",
+      "unicode",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "go/ast",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "cmp",
+      "fmt",
+      "go/scanner",
+      "go/token",
+      "io",
+      "iter",
+      "os",
+      "reflect",
+      "slices",
+      "strconv",
+      "strings",
+      "unicode",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "go/build/constraint",
+    "standard": true,
+    "imports": [
+      "errors",
+      "strconv",
+      "strings",
+      "unicode",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "go/parser",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "errors",
+      "fmt",
+      "go/ast",
+      "go/build/constraint",
+      "go/scanner",
+      "go/token",
+      "io",
+      "io/fs",
+      "os",
+      "path/filepath",
+      "strings"
+    ],
+    "module": null
+  },
+  {
+    "path": "github.com/go-restruct/restruct",
+    "standard": false,
+    "imports": [
+      "encoding/binary",
+      "errors",
+      "fmt",
+      "github.com/go-restruct/restruct/expr",
+      "github.com/pkg/errors",
+      "go/ast",
+      "go/parser",
+      "go/token",
+      "math",
+      "math/bits",
+      "reflect",
+      "strconv",
+      "strings",
+      "sync",
+      "unicode",
+      "unicode/utf8"
+    ],
+    "module": "github.com/go-restruct/restruct"
+  },
+  {
+    "path": "github.com/dsoprea/go-exfat",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "encoding/binary",
+      "fmt",
+      "github.com/dsoprea/go-logging",
+      "github.com/go-restruct/restruct",
+      "io",
+      "math",
+      "os",
+      "path",
+      "reflect",
+      "sort",
+      "strings",
+      "time",
+      "unicode/utf16"
+    ],
+    "module": "github.com/dsoprea/go-exfat"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/artifact/image/symlink",
+    "standard": false,
+    "imports": [
+      "fmt",
+      "github.com/google/osv-scalibr/log",
+      "github.com/google/uuid",
+      "io/fs",
+      "os",
+      "path",
+      "path/filepath",
+      "strings"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/lunixbochs/struc",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "encoding/binary",
+      "errors",
+      "fmt",
+      "io",
+      "math",
+      "reflect",
+      "regexp",
+      "strconv",
+      "strings",
+      "sync"
+    ],
+    "module": "github.com/lunixbochs/struc"
+  },
+  {
+    "path": "flag",
+    "standard": true,
+    "imports": [
+      "encoding",
+      "errors",
+      "fmt",
+      "io",
+      "os",
+      "reflect",
+      "runtime",
+      "slices",
+      "strconv",
+      "strings",
+      "time"
+    ],
+    "module": null
+  },
+  {
+    "path": "go.uber.org/multierr",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "errors",
+      "fmt",
+      "io",
+      "strings",
+      "sync",
+      "sync/atomic"
+    ],
+    "module": "go.uber.org/multierr"
+  },
+  {
+    "path": "go.uber.org/zap/internal/pool",
+    "standard": false,
+    "imports": [
+      "sync"
+    ],
+    "module": "go.uber.org/zap"
+  },
+  {
+    "path": "go.uber.org/zap/buffer",
+    "standard": false,
+    "imports": [
+      "go.uber.org/zap/internal/pool",
+      "strconv",
+      "time"
+    ],
+    "module": "go.uber.org/zap"
+  },
+  {
+    "path": "go.uber.org/zap/internal/bufferpool",
+    "standard": false,
+    "imports": [
+      "go.uber.org/zap/buffer"
+    ],
+    "module": "go.uber.org/zap"
+  },
+  {
+    "path": "go.uber.org/zap/internal/color",
+    "standard": false,
+    "imports": [
+      "fmt"
+    ],
+    "module": "go.uber.org/zap"
+  },
+  {
+    "path": "go.uber.org/zap/internal/exit",
+    "standard": false,
+    "imports": [
+      "os"
+    ],
+    "module": "go.uber.org/zap"
+  },
+  {
+    "path": "go.uber.org/zap/zapcore",
+    "standard": false,
+    "imports": [
+      "bufio",
+      "bytes",
+      "encoding/base64",
+      "encoding/json",
+      "errors",
+      "fmt",
+      "go.uber.org/multierr",
+      "go.uber.org/zap/buffer",
+      "go.uber.org/zap/internal/bufferpool",
+      "go.uber.org/zap/internal/color",
+      "go.uber.org/zap/internal/exit",
+      "go.uber.org/zap/internal/pool",
+      "io",
+      "math",
+      "reflect",
+      "runtime",
+      "strings",
+      "sync",
+      "sync/atomic",
+      "time",
+      "unicode/utf8"
+    ],
+    "module": "go.uber.org/zap"
+  },
+  {
+    "path": "go.uber.org/zap/internal",
+    "standard": false,
+    "imports": [
+      "go.uber.org/zap/zapcore"
+    ],
+    "module": "go.uber.org/zap"
+  },
+  {
+    "path": "go.uber.org/zap/internal/stacktrace",
+    "standard": false,
+    "imports": [
+      "go.uber.org/zap/buffer",
+      "go.uber.org/zap/internal/bufferpool",
+      "go.uber.org/zap/internal/pool",
+      "runtime"
+    ],
+    "module": "go.uber.org/zap"
+  },
+  {
+    "path": "container/list",
+    "standard": true,
+    "imports": [],
+    "module": null
+  },
+  {
+    "path": "crypto/aes",
+    "standard": true,
+    "imports": [
+      "crypto/cipher",
+      "crypto/internal/boring",
+      "crypto/internal/fips140/aes",
+      "strconv"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/des",
+    "standard": true,
+    "imports": [
+      "crypto/cipher",
+      "crypto/internal/fips140/alias",
+      "crypto/internal/fips140only",
+      "errors",
+      "internal/byteorder",
+      "strconv",
+      "sync"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/nistec/fiat",
+    "standard": true,
+    "imports": [
+      "crypto/internal/fips140/check",
+      "crypto/internal/fips140/subtle",
+      "errors",
+      "math/bits"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/nistec",
+    "standard": true,
+    "imports": [
+      "crypto/internal/constanttime",
+      "crypto/internal/fips140/check",
+      "crypto/internal/fips140/nistec/fiat",
+      "crypto/internal/fips140deps/byteorder",
+      "errors",
+      "math/bits",
+      "runtime",
+      "sync",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/ecdh",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "crypto/internal/fips140",
+      "crypto/internal/fips140/check",
+      "crypto/internal/fips140/drbg",
+      "crypto/internal/fips140/nistec",
+      "crypto/internal/fips140deps/byteorder",
+      "errors",
+      "io",
+      "math/bits",
+      "sync"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/edwards25519/field",
+    "standard": true,
+    "imports": [
+      "crypto/internal/fips140/check",
+      "crypto/internal/fips140/subtle",
+      "crypto/internal/fips140deps/byteorder",
+      "errors",
+      "math/bits"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/ecdh",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "crypto",
+      "crypto/internal/boring",
+      "crypto/internal/fips140/ecdh",
+      "crypto/internal/fips140/edwards25519/field",
+      "crypto/internal/fips140only",
+      "crypto/internal/rand",
+      "crypto/subtle",
+      "errors",
+      "io"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/elliptic",
+    "standard": true,
+    "imports": [
+      "crypto/internal/fips140/nistec",
+      "errors",
+      "io",
+      "math/big",
+      "sync"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/boring/bbig",
+    "standard": true,
+    "imports": [
+      "crypto/internal/boring",
+      "math/big",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/bigmod",
+    "standard": true,
+    "imports": [
+      "crypto/internal/fips140/check",
+      "crypto/internal/fips140deps/byteorder",
+      "crypto/internal/fips140deps/cpu",
+      "crypto/internal/impl",
+      "errors",
+      "math/bits"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/ecdsa",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "crypto/internal/fips140",
+      "crypto/internal/fips140/bigmod",
+      "crypto/internal/fips140/check",
+      "crypto/internal/fips140/drbg",
+      "crypto/internal/fips140/hmac",
+      "crypto/internal/fips140/nistec",
+      "crypto/internal/fips140/sha512",
+      "errors",
+      "hash",
+      "io",
+      "math/bits",
+      "sync"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140cache",
+    "standard": true,
+    "imports": [
+      "runtime",
+      "sync",
+      "weak"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/sha3",
+    "standard": true,
+    "imports": [
+      "crypto",
+      "crypto/internal/fips140/sha3",
+      "hash",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140hash",
+    "standard": true,
+    "imports": [
+      "crypto/internal/fips140/sha3",
+      "crypto/sha3",
+      "hash",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/sha512",
+    "standard": true,
+    "imports": [
+      "crypto",
+      "crypto/internal/boring",
+      "crypto/internal/fips140/sha512",
+      "hash"
+    ],
+    "module": null
+  },
+  {
+    "path": "encoding/asn1",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "errors",
+      "fmt",
+      "internal/saferio",
+      "math",
+      "math/big",
+      "reflect",
+      "runtime",
+      "slices",
+      "strconv",
+      "strings",
+      "time",
+      "unicode/utf16",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "vendor/golang.org/x/crypto/cryptobyte/asn1",
+    "standard": true,
+    "imports": [],
+    "module": null
+  },
+  {
+    "path": "vendor/golang.org/x/crypto/cryptobyte",
+    "standard": true,
+    "imports": [
+      "encoding/asn1",
+      "errors",
+      "fmt",
+      "vendor/golang.org/x/crypto/cryptobyte/asn1",
+      "math/big",
+      "reflect",
+      "time"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/ecdsa",
+    "standard": true,
+    "imports": [
+      "crypto",
+      "crypto/ecdh",
+      "crypto/elliptic",
+      "crypto/internal/boring",
+      "crypto/internal/boring/bbig",
+      "crypto/internal/fips140/ecdsa",
+      "crypto/internal/fips140/nistec",
+      "crypto/internal/fips140cache",
+      "crypto/internal/fips140hash",
+      "crypto/internal/fips140only",
+      "crypto/internal/rand",
+      "crypto/sha512",
+      "crypto/subtle",
+      "errors",
+      "vendor/golang.org/x/crypto/cryptobyte",
+      "vendor/golang.org/x/crypto/cryptobyte/asn1",
+      "io",
+      "math/big",
+      "math/rand/v2"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/edwards25519",
+    "standard": true,
+    "imports": [
+      "crypto/internal/constanttime",
+      "crypto/internal/fips140/check",
+      "crypto/internal/fips140/edwards25519/field",
+      "crypto/internal/fips140deps/byteorder",
+      "errors",
+      "math/bits",
+      "sync"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/ed25519",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "crypto/internal/fips140",
+      "crypto/internal/fips140/check",
+      "crypto/internal/fips140/drbg",
+      "crypto/internal/fips140/edwards25519",
+      "crypto/internal/fips140/sha512",
+      "errors",
+      "strconv",
+      "sync"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/ed25519",
+    "standard": true,
+    "imports": [
+      "crypto",
+      "crypto/internal/fips140/ed25519",
+      "crypto/internal/fips140cache",
+      "crypto/internal/fips140only",
+      "crypto/internal/rand",
+      "crypto/rand",
+      "crypto/subtle",
+      "errors",
+      "internal/godebug",
+      "io",
+      "strconv"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/hkdf",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "crypto/internal/fips140",
+      "crypto/internal/fips140/check",
+      "crypto/internal/fips140/hmac",
+      "crypto/internal/fips140/sha256",
+      "errors",
+      "hash"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/hkdf",
+    "standard": true,
+    "imports": [
+      "crypto/internal/fips140/hkdf",
+      "crypto/internal/fips140hash",
+      "crypto/internal/fips140only",
+      "errors",
+      "hash"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/hmac",
+    "standard": true,
+    "imports": [
+      "crypto/internal/boring",
+      "crypto/internal/fips140/hmac",
+      "crypto/internal/fips140hash",
+      "crypto/internal/fips140only",
+      "crypto/subtle",
+      "hash"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/mlkem",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "crypto/internal/fips140",
+      "crypto/internal/fips140/check",
+      "crypto/internal/fips140/drbg",
+      "crypto/internal/fips140/sha3",
+      "crypto/internal/fips140/subtle",
+      "crypto/internal/fips140deps/byteorder",
+      "errors",
+      "sync"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/mlkem",
+    "standard": true,
+    "imports": [
+      "crypto",
+      "crypto/internal/fips140/mlkem"
+    ],
+    "module": null
+  },
+  {
+    "path": "vendor/golang.org/x/crypto/internal/alias",
+    "standard": true,
+    "imports": [
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "vendor/golang.org/x/crypto/chacha20",
+    "standard": true,
+    "imports": [
+      "crypto/cipher",
+      "encoding/binary",
+      "errors",
+      "vendor/golang.org/x/crypto/internal/alias",
+      "math/bits",
+      "runtime"
+    ],
+    "module": null
+  },
+  {
+    "path": "vendor/golang.org/x/crypto/internal/poly1305",
+    "standard": true,
+    "imports": [
+      "crypto/subtle",
+      "encoding/binary",
+      "math/bits"
+    ],
+    "module": null
+  },
+  {
+    "path": "vendor/golang.org/x/sys/cpu",
+    "standard": true,
+    "imports": [
+      "os",
+      "runtime",
+      "strconv",
+      "strings",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "vendor/golang.org/x/crypto/chacha20poly1305",
+    "standard": true,
+    "imports": [
+      "crypto/cipher",
+      "crypto/fips140",
+      "encoding/binary",
+      "errors",
+      "vendor/golang.org/x/crypto/chacha20",
+      "vendor/golang.org/x/crypto/internal/alias",
+      "vendor/golang.org/x/crypto/internal/poly1305",
+      "vendor/golang.org/x/sys/cpu"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/hpke",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "crypto",
+      "crypto/cipher",
+      "crypto/ecdh",
+      "crypto/fips140",
+      "crypto/hkdf",
+      "crypto/internal/fips140/aes",
+      "crypto/internal/fips140/aes/gcm",
+      "crypto/internal/fips140/drbg",
+      "crypto/internal/rand",
+      "crypto/mlkem",
+      "crypto/sha256",
+      "crypto/sha3",
+      "crypto/sha512",
+      "errors",
+      "fmt",
+      "vendor/golang.org/x/crypto/chacha20poly1305",
+      "hash",
+      "internal/byteorder",
+      "slices"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/tls12",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "crypto/internal/fips140",
+      "crypto/internal/fips140/check",
+      "crypto/internal/fips140/hmac",
+      "crypto/internal/fips140/sha256",
+      "crypto/internal/fips140/sha512",
+      "errors",
+      "hash"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/tls13",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "crypto/internal/fips140",
+      "crypto/internal/fips140/check",
+      "crypto/internal/fips140/hkdf",
+      "crypto/internal/fips140/sha256",
+      "crypto/internal/fips140deps/byteorder",
+      "errors",
+      "hash"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/mldsa",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "crypto/internal/constanttime",
+      "crypto/internal/fips140",
+      "crypto/internal/fips140/check",
+      "crypto/internal/fips140/drbg",
+      "crypto/internal/fips140/sha256",
+      "crypto/internal/fips140/sha3",
+      "crypto/internal/fips140/subtle",
+      "crypto/internal/fips140deps/byteorder",
+      "errors",
+      "math/bits",
+      "sync"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/mldsa",
+    "standard": true,
+    "imports": [
+      "crypto",
+      "crypto/internal/fips140/mldsa",
+      "errors",
+      "io"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/rc4",
+    "standard": true,
+    "imports": [
+      "crypto/internal/fips140/alias",
+      "crypto/internal/fips140only",
+      "errors",
+      "strconv"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/internal/fips140/rsa",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "crypto/internal/constanttime",
+      "crypto/internal/fips140",
+      "crypto/internal/fips140/bigmod",
+      "crypto/internal/fips140/check",
+      "crypto/internal/fips140/drbg",
+      "crypto/internal/fips140/sha256",
+      "crypto/internal/fips140/sha3",
+      "crypto/internal/fips140/sha512",
+      "crypto/internal/fips140/subtle",
+      "errors",
+      "hash",
+      "io",
+      "sync"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/rsa",
+    "standard": true,
+    "imports": [
+      "crypto",
+      "crypto/internal/boring",
+      "crypto/internal/boring/bbig",
+      "crypto/internal/fips140/bigmod",
+      "crypto/internal/fips140/rsa",
+      "crypto/internal/fips140hash",
+      "crypto/internal/fips140only",
+      "crypto/internal/rand",
+      "crypto/rand",
+      "crypto/subtle",
+      "errors",
+      "fmt",
+      "hash",
+      "internal/godebug",
+      "io",
+      "math",
+      "math/big"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/tls/internal/fips140tls",
+    "standard": true,
+    "imports": [
+      "crypto/fips140",
+      "sync/atomic"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/dsa",
+    "standard": true,
+    "imports": [
+      "crypto/internal/fips140only",
+      "crypto/internal/rand",
+      "errors",
+      "io",
+      "math/big"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/x509/pkix",
+    "standard": true,
+    "imports": [
+      "encoding/asn1",
+      "encoding/hex",
+      "fmt",
+      "math/big",
+      "strings",
+      "time"
+    ],
+    "module": null
+  },
+  {
+    "path": "encoding/pem",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "encoding/base64",
+      "errors",
+      "io",
+      "slices",
+      "strings"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/x509",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "crypto",
+      "crypto/aes",
+      "crypto/cipher",
+      "crypto/des",
+      "crypto/dsa",
+      "crypto/ecdh",
+      "crypto/ecdsa",
+      "crypto/ed25519",
+      "crypto/elliptic",
+      "crypto/fips140",
+      "crypto/md5",
+      "crypto/mldsa",
+      "crypto/rsa",
+      "crypto/sha1",
+      "crypto/sha256",
+      "crypto/sha512",
+      "crypto/x509/pkix",
+      "encoding/asn1",
+      "encoding/hex",
+      "encoding/pem",
+      "errors",
+      "fmt",
+      "vendor/golang.org/x/crypto/cryptobyte",
+      "vendor/golang.org/x/crypto/cryptobyte/asn1",
+      "internal/godebug",
+      "internal/goos",
+      "io",
+      "io/fs",
+      "iter",
+      "maps",
+      "math",
+      "math/big",
+      "math/bits",
+      "net",
+      "net/netip",
+      "net/url",
+      "os",
+      "path/filepath",
+      "runtime",
+      "slices",
+      "strconv",
+      "strings",
+      "sync",
+      "time",
+      "unicode",
+      "unicode/utf16",
+      "unicode/utf8",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "crypto/tls",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "container/list",
+      "context",
+      "crypto",
+      "crypto/aes",
+      "crypto/cipher",
+      "crypto/des",
+      "crypto/ecdh",
+      "crypto/ecdsa",
+      "crypto/ed25519",
+      "crypto/elliptic",
+      "crypto/fips140",
+      "crypto/hkdf",
+      "crypto/hmac",
+      "crypto/hpke",
+      "crypto/internal/boring",
+      "crypto/internal/fips140/aes",
+      "crypto/internal/fips140/aes/gcm",
+      "crypto/internal/fips140/tls12",
+      "crypto/internal/fips140/tls13",
+      "crypto/md5",
+      "crypto/mldsa",
+      "crypto/mlkem",
+      "crypto/rand",
+      "crypto/rc4",
+      "crypto/rsa",
+      "crypto/sha1",
+      "crypto/sha256",
+      "crypto/sha512",
+      "crypto/subtle",
+      "crypto/tls/internal/fips140tls",
+      "crypto/x509",
+      "encoding/pem",
+      "errors",
+      "fmt",
+      "vendor/golang.org/x/crypto/chacha20poly1305",
+      "vendor/golang.org/x/crypto/cryptobyte",
+      "hash",
+      "internal/byteorder",
+      "internal/cpu",
+      "internal/godebug",
+      "io",
+      "net",
+      "os",
+      "runtime",
+      "slices",
+      "sort",
+      "strconv",
+      "strings",
+      "sync",
+      "sync/atomic",
+      "time",
+      "unsafe",
+      "weak"
+    ],
+    "module": null
+  },
+  {
+    "path": "vendor/golang.org/x/text/transform",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "errors",
+      "io",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "vendor/golang.org/x/text/unicode/bidi",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "container/list",
+      "fmt",
+      "log",
+      "sort",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "vendor/golang.org/x/text/secure/bidirule",
+    "standard": true,
+    "imports": [
+      "errors",
+      "vendor/golang.org/x/text/transform",
+      "vendor/golang.org/x/text/unicode/bidi",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "vendor/golang.org/x/text/unicode/norm",
+    "standard": true,
+    "imports": [
+      "encoding/binary",
+      "fmt",
+      "vendor/golang.org/x/text/transform",
+      "io",
+      "sync",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "vendor/golang.org/x/net/idna",
+    "standard": true,
+    "imports": [
+      "fmt",
+      "vendor/golang.org/x/text/secure/bidirule",
+      "vendor/golang.org/x/text/unicode/bidi",
+      "vendor/golang.org/x/text/unicode/norm",
+      "math",
+      "strings",
+      "unicode",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "net/textproto",
+    "standard": true,
+    "imports": [
+      "bufio",
+      "bytes",
+      "errors",
+      "fmt",
+      "io",
+      "math",
+      "net",
+      "strconv",
+      "strings",
+      "sync",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "vendor/golang.org/x/net/http/httpguts",
+    "standard": true,
+    "imports": [
+      "vendor/golang.org/x/net/idna",
+      "net",
+      "net/textproto",
+      "strings",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "vendor/golang.org/x/net/http/httpproxy",
+    "standard": true,
+    "imports": [
+      "errors",
+      "fmt",
+      "vendor/golang.org/x/net/idna",
+      "net",
+      "net/netip",
+      "net/url",
+      "os",
+      "strings",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "mime",
+    "standard": true,
+    "imports": [
+      "bufio",
+      "bytes",
+      "encoding/base64",
+      "errors",
+      "fmt",
+      "io",
+      "maps",
+      "os",
+      "slices",
+      "strings",
+      "sync",
+      "unicode",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "mime/quotedprintable",
+    "standard": true,
+    "imports": [
+      "bufio",
+      "bytes",
+      "fmt",
+      "io"
+    ],
+    "module": null
+  },
+  {
+    "path": "mime/multipart",
+    "standard": true,
+    "imports": [
+      "bufio",
+      "bytes",
+      "crypto/rand",
+      "errors",
+      "fmt",
+      "internal/godebug",
+      "io",
+      "maps",
+      "math",
+      "mime",
+      "mime/quotedprintable",
+      "net/textproto",
+      "os",
+      "path/filepath",
+      "slices",
+      "strconv",
+      "strings",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "net/http/httptrace",
+    "standard": true,
+    "imports": [
+      "context",
+      "crypto/tls",
+      "internal/nettrace",
+      "net",
+      "net/textproto",
+      "time"
+    ],
+    "module": null
+  },
+  {
+    "path": "net/http/internal",
+    "standard": true,
+    "imports": [
+      "bufio",
+      "bytes",
+      "encoding/binary",
+      "errors",
+      "fmt",
+      "io"
+    ],
+    "module": null
+  },
+  {
+    "path": "net/http/internal/ascii",
+    "standard": true,
+    "imports": [
+      "strings",
+      "unicode"
+    ],
+    "module": null
+  },
+  {
+    "path": "vendor/golang.org/x/net/http2/hpack",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "errors",
+      "fmt",
+      "io",
+      "sync"
+    ],
+    "module": null
+  },
+  {
+    "path": "net/http/internal/httpcommon",
+    "standard": true,
+    "imports": [
+      "context",
+      "errors",
+      "fmt",
+      "vendor/golang.org/x/net/http/httpguts",
+      "vendor/golang.org/x/net/http2/hpack",
+      "net/http/httptrace",
+      "net/textproto",
+      "net/url",
+      "sort",
+      "strconv",
+      "strings",
+      "sync"
+    ],
+    "module": null
+  },
+  {
+    "path": "net/http/internal/httpsfv",
+    "standard": true,
+    "imports": [
+      "slices",
+      "strconv",
+      "strings",
+      "time",
+      "unicode/utf8"
+    ],
+    "module": null
+  },
+  {
+    "path": "net/http/internal/http2",
+    "standard": true,
+    "imports": [
+      "bufio",
+      "bytes",
+      "compress/flate",
+      "compress/gzip",
+      "context",
+      "crypto/rand",
+      "crypto/tls",
+      "encoding/binary",
+      "errors",
+      "fmt",
+      "vendor/golang.org/x/net/http/httpguts",
+      "vendor/golang.org/x/net/http2/hpack",
+      "vendor/golang.org/x/net/idna",
+      "io",
+      "io/fs",
+      "log",
+      "math",
+      "math/bits",
+      "math/rand",
+      "mime/multipart",
+      "net",
+      "net/http/httptrace",
+      "net/http/internal",
+      "net/http/internal/httpcommon",
+      "net/http/internal/httpsfv",
+      "net/textproto",
+      "net/url",
+      "os",
+      "reflect",
+      "runtime",
+      "slices",
+      "strconv",
+      "strings",
+      "sync",
+      "sync/atomic",
+      "time"
+    ],
+    "module": null
+  },
+  {
+    "path": "net/http",
+    "standard": true,
+    "imports": [
+      "bufio",
+      "bytes",
+      "compress/flate",
+      "compress/gzip",
+      "container/list",
+      "context",
+      "crypto/tls",
+      "encoding/base64",
+      "errors",
+      "fmt",
+      "vendor/golang.org/x/net/http/httpguts",
+      "vendor/golang.org/x/net/http/httpproxy",
+      "vendor/golang.org/x/net/idna",
+      "internal/godebug",
+      "io",
+      "io/fs",
+      "log",
+      "maps",
+      "math",
+      "math/rand/v2",
+      "mime",
+      "mime/multipart",
+      "net",
+      "net/http/httptrace",
+      "net/http/internal",
+      "net/http/internal/ascii",
+      "net/http/internal/http2",
+      "net/textproto",
+      "net/url",
+      "os",
+      "path",
+      "path/filepath",
+      "reflect",
+      "runtime",
+      "slices",
+      "sort",
+      "strconv",
+      "strings",
+      "sync",
+      "sync/atomic",
+      "time",
+      "unicode",
+      "unicode/utf8",
+      "unsafe"
+    ],
+    "module": null
+  },
+  {
+    "path": "go.uber.org/zap",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "encoding/json",
+      "errors",
+      "flag",
+      "fmt",
+      "go.uber.org/multierr",
+      "go.uber.org/zap/internal",
+      "go.uber.org/zap/internal/bufferpool",
+      "go.uber.org/zap/internal/pool",
+      "go.uber.org/zap/internal/stacktrace",
+      "go.uber.org/zap/zapcore",
+      "io",
+      "log",
+      "math",
+      "net/http",
+      "net/url",
+      "os",
+      "path/filepath",
+      "sort",
+      "strings",
+      "sync",
+      "sync/atomic",
+      "time"
+    ],
+    "module": "go.uber.org/zap"
+  },
+  {
+    "path": "github.com/masahiro331/go-ext4-filesystem/log",
+    "standard": false,
+    "imports": [
+      "go.uber.org/zap"
+    ],
+    "module": "github.com/masahiro331/go-ext4-filesystem"
+  },
+  {
+    "path": "golang.org/x/xerrors/internal",
+    "standard": false,
+    "imports": [],
+    "module": "golang.org/x/xerrors"
+  },
+  {
+    "path": "golang.org/x/xerrors",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "errors",
+      "fmt",
+      "golang.org/x/xerrors/internal",
+      "io",
+      "reflect",
+      "runtime",
+      "strconv",
+      "strings",
+      "unicode",
+      "unicode/utf8"
+    ],
+    "module": "golang.org/x/xerrors"
+  },
+  {
+    "path": "github.com/masahiro331/go-ext4-filesystem/ext4",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "encoding/binary",
+      "fmt",
+      "github.com/lunixbochs/struc",
+      "github.com/masahiro331/go-ext4-filesystem/log",
+      "golang.org/x/xerrors",
+      "io",
+      "io/fs",
+      "path",
+      "path/filepath",
+      "sort",
+      "strings",
+      "time"
+    ],
+    "module": "github.com/masahiro331/go-ext4-filesystem"
+  },
+  {
+    "path": "github.com/davecgh/go-spew/spew",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "encoding/hex",
+      "fmt",
+      "io",
+      "os",
+      "reflect",
+      "regexp",
+      "sort",
+      "strconv",
+      "strings",
+      "unsafe"
+    ],
+    "module": "github.com/davecgh/go-spew"
+  },
+  {
+    "path": "www.velocidex.com/golang/go-ntfs/parser",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "container/list",
+      "context",
+      "encoding/binary",
+      "encoding/hex",
+      "encoding/json",
+      "errors",
+      "fmt",
+      "github.com/davecgh/go-spew/spew",
+      "io",
+      "os",
+      "path",
+      "runtime/debug",
+      "sort",
+      "strconv",
+      "strings",
+      "sync",
+      "time",
+      "unicode/utf16",
+      "unicode/utf8"
+    ],
+    "module": "www.velocidex.com/golang/go-ntfs"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/embeddedfs/common",
+    "standard": false,
+    "imports": [
+      "archive/tar",
+      "context",
+      "encoding/binary",
+      "errors",
+      "fmt",
+      "github.com/diskfs/go-diskfs",
+      "github.com/diskfs/go-diskfs/disk",
+      "github.com/diskfs/go-diskfs/filesystem/fat32",
+      "github.com/diskfs/go-diskfs/partition/part",
+      "github.com/dsoprea/go-exfat",
+      "github.com/google/osv-scalibr/artifact/image/symlink",
+      "github.com/google/osv-scalibr/fs",
+      "github.com/masahiro331/go-ext4-filesystem/ext4",
+      "io",
+      "io/fs",
+      "os",
+      "path",
+      "path/filepath",
+      "strings",
+      "sync",
+      "syscall",
+      "time",
+      "www.velocidex.com/golang/go-ntfs/parser"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/veles",
+    "standard": false,
+    "imports": [
+      "context",
+      "errors",
+      "fmt",
+      "io",
+      "reflect"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/veles/sensitiveinformation",
+    "standard": false,
+    "imports": [],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/inventory",
+    "standard": false,
+    "imports": [
+      "context",
+      "errors",
+      "github.com/google/osv-scalibr/extractor",
+      "github.com/google/osv-scalibr/fs",
+      "github.com/google/osv-scalibr/inventory/location",
+      "github.com/google/osv-scalibr/inventory/vex",
+      "github.com/google/osv-scalibr/veles",
+      "github.com/google/osv-scalibr/veles/sensitiveinformation",
+      "github.com/ossf/osv-schema/bindings/go/osvschema",
+      "path/filepath",
+      "time"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/stats",
+    "standard": false,
+    "imports": [
+      "github.com/google/osv-scalibr/inventory",
+      "github.com/google/osv-scalibr/plugin",
+      "time"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem",
+    "standard": false,
+    "imports": [
+      "context",
+      "errors",
+      "fmt",
+      "github.com/gobwas/glob",
+      "github.com/google/osv-scalibr/extractor",
+      "github.com/google/osv-scalibr/extractor/filesystem/embeddedfs/common",
+      "github.com/google/osv-scalibr/extractor/filesystem/internal",
+      "github.com/google/osv-scalibr/fs",
+      "github.com/google/osv-scalibr/inventory",
+      "github.com/google/osv-scalibr/inventory/location",
+      "github.com/google/osv-scalibr/log",
+      "github.com/google/osv-scalibr/plugin",
+      "github.com/google/osv-scalibr/stats",
+      "io",
+      "io/fs",
+      "os",
+      "path/filepath",
+      "regexp",
+      "slices",
+      "strings",
+      "sync",
+      "time"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/tidwall/match",
+    "standard": false,
+    "imports": [
+      "unicode/utf8"
+    ],
+    "module": "github.com/tidwall/match"
+  },
+  {
+    "path": "github.com/tidwall/pretty",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "encoding/json",
+      "sort",
+      "strconv"
+    ],
+    "module": "github.com/tidwall/pretty"
+  },
+  {
+    "path": "github.com/tidwall/gjson",
+    "standard": false,
+    "imports": [
+      "github.com/tidwall/match",
+      "github.com/tidwall/pretty",
+      "iter",
+      "strconv",
+      "strings",
+      "time",
+      "unicode/utf16",
+      "unicode/utf8",
+      "unsafe"
+    ],
+    "module": "github.com/tidwall/gjson"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/internal/linefinder",
+    "standard": false,
+    "imports": [
+      "github.com/tidwall/gjson",
+      "sort"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/language/javascript/internal/commitextractor",
+    "standard": false,
+    "imports": [
+      "net/url",
+      "regexp",
+      "slices",
+      "strings"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/tidwall/jsonc",
+    "standard": false,
+    "imports": [],
+    "module": "github.com/tidwall/jsonc"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/language/javascript/bunlock",
+    "standard": false,
+    "imports": [
+      "context",
+      "encoding/json",
+      "errors",
+      "fmt",
+      "github.com/google/osv-scalibr/binary/proto/config_go_proto",
+      "github.com/google/osv-scalibr/extractor",
+      "github.com/google/osv-scalibr/extractor/filesystem",
+      "github.com/google/osv-scalibr/extractor/filesystem/internal/linefinder",
+      "github.com/google/osv-scalibr/extractor/filesystem/language/javascript/internal/commitextractor",
+      "github.com/google/osv-scalibr/extractor/filesystem/osv",
+      "github.com/google/osv-scalibr/inventory",
+      "github.com/google/osv-scalibr/plugin",
+      "github.com/google/osv-scalibr/purl",
+      "github.com/tidwall/gjson",
+      "github.com/tidwall/jsonc",
+      "io",
+      "path/filepath",
+      "slices",
+      "strings"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/internal/units",
+    "standard": false,
+    "imports": [],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/language/javascript/packagejson",
+    "standard": false,
+    "imports": [
+      "context",
+      "deps.dev/util/semver",
+      "encoding/json",
+      "fmt",
+      "github.com/google/osv-scalibr/binary/proto/config_go_proto",
+      "github.com/google/osv-scalibr/extractor",
+      "github.com/google/osv-scalibr/extractor/filesystem",
+      "github.com/google/osv-scalibr/extractor/filesystem/internal/linefinder",
+      "github.com/google/osv-scalibr/extractor/filesystem/internal/units",
+      "github.com/google/osv-scalibr/extractor/filesystem/language/javascript/packagejson/metadata",
+      "github.com/google/osv-scalibr/inventory",
+      "github.com/google/osv-scalibr/log",
+      "github.com/google/osv-scalibr/plugin",
+      "github.com/google/osv-scalibr/purl",
+      "github.com/google/osv-scalibr/stats",
+      "github.com/tidwall/gjson",
+      "io",
+      "io/fs",
+      "path/filepath"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/internal/dependencyfile/packagelockjson",
+    "standard": false,
+    "imports": [],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "github.com/google/osv-scalibr/extractor/filesystem/language/javascript/packagelockjson",
+    "standard": false,
+    "imports": [
+      "context",
+      "encoding/json",
+      "errors",
+      "fmt",
+      "github.com/google/osv-scalibr/binary/proto/config_go_proto",
+      "github.com/google/osv-scalibr/extractor",
+      "github.com/google/osv-scalibr/extractor/filesystem",
+      "github.com/google/osv-scalibr/extractor/filesystem/internal/linefinder",
+      "github.com/google/osv-scalibr/extractor/filesystem/language/javascript/internal/commitextractor",
+      "github.com/google/osv-scalibr/extractor/filesystem/language/javascript/metadata",
+      "github.com/google/osv-scalibr/internal/dependencyfile/packagelockjson",
+      "github.com/google/osv-scalibr/inventory",
+      "github.com/google/osv-scalibr/plugin",
+      "github.com/google/osv-scalibr/purl",
+      "github.com/google/osv-scalibr/stats",
+      "github.com/tidwall/gjson",
+      "io",
+      "maps",
+      "net/url",
+      "path",
+      "path/filepath",
+      "slices",
+      "strings"
+    ],
+    "module": "github.com/google/osv-scalibr"
+  },
+  {
+    "path": "testing/iotest",
+    "standard": true,
+    "imports": [
+      "bytes",
+      "errors",
+      "fmt",
+      "io",
+      "log"
+    ],
+    "module": null
+  },
+  {
+    "path": "testing/fstest",
+    "standard": true,
+    "imports": [
+      "errors",
+      "fmt",
+      "io",
+      "io/fs",
+      "maps",
+      "path",
+      "slices",
+      "strings",
+      "testing/iotest",
+      "time"
+    ],
+    "module": null
+  },
+  {
+    "path": "packtrace.local/scalibr-inventory-probe",
+    "standard": false,
+    "imports": [
+      "bytes",
+      "context",
+      "crypto/sha256",
+      "encoding/json",
+      "errors",
+      "fmt",
+      "github.com/google/osv-scalibr/binary/proto/config_go_proto",
+      "github.com/google/osv-scalibr/extractor",
+      "github.com/google/osv-scalibr/extractor/filesystem",
+      "github.com/google/osv-scalibr/extractor/filesystem/language/javascript/bunlock",
+      "github.com/google/osv-scalibr/extractor/filesystem/language/javascript/packagejson",
+      "github.com/google/osv-scalibr/extractor/filesystem/language/javascript/packagelockjson",
+      "github.com/google/osv-scalibr/inventory",
+      "io",
+      "io/fs",
+      "os",
+      "path",
+      "sort",
+      "strings",
+      "testing/fstest",
+      "time"
+    ],
+    "module": "packtrace.local/scalibr-inventory-probe"
+  },
+  {
+    "path": "packtrace.local/scalibr-inventory-probe/cmd/extractors",
+    "standard": false,
+    "imports": [
+      "packtrace.local/scalibr-inventory-probe"
+    ],
+    "module": "packtrace.local/scalibr-inventory-probe"
+  }
+]

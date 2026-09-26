@@ -1,0 +1,8 @@
+{
+  "dependency-license-inventory.json": "9ca781c077c44fa58e234647b94b70760dab6d63bd2993ee12949a6175c56f72",
+  "module-graph.json": "9260d3ed701195864ea55f5ce2b9495153fdb71c3753bae793de9fdf3e8dab86",
+  "observations.json": "7d3461bc237316fc2cb25d3e85683790eece9531ed877bdbe86480f2d5f111dd",
+  "raw-runs.json": "9fcf67a31cc1743d0d721e3be37cd4155d2d32bfe12aec114a2afab389289fa3",
+  "selected-imports.json": "6d5718138bb25dc4f17621f9964ea16682a2cd5c9bbdf5cfd11c7eb60369d6bf",
+  "summary.json": "c10e2347e3d636b5d61273a0f5b12959f5edbcf6ecd2cd7c11c91ebd880a2c69"
+}
