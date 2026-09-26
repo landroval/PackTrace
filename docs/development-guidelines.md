@@ -104,13 +104,16 @@ dependency must have a concrete purpose and acceptable maintenance/license costs
 
 ## 5. Offline behavior and privacy
 
-Scanning makes no network requests by default. Keep network capability in
-explicitly authorized synchronization/fetch paths rather than implicit helpers.
+Scanning makes no network requests. Keep network capability in separate,
+explicitly authorized synchronization/fetch operations rather than implicit
+helpers or an online scan mode; see the
+[approved scope clarification](design-decisions.md#23-online-preparation-scope-clarification).
 
 - Missing local intelligence or references makes applicable checks incomplete or
   unverified; it must not silently trigger a request.
-- Provide distinct explicit operations/options for intelligence synchronization,
-  public artifact fetching, and authorized online scans.
+- Provide distinct explicit operations for intelligence synchronization and public
+  artifact fetching, followed by offline scanning. Do not add an integrated online
+  scan mode for the pilot.
 - Do not query public services with private package identities implicitly.
 - Do not transmit source files, credentials, or local paths implicitly.
 - Establish public/private/unknown source classification from explicit trusted

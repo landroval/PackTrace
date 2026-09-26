@@ -4,7 +4,16 @@
 
 This is the proposed pre-1.0 shipping checklist, derived from the confirmed
 product scope. It defines what must be delivered, not how to implement it.
-All items are unchecked: this document does not claim implementation or validation.
+Check a top-level item only when its own acceptance criterion is met.
+Documentation-only contracts may be checked with linked approved documentation;
+that does not establish runtime implementation. Product behaviors and release
+gates still require executed acceptance evidence. Checked nested milestones show
+narrower progress and do not close their unchecked parent.
+
+**Current evidence review:** two documentation contracts are complete; no executable
+product capability is qualified for shipping. The bounded Linux probe and reviewed
+design/budget milestones are recorded below without promoting them to product
+acceptance.
 
 The first delivery target remains a usable team pilot. Develop the capabilities
 incrementally during 0.x; do not label an intermediate inventory-only build as the
@@ -16,6 +25,10 @@ Related documents:
 
 - [Development roadmap](development-roadmap.md): sequencing and approval gates.
 - [Development guidelines](development-guidelines.md): engineering and safety rules.
+- [Approved design directions](design-decisions.md): reviewed decisions, not the
+  complete specification or implementation plan.
+- [Inventory evaluation results](inventory-evaluation-results.md): bounded probe
+  evidence and explicit gaps.
 
 Documentation approval does not authorize probes, production implementation,
 dependency installation, or publication. The design and detailed implementation
@@ -82,8 +95,12 @@ scope; it never claims that a malicious payload executed.
   withdrawals, corrections, and removals without indefinitely retaining stale data.
 - [ ] **Freshness visibility:** report snapshot identity, acquisition and available
   upstream timestamps, freshness policy, and unavailable or stale intelligence.
-- [ ] **Source authenticity:** document the trust placed in data sources and
+- [x] **Source authenticity:** document the trust placed in data sources and
   transport, and distinguish it from locally computed integrity hashes.
+  **Documentation evidence:** [approved source/trust contract](design-decisions.md#7-intelligence-acquisition-sources)
+  separates acquisition source, publisher, HTTPS, and local hashes, and records
+  aggregator limitations. This closes the documentation requirement only;
+  runtime networking/authenticity controls remain unimplemented and unqualified.
 
 **Shipping condition:** unavailable or unacceptable intelligence produces an
 incomplete applicable check, not a successful no-findings result.
@@ -94,8 +111,12 @@ incomplete applicable check, not a successful no-findings result.
   including references for private dependencies.
 - [ ] **Explicit public fetching:** fetch missing public reference artifacts only
   with authorization and validated destination/source rules.
-- [ ] **Explicit online scans:** provide an authorized online mode without weakening
+- [ ] **Explicit online preparation workflow:** provide separately authorized
+  intelligence/artifact preparation followed by offline scanning, without weakening
   destination restrictions or private-package privacy rules.
+  **Approved scope clarification:** [separate preparation, no online scan mode](design-decisions.md#23-online-preparation-scope-clarification)
+  replaces the earlier integrated-online-scan wording; the workflow is not yet
+  implemented.
 - [ ] **Reference validation:** validate the artifact against an expected digest
   with recorded provenance before comparing installed contents.
 - [ ] **Lockfile-consistent assurance:** label comparisons whose reference matches
@@ -149,9 +170,13 @@ findings and completeness. An empty findings array cannot hide failed checks.
 - [ ] **Report-first CI:** allow completed scans to report findings without failing
   CI by default.
 - [ ] **Optional enforcement:** let approved policy enable finding-based failure.
-- [ ] **Precise exit-code contract:** distinguish operational failure, incomplete
+- [x] **Precise exit-code contract:** distinguish operational failure, incomplete
   required checks, and enforcement outcomes, including precedence when findings
   coexist with incomplete coverage.
+  **Documentation evidence:** [approved exit contract](design-decisions.md#5-scan-defaults-and-exit-codes)
+  defines `0`, `1`, `2`, `3`, `130` and ordinary precedence `2 > 3 > 1 > 0`.
+  Runtime behavior remains unimplemented; the policy/report acceptance gate below
+  stays open.
 - [ ] **Required coverage policy:** configure which checks and freshness
   requirements must complete; disclose exclusions and their effect.
 - [ ] **Trusted policy precedence:** prevent untrusted project configuration from
@@ -227,9 +252,18 @@ shipped solely because code exists; link its executed acceptance evidence.
 
 - [ ] **Approved design and implementation plan:** material compatibility, trust,
   configuration, report, and exit-code decisions are recorded and reviewed.
+  - [x] **Design-direction milestone:** [reviewed decisions](design-decisions.md)
+    record the approved contracts. The complete written specification and detailed
+    implementation plan are still pending, so this gate remains open.
 - [ ] **SCALIBR evaluation completed:** selected extractors are evaluated at a
   pinned revision for required observations, errors, platform behavior, API
   stability, footprint, and licensing; custom handling is justified by gaps.
+  - [x] **Bounded Linux probe milestone:** [probe A and gap/adoption report](inventory-evaluation-results.md)
+    evaluated the pinned extractors using synthetic inputs: 73 children executed,
+    including three panics; two graph cases were blocked. This is not a passing
+    product suite. Native macOS/Windows and producer-generated compatibility,
+    broader platform assessment, and full licensing review remain outstanding;
+    the broader gate stays open.
 - [ ] **Inventory accuracy:** identify every expected installed instance in the
   supported fixture corpus, with zero locked-only entries labeled installed.
 - [ ] **Detection correctness:** reviewed parser and matching tables pass,
@@ -252,6 +286,11 @@ shipped solely because code exists; link its executed acceptance evidence.
 - [ ] **Measured resource use:** meet approved runtime and peak-memory budgets on
   a fixed, documented corpus and hardware/cache profile. Set numeric thresholds
   in the design before implementation approval, not after seeing results.
+  - [x] **Budget-definition milestone:** [scan/benchmark targets](design-decisions.md#18-initial-scan-budgets-and-acceptance-targets),
+    [intelligence budgets](design-decisions.md#20-intelligence-synchronization-budgets),
+    and [reference budgets](design-decisions.md#21-artifact-preparation-and-reference-inspection-budgets)
+    are approved. The exact benchmark corpus and production measurements remain
+    pending; probe measurements do not close this gate.
 - [ ] **Team-pilot review:** investigate consenting projects read-only, review
   findings against available ground truth, and document false positives, coverage
   gaps, usability issues, and unresolved limitations before release approval.
@@ -277,20 +316,29 @@ Do not expand this checklist with these items without a separate scope decision:
 - A public Go API compatibility commitment.
 - A database or elaborate task framework without demonstrated need.
 
-## 11. Scope details still requiring design approval
+## 11. Approved directions versus remaining qualification
 
-The capabilities above are the shipping target. The following details are not yet
-settled and must not be advertised as supported or silently guessed:
+The capabilities above remain the shipping target. The
+[design-decision record](design-decisions.md) now settles substantial directions,
+without establishing implemented or validated product support:
 
-- Exact npm/Bun versions, lockfile versions, workspace patterns, and layouts.
-- Supported OS versions and CPU architectures.
-- Intelligence dataset selection, update mechanics, freshness thresholds, and
-  source-authenticity guarantees.
-- Public/private classification rules and authorized network destinations.
-- Baseline trust configuration and supported digest/identity semantics.
-- Numeric resource/performance budgets and benchmark corpus.
-- CLI/configuration syntax, required-check defaults, exit-code values, and report
-  schema/versioning details.
+- npm/Bun anchors, baseline workspace/layout scope, and five native OS/architecture
+  targets are recorded. Actual producer-generated and native qualification remain
+  pending.
+- OSV npm aggregation, update/reconciliation direction, 24-hour freshness, and
+  seven-day full reconciliation are selected. Exact data handling and licensing
+  review remain incomplete.
+- Origin classification, explicit network authorization, baseline trust, and
+  supported assurance digests have approved contracts; concrete mappings and
+  native enforcement still need specification and tests.
+- Scan/preparation budgets, benchmark targets, and a 32 GiB managed-storage quota
+  with explicit historical cleanup are approved. Exact corpus, quota/retention
+  mechanisms, and production measurements remain pending.
+- Offline all-three-check defaults, explicit JSON policy, exit codes, JSON `1.0`,
+  portable privacy, and evidence-bound exceptions are agreed. Complete schemas,
+  encodings, worker protocol, and runtime behavior remain to be delivered.
+- The full written specification and detailed implementation plan still require
+  review and approval. Reviewed directions alone do not close that gate.
 
-Resolve these through the design and approved compatibility evaluation described
-in the roadmap. This checklist does not authorize implementation or a probe.
+Resolve remaining details through the roadmap's design and qualification process.
+This checklist does not authorize implementation, a probe, downloads, or deletion.

@@ -811,7 +811,8 @@ pilot release; these are design values, not measured consumption.
 - Exceeding a limit prevents candidate publication and freshness renewal. Never
   remove records merely to make a snapshot fit.
 - Staging occupancy excludes earlier retained snapshots. It is not a global quota
-  for all retained historical storage; retention remains a separate decision.
+  for all retained historical storage; section 22 defines the separate global
+  quota and retention policy.
 
 ### Public metadata observation
 
@@ -865,8 +866,8 @@ and memory controls.
   from atomic publication of a complete intelligence snapshot.
 - Inspection limits make the affected comparison incomplete without erasing
   previous findings.
-- Transfer/staging limits do not impose a global historical-cache quota; retention
-  remains separate.
+- Transfer/staging limits are distinct from the global quota and retention policy
+  in section 22; both sets of limits apply.
 
 Private/unknown sources still use local references. These budgets neither widen
 network authorization nor authorize executing artifact downloads now.
@@ -876,7 +877,54 @@ limits, repeated reads, truncated downloads, wrong digests, unsafe archive entri
 partially successful batches, and incomplete comparisons retaining earlier
 findings. Qualify numeric defaults rather than silently increasing them.
 
-## 22. Remaining design work
+## 22. Global cache quota and retention
+
+**Approved default:** a 32 GiB quota for PackTrace-managed storage, with explicit
+historical cleanup rather than automatic eviction.
+
+- Count managed snapshots, artifacts, indexes, and staging against the global
+  quota. Per-operation budgets still apply; their individual maxima need not all
+  fit at the same time.
+- Reserve capacity before writing and coordinate concurrent writers. If capacity
+  is insufficient, fail without replacing the valid snapshot or silently raising
+  limits.
+- Protect the active snapshot, the previous valid snapshot, objects used by active
+  scans, and explicitly pinned objects.
+- Freshness expiry affects coverage; it does not automatically delete data.
+- `cache prune` first presents a preview. Applying cleanup requires explicit
+  authorization and revalidation of candidates, managed-store ownership, and
+  active use. This is a design contract, not an implemented command.
+- Never prune investigated targets, reports, baselines, or user-owned external
+  references.
+- Automatically clean up only the operation's own temporary data whose ownership
+  is established. Report uncertain leftovers rather than deleting blindly.
+
+Historical cleanup can prevent reproducing an old report even when that report
+retains hashes and provenance. The preview must explain this risk. Automatic
+eviction of unprotected historical objects was considered but not selected.
+
+Exact quota accounting, reservations, pinning, crash recovery, and deletion
+mechanisms require specification and native qualification. No existing cache,
+probe data, or other files are authorized for deletion by this design approval.
+
+**Required acceptance coverage, not yet executed:** concurrent quota reservations,
+global versus per-operation budgets, full storage preserving a valid snapshot,
+protected objects, active readers, preview/apply revalidation, uncertain ownership,
+external paths, and explicit historical-reproduction warnings.
+
+## 23. Online preparation scope clarification
+
+The earlier shipping checklist called for explicit online scans. The user resolved
+that requirement in favor of separate, explicitly authorized intelligence/artifact
+preparation followed by offline scanning. Do not add an online mode to `scan` or
+an additional integrated online-investigation command for the pilot.
+
+The [shipping checklist](pre-1.0-features.md) and
+[engineering guidelines](development-guidelines.md) reflect this scope decision.
+Preparation retains all approved destination, privacy, trust, and budget controls;
+selecting this workflow does not itself authorize executing network operations.
+
+## 24. Remaining design work
 
 The approvals above do not settle the following contracts:
 
@@ -889,8 +937,8 @@ The approvals above do not settle the following contracts:
   format, multi-digest handling, and per-layout integrity comparison rules.
 - Concrete JSON/SARIF field mappings, canonical fingerprint encodings, redaction
   field rules, exception schemas, and compatibility fixtures.
-- Cache/snapshot retention and overall storage policy, exact benchmark corpus,
-  and executable acceptance checks.
+- Exact quota/reservation/retention mechanisms, benchmark corpus, and executable
+  acceptance checks.
 
 These decisions authorize neither live synchronization nor artifact-fetch execution.
 Review the remaining sections before producing the complete written specification.
