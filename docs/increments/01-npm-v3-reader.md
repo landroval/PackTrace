@@ -1,8 +1,8 @@
 # Increment 1: npm v3 lockfile reader
 
-Status: proposed written specification; awaiting approval. No implementation is
-authorized by this document. After approval, review a short implementation plan
-and explicitly authorize its execution. Global constraints remain in
+Status: written specification approved. Implementation still requires approval of
+the [implementation plan](01-npm-v3-reader-plan.md) and explicit execution
+authorization. Global constraints remain in
 [design decisions](../design-decisions.md).
 
 ## Deliverable
