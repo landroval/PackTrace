@@ -17,7 +17,9 @@ by the existence of these documents.
 - Do not claim that a format, platform, or security property has been validated
   without recording the relevant executed checks and results.
 
-Read this alongside [the development guidelines](development-guidelines.md).
+Read this alongside [the development guidelines](development-guidelines.md) and
+[approved technical design directions](design-decisions.md). The latter records
+post-probe decisions; it is not the complete specification or implementation plan.
 
 ## 1. Product goal and confirmed scope
 
