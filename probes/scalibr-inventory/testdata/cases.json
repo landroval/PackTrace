@@ -1,0 +1,1112 @@
+[
+  {
+    "id": "a01-npm1",
+    "group": "A01",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 1, \"dependencies\": {\"@packtrace-fixture/a\": {\"version\": \"1.0.0\", \"dependencies\": {\"@packtrace-fixture/b\": {\"version\": \"2.0.0\"}}}}}",
+    "gaps": [
+      "lock observations only; source/digest/instance fields require supplementation"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 2
+    }
+  },
+  {
+    "id": "a01-npm2",
+    "group": "A01",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/@packtrace-fixture/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}}}",
+    "gaps": [
+      "lock observations only; source/digest/instance fields require supplementation"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a01-npm3",
+    "group": "A01",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/@packtrace-fixture/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}}}",
+    "gaps": [
+      "lock observations only; source/digest/instance fields require supplementation"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a02-both",
+    "group": "A02",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/@packtrace-fixture/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}}}",
+    "gaps": [],
+    "expect": {
+      "outcome": "ok",
+      "count": 0
+    },
+    "files": {
+      "npm-shrinkwrap.json": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/b\": {\"name\": \"@packtrace-fixture/b\", \"version\": \"2.0.0\"}}}"
+    }
+  },
+  {
+    "id": "a02-shrinkwrap",
+    "group": "A02",
+    "extractor": "npm",
+    "path": "npm-shrinkwrap.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/@packtrace-fixture/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}}}",
+    "gaps": [],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a02-unreadable-shrinkwrap",
+    "group": "A02",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/@packtrace-fixture/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}}}",
+    "gaps": [
+      "upstream fallback hides denied higher-precedence file"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "open_denied": true
+  },
+  {
+    "id": "a03-stat-denied",
+    "group": "A03",
+    "extractor": "manifest",
+    "path": "package.json",
+    "content": "{\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}",
+    "gaps": [
+      "selection is false without an error channel; direct extraction still succeeds"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1,
+      "selected": false
+    },
+    "stat_denied": true
+  },
+  {
+    "id": "a03-reader-denied",
+    "group": "A03",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/@packtrace-fixture/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}}}",
+    "gaps": [
+      "unreadable input"
+    ],
+    "expect": {
+      "outcome": "error",
+      "count": 0
+    },
+    "read_error": true
+  },
+  {
+    "id": "a03-stat-denied-npm",
+    "group": "A03",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/@packtrace-fixture/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}}}",
+    "gaps": [
+      "selection diagnostic must be owned by caller"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1,
+      "selected": false
+    },
+    "stat_denied": true
+  },
+  {
+    "id": "a04-duplicate-instances",
+    "group": "A04",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}, \"node_modules/p/node_modules/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}, \"node_modules/q/node_modules/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"2.0.0\"}}}",
+    "gaps": [
+      "three locked instances collapse to two identities"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 2
+    }
+  },
+  {
+    "id": "a05-alias",
+    "group": "A05",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 1, \"dependencies\": {\"alias\": {\"version\": \"npm:real@1.0.0\"}}}",
+    "gaps": [
+      "alias provenance not retained"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a05-scoped-alias",
+    "group": "A05",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 1, \"dependencies\": {\"alias\": {\"version\": \"npm:@packtrace-fixture/real@1.0.0\"}}}",
+    "gaps": [
+      "alias provenance not retained"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a05-bad-alias",
+    "group": "A05",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 1, \"dependencies\": {\"alias\": {\"version\": \"npm:bad\"}}}",
+    "gaps": [
+      "malformed alias may panic"
+    ],
+    "expect": {
+      "outcome": "panic"
+    }
+  },
+  {
+    "id": "a05-public",
+    "group": "A05",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\", \"resolved\": \"https://registry.npmjs.org/a/-/a-1.0.0.tgz\"}}}",
+    "gaps": [
+      "source identity/classification is not fetch authorization; raw URL lost"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a05-private-npm",
+    "group": "A05",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\", \"resolved\": \"https://private.invalid/npm/a.tgz\"}}}",
+    "gaps": [
+      "source identity/classification is not fetch authorization; raw URL lost"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a05-file",
+    "group": "A05",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\", \"resolved\": \"file:../local\"}}}",
+    "gaps": [
+      "source identity/classification is not fetch authorization; raw URL lost"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a05-git-full",
+    "group": "A05",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\", \"resolved\": \"git+https://example.invalid/a.git#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}}}",
+    "gaps": [
+      "source identity/classification is not fetch authorization; raw URL lost"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a05-git-short",
+    "group": "A05",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\", \"resolved\": \"git+https://example.invalid/a.git#abcdef0\"}}}",
+    "gaps": [
+      "source identity/classification is not fetch authorization; raw URL lost"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a06-workspace-lock",
+    "group": "A06",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"\": {\"name\": \"root\", \"version\": \"1.0.0\", \"workspaces\": [\"packages/*\"]}, \"packages/ui\": {\"name\": \"ui\", \"version\": \"1.0.0\"}, \"node_modules/ui\": {\"link\": true, \"resolved\": \"packages/ui\"}, \"node_modules/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}}}",
+    "gaps": [
+      "root/link ownership and dependency paths omitted"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 2
+    }
+  },
+  {
+    "id": "a06-workspace-root",
+    "group": "A06",
+    "extractor": "manifest",
+    "path": "package.json",
+    "content": "{\"name\": \"root\", \"version\": \"1.0.0\", \"workspaces\": [\"packages/*\"], \"dependencies\": {\"@packtrace-fixture/a\": \"^1.0.0\"}, \"devDependencies\": {\"@packtrace-fixture/b\": \"^2.0.0\"}}",
+    "gaps": [
+      "workspace and dev dependency declarations omitted"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a07-groups",
+    "group": "A07",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\", \"devOptional\": true}, \"node_modules/b\": {\"name\": \"@packtrace-fixture/b\", \"version\": \"1.0.0\", \"inBundle\": true}, \"node_modules/c\": {\"name\": \"c\", \"version\": \"1.0.0\", \"dev\": true, \"optional\": true}}}",
+    "gaps": [],
+    "expect": {
+      "outcome": "ok",
+      "count": 3
+    }
+  },
+  {
+    "id": "a07-optional-peer-absent",
+    "group": "A07",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"\": {\"name\": \"root\", \"version\": \"1.0.0\", \"optionalDependencies\": {\"@packtrace-fixture/a\": \"1.0.0\"}}, \"node_modules/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\", \"optional\": true, \"os\": [\"darwin\"], \"cpu\": [\"arm64\"], \"peerDependencies\": {\"@packtrace-fixture/b\": \"^2.0.0\"}, \"peerDependenciesMeta\": {\"@packtrace-fixture/b\": {\"optional\": true}}}}}",
+    "gaps": [
+      "locked optional package is not physically installed evidence; platform/peer metadata lost"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a08-digests-conflict",
+    "group": "A08",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\", \"resolved\": \"https://registry.npmjs.org/a.tgz\", \"integrity\": \"sha512-AAAA\"}, \"node_modules/p/node_modules/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\", \"resolved\": \"https://private.invalid/a.tgz\", \"integrity\": \"sha1-BBBB\"}}}",
+    "gaps": [
+      "distinct source/digest observations collapsed; integrity omitted"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a08-digest-absent",
+    "group": "A08",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/@packtrace-fixture/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}}}",
+    "gaps": [
+      "reference digest unavailable"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a09-v0-configNone",
+    "group": "A09",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "{\"lockfileVersion\": 0, \"packages\": {\"@packtrace-fixture/a\": [\"@packtrace-fixture/a@1.0.0\", \"\", {}, \"sha512-synthetic\"]}, \"workspaces\": {\"\": {\"name\": \"root\", \"version\": \"1.0.0\", \"dependencies\": {\"@packtrace-fixture/a\": \"1.0.0\"}}, \"packages/ui\": {\"name\": \"ui\", \"version\": \"1.0.0\"}}, \"overrides\": {\"@packtrace-fixture/a\": {\"@packtrace-fixture/b\": \"2.0.0\"}}, \"catalog\": {\"@packtrace-fixture/b\": \"2.0.0\"}}",
+    "gaps": [
+      "successful tuple parse is not grammar/workspace/config/override validation"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a09-v1-configNone",
+    "group": "A09",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "{\"lockfileVersion\": 1, \"packages\": {\"@packtrace-fixture/a\": [\"@packtrace-fixture/a@1.0.0\", \"\", {}, \"sha512-synthetic\"]}, \"workspaces\": {\"\": {\"name\": \"root\", \"version\": \"1.0.0\", \"dependencies\": {\"@packtrace-fixture/a\": \"1.0.0\"}}, \"packages/ui\": {\"name\": \"ui\", \"version\": \"1.0.0\"}}, \"overrides\": {\"@packtrace-fixture/a\": {\"@packtrace-fixture/b\": \"2.0.0\"}}, \"catalog\": {\"@packtrace-fixture/b\": \"2.0.0\"}}",
+    "gaps": [
+      "successful tuple parse is not grammar/workspace/config/override validation"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a09-v1-config0",
+    "group": "A09",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "{\"lockfileVersion\": 1, \"packages\": {\"@packtrace-fixture/a\": [\"@packtrace-fixture/a@1.0.0\", \"\", {}, \"sha512-synthetic\"]}, \"configVersion\": 0, \"workspaces\": {\"\": {\"name\": \"root\", \"version\": \"1.0.0\", \"dependencies\": {\"@packtrace-fixture/a\": \"1.0.0\"}}, \"packages/ui\": {\"name\": \"ui\", \"version\": \"1.0.0\"}}, \"overrides\": {\"@packtrace-fixture/a\": {\"@packtrace-fixture/b\": \"2.0.0\"}}, \"catalog\": {\"@packtrace-fixture/b\": \"2.0.0\"}}",
+    "gaps": [
+      "successful tuple parse is not grammar/workspace/config/override validation"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a09-v1-config1",
+    "group": "A09",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "{\"lockfileVersion\": 1, \"packages\": {\"@packtrace-fixture/a\": [\"@packtrace-fixture/a@1.0.0\", \"\", {}, \"sha512-synthetic\"]}, \"configVersion\": 1, \"workspaces\": {\"\": {\"name\": \"root\", \"version\": \"1.0.0\", \"dependencies\": {\"@packtrace-fixture/a\": \"1.0.0\"}}, \"packages/ui\": {\"name\": \"ui\", \"version\": \"1.0.0\"}}, \"overrides\": {\"@packtrace-fixture/a\": {\"@packtrace-fixture/b\": \"2.0.0\"}}, \"catalog\": {\"@packtrace-fixture/b\": \"2.0.0\"}}",
+    "gaps": [
+      "successful tuple parse is not grammar/workspace/config/override validation"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a09-v2-config1",
+    "group": "A09",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "{\"lockfileVersion\": 2, \"packages\": {\"@packtrace-fixture/a\": [\"@packtrace-fixture/a@1.0.0\", \"\", {}, \"sha512-synthetic\"]}, \"configVersion\": 1, \"workspaces\": {\"\": {\"name\": \"root\", \"version\": \"1.0.0\", \"dependencies\": {\"@packtrace-fixture/a\": \"1.0.0\"}}, \"packages/ui\": {\"name\": \"ui\", \"version\": \"1.0.0\"}}, \"overrides\": {\"@packtrace-fixture/a\": {\"@packtrace-fixture/b\": \"2.0.0\"}}, \"catalog\": {\"@packtrace-fixture/b\": \"2.0.0\"}}",
+    "gaps": [
+      "successful tuple parse is not grammar/workspace/config/override validation"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a09-v3-config1",
+    "group": "A09",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"@packtrace-fixture/a\": [\"@packtrace-fixture/a@1.0.0\", \"\", {}, \"sha512-synthetic\"]}, \"configVersion\": 1, \"workspaces\": {\"\": {\"name\": \"root\", \"version\": \"1.0.0\", \"dependencies\": {\"@packtrace-fixture/a\": \"1.0.0\"}}, \"packages/ui\": {\"name\": \"ui\", \"version\": \"1.0.0\"}}, \"overrides\": {\"@packtrace-fixture/a\": {\"@packtrace-fixture/b\": \"2.0.0\"}}, \"catalog\": {\"@packtrace-fixture/b\": \"2.0.0\"}}",
+    "gaps": [
+      "successful tuple parse is not grammar/workspace/config/override validation"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a10-aliases-duplicates",
+    "group": "A10",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "{\"lockfileVersion\": 1, \"packages\": {\"alias\": [\"@packtrace-fixture/a@1.0.0\"], \"parent/alias\": [\"@packtrace-fixture/a@1.0.0\"]}}",
+    "gaps": [
+      "alias keys and placement context not preserved as structured output"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 2
+    }
+  },
+  {
+    "id": "a10-sources",
+    "group": "A10",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "{\"lockfileVersion\": 1, \"packages\": {\"url\": [\"url@https://private.invalid/pkg.tgz\"], \"git\": [\"git@github:fixture/repo#abcdef0\"], \"file\": [\"file@file:./local.tgz\"], \"workspace\": [\"ui@workspace:packages/ui\"]}}",
+    "gaps": [
+      "nonregistry identity/version and source uncertainty; workspace token may survive as version"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 4
+    }
+  },
+  {
+    "id": "a10-scoped",
+    "group": "A10",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "{\"lockfileVersion\": 1, \"packages\": {\"@packtrace-fixture/a\": [\"@packtrace-fixture/a@1.0.0\", \"\", {}, \"sha512-synthetic\"]}}",
+    "gaps": [
+      "reference digest absent from extractor output"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a11-bad-json",
+    "group": "A11",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "{",
+    "gaps": [
+      "malformed/unsupported input requires explicit validation; observe upstream result"
+    ],
+    "expect": {
+      "outcome": "error",
+      "count": 0
+    }
+  },
+  {
+    "id": "a11-null",
+    "group": "A11",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "null",
+    "gaps": [
+      "malformed/unsupported input requires explicit validation; observe upstream result"
+    ],
+    "expect": {
+      "outcome": "panic"
+    }
+  },
+  {
+    "id": "a11-wrong-packages",
+    "group": "A11",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "{\"packages\": []}",
+    "gaps": [
+      "malformed/unsupported input requires explicit validation; observe upstream result"
+    ],
+    "expect": {
+      "outcome": "error",
+      "count": 0
+    }
+  },
+  {
+    "id": "a11-empty-tuple",
+    "group": "A11",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "{\"packages\": {\"a\": []}}",
+    "gaps": [
+      "malformed/unsupported input requires explicit validation; observe upstream result"
+    ],
+    "expect": {
+      "outcome": "error",
+      "count": 0
+    }
+  },
+  {
+    "id": "a11-bad-tuple",
+    "group": "A11",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "{\"packages\": {\"a\": [42]}}",
+    "gaps": [
+      "malformed/unsupported input requires explicit validation; observe upstream result"
+    ],
+    "expect": {
+      "outcome": "error",
+      "count": 0
+    }
+  },
+  {
+    "id": "a11-partial",
+    "group": "A11",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "{\"packages\": {\"a\": [\"a@1.0.0\"], \"bad\": []}}",
+    "gaps": [
+      "malformed/unsupported input requires explicit validation; observe upstream result"
+    ],
+    "expect": {
+      "outcome": "error",
+      "count": 1
+    }
+  },
+  {
+    "id": "a11-negative-version",
+    "group": "A11",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "{\"lockfileVersion\": -1, \"packages\": {\"@packtrace-fixture/a\": [\"@packtrace-fixture/a@1.0.0\", \"\", {}, \"sha512-synthetic\"]}}",
+    "gaps": [
+      "malformed/unsupported input requires explicit validation; observe upstream result"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a11-unknown-version",
+    "group": "A11",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "{\"lockfileVersion\": 999, \"packages\": {\"@packtrace-fixture/a\": [\"@packtrace-fixture/a@1.0.0\", \"\", {}, \"sha512-synthetic\"]}}",
+    "gaps": [
+      "malformed/unsupported input requires explicit validation; observe upstream result"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a11-duplicate-key",
+    "group": "A11",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "{\"lockfileVersion\":1,\"packages\":{\"a\":[\"a@1.0.0\"],\"a\":[\"a@2.0.0\"]}}",
+    "gaps": [
+      "malformed/unsupported input requires explicit validation; observe upstream result"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a11-jsonc",
+    "group": "A11",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "// synthetic\n{\"lockfileVersion\":1,\"packages\":{\"a\":[\"a@1.0.0\",],},}",
+    "gaps": [
+      "malformed/unsupported input requires explicit validation; observe upstream result"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a11-npm-null",
+    "group": "A11",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "null",
+    "gaps": [
+      "invalid lockfile"
+    ],
+    "expect": {
+      "outcome": "error",
+      "count": 0
+    }
+  },
+  {
+    "id": "a11-npm-unknown-version",
+    "group": "A11",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 999, \"packages\": {\"node_modules/@packtrace-fixture/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}}}",
+    "gaps": [
+      "unknown format version accepted"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a11-npm-wrong-type",
+    "group": "A11",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"packages\": []}",
+    "gaps": [
+      "invalid package map"
+    ],
+    "expect": {
+      "outcome": "error",
+      "count": 0
+    }
+  },
+  {
+    "id": "a12-normal",
+    "group": "A12",
+    "extractor": "manifest",
+    "path": "package.json",
+    "content": "{\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}",
+    "gaps": [],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    }
+  },
+  {
+    "id": "a12-no-name",
+    "group": "A12",
+    "extractor": "manifest",
+    "path": "package.json",
+    "content": "{\"version\": \"1.0.0\", \"dependencies\": {\"@packtrace-fixture/a\": \"1.0.0\"}}",
+    "gaps": [
+      "filtered/malformed manifest must not disappear from coverage"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 0
+    }
+  },
+  {
+    "id": "a12-no-version",
+    "group": "A12",
+    "extractor": "manifest",
+    "path": "package.json",
+    "content": "{\"name\": \"root\", \"dependencies\": {\"@packtrace-fixture/a\": \"1.0.0\"}}",
+    "gaps": [
+      "filtered/malformed manifest must not disappear from coverage"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 0
+    }
+  },
+  {
+    "id": "a12-null",
+    "group": "A12",
+    "extractor": "manifest",
+    "path": "package.json",
+    "content": "null",
+    "gaps": [
+      "filtered/malformed manifest must not disappear from coverage"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 0
+    }
+  },
+  {
+    "id": "a12-vscode",
+    "group": "A12",
+    "extractor": "manifest",
+    "path": "package.json",
+    "content": "{\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\", \"engines\": {\"vscode\": \"*\"}}",
+    "gaps": [
+      "filtered/malformed manifest must not disappear from coverage"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 0
+    }
+  },
+  {
+    "id": "a12-unity",
+    "group": "A12",
+    "extractor": "manifest",
+    "path": "package.json",
+    "content": "{\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\", \"unity\": \"2021.1\"}",
+    "gaps": [
+      "filtered/malformed manifest must not disappear from coverage"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 0
+    }
+  },
+  {
+    "id": "a12-null-person",
+    "group": "A12",
+    "extractor": "manifest",
+    "path": "package.json",
+    "content": "{\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\", \"maintainers\": [null]}",
+    "gaps": [
+      "filtered/malformed manifest must not disappear from coverage"
+    ],
+    "expect": {
+      "outcome": "panic"
+    }
+  },
+  {
+    "id": "a13-inference-False",
+    "group": "A13",
+    "extractor": "manifest",
+    "path": "package.json",
+    "content": "{\"name\": \"root\", \"version\": \"1.0.0\", \"dependencies\": {\"@packtrace-fixture/a\": \"^1.0.0\"}}",
+    "gaps": [],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "include_dependencies": false
+  },
+  {
+    "id": "a13-inference-True",
+    "group": "A13",
+    "extractor": "manifest",
+    "path": "package.json",
+    "content": "{\"name\": \"root\", \"version\": \"1.0.0\", \"dependencies\": {\"@packtrace-fixture/a\": \"^1.0.0\"}}",
+    "gaps": [
+      "inferred minimum is not resolved/installed version"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 2
+    },
+    "include_dependencies": true
+  },
+  {
+    "id": "a14-hoisted",
+    "group": "A14",
+    "extractor": "manifest",
+    "path": "package.json",
+    "content": "{}",
+    "gaps": [
+      "authored locations only; not generated manager layout or actual dependency resolution"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 2
+    },
+    "native": "installed",
+    "files": {
+      "node_modules/a/package.json": "{\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}",
+      "node_modules/p/node_modules/a/package.json": "{\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}"
+    },
+    "enumerate": [
+      "node_modules/a/package.json",
+      "node_modules/p/node_modules/a/package.json"
+    ]
+  },
+  {
+    "id": "a14-isolated",
+    "group": "A14",
+    "extractor": "manifest",
+    "path": "package.json",
+    "content": "{}",
+    "gaps": [
+      "authored locations only; not generated manager layout or actual dependency resolution"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 3
+    },
+    "native": "installed",
+    "files": {
+      "node_modules/.bun/a@1.0.0/node_modules/a/package.json": "{\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}",
+      "node_modules/.bun/a@1.0.0_peer@2/node_modules/a/package.json": "{\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}",
+      "node_modules/.bun/stale@1.0.0/node_modules/stale/package.json": "{\"name\": \"stale\", \"version\": \"1.0.0\"}"
+    },
+    "enumerate": [
+      "node_modules/.bun/a@1.0.0/node_modules/a/package.json",
+      "node_modules/.bun/a@1.0.0_peer@2/node_modules/a/package.json",
+      "node_modules/.bun/stale@1.0.0/node_modules/stale/package.json"
+    ]
+  },
+  {
+    "id": "a15-root-links",
+    "group": "A15",
+    "extractor": "manifest",
+    "path": "package.json",
+    "content": "{}",
+    "gaps": [
+      "Linux os.Root containment only; Windows/junctions and production discovery not tested"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 0
+    },
+    "native": "links"
+  },
+  {
+    "id": "a16-canceled-npm",
+    "group": "A16",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/@packtrace-fixture/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}}}",
+    "gaps": [
+      "already-canceled context ignored by extraction path"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "canceled": true
+  },
+  {
+    "id": "a16-canceled-bun",
+    "group": "A16",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "{\"lockfileVersion\": 1, \"packages\": {\"@packtrace-fixture/a\": [\"@packtrace-fixture/a@1.0.0\", \"\", {}, \"sha512-synthetic\"]}}",
+    "gaps": [
+      "already-canceled context ignored by extraction path"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "canceled": true
+  },
+  {
+    "id": "a16-canceled-manifest",
+    "group": "A16",
+    "extractor": "manifest",
+    "path": "package.json",
+    "content": "{\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}",
+    "gaps": [
+      "already-canceled context ignored by extraction path"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1
+    },
+    "canceled": true
+  },
+  {
+    "id": "a16-reader-midfail",
+    "group": "A16",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "{\"lockfileVersion\": 1, \"packages\": {\"@packtrace-fixture/a\": [\"@packtrace-fixture/a@1.0.0\", \"\", {}, \"sha512-synthetic\"]}}",
+    "gaps": [
+      "partial read failure"
+    ],
+    "expect": {
+      "outcome": "error",
+      "count": 0
+    },
+    "read_error": true
+  },
+  {
+    "id": "a16-oversize",
+    "group": "A16",
+    "extractor": "manifest",
+    "path": "package.json",
+    "content": "{\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}",
+    "gaps": [
+      "probe boundary rejects input before extractor"
+    ],
+    "expect": {
+      "outcome": "error",
+      "count": 0
+    },
+    "oversize": true
+  },
+  {
+    "id": "a16-npm-reported-size",
+    "group": "A16",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/@packtrace-fixture/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}}}",
+    "gaps": [
+      "FileRequired limit is not enforced by direct Extract"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1,
+      "selected": false
+    },
+    "reported_size": 2097153
+  },
+  {
+    "id": "a16-bun-reported-size",
+    "group": "A16",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "{\"lockfileVersion\": 1, \"packages\": {\"@packtrace-fixture/a\": [\"@packtrace-fixture/a@1.0.0\", \"\", {}, \"sha512-synthetic\"]}}",
+    "gaps": [
+      "Bun ignores configured size limit"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1,
+      "selected": true
+    },
+    "reported_size": 2097153
+  },
+  {
+    "id": "a16-changing-file",
+    "group": "A16",
+    "extractor": "manifest",
+    "path": "package.json",
+    "content": "{}",
+    "gaps": [
+      "controlled before/after mutation detected by probe; no immutable-snapshot guarantee"
+    ],
+    "expect": {
+      "outcome": "error",
+      "count": 2
+    },
+    "native": "changing"
+  },
+  {
+    "id": "a03-native-permission",
+    "group": "A03",
+    "extractor": "manifest",
+    "path": "package.json",
+    "content": "{}",
+    "gaps": [
+      "native Linux permission failure; no privilege elevation"
+    ],
+    "expect": {
+      "outcome": "error",
+      "count": 0
+    },
+    "native": "permission",
+    "files": {
+      "package.json": "{\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}"
+    },
+    "enumerate": [
+      "package.json"
+    ]
+  },
+  {
+    "id": "a17-ambiguous",
+    "group": "A17",
+    "extractor": "graph",
+    "path": "package.json",
+    "content": "{}",
+    "gaps": [
+      "constraint candidates are not evidence of physical dependency edges; missing edges need coverage"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 3
+    },
+    "files": {
+      "node_modules/parent/package.json": "{\"name\": \"parent\", \"version\": \"1.0.0\", \"dependencies\": {\"@packtrace-fixture/a\": \"^1.0.0\"}}",
+      "node_modules/a/package.json": "{\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}",
+      "node_modules/other/node_modules/a/package.json": "{\"name\": \"@packtrace-fixture/a\", \"version\": \"1.5.0\"}"
+    }
+  },
+  {
+    "id": "a17-missing",
+    "group": "A17",
+    "extractor": "graph",
+    "path": "package.json",
+    "content": "{}",
+    "gaps": [
+      "constraint candidates are not evidence of physical dependency edges; missing edges need coverage"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 3
+    },
+    "files": {
+      "node_modules/parent/package.json": "{\"name\": \"parent\", \"version\": \"1.0.0\", \"dependencies\": {\"@packtrace-fixture/a\": \"^1.0.0\", \"missing\": \"^1.0.0\"}}",
+      "node_modules/a/package.json": "{\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}",
+      "node_modules/other/node_modules/a/package.json": "{\"name\": \"@packtrace-fixture/a\", \"version\": \"1.5.0\"}"
+    }
+  },
+  {
+    "id": "a18-pnpm",
+    "group": "A18",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{}",
+    "gaps": [
+      "FileRequired is not product discovery/unsupported-input reporting; direct Extract exercised"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 0,
+      "selected": false
+    },
+    "files": {}
+  },
+  {
+    "id": "a18-yarn",
+    "group": "A18",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{}",
+    "gaps": [
+      "FileRequired is not product discovery/unsupported-input reporting; direct Extract exercised"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 0,
+      "selected": false
+    },
+    "files": {}
+  },
+  {
+    "id": "a18-bun-binary",
+    "group": "A18",
+    "extractor": "bun",
+    "path": "bun.lock",
+    "content": "{}",
+    "gaps": [
+      "FileRequired is not product discovery/unsupported-input reporting; direct Extract exercised"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 0,
+      "selected": false
+    },
+    "files": {}
+  },
+  {
+    "id": "a18-hidden-npm",
+    "group": "A18",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/@packtrace-fixture/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}}}",
+    "gaps": [
+      "FileRequired is not product discovery/unsupported-input reporting; direct Extract exercised"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1,
+      "selected": false
+    },
+    "files": {}
+  },
+  {
+    "id": "a18-nested-npm",
+    "group": "A18",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/@packtrace-fixture/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}}}",
+    "gaps": [
+      "FileRequired is not product discovery/unsupported-input reporting; direct Extract exercised"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1,
+      "selected": false
+    },
+    "files": {}
+  },
+  {
+    "id": "a18-mixed-root",
+    "group": "A18",
+    "extractor": "npm",
+    "path": "package-lock.json",
+    "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/@packtrace-fixture/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}}}",
+    "gaps": [
+      "FileRequired is not product discovery/unsupported-input reporting; direct Extract exercised"
+    ],
+    "expect": {
+      "outcome": "ok",
+      "count": 1,
+      "selected": true
+    },
+    "files": {
+      "bun.lock": "{\"lockfileVersion\": 1, \"packages\": {\"@packtrace-fixture/a\": [\"@packtrace-fixture/a@1.0.0\", \"\", {}, \"sha512-synthetic\"]}}"
+    }
+  }
+]
