@@ -1,7 +1,8 @@
 # Increment 4: manifests and declared dependencies
 
-Status: scope selected; written specification awaiting approval. A reviewed plan
-and explicit execution authorization are still required. Authority:
+Status: written specification approved, including the declaration bound and
+neutral error prefix. The [implementation plan](04-manifest-declarations-plan.md)
+and explicit execution authorization remain to be approved. Authority:
 [design decisions](../design-decisions.md).
 
 ## Deliverable and interfaces
