@@ -485,7 +485,147 @@ mutable caches, identity/source binding, policy-required independent assurance,
 modified/missing/added/type/link changes, nested and bundled ownership, generated
 metadata, patches, and unreadable/changing/excluded content.
 
-## 13. Remaining design work
+## 13. Report contract
+
+**Approved direction:** versioned JSON represents the complete result model, with
+terminal and SARIF as projections of that same model. Exported values remain
+subject to the explicit privacy rules below; complete model coverage does not mean
+an unredacted forensic export.
+
+- Start with `schemaVersion: "1.0"`. Breaking changes increment the major version;
+  minor changes are additive.
+- Include execution, scope, inputs/snapshots used, inventory, evidence, coverage,
+  findings, candidates, diagnostics, and effective policy. Exact field definitions
+  remain to be specified in the written schema.
+- Relate records through identifiers rather than duplicating all supporting
+  evidence inside every finding. Keep unknown values explicit.
+- Separate execution outcome from findings. An incomplete report may contain
+  valid detections.
+- Use stable ordering for comparisons. Timestamps and duration do not form part
+  of finding identity.
+- Keep severity and confidence distinct: preserve source severity when available
+  and explain confidence through evidence, without invented probabilities.
+
+### Terminal and SARIF
+
+Terminal output summarizes coverage and findings, then limitations and next steps.
+Never label the target safe or clean.
+
+SARIF 2.1.0 represents findings as results, with locations only when available and
+permitted. Coverage and diagnostics use execution metadata and notifications.
+Ambiguous candidates must not become confirmed results. A consumer may hide those
+metadata/notifications: an empty alert UI is not evidence of complete coverage.
+
+Do not invent a physical installed location for a lockfile-only package. Preserve
+exception acceptance state in every projection. Apply privacy rules to messages
+and diagnostics, not only structured fields.
+
+**Required acceptance coverage, not yet executed:** JSON/SARIF schema validation,
+version compatibility, stable ordering, unknown values, lockfile-only locations,
+separate candidates, and agreement between terminal/JSON/SARIF on findings,
+coverage, exception status, and process outcome.
+
+## 14. Report privacy profiles
+
+**Approved default:** `portable` for all formats. The operator must explicitly
+select `local` for additional investigative detail. These are presentation
+profiles, not permissions to transmit data.
+
+### Common restrictions
+
+- Do not include credentials, tokens, raw file contents, or secret-bearing URLs.
+- Omit absolute host paths and escape untrusted text.
+- Apply the rules to errors, messages, references, and worker output, not just
+  structured path fields.
+
+### Portable
+
+- Hide private/unknown-origin identities, sensitive URLs, and internal project
+  paths.
+- Replace sensitive references with opaque identifiers within the report,
+  preserving relationships, counts, and coverage states.
+- Do not publish sensitive evidence hashes or fingerprints that could expose names
+  through dictionary attacks.
+- Omit SARIF locations when showing them would reveal protected information. Do
+  not substitute fictitious filesystem paths.
+- Prevent messages or candidate details from reintroducing hidden fields.
+
+Portable output reduces exposure but does not guarantee anonymity: counts, public
+advisories, and other patterns can support inference. Its opaque identifiers do
+not promise correlation across runs. Redacted exports are not interchangeable with
+full local evidence for reviewing or creating exceptions.
+
+### Local
+
+- Show identities and relative paths needed for investigation, plus evidence
+  hashes/fingerprints.
+- Continue to prohibit secrets, raw contents, and absolute host paths.
+- Treat the report as sensitive. Selecting local does not authorize uploading it
+  to a service.
+
+A trusted policy may require portable and prevent flags from weakening it.
+Redaction changes presentation, not matching, coverage, or enforcement.
+
+**Required acceptance coverage, not yet executed:** every output format under both
+profiles; hidden fields absent from free-text diagnostics/candidates as well as
+structured data; opaque references preserving relationships; omitted sensitive
+hashes/fingerprints and SARIF locations; policy-enforced portable output; and equal
+underlying decisions across profiles.
+
+## 15. Evidence-bound exceptions
+
+**Approved direction:** explicit temporary exceptions in the selected policy,
+never coverage waivers. The default maximum lifetime is 30 days, explicitly
+configurable by trusted policy.
+
+Each exception includes:
+
+- Identifier, reason, approval owner, and approval/expiry timestamps in UTC.
+- Exact rule/advisory, package, version, origin, and project/instance scope.
+- A fingerprint of the accepted evidence, not only a package name.
+
+The lifetime runs from approval to expiry, not from each scan or snapshot refresh.
+Approval-owner text and timestamps record policy assertions, not a cryptographic
+proof of organizational approval; the policy-authority boundary still applies.
+
+### Evidence binding
+
+For advisories, bind the relevant observation and the evaluated advisory record.
+Corrections changing that evidence require renewed review. A snapshot-only update
+with unchanged bound evidence does not automatically renew or invalidate an
+exception.
+
+For integrity, bind the file/instance, reference and assurance level, expected
+digest, and observed digest. Explicitly represent absence, addition, and type
+changes when there is no comparable digest.
+
+Maintain separate fingerprints:
+
+1. Tracking fingerprint: correlate the same kind of finding across runs.
+2. Acceptance fingerprint: establish that the evidence still matches what was
+   reviewed.
+
+A tracking fingerprint alone cannot transfer acceptance to new evidence. Sensitive
+fingerprints are omitted in portable output. Canonical encodings and exact bound
+fields remain to be specified and tested.
+
+### Evaluation
+
+- Expired, future, or evidence-mismatched exceptions do not accept findings.
+- Malformed exceptions invalidate the policy with exit `2`. Structurally valid
+  but inapplicable exceptions remain visible with their disposition.
+- Accepted findings remain visible; acceptance only removes their contribution to
+  finding enforcement.
+- Do not admit permanent, global, or broadly wildcarded exceptions.
+- Exceptions cannot confirm candidates or make incomplete checks complete.
+
+**Required acceptance coverage, not yet executed:** lifetime limits and timestamp
+boundaries, expired/future/malformed exceptions, exact scoping, evidence changes,
+unchanged evidence across snapshot refresh, reference-assurance changes,
+missing/added/type-change evidence, accepted findings remaining visible, and
+coverage/enforcement independence.
+
+## 16. Remaining design work
 
 The approvals above do not settle the following contracts:
 
@@ -496,7 +636,8 @@ The approvals above do not settle the following contracts:
   licensing review, and exact snapshot/update/reconciliation mechanics.
 - Exact public-fetch requests, origin/mirror rules, DNS/proxy enforcement, baseline
   format, multi-digest handling, and per-layout integrity comparison rules.
-- Report schema, fingerprints, redaction details, and evidence-bound exceptions.
+- Concrete JSON/SARIF field mappings, canonical fingerprint encodings, redaction
+  field rules, exception schemas, and compatibility fixtures.
 - Resource/performance thresholds and executable acceptance checks.
 
 These decisions authorize neither live synchronization nor artifact-fetch execution.
