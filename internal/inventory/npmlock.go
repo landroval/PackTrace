@@ -26,12 +26,12 @@ type Document struct {
 // ParseError exposes a category without disclosing input contents.
 type ParseError struct{ Code string }
 
-func (e *ParseError) Error() string { return "npm v3: " + e.Code }
+func (e *ParseError) Error() string { return "npm lockfile: " + e.Code }
 
-// ParseNPMLockV3 reads one lockfile-version-3 document from memory. The caller
+// ParseNPMLock reads one lockfile-version-2 or -3 document from memory. The caller
 // must not mutate data during the call. Successful parsing does not establish
 // producer compatibility, effective-input selection, provenance, or safety.
-func ParseNPMLockV3(data []byte) (Document, error) {
+func ParseNPMLock(data []byte) (Document, error) {
 	if len(data) > maxLockfileBytes {
 		return Document{}, &ParseError{Code: "limit-exceeded"}
 	}
@@ -55,7 +55,7 @@ func ParseNPMLockV3(data []byte) (Document, error) {
 	if !integerLiteral(version) {
 		return Document{}, &ParseError{Code: "invalid-shape"}
 	}
-	if string(version) != "3" {
+	if string(version) != "2" && string(version) != "3" {
 		return Document{}, &ParseError{Code: "unsupported-version"}
 	}
 	var records map[string]json.RawMessage
