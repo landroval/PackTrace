@@ -1,7 +1,7 @@
 # Increment 6: compare root declarations
 
-Status: scope selected; written specification awaiting approval. Plan and execution
-approval remain separate. Authority: [design decisions](../design-decisions.md).
+Status: written specification approved. The [implementation plan](06-root-comparison-plan.md)
+and execution authorization remain to be approved. Authority: [design decisions](../design-decisions.md).
 
 ## Deliverable and inputs
 
