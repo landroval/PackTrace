@@ -1,7 +1,8 @@
 # Increment 2: npm v2/v3 lockfile reader
 
-Status: scope selected; this written specification awaits approval. A reviewed
-implementation plan and explicit execution authorization are still required.
+Status: written specification approved. The
+[implementation plan](02-npm-v2-reader-plan.md) still requires review and explicit
+execution authorization.
 Global constraints remain in [design decisions](../design-decisions.md).
 
 ## Deliverable and API change
