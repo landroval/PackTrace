@@ -2,11 +2,20 @@
 
 ## Status and approval boundary
 
-These are user-approved design directions, not the complete technical
-specification or implementation plan. Production implementation, dependency
-installation, new probes, native runner provisioning, and publication remain
-unapproved. Review and approve the written specification and implementation plan
-before separately authorizing production work.
+These are user-approved design directions, not a complete technical specification
+or implementation plan. The user has changed the development approach to small,
+verifiable increments: approve the written specification for an increment, then
+its implementation plan and execution. Closing every remaining product-wide
+design question is no longer a prerequisite for unrelated increments.
+
+This supersedes earlier statements requiring a complete product-wide specification
+before any production development. Safety and release requirements remain intact;
+native feasibility still gates the affected native mechanisms, not an in-memory
+parser. Dependency installation, native probes/runners, and publication retain
+their separate authorization boundaries. No implementation has yet been authorized.
+
+The first bounded deliverable is the
+[npm v3 reader increment](increments/01-npm-v3-reader.md).
 
 This record carries forward the decisions made after the
 [SCALIBR evaluation](inventory-evaluation-results.md). It supersedes the earlier
