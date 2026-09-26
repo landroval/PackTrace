@@ -1,8 +1,9 @@
 # Increment 3: typed npm locked records
 
-Status: written specification approved, including the additional record bound.
-The [implementation plan](03-npm-locked-records-plan.md) and explicit execution
-authorization remain to be approved. Global constraints are in
+Status: specification, record bound, and [implementation plan](03-npm-locked-records-plan.md)
+approved; inline execution explicitly authorized and completed. Implementation
+commit `8ef999fe`; 139 passing root tests/subtests and `go vet`.
+No producer/native or full-scanner qualification is implied. Global constraints are in
 [design decisions](../design-decisions.md).
 
 ## Deliverable

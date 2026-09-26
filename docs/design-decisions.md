@@ -12,15 +12,19 @@ This supersedes earlier statements requiring a complete product-wide specificati
 before any production development. Safety and release requirements remain intact;
 native feasibility still gates the affected native mechanisms, not an in-memory
 parser. Dependency installation, native probes/runners, and publication retain
-their separate authorization boundaries. The first two reader increments were
+their separate authorization boundaries. The first three inventory increments were
 individually approved and explicitly authorized for inline implementation and
 local synthetic verification. Their authorization does not extend to further
 increments or native probes.
 
 Implemented bounded deliverables: the
-[npm v3 reader](increments/01-npm-v3-reader.md) and its
-[npm v2/v3 extension](increments/02-npm-v2-reader.md). The shared internal entry
-point is now `ParseNPMLock`; raw legacy data is retained, not semantically resolved.
+[npm v3 reader](increments/01-npm-v3-reader.md), its
+[npm v2/v3 extension](increments/02-npm-v2-reader.md), and
+[typed locked records](increments/03-npm-locked-records.md). `ParseNPMLock` retains
+raw evidence; `ProjectNPMLock` exposes explicit scalar claims and field states,
+without semantic resolution or installed-state inference. The projection has its
+own approved 20,000-record bound, including root/workspace/link entries; this does
+not change raw-reader limits or redefine the installed-instance budget.
 
 This record carries forward the decisions made after the
 [SCALIBR evaluation](inventory-evaluation-results.md). It supersedes the earlier

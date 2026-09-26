@@ -1,7 +1,8 @@
 # Typed npm locked records implementation plan
 
 > **For agentic workers:** use `superpowers:executing-plans` for approved inline
-> execution. Await plan review and explicit execution authorization.
+> execution. The user approved this plan and explicitly authorized implementation,
+> local synthetic tests/vet, and scoped code/docs commits in the current jj workspace.
 
 **Goal:** expose typed, evidence-linked lockfile records without inferred semantics.
 **Architecture:** project the existing `Document`, retaining it unchanged; sort
@@ -39,7 +40,7 @@ all type declarations and the unchanged-document precondition.
 **Produces:** the types and `ProjectNPMLock(Document) (NPMLockProjection, error)`
 exactly specified in the linked contract. No shared-interface change is needed.
 
-- [ ] Write tests first, parsing synthetic v2/v3 bytes with the existing reader.
+- [x] Write tests first, parsing synthetic v2/v3 bytes with the existing reader.
   Start with a minimal positive assertion of preserved ordering and explicit data:
 
 ```go
@@ -59,13 +60,13 @@ func TestProjectNPMLockOrdersRecords(t *testing.T) {
 }
 ```
 
-- [ ] Extend that fixture/test across both versions with workspace, link, alias,
+- [x] Extend that fixture/test across both versions with workspace, link, alias,
   unusual keys, missing names, and uninterpreted range/source/digest strings.
   Use a literal expected order and explicit scalar expectations. Snapshot the raw
   document with `json.Marshal` before/after projection, including an unknown field
   and conflicting legacy data; then mutate raw field bytes, maps, and the document
   digest and assert the previously returned projection is unchanged.
-- [ ] Add a table that applies the same raw value to `name`, `version`, `resolved`,
+- [x] Add a table that applies the same raw value to `name`, `version`, `resolved`,
   and `integrity`, plus an independently supplied `link` value:
 
 | String-field JSON / link JSON | Expected states and values |
@@ -82,18 +83,18 @@ func TestProjectNPMLockOrdersRecords(t *testing.T) {
 
   Add a mixed-type record with invalid name but usable version/resolved/integrity
   and link; assert the record and valid fields survive, without fabricated names.
-- [ ] Cover parsed empty packages (non-nil empty records), zero document, nil Fields,
+- [x] Cover parsed empty packages (non-nil empty records), zero document, nil Fields,
   nil Packages, and a nil record after a valid sorted record. Use the existing typed
   error/category contract and assert both zero digest and nil records on rejection.
   Build synthetic parsed documents containing exactly 20,000 and 20,001 entries
   with `strings.Builder`/`fmt.Fprintf`; assert full success versus zero-result limit
   error. Do not change the parser's limits or run package managers.
-- [ ] Run the tests to observe the initially missing API. Then introduce only the
+- [x] Run the tests to observe the initially missing API. Then introduce only the
   specified type declarations and a compiling stub returning
   `NPMLockProjection{}, nil`. Rerun the projection tests: missing-record and expected-
   error assertions must fail at runtime. Missing-symbol compilation errors alone
   do not satisfy this RED gate.
-- [ ] Implement the minimum function: nil guards, count guard, `slices.Sorted` over
+- [x] Implement the minimum function: nil guards, count guard, `slices.Sorted` over
   `maps.Keys`, one output slot per key, nil-record rejection, and the five fields.
   Decode field state through one helper used by string and bool fields:
 
@@ -116,10 +117,10 @@ func projectField[T string | bool](fields map[string]json.RawMessage, key string
   slice. Append records in sorted order; copy `doc.SHA256` only into successful
   results. Reject with `NPMLockProjection{}, &ParseError{Code: ...}` using the exact
   `invalid-shape` and `limit-exceeded` categories, never raw decoder errors.
-- [ ] Format both new files; run all root tests and vet; inspect the diff against
+- [x] Format both new files; run all root tests and vet; inspect the diff against
   every acceptance item. Confirm old reader/tests/module are unchanged and no
   import introduces I/O. Review is inline, not independent/native qualification.
-- [ ] Commit only the two new Go files with jj, then record completion in these
+- [x] Commit only the two new Go files with jj, then record completion in these
   increment documents and a nested shipping milestone in a separate docs commit.
 
 ## Commands (Nushell)
@@ -138,3 +139,19 @@ jj commit -m "feat: project typed npm locked records" internal/inventory/npmlock
 
 Record actual toolchain and results. Do not download/install anything, execute
 existing probes, claim full npm support, or expand to another increment.
+
+## Execution evidence
+
+- Initial compilation failed for the absent projection API. After adding only the
+  specified types and a zero-result stub, all 36 projection tests/subtests failed
+  at runtime: missing records/evidence, lost field-state results, or missing errors.
+  This second run established behavioral RED before implementation.
+- GREEN: 139 root tests/subtests passed; root `go vet ./...` passed. Both were rerun
+  after inline review. `go list -m all` listed only `packtrace`.
+- Development toolchain: `go1.27.1-X:nodwarf5 linux/amd64`, with the offline flags
+  above. No downloads, native qualification, or probe execution/changes.
+- Existing `npmlock.go`, `npmlock_test.go`, and `go.mod` were unchanged. New
+  production code uses only bytes/JSON/maps/slices; no filesystem or network I/O.
+- Scoped code commit: `8ef999fe`. Review was inline, not independent.
+- Markdown link verification excludes fenced and inline code: Go signatures such as
+  `projectField[T](...)` are code, not document links.
