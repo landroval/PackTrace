@@ -1015,7 +1015,7 @@
     "id": "a18-pnpm",
     "group": "A18",
     "extractor": "npm",
-    "path": "package-lock.json",
+    "path": "pnpm-lock.yaml",
     "content": "{}",
     "gaps": [
       "FileRequired is not product discovery/unsupported-input reporting; direct Extract exercised"
@@ -1031,7 +1031,7 @@
     "id": "a18-yarn",
     "group": "A18",
     "extractor": "npm",
-    "path": "package-lock.json",
+    "path": "yarn.lock",
     "content": "{}",
     "gaps": [
       "FileRequired is not product discovery/unsupported-input reporting; direct Extract exercised"
@@ -1047,7 +1047,7 @@
     "id": "a18-bun-binary",
     "group": "A18",
     "extractor": "bun",
-    "path": "bun.lock",
+    "path": "bun.lockb",
     "content": "{}",
     "gaps": [
       "FileRequired is not product discovery/unsupported-input reporting; direct Extract exercised"
@@ -1063,7 +1063,7 @@
     "id": "a18-hidden-npm",
     "group": "A18",
     "extractor": "npm",
-    "path": "package-lock.json",
+    "path": "node_modules/.package-lock.json",
     "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/@packtrace-fixture/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}}}",
     "gaps": [
       "FileRequired is not product discovery/unsupported-input reporting; direct Extract exercised"
@@ -1079,7 +1079,7 @@
     "id": "a18-nested-npm",
     "group": "A18",
     "extractor": "npm",
-    "path": "package-lock.json",
+    "path": "node_modules/a/package-lock.json",
     "content": "{\"lockfileVersion\": 3, \"packages\": {\"node_modules/@packtrace-fixture/a\": {\"name\": \"@packtrace-fixture/a\", \"version\": \"1.0.0\"}}}",
     "gaps": [
       "FileRequired is not product discovery/unsupported-input reporting; direct Extract exercised"

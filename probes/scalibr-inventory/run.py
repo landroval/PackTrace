@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import time
@@ -23,7 +24,8 @@ def sandbox(command, *, online=False, target=None):
             "--symlink", "usr/bin", "/bin", "--symlink", "usr/lib", "/lib",
             "--symlink", "usr/lib", "/lib64", "--proc", "/proc", "--dev", "/dev",
             "--tmpfs", "/tmp", "--clearenv", "--setenv", "PATH", "/usr/bin",
-            "--setenv", "HOME", "/tmp", "--setenv", "GOTOOLCHAIN", "local",
+            "--setenv", "HOME", "/tmp", "--setenv", "PROBE_RUN_ID", str(os.getpid()),
+            "--setenv", "GOTOOLCHAIN", "local",
             "--setenv", "GOWORK", "off", "--setenv", "GOENV", "off",
             "--setenv", "CGO_ENABLED", "0", "--setenv", "GOTELEMETRY", "off",
             "--setenv", "GOMODCACHE", "/cache/mod", "--setenv", "GOCACHE", "/cache/build",
@@ -62,14 +64,21 @@ def run(label, command, *, online=False, seconds=900, memory="2G", target=None, 
             "-p", "NoNewPrivileges=yes"] + sandbox(command, online=online, target=target)
     out, err = RESULTS / f"{label}.stdout", RESULTS / f"{label}.stderr"
     started = time.monotonic()
+    prior_work = sum(json.loads(p.read_text())["elapsed_seconds"]
+                     for p in RESULTS.glob("*.process.json")
+                     if not re.match(r"a\d\d-", p.name))
+    is_case = bool(re.match(r"a\d\d-", label))
+    control = f"{original_label}-{os.getpid()}"
     reason = None
     with out.open("wb") as stdout, err.open("wb") as stderr:
         p = subprocess.Popen(args, stdout=stdout, stderr=stderr)
         try:
             while p.poll() is None:
-                if changing and (RESULTS / f"{original_label}.ready").exists() and not (RESULTS / f"{original_label}.changed").exists():
+                if changing and (RESULTS / f"{control}.ready").exists() and not (RESULTS / f"{control}.changed").exists():
                     (target / "package.json").write_text('{"name":"changing","version":"2.0.0"}')
-                    (RESULTS / f"{original_label}.changed").write_text("synthetic fixture controller changed file\n")
+                    (RESULTS / f"{control}.changed").write_text("synthetic fixture controller changed file\n")
+                if not is_case and prior_work + time.monotonic() - started > 900:
+                    reason = "aggregate preparation/build execution budget exceeded"
                 if time.monotonic() - started > seconds + 15:
                     reason = "outer deadline exceeded"
                 if size(CACHE / "mod") > 2 * 1024**3:
@@ -117,7 +126,7 @@ def tree_hash(root):
 
 
 def native_tree(case):
-    root = CACHE / "targets" / case["id"]
+    root = CACHE / "targets" / f"{case['id']}-{os.getpid()}"
     root.mkdir(parents=True, exist_ok=False)
     if case["native"] == "links":
         (root / "regular").write_text("synthetic fixture\n")
@@ -144,12 +153,17 @@ def native_tree(case):
     return root
 
 
-def cases():
+def cases(group=None):
     corpus = json.loads((ROOT / "testdata/cases.json").read_text())
     if len(corpus) > 80 or len({c["id"] for c in corpus}) != len(corpus):
         raise ValueError("case budget/duplicate ID")
-    started = time.monotonic()
     records = []
+    if group is not None:
+        if group not in {c["group"] for c in corpus}:
+            raise ValueError("unknown fixture group")
+        corpus = [c for c in corpus if c["group"] == group]
+        records = [r for r in json.loads((RESULTS / "observations.json").read_text()) if r["group"] != group]
+    started = time.monotonic()
     for c in corpus:
         if time.monotonic() - started > 600:
             raise RuntimeError("total case deadline exceeded")
@@ -215,7 +229,10 @@ def cases():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("mode", choices=["prepare", "red", "build", "cases", "verify"])
+    parser.add_argument("--group", help="Rerun one authored fixture group, retaining other observations")
     args = parser.parse_args()
+    if args.group and args.mode != "cases":
+        parser.error("--group is only valid for cases")
     RESULTS.mkdir(exist_ok=True)
     for name in ("mod", "build", "tmp", "outside"):
         (CACHE / name).mkdir(parents=True, exist_ok=True)
@@ -232,6 +249,7 @@ def main():
     elif args.mode in ("build", "verify"):
         # Whole-module compilation already exposed the optional graph blocker.
         # Verify the independent extractor surface without concealing that result.
+        require(run("fixture-tests", ["python3", "-m", "unittest", "test_fixtures"]))
         require(run("extractor-tests", ["go", "test", "-count=1", "-timeout=10m", "-json", ".", "./cmd/extractors"]))
         require(run("extractor-vet", ["go", "vet", ".", "./cmd/extractors"]))
         if args.mode == "build":
@@ -246,7 +264,7 @@ def main():
                 require(built)
                 require(run(f"version-{name}", ["go", "version", "-m", f"results/{name}-probe"]))
     else:
-        cases()
+        cases(args.group)
 
 
 if __name__ == "__main__":

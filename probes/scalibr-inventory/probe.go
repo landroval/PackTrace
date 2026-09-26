@@ -315,13 +315,14 @@ func observeChanging(c Case) Observation {
 		o.Error = err.Error()
 		return o
 	}
-	if err := os.WriteFile("results/"+c.ID+".ready", []byte("ready"), 0600); err != nil {
+	control := "results/" + c.ID + "-" + os.Getenv("PROBE_RUN_ID")
+	if err := os.WriteFile(control+".ready", []byte("ready"), 0600); err != nil {
 		o.Error = err.Error()
 		return o
 	}
 	deadline := time.Now().Add(4 * time.Second)
 	for {
-		if _, err := os.Stat("results/" + c.ID + ".changed"); err == nil {
+		if _, err := os.Stat(control + ".changed"); err == nil {
 			break
 		}
 		if time.Now().After(deadline) {

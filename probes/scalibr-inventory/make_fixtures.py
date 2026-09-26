@@ -87,7 +87,7 @@ for absent in (False,True):
     files = {"node_modules/parent/package.json":json.dumps(manifest("parent",dependencies={A:"^1.0.0", **({"missing":"^1.0.0"} if absent else {})})),"node_modules/a/package.json":json.dumps(manifest()),"node_modules/other/node_modules/a/package.json":json.dumps(manifest(A,"1.5.0"))}
     add("A17","missing" if absent else "ambiguous","graph",{},3,files=files,gaps=["constraint candidates are not evidence of physical dependency edges; missing edges need coverage"])
 for label,ex,path,data in [("pnpm","npm","pnpm-lock.yaml",{}),("yarn","npm","yarn.lock",{}),("bun-binary","bun","bun.lockb",{}),("hidden-npm","npm","node_modules/.package-lock.json",npm()),("nested-npm","npm","node_modules/a/package-lock.json",npm()),("mixed-root","npm","package-lock.json",npm())]:
-    add("A18",label,ex,data,1 if label in ("hidden-npm","nested-npm","mixed-root") else 0,selected=label=="mixed-root",files={"bun.lock":json.dumps(bun())} if label=="mixed-root" else {},gaps=["FileRequired is not product discovery/unsupported-input reporting; direct Extract exercised"])
+    add("A18",label,ex,data,1 if label in ("hidden-npm","nested-npm","mixed-root") else 0,path=path,selected=label=="mixed-root",files={"bun.lock":json.dumps(bun())} if label=="mixed-root" else {},gaps=["FileRequired is not product discovery/unsupported-input reporting; direct Extract exercised"])
 
 assert len(cases) <= 80
 assert {c["group"] for c in cases} == {f"A{i:02d}" for i in range(1,19)}
