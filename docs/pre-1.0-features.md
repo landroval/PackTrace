@@ -11,8 +11,8 @@ gates still require executed acceptance evidence. Checked nested milestones show
 narrower progress and do not close their unchecked parent.
 
 **Current evidence review:** two documentation contracts are complete; no executable
-product capability is qualified for shipping. The internal npm v2/v3 reader and
-typed-record projection pass synthetic tests; their narrower milestones, the bounded
+product capability is qualified for shipping. Internal npm v2/v3 reading, typed
+locked records, and manifest declarations pass synthetic tests; these milestones, the bounded
 Linux probe, and reviewed design/budget milestones do not establish full product
 acceptance.
 
@@ -60,6 +60,10 @@ alone does not authorize probes, dependency installation, or publication.
   retain workspace attribution where actually known.
 - [ ] **Separate evidence classes:** distinguish declared dependencies,
   locked/resolved dependencies, and physically observed installed packages.
+  - [x] [Manifest declarations](increments/04-manifest-declarations.md) now have
+    separate raw/typed evidence with four preserved groups, a 2 MiB reader bound,
+    and a 20,000-membership projection bound. The root suite passes 181 tests/subtests
+    plus `go vet`; installed observations and reconciliation remain unimplemented.
 - [ ] **Installed instances:** retain physical locations and multiple versions or
   copies rather than collapsing all packages with the same identity.
 - [ ] **Dependency relationships:** report logical edges and dependency paths only
@@ -354,7 +358,7 @@ without establishing implemented or validated product support:
   portable privacy, and evidence-bound exceptions are agreed. Complete schemas,
   encodings, worker protocol, and runtime behavior remain to be delivered.
 - Each increment requires its own written-spec, plan, and execution approvals.
-  The first three inventory increments completed that process; further increments and full
+  The first four inventory increments completed that process; further increments and full
   product/release qualification are not implicitly approved.
 
 Resolve remaining details through the roadmap's design and qualification process.

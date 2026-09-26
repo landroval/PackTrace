@@ -1,7 +1,8 @@
 # Manifest declarations implementation plan
 
 > **For agentic workers:** use `superpowers:executing-plans` for approved inline
-> execution. Await plan review and explicit execution authorization.
+> execution. The user approved this plan and explicitly authorized the five listed
+> Go files, local synthetic tests/vet, and scoped code/docs commits in this jj workspace.
 
 **Goal:** read manifest bytes and retain typed dependency declarations separately
 from locked and installed evidence.
@@ -43,7 +44,7 @@ and `projectField[string]` without duplicating their logic.
 `parseJSONFields(data []byte, byteLimit int) (map[string]json.RawMessage, error)`.
 No change to `ParseNPMLock`, `ProjectNPMLock`, or their data type signatures.
 
-- [ ] Write manifest tests first. Begin with a literal retained declaration:
+- [x] Write manifest tests first. Begin with a literal retained declaration:
 
 ```go
 func TestManifestDeclaredGroups(t *testing.T) {
@@ -66,12 +67,12 @@ func TestManifestDeclaredGroups(t *testing.T) {
   URL/range strings, raw scripts/peer metadata/unknown precise numbers, original
   digest and unchanged raw document. Mutate source bytes after parsing and document
   data after projection to verify independent ownership.
-- [ ] Add reader rejection tables for invalid/trailing/root-non-object JSON,
+- [x] Add reader rejection tables for invalid/trailing/root-non-object JSON,
   duplicate keys including escaped equivalents and nested unknown/requirements,
   malformed UTF-8/surrogates, plus accepted Unicode and an uninterpreted
   `lockfileVersion` field. Check zero document and controlled errors on failure.
   Verify exactly 2 MiB vs 2 MiB+1 and 128 vs 129 containers; retain the old npm suite.
-- [ ] Add these projection cases, keeping all valid sibling data:
+- [x] Add these projection cases, keeping all valid sibling data:
 
 | Group / requirement condition | Expected |
 | --- | --- |
@@ -89,11 +90,11 @@ func TestManifestDeclaredGroups(t *testing.T) {
   synthetic manifests with 10,000 null requirements in one group and 10,000 invalid
   requirements using the same names in another: all 20,000 memberships must survive.
   Add one more membership in a later group for zero-result `limit-exceeded`.
-- [ ] Update the two existing error helpers to expect `inventory: `, without changing
+- [x] Update the two existing error helpers to expect `inventory: `, without changing
   other expectations. Run tests to confirm the new API is absent; add only the
   specified types and zero-result stubs; rerun for runtime RED. Compilation errors
   alone do not establish the behavioral gate.
-- [ ] Factor the existing size/UTF-8/token/depth/duplicate/surrogate/object checks
+- [x] Factor the existing size/UTF-8/token/depth/duplicate/surrogate/object checks
   from `ParseNPMLock` into `parseJSONFields`, in the same order. Use its `byteLimit`
   parameter for size rejection; retain `UseNumber`. Change the controlled error
   prefix. `ParseNPMLock` then starts with:
@@ -106,7 +107,7 @@ if err != nil { return Document{}, err }
   Preserve its existing integer-version, package-shape, raw-retention and digest
   handling. `ParseManifest` calls the same helper with `2 << 20`, propagates safe
   errors with a zero document, and returns `ManifestDocument{SHA256: sha256.Sum256(data), Fields: fields}`.
-- [ ] Implement `ProjectManifest`: reject nil Fields; allocate four named groups in
+- [x] Implement `ProjectManifest`: reject nil Fields; allocate four named groups in
   the specified order; distinguish absence/null/non-object/object. Decode an object
   to `map[string]json.RawMessage`; before sorting or allocating its output entries:
 
@@ -121,10 +122,10 @@ total += len(entries)
   `slices.Sorted(maps.Keys(entries))`, decode with `projectField[string]`, and append
   `DeclaredDependency{Name: name, Requirement: field.Value, State: field.State}`.
   Return the source digest only with the successful complete group slice.
-- [ ] Format the changed/new Go files, run all root tests/vet, and inspect the full
+- [x] Format the changed/new Go files, run all root tests/vet, and inspect the full
   diff and the shared validator's callers. Confirm no I/O imports, new dependencies,
   probe changes, or undeclared lockfile behavior changes. Review is inline.
-- [ ] Commit only the five listed Go files with jj, then record verified completion
+- [x] Commit only the five listed Go files with jj, then record verified completion
   and a nested shipping milestone in a separate documentation commit.
 
 ## Commands (Nushell)
@@ -144,3 +145,21 @@ jj commit -m "feat: read manifest dependency declarations" internal/inventory/ma
 
 Record actual development toolchain and test results. Do not run the nested
 SCALIBR module or promote synthetic checks to producer/native qualification.
+
+## Execution evidence
+
+- Initial tests failed compilation for absent manifest APIs. With only types and
+  zero-result stubs added, all 42 new tests/subtests failed at runtime, establishing
+  behavioral RED before implementing the reader/projection.
+- GREEN: 181 passing root tests/subtests and root `go vet ./...`; both rerun after
+  inline review. `go list -m all` listed only `packtrace`.
+- Shared validator callers checked before/after refactoring: both readers use
+  `parseJSONFields`; the duplicate/depth/Unicode validators are not duplicated.
+  Existing lockfile tests changed only their error-prefix expectations and still
+  verify v2/v3 parsing, 64 MiB, 128-depth, and projection behavior.
+- New tests verify 2 MiB manifests, raw evidence/ownership, all declaration states,
+  four separate groups, and the cumulative 20,000/20,001 boundary counting repeated,
+  null, and invalid memberships. No range/alias/source resolution is performed.
+- Development toolchain: `go1.27.1-X:nodwarf5 linux/amd64`, offline flags above.
+  No dependencies, I/O imports, downloads, probe changes/execution, or native tests.
+- Scoped code commit: `7687f3aa`. Review was inline, not independent.

@@ -1,8 +1,9 @@
 # Increment 4: manifests and declared dependencies
 
-Status: written specification approved, including the declaration bound and
-neutral error prefix. The [implementation plan](04-manifest-declarations-plan.md)
-and explicit execution authorization remain to be approved. Authority:
+Status: specification, declaration bound, neutral error prefix, and
+[implementation plan](04-manifest-declarations-plan.md) approved; inline execution
+explicitly authorized and completed. Commit `7687f3aa`; 181 passing root
+tests/subtests and `go vet`. No producer/native or full-scanner qualification. Authority:
 [design decisions](../design-decisions.md).
 
 ## Deliverable and interfaces
