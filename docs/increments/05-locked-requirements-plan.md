@@ -1,7 +1,8 @@
 # Locked requirements implementation plan
 
 > **For agentic workers:** use `superpowers:executing-plans` for approved inline
-> execution. Await plan review and explicit execution authorization.
+> execution. The user approved the plan and explicitly authorized the three listed
+> Go files, synthetic tests/vet, and scoped code/docs commits in the current jj workspace.
 
 **Goal:** expose requirements recorded per npm lockfile location without resolving them.
 **Architecture:** one shared group projector, with a remaining allowance supplied
@@ -37,7 +38,7 @@ by each caller; separate enclosing manifest/lockfile evidence types.
 **Produces:** `LockedRecord.Requirements []DependencyGroup` and private
 `projectDependencyGroups(fields map[string]json.RawMessage, allowance int) ([]DependencyGroup, int, error)`.
 
-- [ ] Write v2/v3 tests first. A minimal positive assertion starts with:
+- [x] Write v2/v3 tests first. A minimal positive assertion starts with:
 
 ```go
 func TestProjectNPMLockRequirements(t *testing.T) {
@@ -63,15 +64,15 @@ func TestProjectNPMLockRequirements(t *testing.T) {
   top-level legacy data. Snapshot raw document before/after; mutate source requirement
   bytes/maps after projection and assert independence. Mutate one returned group's
   metadata and confirm another record's groups do not alias it.
-- [ ] Add cumulative-bound fixtures with two records: first has 10,000 null
+- [x] Add cumulative-bound fixtures with two records: first has 10,000 null
   dependency entries; second has 5,000 invalid dev entries and 5,000 optional entries,
   reusing names across records/groups. A third record with an empty object group
   must still succeed at exactly 20,000. Give that later group one entry to require
   `limit-exceeded` and a zero projection. Use the existing error assertion helper.
-- [ ] Run tests to observe the missing field, then add only the `Requirements` field
+- [x] Run tests to observe the missing field, then add only the `Requirements` field
   to make them compile. Rerun for runtime RED: missing groups and missing cumulative
   error must fail before implementing projection behavior.
-- [ ] Extract the existing group loop from `ProjectManifest` into the private helper.
+- [x] Extract the existing group loop from `ProjectManifest` into the private helper.
   Use the argument `fields` instead of `doc.Fields`, and `allowance` instead of the
   manifest constant. Return `nil, 0, err` for a limit error, or `groups, total, nil`
   on success. Retain fixed group order, all states, independent slices, and decoding
@@ -86,7 +87,7 @@ if err != nil { return ManifestProjection{}, err }
 return ManifestProjection{SourceSHA256: doc.SHA256, Groups: groups}, nil
 ```
 
-- [ ] Add `maxLockedRequirements = 20_000` alongside the record limit. Initialize
+- [x] Add `maxLockedRequirements = 20_000` alongside the record limit. Initialize
   `remaining := maxLockedRequirements` once before the record loop. After each
   record's existing nil guard:
 
@@ -98,10 +99,10 @@ remaining -= used
 
   Assign `Requirements: groups` in that record's literal. Preserve existing scalar
   assignments and final source digest; never consume the top-level legacy tree.
-- [ ] Format the three files; run all root tests/vet, including unchanged manifest
+- [x] Format the three files; run all root tests/vet, including unchanged manifest
   regressions. Review helper callers, limits, nil/empty distinctions, error privacy,
   and the absence of parser/module/probe changes. Review is inline, not independent.
-- [ ] Commit only those three Go files; record results and a nested shipping
+- [x] Commit only those three Go files; record results and a nested shipping
   milestone in a separate documentation commit after verification.
 
 ## Commands (Nushell)
@@ -120,3 +121,22 @@ jj commit -m "feat: project locked dependency requirements" internal/inventory/m
 
 Use the existing development toolchain, record actual results, and do not run
 package managers, nested probes, or native qualification merely to finish this task.
+
+## Execution evidence
+
+- RED: tests initially failed to compile for the absent field. With only the field
+  added, all six new tests/subtests failed at runtime on missing groups or missing
+  cumulative-limit rejection. Implementation followed that behavioral RED gate.
+- GREEN: 187 passing root tests/subtests and root `go vet ./...`; both rerun after
+  inline review. The unchanged manifest regressions also passed. `go list -m all`
+  listed only `packtrace`.
+- Shared helper callers checked: manifest supplies its own full allowance; lockfile
+  supplies a remaining counter initialized once before iterating records. Empty
+  later groups succeed with zero remaining allowance; excess returns zero result.
+- Tests preserve v2/v3 evidence, groups/states, root/workspace/link separation,
+  legacy conflicts, independent raw/output ownership, and 20,000/20,001 memberships
+  across records and groups, including repeated/null/invalid requirements.
+- Existing development toolchain: `go1.27.1-X:nodwarf5 linux/amd64`, offline flags
+  above. No reader behavior, module requirements, probe, or platform qualification
+  changes. Review was inline, not independent.
+- Scoped code commit: `10057f08`; only the three approved Go files were included.

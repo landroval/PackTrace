@@ -12,7 +12,7 @@ narrower progress and do not close their unchecked parent.
 
 **Current evidence review:** two documentation contracts are complete; no executable
 product capability is qualified for shipping. Internal npm v2/v3 reading, typed
-locked records, and manifest declarations pass synthetic tests; these milestones, the bounded
+locked records/requirements, and manifest declarations pass synthetic tests; these milestones, the bounded
 Linux probe, and reviewed design/budget milestones do not establish full product
 acceptance.
 
@@ -68,6 +68,10 @@ alone does not authorize probes, dependency installation, or publication.
   copies rather than collapsing all packages with the same identity.
 - [ ] **Dependency relationships:** report logical edges and dependency paths only
   when supported by evidence; preserve unknown relationships as unknown.
+  - [x] [Recorded lockfile requirements](increments/05-locked-requirements.md) are
+    retained per location/group with their own whole-lockfile 20,000-membership
+    bound. Root tests/vet pass (187 tests/subtests); destinations, resolved edges,
+    dependency paths, and installed relationships are not established.
 - [ ] **Source and identity provenance:** retain ecosystem, name, version, resolved
   source, available artifact digests and their sources, observation method,
   conflicting evidence, and uncertainty.
@@ -358,7 +362,7 @@ without establishing implemented or validated product support:
   portable privacy, and evidence-bound exceptions are agreed. Complete schemas,
   encodings, worker protocol, and runtime behavior remain to be delivered.
 - Each increment requires its own written-spec, plan, and execution approvals.
-  The first four inventory increments completed that process; further increments and full
+  The first five inventory increments completed that process; further increments and full
   product/release qualification are not implicitly approved.
 
 Resolve remaining details through the roadmap's design and qualification process.

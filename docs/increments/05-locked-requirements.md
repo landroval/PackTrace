@@ -1,8 +1,9 @@
 # Increment 5: locked dependency requirements
 
-Status: written specification approved, including the cumulative membership bound.
-The [implementation plan](05-locked-requirements-plan.md) and execution authorization
-remain to be approved. Authority: [design decisions](../design-decisions.md).
+Status: specification, cumulative bound, and [implementation plan](05-locked-requirements-plan.md)
+approved; inline execution explicitly authorized and completed. Code commit
+`10057f08`; 187 passing root tests/subtests and `go vet`. No resolved-graph,
+producer/native, or full-scanner qualification is implied. Authority: [design decisions](../design-decisions.md).
 
 ## Deliverable
 
