@@ -1,7 +1,8 @@
 # Increment 3: typed npm locked records
 
-Status: scope selected; written specification awaiting approval. A reviewed plan
-and explicit execution authorization remain required. Global constraints are in
+Status: written specification approved, including the additional record bound.
+The [implementation plan](03-npm-locked-records-plan.md) and explicit execution
+authorization remain to be approved. Global constraints are in
 [design decisions](../design-decisions.md).
 
 ## Deliverable
