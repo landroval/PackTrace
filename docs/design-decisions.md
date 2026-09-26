@@ -1077,13 +1077,45 @@ partial lines, sequence/reference errors, duplicate keys, mismatched builds,
 contradictory closure, a false completion followed by panic or extra traffic,
 interruption, backpressure, pipe failure, cumulative limits, and sensitive errors.
 
-## 27. Remaining design work
+## 27. Native feasibility gate
+
+**Approved next design step:** prepare a bounded native feasibility probe plan
+before fixing the unresolved filesystem/resource mechanisms in the consolidated
+specification. The user selected this over further source-only exploration or
+changing macOS scope. Retain all five native targets and the mandatory safeguards;
+no unsafe fallback or reduction in qualification requirements was approved.
+
+The [Probe B plan](native-safety-probe.md) starts with macOS safe file opening,
+then expands only if a credible mechanism is available. It also covers portable
+memory observation and process termination. The user subsequently approved the
+written scope, limits, and stop conditions **only**. Prototype creation, runner
+setup, privileged actions, downloads, and execution remain separately gated and
+are not authorized.
+
+Source inspection identified reasons not to assume feasibility:
+
+- `Lstat` before opening and `Fstat` afterwards can detect a type substitution too
+  late to prevent a device-open side effect. Nonblocking/event-only flags are not
+  established metadata-only guards. The pinned XNU `spec_open` inspected in the
+  probe draft does not have an `O_EVTONLY` bypass of device driver opening.
+- Linux cgroup charged memory, Windows Job committed memory, process resident
+  samples, and Go soft targets are different quantities. Late placement into a
+  cgroup/Job does not establish startup-wide accounting; Linux also documents
+  temporary `memory.max` overruns.
+
+These are source-level constraints, not native qualification results or proof
+that macOS support is impossible. No production mechanisms, build changes, extra
+dependencies, production limits, or strict-mode availability are selected by this
+plan. Keep its approved probe budgets separate from production budgets.
+
+## 28. Remaining design work
 
 The approvals above do not settle the following contracts:
 
 - Per-format schemas, exact manager-profile syntax, and complete typed IPC
   payloads/lifecycle states.
-- Exact filesystem, monitoring, termination, and strict-mode OS mechanisms.
+- Exact filesystem, monitoring, termination, and strict-mode OS mechanisms,
+  informed by the separately reviewed/authorized native feasibility work.
 - Complete CLI and policy schemas, local-input locations, and validation rules.
 - Qualification of candidate dependencies, exact matching rules and
   source/classification/correction mappings, full licensing/notice review, and
