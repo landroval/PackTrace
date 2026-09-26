@@ -1,8 +1,10 @@
 # Increment 1: npm v3 lockfile reader
 
-Status: written specification approved. Implementation still requires approval of
-the [implementation plan](01-npm-v3-reader-plan.md) and explicit execution
-authorization. Global constraints remain in
+Status: specification and [implementation plan](01-npm-v3-reader-plan.md) approved;
+inline implementation and local synthetic verification explicitly authorized.
+Implemented in `internal/inventory/npmlock.go`, with regression tests alongside it.
+Development checks passed: 38 tests and `go vet`. This is not native/release or
+full scanner qualification. Global constraints remain in
 [design decisions](../design-decisions.md).
 
 ## Deliverable

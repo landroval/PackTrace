@@ -11,8 +11,9 @@ gates still require executed acceptance evidence. Checked nested milestones show
 narrower progress and do not close their unchecked parent.
 
 **Current evidence review:** two documentation contracts are complete; no executable
-product capability is qualified for shipping. The bounded Linux probe and reviewed
-design/budget milestones are recorded below without promoting them to product
+product capability is qualified for shipping. The first internal npm v3 reader is
+implemented with passing synthetic tests; its narrower milestone, the bounded
+Linux probe, and reviewed design/budget milestones do not establish full product
 acceptance.
 
 The first delivery target remains a usable team pilot. Develop the capabilities
@@ -30,14 +31,20 @@ Related documents:
 - [Inventory evaluation results](inventory-evaluation-results.md): bounded probe
   evidence and explicit gaps.
 
-Documentation approval does not authorize probes, production implementation,
-dependency installation, or publication. The design and detailed implementation
-plan still require explicit approval before production work begins.
+Development now proceeds through small increments, each with an approved written
+specification, implementation plan, and explicit execution authorization. Global
+design completion is not a prerequisite for unrelated increments. Documentation
+alone does not authorize probes, dependency installation, or publication.
 
 ## 1. Project discovery and dependency inventory
 
 - [ ] **npm projects:** inspect the approved npm/lockfile versions, honor
   `npm-shrinkwrap.json` precedence, and report effective lockfile selection.
+  - [x] Internal npm v3 byte reader implemented: raw-field preservation, original
+    SHA-256, strict input rejection, size/depth bounds, 38 passing synthetic tests
+    and `go vet`. See the [increment](increments/01-npm-v3-reader.md). Discovery,
+    manager semantics, effective selection, and native/producer qualification
+    remain open.
 - [ ] **Bun projects:** inspect modern text-based `bun.lock` versions and installed
   layouts in the approved compatibility matrix.
 - [ ] **Workspaces and monorepos:** discover supported workspace structures and
@@ -337,8 +344,9 @@ without establishing implemented or validated product support:
 - Offline all-three-check defaults, explicit JSON policy, exit codes, JSON `1.0`,
   portable privacy, and evidence-bound exceptions are agreed. Complete schemas,
   encodings, worker protocol, and runtime behavior remain to be delivered.
-- The full written specification and detailed implementation plan still require
-  review and approval. Reviewed directions alone do not close that gate.
+- Each increment requires its own written-spec, plan, and execution approvals.
+  The first reader has completed that process; remaining increments and the full
+  product/release qualification are not implicitly approved.
 
 Resolve remaining details through the roadmap's design and qualification process.
 This checklist does not authorize implementation, a probe, downloads, or deletion.

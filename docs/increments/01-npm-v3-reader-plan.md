@@ -1,7 +1,8 @@
 # npm v3 reader implementation plan
 
 > **For agentic workers:** Use `superpowers:executing-plans` for inline execution.
-> Await plan approval and explicit execution authorization before changing code.
+> Plan approved; inline creation, local synthetic tests/vet, and scoped commit
+> explicitly authorized. No downloads or native probes were authorized.
 
 **Goal:** Deliver the approved in-memory npm v3 reader and regression tests.
 **Architecture:** One internal package; validation precedes raw-field projection.
@@ -53,7 +54,7 @@ report output. Their ownership is independent of the input slice.
 
 ## Single task: validated, field-preserving reader
 
-- [ ] Create the module and failing tests first. Initial smoke test:
+- [x] Create the module and failing tests first. Initial smoke test:
 
 ```go
 func TestParseNPMLockV3(t *testing.T) {
@@ -77,9 +78,9 @@ func TestParseNPMLockV3(t *testing.T) {
   Build valid JSON padded to exactly 64 MiB and one byte over; test total container
   depths 128 and 129. Mutate the source after success and compare retained fields.
 
-- [ ] Run the tests and record the expected failure because the reader is absent.
+- [x] Run the tests and record the expected failure because the reader is absent.
 
-- [ ] Implement in this order: check byte length; check UTF-8 and JSON syntax;
+- [x] Implement in this order: check byte length; check UTF-8 and JSON syntax;
   validate escaped surrogate pairing without mistaking escaped backslashes for
   escapes; walk tokens with `UseNumber`, object-local decoded-key sets, and bounded
   recursion to enforce duplicate/depth rules. Then decode top-level raw fields,
@@ -89,7 +90,7 @@ func TestParseNPMLockV3(t *testing.T) {
   Treat missing/wrongly typed required fields as `invalid-shape`; an integer
   lockfile version other than 3 is `unsupported-version`.
 
-- [ ] Run tests, format the two Go files, and run vet. Nushell commands:
+- [x] Run tests, format the two Go files, and run vet. Nushell commands:
 
 ```nu
 with-env {GOTOOLCHAIN: local, GOPROXY: off, GOWORK: off, CGO_ENABLED: '0'} { go test ./... }
@@ -98,14 +99,28 @@ with-env {GOTOOLCHAIN: local, GOPROXY: off, GOWORK: off, CGO_ENABLED: '0'} { go 
 with-env {GOTOOLCHAIN: local, GOPROXY: off, GOWORK: off, CGO_ENABLED: '0'} { go vet ./... }
 ```
 
-- [ ] Review the diff against every spec requirement. Recheck malformed/Unicode,
+- [x] Review the diff against every spec requirement. Recheck malformed/Unicode,
   duplicate-key, and boundary cases; confirm no dependency, target I/O, or scanner
   support claim was introduced. No independent subagent review is implied.
-- [ ] Commit only `go.mod` and the two Go files with jj. Report red/green evidence,
+- [x] Commit only `go.mod` and the two Go files with jj. Report red/green evidence,
   test/vet results, development toolchain, and remaining native/release limitations.
 
 ## Execution boundary
 
-This plan does not authorize execution by itself. Approval may explicitly authorize
-inline creation of these files and local synthetic tests, without any downloads,
-runner provisioning, or changes to the existing probe. Otherwise stop for review.
+The user explicitly authorized inline execution of this plan. That permission is
+limited to this increment; it does not authorize downloads, runner provisioning,
+or changes to the existing probe.
+
+## Execution evidence
+
+- RED: root `go test ./...` failed because `ParseNPMLockV3` and `ParseError` did not
+  exist, before implementation was written.
+- GREEN: 38 tests passed; root `go vet ./...` passed. The root module contains only
+  `packtrace/internal/inventory`; the separate SCALIBR probe was not rerun or changed.
+- Development toolchain: `go1.27.1-X:nodwarf5 linux/amd64`, with `GOTOOLCHAIN=local`,
+  `GOPROXY=off`, `GOWORK=off`, and `CGO_ENABLED=0`; no release qualification claimed.
+- Implementation ruling: combine syntax/depth/duplicate validation in the token
+  walk rather than adding a preliminary `json.Valid` pass. This enforces our depth
+  limit before the decoder's larger internal limit. Validate surrogate escapes
+  only after the token stream establishes syntactic validity.
+- Scoped implementation commit: `0fe821ad`. Review was inline, not independent.
