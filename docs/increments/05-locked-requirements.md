@@ -1,7 +1,8 @@
 # Increment 5: locked dependency requirements
 
-Status: scope selected; written specification awaiting approval. Plan and execution
-approval remain separate. Authority: [design decisions](../design-decisions.md).
+Status: written specification approved, including the cumulative membership bound.
+The [implementation plan](05-locked-requirements-plan.md) and execution authorization
+remain to be approved. Authority: [design decisions](../design-decisions.md).
 
 ## Deliverable
 
