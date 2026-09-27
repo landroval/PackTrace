@@ -1,7 +1,8 @@
 # Increment 11: OSV ranges and events
 
-Status: scope selected; written specification awaiting approval. Plan and execution
-approval remain separate. Authority: [design decisions](../design-decisions.md).
+Status: specification approved, including complete event fields and the combined
+20,000-unit budget. [Plan](11-osv-ranges-plan.md) and execution remain to be approved.
+Authority: [design decisions](../design-decisions.md).
 
 ## Deliverable
 
