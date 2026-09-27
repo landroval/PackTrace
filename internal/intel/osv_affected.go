@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 )
 
-const maxAffectedEntries = 20_000
+const (
+	maxAffectedEntries  = 20_000
+	maxAffectedVersions = 20_000
+)
 
 // OSVFieldState describes JSON shape, not identity validity. Unavailable children
 // must not be confused with absent fields in a successfully inspected parent.
@@ -25,12 +28,20 @@ type OSVString struct {
 	Value string
 }
 
+// OSVVersions preserves version-list evidence, not validated concrete versions.
+// Member position is its source index; duplicate and unusable members are retained.
+type OSVVersions struct {
+	State   OSVFieldState
+	Entries []OSVString
+}
+
 // OSVAffectedEntry is one positional claim, not an installed or matched package.
 // Unusable parents leave their children's states unavailable.
 type OSVAffectedEntry struct {
 	Index                 int
 	State, PackageState   OSVFieldState
 	Ecosystem, Name, PURL OSVString
+	Versions              OSVVersions
 }
 
 // OSVAffectedProjection binds claims to source digest + affected index + field.
@@ -57,10 +68,17 @@ func ProjectOSVAffected(doc OSVDocument) (OSVAffectedProjection, error) {
 		return OSVAffectedProjection{}, &ParseError{Code: "limit-exceeded"}
 	}
 	result.Entries = make([]OSVAffectedEntry, 0, len(items))
+	remaining := maxAffectedVersions
 	for index, raw := range items {
 		fields, state := decodeOSVField[map[string]json.RawMessage](raw, true)
 		entry := OSVAffectedEntry{Index: index, State: state}
 		if state == OSVFieldValue {
+			versions, used, err := projectOSVVersions(fields, remaining)
+			if err != nil {
+				return OSVAffectedProjection{}, err
+			}
+			remaining -= used
+			entry.Versions = versions
 			packageRaw, present := fields["package"]
 			packageFields, packageState := decodeOSVField[map[string]json.RawMessage](packageRaw, present)
 			entry.PackageState = packageState
@@ -73,6 +91,24 @@ func ProjectOSVAffected(doc OSVDocument) (OSVAffectedProjection, error) {
 		result.Entries = append(result.Entries, entry)
 	}
 	return result, nil
+}
+
+func projectOSVVersions(fields map[string]json.RawMessage, remaining int) (OSVVersions, int, error) {
+	raw, present := fields["versions"]
+	items, state := decodeOSVField[[]json.RawMessage](raw, present)
+	result := OSVVersions{State: state}
+	if state != OSVFieldValue {
+		return result, 0, nil
+	}
+	if len(items) > remaining {
+		return OSVVersions{}, 0, &ParseError{Code: "limit-exceeded"}
+	}
+	result.Entries = make([]OSVString, 0, len(items))
+	for _, raw := range items {
+		value, state := decodeOSVField[string](raw, true)
+		result.Entries = append(result.Entries, OSVString{State: state, Value: value})
+	}
+	return result, len(items), nil
 }
 
 // decodeOSVField checks only type: the reader already validated raw JSON syntax.

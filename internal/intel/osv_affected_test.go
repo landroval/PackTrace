@@ -56,6 +56,9 @@ func TestProjectOSVAffectedParentStates(t *testing.T) {
 			got, err := ProjectOSVAffected(doc)
 			child := OSVString{State: tc.childState}
 			want := OSVAffectedEntry{Index: 0, State: tc.state, PackageState: tc.packageState, Ecosystem: child, Name: child, PURL: child}
+			if tc.state == OSVFieldValue {
+				want.Versions = OSVVersions{State: OSVFieldAbsent}
+			}
 			if err != nil || got.SourceSHA256 != doc.SHA256 || got.State != OSVFieldValue || !reflect.DeepEqual(got.Entries, []OSVAffectedEntry{want}) {
 				t.Fatal("unavailable/absent parent or child collapsed", got, err)
 			}
@@ -84,7 +87,7 @@ func TestProjectOSVAffectedStringStates(t *testing.T) {
 				if err != nil || got.State != OSVFieldValue || len(got.Entries) != 1 {
 					t.Fatal("record lost", err)
 				}
-				want := OSVAffectedEntry{State: OSVFieldValue, PackageState: OSVFieldValue, Ecosystem: OSVString{State: OSVFieldAbsent}, Name: OSVString{State: OSVFieldAbsent}, PURL: OSVString{State: OSVFieldAbsent}}
+				want := OSVAffectedEntry{State: OSVFieldValue, PackageState: OSVFieldValue, Ecosystem: OSVString{State: OSVFieldAbsent}, Name: OSVString{State: OSVFieldAbsent}, PURL: OSVString{State: OSVFieldAbsent}, Versions: OSVVersions{State: OSVFieldAbsent}}
 				field := OSVString{State: tc.state, Value: tc.value}
 				switch key {
 				case "ecosystem":
@@ -118,7 +121,7 @@ func TestProjectOSVAffectedEvidenceAndOrder(t *testing.T) {
 			t.Fatal("positions changed")
 		}
 	}
-	first := OSVAffectedEntry{State: OSVFieldValue, PackageState: OSVFieldValue, Ecosystem: OSVString{State: OSVFieldValue, Value: "PyPI"}, Name: OSVString{State: OSVFieldValue, Value: "mismatch"}, PURL: OSVString{State: OSVFieldValue, Value: "pkg:npm/other@9"}}
+	first := OSVAffectedEntry{State: OSVFieldValue, PackageState: OSVFieldValue, Ecosystem: OSVString{State: OSVFieldValue, Value: "PyPI"}, Name: OSVString{State: OSVFieldValue, Value: "mismatch"}, PURL: OSVString{State: OSVFieldValue, Value: "pkg:npm/other@9"}, Versions: OSVVersions{State: OSVFieldValue, Entries: []OSVString{{State: OSVFieldValue, Value: "9"}}}}
 	if !reflect.DeepEqual(got.Entries[0], first) {
 		t.Fatal("non-npm/conflicting identity interpreted")
 	}
@@ -186,6 +189,7 @@ func TestProjectOSVAffectedLimits(t *testing.T) {
 					want.State = OSVFieldInvalidType
 				case 2:
 					want.State, want.PackageState = OSVFieldValue, OSVFieldValue
+					want.Versions = OSVVersions{State: OSVFieldAbsent}
 					want.Name = OSVString{State: OSVFieldValue, Value: "same"}
 					want.Ecosystem, want.PURL = OSVString{State: OSVFieldAbsent}, OSVString{State: OSVFieldAbsent}
 				}
