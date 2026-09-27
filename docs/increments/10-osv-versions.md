@@ -1,7 +1,7 @@
 # Increment 10: explicit OSV affected versions
 
-Status: scope selected; written specification awaiting approval. Plan and execution
-approval remain separate. Authority: [design decisions](../design-decisions.md).
+Status: specification approved, including the cumulative 20,000-version bound.
+The [implementation plan](10-osv-versions-plan.md) and execution remain to be approved. Authority: [design decisions](../design-decisions.md).
 
 ## Deliverable
 
