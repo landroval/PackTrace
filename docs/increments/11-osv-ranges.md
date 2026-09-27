@@ -1,7 +1,8 @@
 # Increment 11: OSV ranges and events
 
-Status: specification approved, including complete event fields and the combined
-20,000-unit budget. [Plan](11-osv-ranges-plan.md) and execution remain to be approved.
+Status: specification (complete event fields and combined 20,000-unit budget) and
+[plan](11-osv-ranges-plan.md) approved; inline execution explicitly authorized and
+completed. Code `63a06daa`; 553 root tests/subtests and vet pass.
 Authority: [design decisions](../design-decisions.md).
 
 ## Deliverable

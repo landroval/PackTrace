@@ -1,7 +1,8 @@
 # OSV ranges and events implementation plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: use `superpowers:executing-plans`
-> for approved inline execution. Await plan review and execution authorization.
+> for approved inline execution. User approved the plan and explicitly authorized
+> four Go files, offline synthetic verification, and scoped code/docs commits.
 
 **Goal:** retain all recorded range/event claims without interval evaluation.
 **Architecture:** extend affected entries with one range projection; nested helpers
@@ -37,7 +38,7 @@ and string decoding, keeping unusable children unavailable.
 **Produces:** spec types, additive `OSVAffectedEntry.Ranges OSVRanges`, and private
 `projectOSVRanges(fields map[string]json.RawMessage, remaining *int) (OSVRanges, error)`.
 
-- [ ] Write tests through the existing affectedDocument helper. Begin with a range
+- [x] Write tests through the existing affectedDocument helper. Begin with a range
   whose type is null and events contain `{"introduced":"0","fixed":"2","future":false}`:
 
 ```go
@@ -62,18 +63,18 @@ if len(f) != 3 || f[0].Name != "fixed" || f[1].Name != "future" ||
   strings, independent package/versions/type/repo usability, digest and raw retention.
   Snapshot nested output, mutate source, then one returned event field to verify
   other entries/events and source remain independent.
-- [ ] Build a mixed cumulative-bound fixture across two affected entries. First:
+- [x] Build a mixed cumulative-bound fixture across two affected entries. First:
   two range slots (one null), two event slots (one null), and two fields in the
   object event (one invalid unknown field): six units. Second: one range with
   19,993 empty-object events: 19,994 units. Total 20,000 succeeds, including later
   empty/absent range lists. Add one unknown null field to the last event for 20,001;
   require controlled limit-exceeded and zero whole projection. This pins all three
   unit kinds and prevents per-record/range/event reset.
-- [ ] Observe missing type/field compile RED. Add only type definitions and Ranges
+- [x] Observe missing type/field compile RED. Add only type definitions and Ranges
   field; rerun focused tests for runtime RED. Update old affected expectations only
   for absent Ranges on object entries and the already-present UNKNOWN/introduced
   range in the repeated fixture. Do not change old fixtures or prior-field assertions.
-- [ ] Implement `maxRangeUnits = 20_000` and a private counter helper:
+- [x] Implement `maxRangeUnits = 20_000` and a private counter helper:
 
 ```go
 func consumeOSVRangeUnits(remaining *int, count int) error {
@@ -86,19 +87,19 @@ func consumeOSVRangeUnits(remaining *int, count int) error {
   Callers pass a private nonnegative remaining counter and nonnegative collection
   lengths; no new generic quota framework. Check/consume after raw decoding but
   before output allocation, child projection, or key sorting.
-- [ ] Implement projectOSVRanges: decode the ranges list via decodeOSVField; non-value
+- [x] Implement projectOSVRanges: decode the ranges list via decodeOSVField; non-value
   returns its state with nil entries. Consume len(items), allocate non-nil output,
   iterate in source order and decode each element object. Always retain Index/state;
   only objects project Type/Repo plus Events using private
   `projectOSVEvents(fields map[string]json.RawMessage, remaining *int) (OSVEvents, error)`.
-- [ ] Implement projectOSVEvents analogously: consume event slots before output;
+- [x] Implement projectOSVEvents analogously: consume event slots before output;
   for each object event, consume len(fields), allocate non-nil field output, then
   iterate `slices.Sorted(maps.Keys(fields))` and append
   `OSVEventField{Name: name, Value: projectOSVString(fields, name)}`. Null/invalid
   event elements retain state/index with nil fields. Empty objects retain empty fields.
   Propagate errors as zero helper results; do not discard unfamiliar names or choose
   an event kind. Range type/repo validity cannot gate event decoding.
-- [ ] In ProjectOSVAffected initialize `remainingRanges := maxRangeUnits` once before
+- [x] In ProjectOSVAffected initialize `remainingRanges := maxRangeUnits` once before
   its loop. For each object affected entry, outside package/versions-success gating:
 
 ```go
@@ -109,10 +110,10 @@ entry.Ranges = ranges
 
   Existing fatal version-budget errors remain fatal; unusable version list states
   do not block ranges. Keep all prior identity/version assignments and root guards.
-- [ ] Format four files, run focused and full root tests/vet; inspect counter sharing,
+- [x] Format four files, run focused and full root tests/vet; inspect counter sharing,
   type-gating, complete field enumeration and nested ownership. Verify changes outside
   four-file scope absent; rerun full tests/vet after inline review.
-- [ ] Commit the four Go files only; separately record actual verification and a
+- [x] Commit the four Go files only; separately record actual verification and a
   nested milestone, preserving all semantic/matching/native gates. Close the ledger.
 
 ## Commands (Nushell)
@@ -129,3 +130,28 @@ jj commit -m "feat: project OSV range and event evidence" internal/intel/osv_ran
 
 Require successful verification before commit. Review is inline, not independent;
 retained event strings are not evaluated intervals or confirmed affected versions.
+
+## Execution evidence
+
+- RED: missing types/field first failed compilation. With definitions only, 59 of
+  62 new tests/subtests failed behaviorally; three unavailable-parent cases already
+  held. Implementation followed this runtime RED gate.
+- Initial GREEN: 62 new/550 total tests/subtests and root vet passed.
+- Inline review strengthened ordering checks with three more tests/subtests using
+  distinct, nonmonotonic ranges/events. Temporary reversal of ranges failed the
+  range-order case; reversal of events separately failed the event-order case.
+  Both mutations were removed before final verification; no production behavior change.
+- Final GREEN: **65 new/553 total root tests/subtests**, vet passes after inline review.
+  Checked module list remains only `packtrace`; no dependencies/toolchain downloads.
+- Exact combined 20,000/20,001 units tested across affected entries and nested
+  ranges/events/fields, with 20,000 enumerated versions simultaneously retained.
+  Separate collection-bound tests cover each of the three count sites. Late unknown
+  null field excess returns the existing controlled error and a zero whole projection.
+- All prior Go files outside approved scope remain byte-identical to base `8d7f0923`.
+  Existing affected tests changed only four expectation sites for added Ranges,
+  including the raw UNKNOWN/introduced fixture, not prior-field assertions or fixtures.
+- Nested snapshots/mutations verify ownership; all event keys, exact strings,
+  duplicates, source positions and independent unusable siblings are preserved.
+- Code `63a06daa` contains only the four approved Go files. Review was inline, not
+  independent; no readers, temporal code, probes, target access or matching changes.
+  Used existing development toolchain/offline environment, not native qualification.

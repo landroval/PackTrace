@@ -13,8 +13,8 @@ narrower progress and do not close their unchecked parent.
 **Current evidence review:** two documentation contracts are complete; no executable
 product capability is qualified for shipping. Internal npm v2/v3 reading, typed
 locked records/requirements, manifest declarations, root textual comparisons,
-bounded advisory JSON reading, temporal projections, and affected identity/version
-projections pass synthetic tests; these milestones, the bounded Linux probe, and reviewed
+bounded advisory JSON reading, temporal projections, and affected identity/version/
+range-event projections pass synthetic tests; these milestones, the bounded Linux probe, and reviewed
 design/budget milestones do not establish full product
 acceptance.
 
@@ -110,6 +110,10 @@ and expected optional-package absence is not classified as malware.
     version strings/positions and unusable members, independently of package state,
     with a cumulative 20,000-slot bound. 488 root tests/subtests and vet pass;
     SemVer/range interpretation and matching remain unimplemented.
+  - [x] [OSV ranges and events](increments/11-osv-ranges.md) preserve source order,
+    unknown/multiple event fields and unavailable/invalid states. Combined 20,000-unit
+    range/event/field budget, separate from version slots. 553 root tests/subtests
+    and vet pass; interval evaluation and matching remain unimplemented.
 - [ ] **Ecosystem-correct matching:** handle approved npm version/range semantics,
   including boundary and prerelease cases; disclose unsupported matching cases.
 - [ ] **Distinct categories:** keep malicious-package advisories, vulnerabilities,
@@ -384,7 +388,7 @@ without establishing implemented or validated product support:
   portable privacy, and evidence-bound exceptions are agreed. Complete schemas,
   encodings, worker protocol, and runtime behavior remain to be delivered.
 - Each increment requires its own written-spec, plan, and execution approvals.
-  The first ten implementation increments completed that process; further increments and full
+  The first eleven implementation increments completed that process; further increments and full
   product/release qualification are not implicitly approved.
 
 Resolve remaining details through the roadmap's design and qualification process.

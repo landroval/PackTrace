@@ -12,7 +12,7 @@ This supersedes earlier statements requiring a complete product-wide specificati
 before any production development. Safety and release requirements remain intact;
 native feasibility still gates the affected native mechanisms, not an in-memory
 parser. Dependency installation, native probes/runners, and publication retain
-their separate authorization boundaries. The first ten implementation increments were
+their separate authorization boundaries. The first eleven implementation increments were
 individually approved and explicitly authorized for inline implementation and
 local synthetic verification. Their authorization does not extend to further
 increments or native probes.
@@ -26,8 +26,9 @@ Implemented bounded deliverables: the
 [root requirement comparison](increments/06-root-comparison.md),
 [bounded OSV record reading](increments/07-osv-reader.md),
 [OSV temporal projection](increments/08-osv-times.md),
-[OSV affected identities](increments/09-osv-affected.md), and
-[explicit OSV versions](increments/10-osv-versions.md). `ParseNPMLock` retains
+[OSV affected identities](increments/09-osv-affected.md),
+[explicit OSV versions](increments/10-osv-versions.md), and
+[OSV ranges and events](increments/11-osv-ranges.md). `ParseNPMLock` retains
 raw evidence; `ProjectNPMLock` exposes explicit scalar claims and field states,
 without semantic resolution or installed-state inference. The projection has its
 own approved 20,000-record bound, including root/workspace/link entries; this does
@@ -56,6 +57,10 @@ states, distinguishing unavailable children from observed absence. Its separate
 Each affected entry also retains its own `versions` list, independent of package
 usability; a separate cumulative 20,000-version-slot bound applies across the advisory.
 Strings, positions and duplicates remain uninterpreted, not concrete-version qualification.
+Affected ranges now retain type/repo claims, ordered events and all event fields
+(including unknown/multiple bounds), with a separate combined 20,000-unit budget
+counting range slots, event slots and event fields. Unsupported shapes remain explicit;
+no interval construction or range-semantic qualification is performed.
 Full OSV schema/identity/range/correction interpretation, matching, synchronization,
 and advisory qualification remain unimplemented.
 
