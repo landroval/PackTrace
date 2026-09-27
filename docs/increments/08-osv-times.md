@@ -1,7 +1,7 @@
 # Increment 8: OSV timestamps and withdrawal claims
 
-Status: scope selected; written specification awaiting approval. Plan and execution
-approval remain separate. Authority: [design decisions](../design-decisions.md).
+Status: written specification approved. The [implementation plan](08-osv-times-plan.md)
+and execution authorization remain to be approved. Authority: [design decisions](../design-decisions.md).
 
 ## Deliverable
 
