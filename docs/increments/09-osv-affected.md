@@ -1,7 +1,7 @@
 # Increment 9: OSV affected package identities
 
-Status: scope selected; written specification awaiting approval. Plan and execution
-approval remain separate. Authority: [design decisions](../design-decisions.md).
+Status: written specification approved, including the 20,000-entry bound. The
+[implementation plan](09-osv-affected-plan.md) and execution remain to be approved. Authority: [design decisions](../design-decisions.md).
 
 ## Deliverable
 
