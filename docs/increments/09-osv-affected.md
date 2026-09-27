@@ -1,7 +1,8 @@
 # Increment 9: OSV affected package identities
 
-Status: written specification approved, including the 20,000-entry bound. The
-[implementation plan](09-osv-affected-plan.md) and execution remain to be approved. Authority: [design decisions](../design-decisions.md).
+Status: specification (including the 20,000-entry bound) and
+[implementation plan](09-osv-affected-plan.md) approved; inline execution explicitly
+authorized and completed. Code `e93464b1`; 472 root tests/subtests and vet pass. Authority: [design decisions](../design-decisions.md).
 
 ## Deliverable
 

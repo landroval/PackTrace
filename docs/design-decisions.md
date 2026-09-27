@@ -12,7 +12,7 @@ This supersedes earlier statements requiring a complete product-wide specificati
 before any production development. Safety and release requirements remain intact;
 native feasibility still gates the affected native mechanisms, not an in-memory
 parser. Dependency installation, native probes/runners, and publication retain
-their separate authorization boundaries. The first eight implementation increments were
+their separate authorization boundaries. The first nine implementation increments were
 individually approved and explicitly authorized for inline implementation and
 local synthetic verification. Their authorization does not extend to further
 increments or native probes.
@@ -24,8 +24,9 @@ Implemented bounded deliverables: the
 [manifest declarations](increments/04-manifest-declarations.md),
 [locked requirements](increments/05-locked-requirements.md),
 [root requirement comparison](increments/06-root-comparison.md),
-[bounded OSV record reading](increments/07-osv-reader.md), and
-[OSV temporal projection](increments/08-osv-times.md). `ParseNPMLock` retains
+[bounded OSV record reading](increments/07-osv-reader.md),
+[OSV temporal projection](increments/08-osv-times.md), and
+[OSV affected identities](increments/09-osv-affected.md). `ParseNPMLock` retains
 raw evidence; `ProjectNPMLock` exposes explicit scalar claims and field states,
 without semantic resolution or installed-state inference. The projection has its
 own approved 20,000-record bound, including root/workspace/link entries; this does
@@ -48,8 +49,11 @@ validation now lives in `internal/jsoninput`; inventory errors stay unchanged, w
 intel errors use `intel: CODE`. `ProjectOSVTimes` now retains modified/published/
 withdrawn text, supported UTC instants, uninterpretable states, and a source withdrawal
 claim. It does not infer active status, temporal ordering, or acquisition freshness.
-Full OSV schema/range/correction interpretation, matching, synchronization, and
-advisory qualification remain unimplemented.
+`ProjectOSVAffected` retains positional ecosystem/name/PURL claims and hierarchy
+states, distinguishing unavailable children from observed absence. Its separate
+20,000-entry bound counts null/invalid slots and duplicates, without filtering.
+Full OSV schema/identity/range/correction interpretation, matching, synchronization,
+and advisory qualification remain unimplemented.
 
 This record carries forward the decisions made after the
 [SCALIBR evaluation](inventory-evaluation-results.md). It supersedes the earlier

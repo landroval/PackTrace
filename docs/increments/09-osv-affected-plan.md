@@ -1,7 +1,8 @@
 # OSV affected identities implementation plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: use `superpowers:executing-plans`
-> for approved inline execution. Await plan review and execution authorization.
+> for approved inline execution. User approved the plan and explicitly authorized
+> two new Go files, offline synthetic verification, and scoped code/docs commits.
 
 **Goal:** expose positional package identity claims without filtering or qualification.
 **Architecture:** a bounded array projection with explicit states at root, element,
@@ -35,7 +36,7 @@ only an inspectable parent can establish a field's absence.
 **Produces:** the types/constants in the spec and
 `ProjectOSVAffected(doc OSVDocument) (OSVAffectedProjection, error)`.
 
-- [ ] Add table tests using ParseOSVRecord-produced documents. Begin with a record
+- [x] Add table tests using ParseOSVRecord-produced documents. Begin with a record
   whose affected array is `[null,{}, {"package":{}}, {"package":{"name":""}}]`:
 
 ```go
@@ -59,12 +60,12 @@ if got.Entries[0].PackageState != OSVFieldUnavailable ||
   including versions/ranges/unknowns before/after; mutate source and output to verify
   owned results, independent entries and copied digest. Nil Fields -> zero projection
   and exact controlled invalid-shape error.
-- [ ] Generate exactly 20,000 array slots mixing null, wrong-type and repeated valid
+- [x] Generate exactly 20,000 array slots mixing null, wrong-type and repeated valid
   package objects; assert every position/state and preserved duplicate identity.
   Add one slot for controlled limit-exceeded/zero projection. No old fixture changes.
-- [ ] Observe missing-symbol compile RED, add only types/constants and zero-result
+- [x] Observe missing-symbol compile RED, add only types/constants and zero-result
   stub, then observe behavioral RED before implementing projection.
-- [ ] Implement private `decodeOSVField` for the three actual raw shapes used here:
+- [x] Implement private `decodeOSVField` for the three actual raw shapes used here:
 
 ```go
 func decodeOSVField[T string | []json.RawMessage | map[string]json.RawMessage](raw json.RawMessage, present bool) (T, OSVFieldState) {
@@ -82,7 +83,7 @@ func decodeOSVField[T string | []json.RawMessage | map[string]json.RawMessage](r
   This helper checks JSON type only; raw syntax/duplicates/depth were validated by
   the reader. Add private `projectOSVString(fields, key)` returning OSVString from
   the raw lookup plus decodeOSVField[string]; no inventory coupling or type moves.
-- [ ] Implement nil Fields guard, then decode affected into []json.RawMessage. Copy
+- [x] Implement nil Fields guard, then decode affected into []json.RawMessage. Copy
   source digest/root state; non-value root returns nil Entries with nil error.
   Array count above `maxAffectedEntries = 20_000` returns zero result/limit-exceeded.
   Otherwise allocate non-nil output capacity equal to slot count and iterate in order:
@@ -105,10 +106,10 @@ result.Entries = append(result.Entries, entry)
 
   Never synthesize child absence for an unusable parent. Leave unknown raw fields
   untouched, and return the full result only within the bound.
-- [ ] Format, run focused and full root tests/vet, review every parent/child state,
+- [x] Format, run focused and full root tests/vet, review every parent/child state,
   cumulative slot count, ownership and evidence locator. Verify old Go files unchanged;
   rerun full tests/vet after inline review. Do not claim independent/native review.
-- [ ] Commit only the two Go files; separately update docs and the nested milestone,
+- [x] Commit only the two Go files; separately update docs and the nested milestone,
   preserving all matching/qualification gates. Close the task ledger.
 
 ## Commands (Nushell)
@@ -125,3 +126,21 @@ jj commit -m "feat: project OSV affected identities" internal/intel/osv_affected
 
 Every verification command must succeed before commit. Type-correct identity claims
 are not validated npm names/PURLs, applicability evidence or supported-schema proof.
+
+## Execution evidence
+
+- RED: missing API/types failed compilation. Types/constants plus a zero-result stub
+  produced 52 behavioral test/subtest failures before implementation.
+- GREEN: 52 new projection tests/subtests and all 420 previous cases pass (472 total),
+  plus root vet. Full tests/vet rerun after inline review. Module listing remains
+  only `packtrace`, using offline flags and the existing development toolchain.
+- Tests cover every hierarchy level, missing versus unavailable children, exact
+  strings, preserved duplicates/order, non-npm/conflicting identities, raw range/
+  version/unknown fields, copied digest, ownership and controlled zero-result errors.
+- Exactly 20,000 mixed null/invalid/repeated slots succeed with every position checked;
+  20,001 fails without truncation. This is not an installed-instance count or RSS cap.
+- Inline review checked all generic decoder instantiations, parent gating, count
+  placement and returned ownership. All prior Go source/test files byte-identical
+  to plan base `7109d143`; no independent or platform-review claim.
+- Code `e93464b1` includes only the two approved files. No new dependencies, readers,
+  timestamp changes, downloads, target access, SCALIBR/native probes or matching.
