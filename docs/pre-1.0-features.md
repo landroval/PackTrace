@@ -13,7 +13,7 @@ narrower progress and do not close their unchecked parent.
 **Current evidence review:** two documentation contracts are complete; no executable
 product capability is qualified for shipping. Internal npm v2/v3 reading, typed
 locked records/requirements, manifest declarations, root textual comparisons,
-and bounded advisory JSON reading pass synthetic tests; these milestones, the bounded Linux probe, and reviewed
+bounded advisory JSON reading, and temporal projections pass synthetic tests; these milestones, the bounded Linux probe, and reviewed
 design/budget milestones do not establish full product
 acceptance.
 
@@ -109,6 +109,10 @@ and expected optional-package absence is not classified as malware.
   source provenance, snapshot identity, and freshness information.
 - [ ] **Corrections and withdrawals:** incorporate changed or withdrawn advisories
   without silently retaining obsolete active findings in new scans.
+  - [x] [Temporal OSV projection](increments/08-osv-times.md) retains field text,
+    supported UTC instants, uncertainty, and withdrawal claims without active-status
+    or freshness inference. 420 root tests/subtests and vet pass; correction handling,
+    full advisory eligibility and matching remain unimplemented.
 
 **Shipping condition:** a feed match identifies reported exposure in the observed
 scope; it never claims that a malicious payload executed.
@@ -371,7 +375,7 @@ without establishing implemented or validated product support:
   portable privacy, and evidence-bound exceptions are agreed. Complete schemas,
   encodings, worker protocol, and runtime behavior remain to be delivered.
 - Each increment requires its own written-spec, plan, and execution approvals.
-  The first seven implementation increments completed that process; further increments and full
+  The first eight implementation increments completed that process; further increments and full
   product/release qualification are not implicitly approved.
 
 Resolve remaining details through the roadmap's design and qualification process.

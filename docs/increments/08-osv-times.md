@@ -1,7 +1,8 @@
 # Increment 8: OSV timestamps and withdrawal claims
 
-Status: written specification approved. The [implementation plan](08-osv-times-plan.md)
-and execution authorization remain to be approved. Authority: [design decisions](../design-decisions.md).
+Status: specification and [implementation plan](08-osv-times-plan.md) approved;
+inline execution explicitly authorized and completed. Code `3e517794`; 420 root
+tests/subtests and `go vet` pass. This does not qualify advisories for matching. Authority: [design decisions](../design-decisions.md).
 
 ## Deliverable
 
