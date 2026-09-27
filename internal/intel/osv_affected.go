@@ -42,6 +42,7 @@ type OSVAffectedEntry struct {
 	State, PackageState   OSVFieldState
 	Ecosystem, Name, PURL OSVString
 	Versions              OSVVersions
+	Ranges                OSVRanges
 }
 
 // OSVAffectedProjection binds claims to source digest + affected index + field.
@@ -69,6 +70,7 @@ func ProjectOSVAffected(doc OSVDocument) (OSVAffectedProjection, error) {
 	}
 	result.Entries = make([]OSVAffectedEntry, 0, len(items))
 	remaining := maxAffectedVersions
+	remainingRanges := maxRangeUnits
 	for index, raw := range items {
 		fields, state := decodeOSVField[map[string]json.RawMessage](raw, true)
 		entry := OSVAffectedEntry{Index: index, State: state}
@@ -79,6 +81,11 @@ func ProjectOSVAffected(doc OSVDocument) (OSVAffectedProjection, error) {
 			}
 			remaining -= used
 			entry.Versions = versions
+			ranges, err := projectOSVRanges(fields, &remainingRanges)
+			if err != nil {
+				return OSVAffectedProjection{}, err
+			}
+			entry.Ranges = ranges
 			packageRaw, present := fields["package"]
 			packageFields, packageState := decodeOSVField[map[string]json.RawMessage](packageRaw, present)
 			entry.PackageState = packageState
