@@ -1,7 +1,8 @@
 # Increment 10: explicit OSV affected versions
 
-Status: specification approved, including the cumulative 20,000-version bound.
-The [implementation plan](10-osv-versions-plan.md) and execution remain to be approved. Authority: [design decisions](../design-decisions.md).
+Status: specification (including the cumulative 20,000-version bound) and
+[implementation plan](10-osv-versions-plan.md) approved; inline execution explicitly
+authorized and completed. Code `9b3548c9`; 488 root tests/subtests and vet pass. Authority: [design decisions](../design-decisions.md).
 
 ## Deliverable
 
