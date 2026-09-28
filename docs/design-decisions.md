@@ -63,6 +63,12 @@ counting range slots, event slots and event fields. Unsupported shapes remain ex
 no interval construction or range-semantic qualification is performed.
 Full OSV schema/identity/range/correction interpretation, matching, synchronization,
 and advisory qualification remain unimplemented.
+A twelfth increment adds a [Bun text lockfile reader](increments/12-bun-lock-reader.md),
+reviewed through its pull request. `ParseBunLock` normalizes JSONC with a
+length-preserving, stdlib-only scanner, then reuses `internal/jsoninput`; it retains
+raw fields, workspace records, and package tuples with the original-byte digest.
+Duplicate keys and non-integer versions are rejected, which is stricter than Bun.
+Tuple projection, workspace/override semantics, and Bun producer qualification remain open.
 
 This record carries forward the decisions made after the
 [SCALIBR evaluation](inventory-evaluation-results.md). It supersedes the earlier

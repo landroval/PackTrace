@@ -11,8 +11,8 @@ gates still require executed acceptance evidence. Checked nested milestones show
 narrower progress and do not close their unchecked parent.
 
 **Current evidence review:** two documentation contracts are complete; no executable
-product capability is qualified for shipping. Internal npm v2/v3 reading, typed
-locked records/requirements, manifest declarations, root textual comparisons,
+product capability is qualified for shipping. Internal npm v2/v3 reading, bounded Bun text
+lockfile reading, typed locked records/requirements, manifest declarations, root textual comparisons,
 bounded advisory JSON reading, temporal projections, and affected identity/version/
 range-event projections pass synthetic tests; these milestones, the bounded Linux probe, and reviewed
 design/budget milestones do not establish full product
@@ -58,6 +58,12 @@ alone does not authorize probes, dependency installation, or publication.
     reconciliation, and matching remain outside this milestone.
 - [ ] **Bun projects:** inspect modern text-based `bun.lock` versions and installed
   layouts in the approved compatibility matrix.
+  - [x] [Bun text lockfile reader](increments/12-bun-lock-reader.md) normalizes JSONC
+    comments and trailing commas without changing byte offsets, accepts integer
+    `lockfileVersion` 0–3, requires `workspaces` and `packages`, and retains raw fields,
+    workspace records, and package tuples with the original-byte SHA-256. 773 root
+    tests/subtests and vet pass; tuple projection, workspace/override semantics,
+    installed layouts, and producer-generated compatibility remain open.
 - [ ] **Workspaces and monorepos:** discover supported workspace structures and
   retain workspace attribution where actually known.
 - [ ] **Separate evidence classes:** distinguish declared dependencies,

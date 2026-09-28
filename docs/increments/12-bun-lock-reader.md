@@ -1,8 +1,11 @@
 # Increment 12: Bun text lockfile reader
 
-Status: specification drafted for review; not yet approved. Tracked in
-[issue #1](https://github.com/landroval/PackTrace/issues/1). The increment number
-is provisional until confirmed. Global constraints remain in
+Status: specification and [implementation plan](12-bun-lock-reader-plan.md) submitted
+for review in the pull request for [issue #1](https://github.com/landroval/PackTrace/issues/1).
+Implemented in `internal/inventory/jsonc.go` and `bunlock.go`, with regression tests
+alongside them (code `38c2961`, tests `9433a48`). Development checks passed: 773 root
+tests/subtests and `go vet`. This is not producer-generated, native, or release
+qualification. The increment number is provisional. Global constraints remain in
 [design decisions](../design-decisions.md).
 
 ## Deliverable

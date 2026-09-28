@@ -1,8 +1,8 @@
 # Bun text lockfile reader implementation plan
 
-> Plan drafted for review together with the implementation in the same pull
-> request. No downloads, new dependencies, Bun execution, or native probes are
-> authorized by this plan.
+> Plan submitted for review together with its implementation in the same pull
+> request. Executed with local synthetic tests only. No downloads, new dependencies,
+> Bun execution, or native probes are authorized by this plan.
 
 **Goal:** Deliver the in-memory `bun.lock` reader and regression tests described
 in the specification.
@@ -67,7 +67,7 @@ returns a new slice of the same length, or `false` for JSONC syntax it rejects;
 
 ## Task 1: JSONC normalizer
 
-- [ ] Write failing tests first in `jsonc_test.go`:
+- [x] Write failing tests first in `jsonc_test.go`:
   - Accepted inputs compared byte-for-byte with expected normalized output:
     line and block comments, trailing commas in objects and arrays, a comment
     between a trailing comma and its closing bracket, CRLF line endings, and
@@ -75,9 +75,9 @@ returns a new slice of the same length, or `false` for JSONC syntax it rejects;
   - Output length always equals input length; every `\n` and `\r` stays in place.
   - Rejected inputs: `{,}`, `[,]`, `[1,,]`, `[,1]`, `{"a":1,,}`, `/* open`,
     a lone `/`, and `/` followed by any byte other than `/` or `*`.
-- [ ] Run the tests and record the expected failure because `normalizeJSONC` is
+- [x] Run the tests and record the expected failure because `normalizeJSONC` is
   absent.
-- [ ] Implement a single pass that tracks whether it is inside a string, whether
+- [x] Implement a single pass that tracks whether it is inside a string, whether
   the previous byte was an escape, the last significant byte outside comments,
   and the position of a pending comma:
   - Inside a string, copy bytes unchanged and end the string only on an
@@ -88,11 +88,11 @@ returns a new slice of the same length, or `false` for JSONC syntax it rejects;
     input); otherwise remember its position.
   - On `}` or `]` with a pending comma, replace that comma with a space. Any
     other significant byte clears the pending comma.
-- [ ] Run the tests until they pass.
+- [x] Run the tests until they pass.
 
 ## Task 2: Bun lockfile reader
 
-- [ ] Write failing tests first in `bunlock_test.go`, following the table style
+- [x] Write failing tests first in `bunlock_test.go`, following the table style
   of `npmlock_test.go`:
   - One document per version `0`–`3` with root and non-root workspaces,
     registry, GitHub, folder, link, workspace, and root package tuples, comments,
@@ -108,18 +108,18 @@ returns a new slice of the same length, or `false` for JSONC syntax it rejects;
     comments; invalid UTF-8 and unpaired surrogates.
   - Exact 64 MiB and 128-depth boundaries accepted; one byte and one level over
     rejected with `limit-exceeded`. Errors never contain input values.
-- [ ] Run the tests and record the expected failure because `ParseBunLock` is
+- [x] Run the tests and record the expected failure because `ParseBunLock` is
   absent.
-- [ ] Implement in this order: reject input over 64 MiB; normalize JSONC; call
+- [x] Implement in this order: reject input over 64 MiB; normalize JSONC; call
   `jsoninput.Object` on the normalized bytes with the same limit; require an
   integer-literal `lockfileVersion` in `0`–`3`; decode `workspaces` into non-null
   object values and `packages` into non-null array values; compute the SHA-256 of
   the original input. Reuse `integerLiteral`. Do not interpret tuples.
-- [ ] Run the tests until they pass.
+- [x] Run the tests until they pass.
 
 ## Task 3: Verification
 
-- [ ] Format the four Go files and run the root checks:
+- [x] Format the four Go files and run the root checks:
 
 ```sh
 gofmt -l internal/inventory
@@ -127,10 +127,10 @@ GOPROXY=off GOWORK=off CGO_ENABLED=0 go test -count=1 ./...
 GOPROXY=off GOWORK=off CGO_ENABLED=0 go vet ./...
 ```
 
-- [ ] Review the diff against every specification requirement. Confirm that no
+- [x] Review the diff against every specification requirement. Confirm that no
   dependency, disk or network access, tuple interpretation, or scanner support
   claim was introduced, and that existing tests still pass unchanged.
-- [ ] Commit only the four Go files as one scoped commit. Report red/green
+- [x] Commit only the four Go files as one scoped commit. Report red/green
   evidence, test/vet results, the development toolchain, and remaining
   qualification limits.
 
@@ -139,3 +139,25 @@ GOPROXY=off GOWORK=off CGO_ENABLED=0 go vet ./...
 This plan covers only the files listed above. It does not authorize downloads,
 new dependencies, Bun execution, producer-generated fixtures, or changes to the
 existing probe.
+
+## Execution evidence
+
+- RED: `go test` failed to build because `normalizeJSONC` did not exist, then again
+  because `ParseBunLock` did not exist, before each implementation was written.
+- GREEN: implementation in `38c2961` (769 root tests/subtests). Parent review then
+  found that a block comment opened by `/*/` closed itself, exposing bytes that Bun
+  treats as comment text. Two failing regression cases were added first; the fix
+  starts the closing search after the opener. 771 tests/subtests passed.
+- Independent local review (reliability lens) approved the change with advisory test
+  gaps: the `escaped-duplicate` case did not use an escaped key, and no case covered
+  an escaped backslash before a closing quote. Commit `9433a48` fixes both, adds an
+  escaped-quote case, and aligns package fixtures with Bun's tuple shapes from its
+  source. Final result: 773 root tests/subtests, `go vet`, and `gofmt -l` clean.
+- Mutation checks: replacing the escape skip with a single-byte step, or detecting
+  escaped quotes by the previous byte only, each fails a normalizer test.
+- Remaining advisory suggestions, deferred: normalizer cases for an unterminated
+  string and a trailing backslash (or a fuzz target), and exact assertions for the
+  normalized `workspaces` value in `Fields`.
+- Development toolchain: `go1.27.1 darwin/arm64` with `GOPROXY=off`, `GOWORK=off`,
+  and `CGO_ENABLED=0`; no release qualification claimed. The SCALIBR probe was not
+  modified or rerun.
