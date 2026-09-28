@@ -19,13 +19,13 @@ func TestParseBunLockPreservesFields(t *testing.T) {
 "packages/a":{"name":"a","version":"1.0.0"},
 },
 "packages":{
-"a":["a@1.0.0","",{"registry":"npm"}],
-"b":["b@git+https://example.invalid/b.git",{}],
-"c":["c@github:owner/repo#abc123",{}],
+"a":["a@1.0.0","",{},"sha512-synthetic"],
+"b":["b@git+https://example.invalid/b.git#abc123",{},"abc123"],
+"c":["c@github:owner/repo#abc123",{},"owner-repo-abc123"],
 "d":["d@file:./local/d",{}],
-"link-e":["link-e","link:packages/e"],
-"workspaces/a":["workspaces/a","workspace:packages/a"],
-"root":["root@root:."]
+"link-e":["link-e@link:packages/e",{}],
+"ws-a":["ws-a@workspace:packages/a"],
+"root":["root@root:",{}]
 },
 "overrides":{"x":"1.0.0"},
 "catalogs":{"default":{"x":"1.0.0"}},
@@ -77,13 +77,13 @@ func TestParseBunLockPreservesFields(t *testing.T) {
 			}
 
 			wantPackages := map[string]string{
-				"a":            `["a@1.0.0","",{"registry":"npm"}]`,
-				"b":            `["b@git+https://example.invalid/b.git",{}]`,
-				"c":            `["c@github:owner/repo#abc123",{}]`,
-				"d":            `["d@file:./local/d",{}]`,
-				"link-e":       `["link-e","link:packages/e"]`,
-				"workspaces/a": `["workspaces/a","workspace:packages/a"]`,
-				"root":         `["root@root:."]`,
+				"a":      `["a@1.0.0","",{},"sha512-synthetic"]`,
+				"b":      `["b@git+https://example.invalid/b.git#abc123",{},"abc123"]`,
+				"c":      `["c@github:owner/repo#abc123",{},"owner-repo-abc123"]`,
+				"d":      `["d@file:./local/d",{}]`,
+				"link-e": `["link-e@link:packages/e",{}]`,
+				"ws-a":   `["ws-a@workspace:packages/a"]`,
+				"root":   `["root@root:",{}]`,
 			}
 			for key, want := range wantPackages {
 				if got := string(doc.Packages[key]); got != want {
@@ -142,7 +142,7 @@ func TestParseBunLockRejectsInvalidDocuments(t *testing.T) {
 		{"object-package-entry", `{"lockfileVersion":1,"workspaces":{},"packages":{"a":{}}}`, "invalid-shape"},
 		{"scalar-package-entry", `{"lockfileVersion":1,"workspaces":{},"packages":{"a":true}}`, "invalid-shape"},
 		{"duplicate-root", `{"lockfileVersion":1,"workspaces":{},"packages":{},"packages":{}}`, "duplicate-key"},
-		{"escaped-duplicate", `{"lockfileVersion":1,"workspaces":{},"packages":{},"packages":{}}`, "duplicate-key"},
+		{"escaped-duplicate", `{"lockfileVersion":1,"workspaces":{},"packages":{},"\u0070ackages":{}}`, "duplicate-key"},
 		{"duplicate-hidden-by-comment", `{"lockfileVersion":1,"workspaces":{},"packages":{},/* dup */"packages":{}}`, "duplicate-key"},
 		{"duplicate-workspace-record", `{"lockfileVersion":1,"workspaces":{"a":{},"a":{}},"packages":{}}`, "duplicate-key"},
 		{"duplicate-package-record", `{"lockfileVersion":1,"workspaces":{},"packages":{"a":[],"a":[]}}`, "duplicate-key"},

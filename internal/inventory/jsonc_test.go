@@ -110,6 +110,18 @@ func TestNormalizeJSONCAcceptsAndPreservesLength(t *testing.T) {
 			},
 		},
 		{
+			name: "escaped backslash before a closing quote ends the string",
+			build: func() (string, string) {
+				return `{"a":"x\\", /* c */ "b":1,}`, `{"a":"x\\",         "b":1 }`
+			},
+		},
+		{
+			name: "escaped quote does not end a string before comment-like bytes",
+			build: func() (string, string) {
+				return `{"a":"q\"/*x*/,}","b":1}`, `{"a":"q\"/*x*/,}","b":1}`
+			},
+		},
+		{
 			name: "block comment opener is never its own closer",
 			build: func() (string, string) {
 				return `{"a":1 /*/ "hidden":2 /*/}`, `{"a":1                   }`
