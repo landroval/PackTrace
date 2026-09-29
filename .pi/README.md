@@ -32,6 +32,7 @@ linked plans and current design decisions before relying on an old contract.
 | 9 | [OSV affected identities](todos/58147a3a.md) |
 | 10 | [Explicit OSV versions](todos/e4ff360d.md) |
 | 11 | [OSV ranges and events](todos/0fc26843.md) |
+| 12 | [Bun text lockfile reader](todos/08cbf8ea.md) |
 
 ## Other historical design records
 
