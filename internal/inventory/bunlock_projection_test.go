@@ -95,6 +95,12 @@ func TestClassifyBunTuple(t *testing.T) {
 		{"root none", "root:", nil, BunKindUnknown},
 		{"root non-object", "root:", []string{str}, BunKindUnknown},
 		{"root prefix only is not root", "root:x", []string{obj}, BunKindUnknown},
+		{"npm null info", "1.0.0", []string{str, `null`, str}, BunKindUnknown},
+		{"git null info", "git+https://h/r.git#abc", []string{`null`, str}, BunKindUnknown},
+		{"tarball null info", "https://h/p", []string{`null`}, BunKindUnknown},
+		{"link null info", "link:p", []string{`null`}, BunKindUnknown},
+		{"workspace null info", "workspace:p", []string{`null`}, BunKindUnknown},
+		{"root null object", "root:", []string{`null`}, BunKindUnknown},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

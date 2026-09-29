@@ -168,6 +168,10 @@ existing reader or probe.
   One advisory suggestion is deferred: `BunKindUnknown` records do not copy their
   raw tuple. The tuple remains in `BunLockDocument.Packages` under the same key,
   as the specification requires, matching the npm projection.
+- A branch-wide reliability review approved the change with one warning: no test
+  covered a `null` INFO or root object. `isJSONObject` already rejects `null`, so the
+  behavior was correct; six `null` cases now pin it. Removing the `null` check made
+  all six fail. The root suite then had 877 tests/subtests.
 - Development toolchain: `go1.27.1 darwin/arm64` with `GOPROXY=off`, `GOWORK=off`,
   and `CGO_ENABLED=0`; no release qualification claimed. The SCALIBR probe was
   not modified or rerun.
