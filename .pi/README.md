@@ -33,6 +33,7 @@ linked plans and current design decisions before relying on an old contract.
 | 10 | [Explicit OSV versions](todos/e4ff360d.md) |
 | 11 | [OSV ranges and events](todos/0fc26843.md) |
 | 12 | [Bun text lockfile reader](todos/08cbf8ea.md) |
+| 13 | [Typed Bun locked records](todos/b7e3c214.md) |
 
 ## Other historical design records
 

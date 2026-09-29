@@ -69,6 +69,12 @@ length-preserving, stdlib-only scanner, then reuses `internal/jsoninput`; it ret
 raw fields, workspace records, and package tuples with the original-byte digest.
 Duplicate keys and non-integer versions are rejected, which is stricter than Bun.
 Tuple projection, workspace/override semantics, and Bun producer qualification remain open.
+A thirteenth increment adds [typed Bun locked records](increments/13-bun-lock-projection.md).
+`ProjectBunLock` splits names at the first `@` after index 0 and classifies a tuple only
+when both its resolution form and exact shape match Bun's writer; mismatches stay
+`BunKindUnknown` records with their raw tuple in the document. It reuses `FieldState` and
+`LockField[T]` but not npm's `LockedRecord`. INFO contents, workspace/override semantics,
+a common npm/Bun model, and Bun producer qualification remain open.
 
 This record carries forward the decisions made after the
 [SCALIBR evaluation](inventory-evaluation-results.md). It supersedes the earlier

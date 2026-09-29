@@ -1,8 +1,12 @@
 # Increment 13: typed Bun locked records
 
 Status: specification and [implementation plan](13-bun-lock-projection-plan.md)
-drafted for [issue #3](https://github.com/landroval/PackTrace/issues/3). The
-increment number is provisional. Global constraints remain in
+submitted for review in the pull request for
+[issue #3](https://github.com/landroval/PackTrace/issues/3). Implemented in
+`internal/inventory/bunlock_projection.go`, with regression tests alongside it
+(`e02ac10`). Development checks passed: 871 root tests/subtests and `go vet`.
+This is not producer-generated, native, or release qualification. The increment
+number is provisional. Global constraints remain in
 [design decisions](../design-decisions.md).
 
 ## Deliverable

@@ -12,7 +12,7 @@ narrower progress and do not close their unchecked parent.
 
 **Current evidence review:** two documentation contracts are complete; no executable
 product capability is qualified for shipping. Internal npm v2/v3 reading, bounded Bun text
-lockfile reading, typed locked records/requirements, manifest declarations, root textual comparisons,
+lockfile reading and typed Bun tuple records, typed locked records/requirements, manifest declarations, root textual comparisons,
 bounded advisory JSON reading, temporal projections, and affected identity/version/
 range-event projections pass synthetic tests; these milestones, the bounded Linux probe, and reviewed
 design/budget milestones do not establish full product
@@ -64,6 +64,13 @@ alone does not authorize probes, dependency installation, or publication.
     workspace records, and package tuples with the original-byte SHA-256. 773 root
     tests/subtests and vet pass; tuple projection, workspace/override semantics,
     installed layouts, and producer-generated compatibility remain open.
+  - [x] [Typed Bun locked records](increments/13-bun-lock-projection.md) split each
+    tuple's `name@resolution` at the first `@` after index 0, classify the eight
+    resolution kinds Bun writes by form and exact tuple shape, and type registry,
+    integrity, and git-tag claims with four-state fields; unrecognized tuples are
+    kept as unknown records. 871 root tests/subtests and vet pass; INFO contents,
+    workspace/override semantics, installed layouts, and producer-generated
+    compatibility remain open.
 - [ ] **Workspaces and monorepos:** discover supported workspace structures and
   retain workspace attribution where actually known.
 - [ ] **Separate evidence classes:** distinguish declared dependencies,

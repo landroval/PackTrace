@@ -78,7 +78,7 @@ On failure return the zero `BunLockProjection` with `invalid-shape` or
 
 ## Task 1: split and classify helpers
 
-- [ ] Write failing tests first in `bunlock_projection_test.go`:
+- [x] Write failing tests first in `bunlock_projection_test.go`:
   - Split table: `pkg@1.0.0`, `@scope/pkg@1.0.0`,
     `pkg@git+ssh://git@github.com/o/r#abc`, `@root:`, `pkg@`, `pkg`, `@scope/pkg`,
     `""`, and non-string/null/absent first elements, each with expected name and
@@ -90,20 +90,20 @@ On failure return the zero `BunLockProjection` with `invalid-shape` or
     non-object INFO; workspace with a non-object element; root without an object;
     and an unrecognized form such as `catalog:` with a non-npm shape. All
     mismatches expect `BunKindUnknown`.
-- [ ] Run the tests and record the expected build failure because the helpers
+- [x] Run the tests and record the expected build failure because the helpers
   are absent. Then add the specified types and helper stubs returning zero
   values, rerun, and record runtime failures (behavioral RED).
-- [ ] Implement `splitBunResolution`: return states unchanged for non-values;
+- [x] Implement `splitBunResolution`: return states unchanged for non-values;
   handle `@root:`; search for `@` from index 1; reject a missing `@` or an empty
   resolution with `FieldInvalidType` for both fields.
-- [ ] Implement `classifyBunTuple` in the specification's order, using small
+- [x] Implement `classifyBunTuple` in the specification's order, using small
   shape checks (`isObject`, `isString`) over the raw elements. Compare the
   tarball suffixes and URL schemes ASCII case-insensitively.
-- [ ] Run the tests until they pass.
+- [x] Run the tests until they pass.
 
 ## Task 2: projection
 
-- [ ] Write failing tests first:
+- [x] Write failing tests first:
   - One synthetic document, parsed with `ParseBunLock`, containing every kind;
     assert `Kind`, `Name`, `Resolution`, `Registry`, `Integrity`, `GitTag`, and
     `Info` for each record, and that `Info` equals the raw INFO bytes.
@@ -116,17 +116,17 @@ On failure return the zero `BunLockProjection` with `invalid-shape` or
     a nil entry, and a non-array entry return zero projections with
     `invalid-shape`. Documents with exactly 20,000 and 20,001 entries return
     full success and `limit-exceeded` respectively.
-- [ ] Run the tests and record runtime RED against a stub returning
+- [x] Run the tests and record runtime RED against a stub returning
   `BunLockProjection{}, nil`.
-- [ ] Implement: nil guards, count guard, `slices.Sorted(maps.Keys(...))`,
+- [x] Implement: nil guards, count guard, `slices.Sorted(maps.Keys(...))`,
   decode each entry into `[]json.RawMessage` (reject a decode failure as
   `invalid-shape`), split, classify, then fill fields by kind. Copy `Info` with
   `bytes.Clone`. Use `make([]BunLockedRecord, 0, len(doc.Packages))`.
-- [ ] Run the tests until they pass.
+- [x] Run the tests until they pass.
 
 ## Task 3: Verification
 
-- [ ] Format the two Go files and run the root checks:
+- [x] Format the two Go files and run the root checks:
 
 ```sh
 gofmt -l internal/inventory
@@ -134,11 +134,11 @@ GOPROXY=off GOWORK=off CGO_ENABLED=0 go test -count=1 ./...
 GOPROXY=off GOWORK=off CGO_ENABLED=0 go vet ./...
 ```
 
-- [ ] Review the diff against every specification requirement. Confirm that no
+- [x] Review the diff against every specification requirement. Confirm that no
   dependency, disk or network access, INFO interpretation, SemVer or URL
   validation, or scanner support claim was introduced, and that existing tests
   still pass unchanged.
-- [ ] Commit only the two Go files as one scoped commit. Report red/green
+- [x] Commit only the two Go files as one scoped commit. Report red/green
   evidence, test/vet results, the development toolchain, and remaining
   qualification limits; record them here and in the specification in a separate
   docs commit.
@@ -151,4 +151,23 @@ existing reader or probe.
 
 ## Execution evidence
 
-Pending.
+- RED (Task 1): the build failed because `splitBunResolution` and
+  `classifyBunTuple` were absent. With zero-value stubs, 33 split and classify
+  subtests failed at runtime before implementation.
+- RED (Task 2): against a `ProjectBunLock` stub returning
+  `BunLockProjection{}, nil`, six top-level projection tests failed at runtime.
+- GREEN: implementation and tests in `e02ac10`. The first GREEN run exposed that
+  `json.Unmarshal` accepts `null` into a string, so an npm tuple with a `null`
+  registry was classified as npm; `isJSONString` now rejects `null` and the case
+  is `BunKindUnknown`.
+- Parent review moved a misplaced `splitBunResolution` doc comment off
+  `ProjectBunLock` and split the tarball condition into named booleans.
+- Final result: 871 root tests/subtests (previously 773), `go vet`, and `gofmt -l`
+  clean.
+- Independent local review (reliability lens, medium risk) approved the change.
+  One advisory suggestion is deferred: `BunKindUnknown` records do not copy their
+  raw tuple. The tuple remains in `BunLockDocument.Packages` under the same key,
+  as the specification requires, matching the npm projection.
+- Development toolchain: `go1.27.1 darwin/arm64` with `GOPROXY=off`, `GOWORK=off`,
+  and `CGO_ENABLED=0`; no release qualification claimed. The SCALIBR probe was
+  not modified or rerun.
