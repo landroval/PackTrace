@@ -162,7 +162,7 @@ existing reader or probe.
   is `BunKindUnknown`.
 - Parent review moved a misplaced `splitBunResolution` doc comment off
   `ProjectBunLock` and split the tarball condition into named booleans.
-- Final result: 871 root tests/subtests (previously 773), `go vet`, and `gofmt -l`
+- Result after the first review: 871 root tests/subtests (previously 773), `go vet`, and `gofmt -l`
   clean.
 - Independent local review (reliability lens, medium risk) approved the change.
   One advisory suggestion is deferred: `BunKindUnknown` records do not copy their

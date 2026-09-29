@@ -4,7 +4,7 @@ Status: specification and [implementation plan](13-bun-lock-projection-plan.md)
 submitted for review in the pull request for
 [issue #3](https://github.com/landroval/PackTrace/issues/3). Implemented in
 `internal/inventory/bunlock_projection.go`, with regression tests alongside it
-(`e02ac10`). Development checks passed: 871 root tests/subtests and `go vet`.
+(`e02ac10`, `02810a3`). Development checks passed: 877 root tests/subtests and `go vet`.
 This is not producer-generated, native, or release qualification. The increment
 number is provisional. Global constraints remain in
 [design decisions](../design-decisions.md).

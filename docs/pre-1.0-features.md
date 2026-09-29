@@ -68,7 +68,7 @@ alone does not authorize probes, dependency installation, or publication.
     tuple's `name@resolution` at the first `@` after index 0, classify the eight
     resolution kinds Bun writes by form and exact tuple shape, and type registry,
     integrity, and git-tag claims with four-state fields; unrecognized tuples are
-    kept as unknown records. 871 root tests/subtests and vet pass; INFO contents,
+    kept as unknown records. 877 root tests/subtests and vet pass; INFO contents,
     workspace/override semantics, installed layouts, and producer-generated
     compatibility remain open.
 - [ ] **Workspaces and monorepos:** discover supported workspace structures and
