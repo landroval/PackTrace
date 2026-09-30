@@ -13,7 +13,7 @@ narrower progress and do not close their unchecked parent.
 **Current evidence review:** two documentation contracts are complete; no executable
 product capability is qualified for shipping. Internal npm v2/v3 reading, bounded Bun text
 lockfile reading and typed Bun tuple records, typed locked records/requirements, manifest declarations, root textual comparisons,
-bounded advisory JSON reading, temporal projections, and affected identity/version/
+bounded advisory JSON reading, temporal and header projections, and affected identity/version/
 range-event projections pass synthetic tests; these milestones, the bounded Linux probe, and reviewed
 design/budget milestones do not establish full product
 acceptance.
@@ -127,6 +127,11 @@ and expected optional-package absence is not classified as malware.
     unknown/multiple event fields and unavailable/invalid states. Combined 20,000-unit
     range/event/field budget, separate from version slots. 553 root tests/subtests
     and vet pass; interval evaluation and matching remain unimplemented.
+  - [x] [OSV header evidence](increments/issue-12-osv-header.md) retains exact
+    ID/schema claims and digest, with a bounded implicit/declared v1 profile,
+    unsupported canonical majors and uninterpreted schema values. 928 root
+    tests/subtests and vet pass; second-person PR review/integration are pending.
+    Full conformance, identity qualification and matching remain unimplemented.
 - [ ] **Ecosystem-correct matching:** handle approved npm version/range semantics,
   including boundary and prerelease cases; disclose unsupported matching cases.
 - [ ] **Distinct categories:** keep malicious-package advisories, vulnerabilities,

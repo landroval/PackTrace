@@ -46,7 +46,7 @@ is distinct from implicit v1 interpretation. No readers or shared types change.
 **Produces:** spec-defined OSVHeaderSchemaState constants, OSVHeader and
 `ProjectOSVHeader(doc OSVDocument) (OSVHeader, error)`.
 
-- [ ] **Write reader-valid synthetic tests first.** Use ParseOSVRecord directly or
+- [x] **Write reader-valid synthetic tests first.** Use ParseOSVRecord directly or
   a private test helper that builds a minimum id/modified envelope and inserts raw
   schema text only when supplied. One first assertion:
 
@@ -70,17 +70,17 @@ if err != nil || !reflect.DeepEqual(got, want) {
   leading-zero components, missing/extra parts, non-ASCII digits and trailing LF/CRLF.
   Include unknown suffixes for major 1 and major 2 to pin profile-before-major handling.
   Test large canonical components using strings.Repeat without exceeding the reader cap.
-- [ ] **Observe compile RED, then behavioral RED.** Run focused tests; expect missing
+- [x] **Observe compile RED, then behavioral RED.** Run focused tests; expect missing
   function/types. Add only the exact spec types/constants plus a zero-result stub,
   rerun and require runtime failures on missing state/digest/evidence before logic.
-- [ ] **Add ownership/error/compatibility cases before behavior.** Verify exact decoded
+- [x] **Add ownership/error/compatibility cases before behavior.** Verify exact decoded
   escaped ID/schema keys and values, whitespace/nonstandard ID text, preserved raw
   affected/extensions/null/uninterpreted sibling fields and original SHA-256.
   Serialize source/output before projection/input mutations; mutate raw bytes/map/digest,
   compare output snapshot, then mutate output fields and confirm source unchanged.
   Nil Fields must satisfy errors.As with intel invalid-shape and zero OSVHeader.
   Reader-rejected ID shapes remain existing reader tests, not a weaker second validator.
-- [ ] **Implement minimal logic** after behavioral RED, using the spec type definitions
+- [x] **Implement minimal logic** after behavioral RED, using the spec type definitions
   already introduced. The canonical check has absolute end anchoring:
 
 ```go
@@ -114,17 +114,37 @@ func ProjectOSVHeader(doc OSVDocument) (OSVHeader, error) {
   This does not trim, coerce, parse integers, reject unusable schema siblings or
   fabricate an effective declared schema value. Unknown is the zero interpretation.
   Add comments stating the narrow profile and unchanged-document precondition.
-- [ ] **Format and run focused/root verification.** Expected focused tests pass;
+- [x] **Format and run focused/root verification.** Expected focused tests pass;
   all prior readers/projections/Bun tests and root vet pass. Verify previous Go files,
   go.mod and probes byte-identical to the approved task base; no go.sum appears.
-- [ ] **Review and reverify.** Inline diff/spec review checks every table branch,
+- [x] **Review and reverify.** Inline diff/spec review checks every table branch,
   absolute anchoring, arbitrary-size digits, source/derived-state separation and
   ownership. Rerun fresh full tests/vet afterward; record actual counts/toolchain.
   Independent PR review remains a separate human gate; never claim it occurred inline.
-- [ ] **Commit only the two Go files**, then record verification separately in the
+- [x] **Commit only the two Go files** (`1e549e42`), then record verification separately in the
   spec/plan and nested product milestone. Publish only the authorized issue bookmark
   and update the issue/draft PR in first person, using Refs #12 until complete acceptance.
   Do not clear #13/#14 blockers or mark Done until reviewed implementation integration.
+
+## Execution record
+
+The user approved the plan and explicitly authorized inline implementation, the
+specified offline verification, scoped documentation/commits and PR #25 updates.
+The current jj workspace was retained; no extra worktree, dependencies or targets
+were created/accessed. GitHub #12 is the live queue; local execution receipts are
+outside the repository rather than a competing shared assignment ledger.
+
+Observed compile RED, then **51 failing new tests/subtests** with the zero stub.
+Minimal implementation passed focused/root checks. Inline review strengthened the
+nil-fields guard fixture with a nonzero digest; a temporary partial-result mutation
+failed that test and was removed. Final fresh offline root checks: **928 passed
+(including 51 new header cases)** and `go vet ./...`, with
+`go1.27.1-X:nodwarf5 linux/amd64`. Existing Go files, go.mod and probes remain
+unchanged; no go.sum. Only the two Go files entered code commit `1e549e42`.
+
+No independent review occurred inline. Human second-person review and integration
+remain pending; #12 stays open and #13/#14 dependencies are not cleared. Synthetic
+checks do not close producer/native, matching, scanner, pilot or release gates.
 
 ## Commands (Nushell)
 

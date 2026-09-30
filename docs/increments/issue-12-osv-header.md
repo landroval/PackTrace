@@ -1,8 +1,9 @@
 # Issue 12: OSV header evidence and bounded v1 interpretation
 
 Status: written specification approved, including the bounded v1-header profile.
-The [implementation plan](issue-12-osv-header-plan.md) is approved and bounded
-inline execution is explicitly authorized; implementation and verification are in progress. Tracking: [issue #12](https://github.com/landroval/PackTrace/issues/12).
+The [implementation plan](issue-12-osv-header-plan.md) was approved and bounded
+inline execution explicitly authorized. Implementation passes synthetic verification;
+second-person PR review and integration remain pending. Tracking: [issue #12](https://github.com/landroval/PackTrace/issues/12).
 Authority: [design decisions](../design-decisions.md).
 
 ## Goal and current boundary
@@ -145,8 +146,9 @@ Synthetic RED/GREEN tests must verify:
 
 ## Coordination and completion
 
-Remain **Preparation** while written specification, plan and explicit execution
-approval are pending. Use an issue-specific branch/bookmark and draft PR; request
+The approved scope moved from **Preparation** to **In progress** after specification,
+plan and explicit execution approval. Implementation is now ready for **Review**;
+the issue stays open until reviewed integration. Use an issue-specific branch/bookmark and draft PR; request
 an agreed second-person review before integration. A specification PR uses
 `Refs #12`, not `Closes #12`; documentation alone does not deliver the projection.
 
@@ -154,6 +156,26 @@ Do not clear #13/#14 dependency links merely because this draft is written or
 approved. The header implementation and its acceptance need integration first;
 those tasks retain their own approvals and must not treat header interpretation
 as identity/range qualification.
+
+## Execution evidence
+
+- Code commit: `1e549e42`; only `internal/intel/osv_header.go` and
+  `internal/intel/osv_header_test.go` were added. Existing Go files, module and
+  probes are unchanged; no dependency or `go.sum` was introduced.
+- Missing API compile RED, then all 51 new tests/subtests failed against the
+  zero-result stub before implementation. Final fresh root verification after
+  inline review: **928 tests/subtests passed, including 51 header cases**, plus
+  offline `go vet ./...`.
+- Toolchain: `go1.27.1-X:nodwarf5 linux/amd64`; this is development evidence,
+  not official/native release qualification.
+- Tests cover source states, canonical/malformed/huge components, v1/v2 suffixes,
+  exact escaping/ID text, sibling preservation, ownership and the existing exact
+  4 MiB reader bound. An inline-review guard test with a nonzero input digest
+  failed under a temporary partial-result mutation; that mutation was removed
+  before the fresh successful root run.
+- Inline review is not independent review. PR #25 requires a second person;
+  #12 remains open and #13/#14 blockers remain intact. No scanner, matching,
+  producer/native qualification, feed acquisition or release gate is delivered.
 
 ## Exclusions
 
