@@ -2,8 +2,8 @@
 
 Status: the written specification is approved, including four explicit Boolean
 conditions and interruption precedence. The [implementation plan](issue-19-cli-exits-plan.md)
-is approved and bounded inline execution is explicitly authorized; implementation
-and verification are in progress.
+was approved and bounded inline execution explicitly authorized. Implementation
+passes synthetic verification; second-person PR review and integration remain pending.
 Tracking: [issue #19](https://github.com/landroval/PackTrace/issues/19).
 Authority: [scan defaults and exits](../design-decisions.md#5-scan-defaults-and-exit-codes)
 and [evidence and coverage](../design-decisions.md#3-evidence-and-coverage-model).
@@ -108,8 +108,8 @@ obligations, not behaviors implemented by this helper. No code means "safe".
 Tests must use these independently specified expectations, not compute expected
 codes with the selector or duplicate its decision algorithm. Observe behavioral
 RED before implementation and fresh offline root tests/vet after inline review.
-Record actual toolchain/counts and synthetic-only limitations; no verification has
-been executed for this documentation-only draft.
+Record actual toolchain/counts and synthetic-only limitations; the execution evidence
+below records performed verification without qualifying a real scan.
 
 ## Scope, work bounds and coordination
 
@@ -118,12 +118,32 @@ collections, parser, allocation quota, clock, environment or process-global stat
 Use the current Go module and standard library without acquiring dependencies.
 Existing inventory/intel/shared JSON Go files, go.mod and probes remain unchanged.
 
-Keep #19 in **Preparation** until written-specification and implementation-plan
-approval plus explicit execution authorization. Work from `development` on the
+#19 moved from **Preparation** to **In progress** after written-specification and
+implementation-plan approval plus explicit execution authorization. It is now ready
+for **Review**, with the issue open pending second-person review and integration. Work from `development` on the
 issue-specific bookmark `issue-19-cli-exits-spec`; no OSV header types or code are
 consumed. GitHub is the live ownership/status queue. A later draft PR uses
 `Refs #19`; documentation alone cannot close this issue or its capability parent.
 An agreed second-person review and reviewed integration remain required.
+
+## Execution evidence
+
+- Code commit `9cecc77b`: only `internal/cli/exits.go` and
+  `internal/cli/exits_test.go` added. Existing Go files, module and probes unchanged;
+  no dependencies or go.sum. The branch is independent of unmerged PR #25.
+- Missing API compile RED, then 15 of 16 matrix rows failed against a zero stub
+  before decision logic; the all-clear row passed. Including the failed parent,
+  behavioral RED reported 16 failing tests/subtests and one passing subtest.
+- After inline review, fresh offline root verification: **894 passing tests/subtests,
+  including 17 selector tests/subtests (16 rows plus parent)**, and `go vet ./...`.
+  These counts belong to this branch's development baseline, not a cumulative suite
+  including the 51 header cases from separate PR #25.
+- Toolchain: `go1.27.1-X:nodwarf5 linux/amd64`. Synthetic development evidence is
+  not official/native release qualification. No real scanner, caller outcome
+  classification, policy/report integration or process-exit behavior was executed.
+- Inline review checked all coexistence priorities, literal expectations, caller
+  qualification responsibility, pure return values and unchanged existing sources.
+  It is not independent review; second-person review and integration remain pending.
 
 ## Exclusions
 

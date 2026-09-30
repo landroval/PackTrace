@@ -46,7 +46,7 @@ report preservation remain outside this slice.
 **Produces:** `SelectScanExit(conditions ScanExitConditions) int` in package `cli`.
 There are no inter-task interfaces or dependencies on unmerged OSV work.
 
-- [ ] **Write the test first**, using a synthetic mask only to encode four explicit
+- [x] **Write the test first**, using a synthetic mask only to encode four explicit
   flags: I=bit3, E=bit2, C=bit1, F=bit0. Expected codes are literals copied from the
   independently approved 16-row matrix, never calculated with production logic.
   Complete `internal/cli/exits_test.go` content:
@@ -84,11 +84,11 @@ func TestSelectScanExit(t *testing.T) {
 }
 ```
 
-- [ ] **Observe compile RED**, expecting missing ScanExitConditions/SelectScanExit.
+- [x] **Observe compile RED**, expecting missing ScanExitConditions/SelectScanExit.
   Introduce exactly the spec's four-field type and a stub returning 0; rerun focused
   tests and observe behavioral RED: only 0000 passes, every other row fails before
   adding decision logic. Do not use compilation failure alone as the behavioral gate.
-- [ ] **Implement minimal logic after RED.** Complete source (types introduced during
+- [x] **Implement minimal logic after RED.** Complete source (types introduced during
   the stub step are retained, not redefined):
 
 ```go
@@ -114,16 +114,37 @@ func SelectScanExit(conditions ScanExitConditions) int {
 }
 ```
 
-- [ ] **Format, run focused/root tests and vet offline.** Every row and the unchanged
+- [x] **Format, run focused/root tests and vet offline.** Every row and the unchanged
   root suites must pass. Verify that only the two new Go files changed; no existing
   types/readers/Bun/probes/module changes or go.sum. Record actual counts/toolchain.
-- [ ] **Review and reverify.** Inline spec/diff review maps every matrix row to its
+- [x] **Review and reverify.** Inline spec/diff review maps every matrix row to its
   condition priorities, checks the caller-evidence boundary and no side-effect imports.
   Rerun fresh full root tests/vet after review. Human review remains a separate gate.
-- [ ] **Commit scoped code**, then record approved execution and verification separately
+- [x] **Commit scoped code** (`9cecc77b`), then record approved execution and verification separately
   in the spec/plan and a nested internal milestone. Publish only if explicitly authorized;
   keep Refs #19, an agreed second-person reviewer and review/integration before Done.
   Do not change #12/#13/#14 or claim a full runtime CLI exit implementation.
+
+## Execution record
+
+The user approved this plan and explicitly authorized inline implementation,
+scoped documentation/commits, offline tests/vet and updates to PR #26. The current
+jj workspace was retained; GitHub #19 is the live queue and local execution
+receipts stay outside the repository. The branch starts from development
+`c921da54`; no unmerged OSV header source or interface is consumed.
+
+Observed missing-API compile RED, then **15 failing matrix rows/one passing row**
+with the zero stub (16 failures including parent). Minimal implementation passed
+focused/root checks. Inline review confirmed the complete literal matrix and
+priority order, pure return behavior, caller obligations and unchanged existing
+source/module/probes. Fresh post-review root verification: **894 tests/subtests
+passed, including 17 new selector tests/subtests**, and `go vet ./...`, using
+`go1.27.1-X:nodwarf5 linux/amd64`. No dependencies or go.sum. The code commit
+`9cecc77b` contains only the two new Go files.
+
+These are synthetic development checks on this independent branch, not combined
+counts from PR #25 or runtime/native/producer/pilot/release acceptance. No independent
+review occurred inline; second-person review and integration remain required.
 
 ## Commands (Nushell)
 
