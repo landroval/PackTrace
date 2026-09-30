@@ -9,6 +9,10 @@ or not they use Pi. They supplement, rather than replace, the project documentat
 
 ## Active backlog
 
+[GitHub collaboration](../docs/github-collaboration.md) defines the live issue queue,
+ownership and Project states. These files remain historical evidence/backlog pointers,
+not a second live assignment system.
+
 [Remaining product design contracts](todos/42e46cd7.md) points to unresolved work.
 It is not an instruction to finish global design before another bounded increment.
 A new increment still requires its own specification, plan and execution approvals.
