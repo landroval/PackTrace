@@ -1,7 +1,8 @@
 # Issue 19: pure scan exit selection
 
-Status: the minimal design is approved for drafting. This written specification,
-its implementation plan and explicit execution authorization are still pending.
+Status: the written specification is approved, including four explicit Boolean
+conditions and interruption precedence. Implementation-plan approval and explicit
+execution authorization remain pending.
 Tracking: [issue #19](https://github.com/landroval/PackTrace/issues/19).
 Authority: [scan defaults and exits](../design-decisions.md#5-scan-defaults-and-exit-codes)
 and [evidence and coverage](../design-decisions.md#3-evidence-and-coverage-model).
