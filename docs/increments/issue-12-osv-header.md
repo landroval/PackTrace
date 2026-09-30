@@ -1,8 +1,8 @@
 # Issue 12: OSV header evidence and bounded v1 interpretation
 
-Status: draft specification awaiting written approval. The bounded v1-header
-approach was selected; this document, its plan and production execution remain
-separate approval gates. Tracking: [issue #12](https://github.com/landroval/PackTrace/issues/12).
+Status: written specification approved, including the bounded v1-header profile.
+Implementation-plan approval and explicit production execution authorization remain
+pending. Tracking: [issue #12](https://github.com/landroval/PackTrace/issues/12).
 Authority: [design decisions](../design-decisions.md).
 
 ## Goal and current boundary
