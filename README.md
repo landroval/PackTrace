@@ -16,6 +16,7 @@ preserve evidence and uncertainty without executing the investigated project's c
 | Area | Implemented | Not established by this work |
 | --- | --- | --- |
 | npm lockfiles | Bounded v2/v3 JSON reading; positional locked records and dependency requirements | Full npm producer/layout compatibility or installed-package inventory |
+| Bun text lockfiles | Bounded JSONC reading and typed package-tuple evidence (increments 12–13) | Workspace semantics, installed-layout attribution or producer/native compatibility |
 | Package manifests | Bounded JSON reading and separate dependency declaration groups | Dependency resolution or package-manager execution |
 | Root comparison | Exact textual comparison of explicitly paired manifest and lockfile root requirements | Semantic range equivalence, installation drift, or findings |
 | OSV records | Bounded JSON reading, temporal claims, affected identities, explicit versions, ranges and events | Full schema/identity qualification, interval evaluation, advisory applicability, or matching |
@@ -38,8 +39,9 @@ coverage, with terminal, JSON and SARIF output.
 
 The pilot targets npm and modern text `bun.lock`, single projects and workspaces,
 and native Linux, macOS and Windows qualification. Those are targets, not current
-compatibility claims. Bun parsing, installed observations, matching, intelligence
-synchronization, integrity investigation and reporting remain future work.
+compatibility claims. Bun reading and package-tuple projection now exist, while
+workspace semantics, installed observations, matching, intelligence synchronization,
+integrity investigation and reporting remain future work.
 
 ## Safety and interpretation
 
@@ -106,6 +108,10 @@ docs/               Design, compatibility evidence and increment contracts
 ```
 
 ## Contributing
+
+Use the [GitHub collaboration guide](docs/github-collaboration.md) for the live
+issue queue, shared Project, ownership rules and `gh`/`jj` examples. Task creation
+and assignment do not replace implementation approvals.
 
 1. Read the [current design decisions](docs/design-decisions.md) and
    [development guidelines](docs/development-guidelines.md).
