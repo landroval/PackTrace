@@ -1,8 +1,9 @@
 # Issue 19: pure scan exit selection
 
 Status: the written specification is approved, including four explicit Boolean
-conditions and interruption precedence. [Implementation-plan](issue-19-cli-exits-plan.md)
-approval and explicit execution authorization remain pending.
+conditions and interruption precedence. The [implementation plan](issue-19-cli-exits-plan.md)
+is approved and bounded inline execution is explicitly authorized; implementation
+and verification are in progress.
 Tracking: [issue #19](https://github.com/landroval/PackTrace/issues/19).
 Authority: [scan defaults and exits](../design-decisions.md#5-scan-defaults-and-exit-codes)
 and [evidence and coverage](../design-decisions.md#3-evidence-and-coverage-model).

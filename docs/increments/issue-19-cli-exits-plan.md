@@ -1,8 +1,9 @@
 # Issue 19: pure scan exit selection implementation plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: use `superpowers:executing-plans`
-> for the project's inline workflow. This plan is a draft; plan approval and explicit
-> execution authorization remain pending. Do not implement from specification approval.
+> for the explicitly approved inline workflow. The user approved this plan and
+> authorized two new Go files, offline tests/vet, scoped documentation/commits and
+> publication in PR #26. Integration still requires a second-person review.
 
 **Goal:** return the approved scan exit code from four explicit caller conditions.
 **Architecture:** one pure function in new `internal/cli`; no integrations or helpers.
