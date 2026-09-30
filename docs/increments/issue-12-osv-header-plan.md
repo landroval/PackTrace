@@ -1,8 +1,9 @@
 # Issue 12: OSV header implementation plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: use `superpowers:executing-plans`
-> for the selected inline workflow. Plan approval and explicit execution authorization
-> remain pending; do not implement from this draft.
+> for the approved inline workflow. The user approved this plan and explicitly
+> authorized two new Go files, offline tests/vet, scoped documentation/commits and
+> publication in PR #25. No merge or independent review is authorized by this record.
 
 **Goal:** project exact ID/schema evidence and the bounded v1-header interpretation.
 **Architecture:** one in-memory function reuses existing intel string/shape helpers.
