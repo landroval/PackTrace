@@ -240,6 +240,11 @@ findings and completeness. An empty findings array cannot hide failed checks.
   defines `0`, `1`, `2`, `3`, `130` and ordinary precedence `2 > 3 > 1 > 0`.
   Runtime behavior remains unimplemented; the policy/report acceptance gate below
   stays open.
+  - [x] [Pure exit selector](increments/issue-19-cli-exits.md) maps four explicit
+    caller conditions to the approved codes, with interruption priority and all
+    16 combinations tested. 894 branch-local root tests/subtests and vet pass;
+    second-person PR review/integration are pending. Caller qualification,
+    operational CLI/report integration and actual process exits remain unimplemented.
 - [ ] **Required coverage policy:** configure which checks and freshness
   requirements must complete; disclose exclusions and their effect.
 - [ ] **Trusted policy precedence:** prevent untrusted project configuration from
