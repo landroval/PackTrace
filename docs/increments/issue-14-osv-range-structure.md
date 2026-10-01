@@ -1,8 +1,10 @@
 # Issue 14: bounded OSV range/event structure checks
 
 Status: the written specification is approved, including the SEMVER/ECOSYSTEM
-structural profile and whole-advisory input design. [Implementation-plan](issue-14-osv-range-structure-plan.md)
-approval and explicit execution authorization remain pending.
+structural profile and whole-advisory input design. The [implementation plan](issue-14-osv-range-structure-plan.md)
+is approved and inline execution explicitly authorized: two new Go files, offline
+tests/vet, scoped documentation/commits and publication in PR #27. No merge or
+acquisition/target/CI/native permission is granted.
 Tracking: [issue #14](https://github.com/landroval/PackTrace/issues/14).
 Authority: [design decisions](../design-decisions.md).
 Prerequisites: integrated [header contract](issue-12-osv-header.md) and

@@ -1,8 +1,9 @@
 # Issue 14: OSV range structure implementation plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: use `superpowers:executing-plans`
-> for the project's inline workflow. This is an implementation-plan draft, not
-> execution authorization. Plan approval and explicit execution remain pending.
+> for the project's inline workflow. This written plan is approved and the user
+> explicitly authorized inline implementation, offline tests/vet, scoped docs/commits
+> and publication in PR #27. No merge, dependencies, corpus/targets, CI or native work.
 
 **Goal:** check the approved bounded SEMVER/ECOSYSTEM event structure profile.
 **Architecture:** preflight the paired projections/layout/budgets before allocating
@@ -548,6 +549,6 @@ with-env { GOTOOLCHAIN: local, GOPROXY: off, GOWORK: off, CGO_ENABLED: "0" } {
 jj commit -m "feat: check OSV range event structure" internal/intel/osv_range_structure.go internal/intel/osv_range_structure_test.go
 ```
 
-Only commit after successful verification. This plan is not permission to implement,
-execute probes/downloads/targets, publish further work or merge the PR. Official/native,
+Only commit after successful verification. The separate authorization covers this
+bounded implementation/publication, not probes/downloads/targets or merging the PR. Official/native,
 producer, matching, scanner and release qualification remain outside these synthetic tests.
