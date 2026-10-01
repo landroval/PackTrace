@@ -47,7 +47,7 @@ OSVRange/OSVEvent and ParseError; unchanged constants/counter named above.
 `CheckOSVRangeStructure(header OSVHeader, affected OSVAffectedProjection) (OSVRangeStructureProjection, error)`.
 No inter-task interfaces or unrelated shared Go changes.
 
-- [ ] **Write tests first**, using the complete matrix/helper below. Add the guard,
+- [x] **Write tests first**, using the complete matrix/helper below. Add the guard,
   hierarchy, ownership and cumulative-boundary cases described afterward before
   implementing behavior. Expected reasons/flags are literals, not the checker logic.
 
@@ -379,7 +379,7 @@ func TestCheckOSVRangeStructureInputBounds(t *testing.T) {
   reader-valid fixtures in memory using json.Marshal/maps/slices; no target reads.
   Forged-guard tests are marked as such and do not establish authentication claims.
 
-- [ ] **Observe compile RED**, then introduce only the exact spec types/constants
+- [x] **Observe compile RED**, then introduce only the exact spec types/constants
   and a zero-result stub. Rerun and observe behavioral failures on digest/shape,
   checked/satisfied flags, complete problems, hierarchy and controlled errors.
   Only then add behavior. Tests for unchanged old reader/projection contracts stay intact.
@@ -387,7 +387,7 @@ func TestCheckOSVRangeStructureInputBounds(t *testing.T) {
   Copy the exact types/constants from the approved spec into the new source during this
   compile-to-behavior RED step; they are the only definitions consumed by this task.
 
-- [ ] **Implement preflight**, before output allocation. Use these private helpers;
+- [x] **Implement preflight**, before output allocation. Use these private helpers;
   their repeated consumed-layout checks are local, not a new shared validation API:
 
 ```go
@@ -442,7 +442,7 @@ func validateOSVRangeStructureInput(header OSVHeader, affected OSVAffectedProjec
   The preflight reads only consumed layout/positions/counts; it does not verify ID,
   repo/versions/package, byte digests against raw inputs, or forged authenticity.
 
-- [ ] **Implement independent results and profile checks** after behavioral RED.
+- [x] **Implement independent results and profile checks** after behavioral RED.
   Retain the exact already-introduced spec types/constants; new source has no imports
   beyond what actual implementation needs. Complete behavior:
 
@@ -513,17 +513,39 @@ func isOSVRangeEventKind(name string) bool {
   preconditions and no version/interval/matching qualification. Private helpers remain
   private; do not move/change old helpers to support this module.
 
-- [ ] **Format and verify focused/root offline.** All new cases and unchanged root
+- [x] **Format and verify focused/root offline.** All new cases and unchanged root
   suites pass, as does vet. Verify only the two new Go files changed, no go.sum,
   existing Go/module/probe bytes identical to approved base. Record actual counts.
-- [ ] **Inline review and fresh verification.** Re-read the spec and inspect every
+- [x] **Inline review and fresh verification.** Re-read the spec and inspect every
   abstention/diagnostic/guard branch. Check distinct order cases, all-record budgets,
   empty Problems vs nil, complete diagnostic order, snapshot ownership and derived
   40,000-problem bound. Re-run full tests/vet afterward. Do not call this independent review.
-- [ ] **Commit only two Go files**, then separately record execution/limits/checks in
+- [x] **Commit only two Go files**, then separately record execution/limits/checks in
   spec/plan and a nested internal milestone. Publish only the authorized issue bookmark
   and first-person English updates to #14/PR #27. Keep Refs #14 and #15 blocked until
   second-person review and implementation integration; no automatic capability closure.
+
+## Execution evidence
+
+- User approved the written plan and explicitly chose inline execution/publication;
+  authorization was recorded in `30bea966` and published before implementation.
+- Code commit `0467081f` contains only the two new Go files. Compile RED then zero-stub
+  behavioral RED: all 88 new tests/subtests failed, not a compilation-only claim.
+- The approved implementation was transcribed without production semantic changes.
+  Literal fixtures were extended for missing shape/state/opacity cases and guards;
+  all source profile snapshots now catch reordering even without output problems.
+- Fresh post-inline-review root checks: 1033 passing tests/subtests (88 new), offline
+  vet, gofmt and unchanged old Go/module bytes. No go.sum/dependency/probe changes.
+  `go1.27.1-X:nodwarf5 linux/amd64`; local/off/off/CGO-disabled environment below.
+- Author self-review only, with temporary reversal mutation failing two source-order
+  cases; mutation removed and root tests/vet green afterward. No independent approval
+  or native/producer/corpus/matching/runtime/release qualification is claimed.
+- Procedural ruling: selected existing jj feature workspace and external /tmp ledger,
+  not extra git-script worktree/workspace files, per user/project workflow. Cost:
+  bookkeeping and scope/base checks were performed manually. No production semantic
+  ruling or deferred minor source finding. Temporary receipts are not repository input.
+- PR #27/#14 remain open in Review pending second-person review/integration. #15
+  remains blocked; no capability parent or shipping gate is closed by this work.
 
 ## Commands (Nushell)
 

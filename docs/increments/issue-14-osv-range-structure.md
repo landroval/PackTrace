@@ -25,11 +25,11 @@ alternation rule is specified. Do not invent such rules or fabricate an implicit
 limit event in recorded evidence. Only public schema text was consulted; no advisory
 corpus, repository or investigated input was acquired.
 
-## Proposed internal interface
+## Implemented internal interface
 
 Only new `internal/intel/osv_range_structure.go` and
 `internal/intel/osv_range_structure_test.go`. Existing types, readers and projections
-remain unchanged. Proposed types (internal evidence, not report/IPC schema):
+remain unchanged. Implemented types (internal evidence, not report/IPC schema):
 
 ```go
 type OSVRangeProblemKind uint8
@@ -209,16 +209,35 @@ ProjectOSVAffected, except explicit basic-guard/forged-budget tests:
   inventory/Bun/module/probes unchanged. Behavioral RED before logic, fresh offline
   root tests/vet after inline review, actual counts/toolchain and synthetic limitations.
 
-No implementation/Go verification for this draft is claimed. The current integrated
-base c5337ea8 independently passed 945 root tests/subtests and vet before drafting;
-that validates prior merged work, not these proposed structure checks.
+Implementation: `0467081f`, only the two new intel Go files. The approved input,
+output, guards and profile rules are unchanged. API-absent compile RED was observed;
+with exact types and a zero stub, all 88 new tests/subtests failed behaviorally.
+
+Fresh post-inline-review offline root tests pass: **1033 tests/subtests**, including
+**88 structure tests/subtests**; vet also passes. Toolchain:
+`go1.27.1-X:nodwarf5 linux/amd64`, with GOTOOLCHAIN=local, GOPROXY=off, GOWORK=off,
+CGO_ENABLED=0. The integrated c5337ea8 base separately passed before implementation.
+Existing Go/module bytes are unchanged; no go.sum, dependencies or probe changes.
+
+Inline self-review strengthened snapshots for every profile fixture, including
+nonmonotonic/non-alternating events. A temporary source-event reversal mutation failed
+both order fixtures; the mutation was removed and the complete root suite/vet rerun.
+Source snapshots, nested ownership, positional guards, exact/over cumulative limits,
+header/type abstention and the derived 40,000-problem bound are exercised. No critical
+or important source finding remains in that self-review.
+
+This is synthetic development evidence only: no native/official toolchain, producer,
+corpus, interval/matching, scanner, worker/report, pilot or release qualification.
+Inline author review is **not independent review**. PR #27 and #14 remain open pending
+second-person review/integration; #15 remains blocked.
 
 ## Coordination and exclusions
 
-Keep #14 Preparation until this specification, a written plan and explicit execution
-are approved. Work on issue-14-osv-range-structure-spec from integrated development,
-not another open feature branch. An agreed second-person review is required before
-integration. Do not close #14 or clear #15 merely because this draft exists/is approved.
+Spec, written plan and explicit inline execution authorization preceded code. Work
+uses issue-14-osv-range-structure-spec from integrated development, not another open
+feature branch. Published implementation moves #14 to Review, not Done; PR #27 stays
+draft until separately made ready. An agreed second-person review is required before
+integration. Do not close #14 or clear #15 on the strength of author review/publication.
 
 No reader/shared-state changes, full OSV conformance, identity/origin qualification,
 SemVer/dependency acquisition, interval/version/overlap evaluation, Git reconstruction,
