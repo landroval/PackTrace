@@ -1,8 +1,8 @@
 # Issue 13: bounded OSV npm identity candidates
 
-Status: the bounded PURL profile and case-preserving ASCII/legacy-name direction
-are approved for drafting. This written specification, implementation plan and
-explicit production execution authorization remain pending.
+Status: written specification approved; publication in a draft PR and preparation
+of the implementation plan explicitly authorized. Plan approval and explicit
+production execution authorization remain pending.
 Tracking: [issue #13](https://github.com/landroval/PackTrace/issues/13).
 Authority: [design decisions](../design-decisions.md#10-advisory-matching-semantics).
 Prerequisites: integrated [header evidence](issue-12-osv-header.md) and
