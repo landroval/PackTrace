@@ -27,7 +27,15 @@ against zero stub), post-review focused/root tests 1,143 total/198 new and offli
 vet pass. Case-folding mutation failed both conflict fixtures and was removed.
 Gofmt/old Go/module/probe bytes/no go.sum verified. Toolchain:
 go1.27.1-X:nodwarf5 linux/amd64; no native/producer/product qualification.
-Author self-review, not independent review; PR remains draft, no merge.
+Author self-review, not independent review; PR remains draft, no merge into development.
+
+Post-publication synchronization: PR #27 was merged in development 89a76e5f.
+User authorized incorporating that base into this feature branch without history
+rewrite, retaining both shared-document milestones and re-verifying offline.
+Fresh actual combined-tree result: 1,231 root tests/subtests (198 npm identity,
+88 range structure) and vet pass. No Go/module/probe bytes changed; original code/
+authorization/evidence commits remain ancestors. This is feature-branch maintenance,
+not merge/ready/reviewer-request or queue-cleanup authorization for #28/#14/#15.
 
 Workspace ruling: use the selected jj feature workspace and external execution ledger
 rather than git-script/root workspace scaffolding. This matches the approved workspace

@@ -139,6 +139,11 @@ and expected optional-package absence is not classified as malware.
     this branch; independent review/integration pending. Lexical candidates do
     not confirm registration, public origin, installed identity, advisory activity,
     matching, enforcement eligibility or complete coverage.
+  - [x] [Bounded OSV range structure checks](increments/issue-14-osv-range-structure.md)
+    inspect the selected SEMVER/ECOSYSTEM v1 profile while preserving source locators,
+    abstention and complete diagnostics. 1033 root tests/subtests (88 new) and offline
+    vet pass; author self-review only, second-person PR review/integration pending.
+    No interval/version/identity/matching or runtime qualification is established.
 - [ ] **Ecosystem-correct matching:** handle approved npm version/range semantics,
   including boundary and prerelease cases; disclose unsupported matching cases.
 - [ ] **Distinct categories:** keep malicious-package advisories, vulnerabilities,

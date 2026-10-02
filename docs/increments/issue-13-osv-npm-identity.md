@@ -10,7 +10,8 @@ remain pending.
 Tracking: [issue #13](https://github.com/landroval/PackTrace/issues/13).
 Authority: [design decisions](../design-decisions.md#10-advisory-matching-semantics).
 Prerequisites: integrated [header evidence](issue-12-osv-header.md) and
-[affected identity claims](09-osv-affected.md). No dependency on open #14/PR #27.
+[affected identity claims](09-osv-affected.md). No semantic dependency on #14's
+profile; its implementation is now integrated through PR #27.
 
 ## Goal and references
 
@@ -232,8 +233,14 @@ focused/root tests and vet. Final: 1,143 root tests/subtests, 198 new; gofmt cle
 old Go/module/probe bytes unchanged against c5337ea8, no dependencies/go.sum.
 Toolchain: go1.27.1-X:nodwarf5 linux/amd64, development/synthetic evidence only.
 
-The branch starts directly from integrated development c5337ea8; unreviewed #14
-source is absent. Counts belong to this tested branch, not sums of sibling branches.
+The original implementation started directly from integrated development c5337ea8,
+without unreviewed #14 source. Its 1,143-test count belongs to that actual tested tree.
+After PR #27 was merged, development 89a76e5f was incorporated into the #13 feature
+branch without rewriting commits. The shared milestone conflict was resolved by
+retaining both blocks. Fresh tests of the actual combined tree passed: **1,231 root
+tests/subtests** (198 npm identity and 88 range-structure cases) and offline vet.
+No Go/module/probe bytes changed during synchronization. This updates the feature
+branch only, not integration of #13 into development; PR #28 remains draft.
 Synthetic identity cases cannot qualify installed/origin/matching/runtime/native/
 producer/release. Author self-review is not independent GitHub review.
 
@@ -242,8 +249,8 @@ producer/release. Author self-review is not independent GitHub review.
 Owner: landroval, preparation only. Bookmark: issue-13-osv-npm-identity-spec.
 Written spec/plan and inline execution are approved; #13 may move to In progress.
 Completion moves it to Review, not Done, pending independent review/integration.
-Independent review/integration retain their own gates. PR #27 is ready with jsustt
-requested, not approved/integrated merely because this preparation proceeds.
+Independent review/integration retain their own gates. PR #27 has been merged into development. This base synchronization does not
+approve/integrate #13 or authorize queue cleanup of #14/#15.
 
 Downloads/dependencies/corpus/targets, origin equivalence, version/interval assessment,
 generic identity model, matcher/negative results, worker/CLI/report/storage, CI/native
