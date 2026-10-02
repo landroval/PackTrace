@@ -12,7 +12,7 @@
 
 ## Status and authority
 
-This is a **local written-plan draft, not approved/published or execution authority**. The user authorized plan preparation after approving/publishing the specification. I have not created source/test files or run selector/root tests for this preparation.
+The user **approved this written plan and explicitly authorized inline implementation here**, offline owned tests/mutations/root verification/vet, scoped evidence and publication in draft PR #31. I record/publish this authorization before Go source/test creation. The two new Go files and spec/plan/nested-milestone evidence are the only authorized changes; target/native/acquisition/CI, ready/reviewer and merge remain excluded. At this pre-code record no selector/source test has been created or executed.
 
 I use the existing `issue-17-npm-input-selection-spec` bookmark/workspace from development `235347cc0be03e3cc5019db40a1e3b710920be9b`, not pending PR #29/#30. A previously recorded integrated tree had1,231 tests/subtests; PR #30's1,543 results belong to that different tree and must not be added/imported here. Execution must run a fresh actual-tree baseline/final count rather than treating either historical count as current evidence.
 
@@ -276,4 +276,4 @@ Capture outputs/status outside the repo, stop on unexpected failure and never in
 
 The single task owns the complete fixed API and test cycle. Reference/layout/precedence/profile/ownership/separation tests map to all spec sections and all five focus classes; no shared-reader change or new subsystem is needed. I self-reviewed spec coverage, exact type/constant/signature consistency, tuple/profile/fallback/ownership focus mapping and placeholders; I found no missing contract item or critical/important documentary issue. I checked three local links, three Go snippets with gofmt (syntax only, not compilation) and two Nushell snippets with nu-check (syntax only), plus unchanged prior tracked bytes. This file is documentary preparation only:41 fixture rows remain unexecuted and all quoted RED/GREEN outcomes are expected, not observed.
 
-The user must approve this written plan and separately authorize source/test/offline execution/evidence publication before Task1 begins. I preserve inline execution plus GitHub second-person review, with no workflow/subagent dispatch or implied native qualification. Publication alone can add this plan to the draft PR, but cannot create the Go files or move the issue into execution.
+The user approved this written plan and separately authorized source/test/offline execution/evidence publication before Task1 begins; this approval does not authorize ready/reviewer, target/native or merge actions. I preserve inline execution plus GitHub second-person review, with no workflow/subagent dispatch or implied native qualification. Publication alone can add this plan to the draft PR, but cannot create the Go files or move the issue into execution.
