@@ -17,7 +17,10 @@ including strings, net/url and test-only reflect/errors/encoding/json.
 
 **Spec:** [approved specification](issue-13-osv-npm-identity.md).
 
-Status: plan prepared for user review, **not approved/execution-authorized**.
+Status: plan approved; inline execution explicitly authorized, including two new
+Go files, offline RED/GREEN/root tests/vet, scoped commits and publication in draft
+PR #28. No new dependencies/targets/corpus, CI/native work, ready/reviewer request
+or merge is authorized.
 The specification is published in [draft PR #28](https://github.com/landroval/PackTrace/pull/28).
 
 ## Global constraints

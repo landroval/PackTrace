@@ -1,8 +1,9 @@
 # Issue 13: bounded OSV npm identity candidates
 
 Status: written specification approved; publication in a draft PR and preparation
-of the implementation plan explicitly authorized. Plan approval and explicit
-production execution authorization remain pending.
+of the implementation plan explicitly authorized. The [plan](issue-13-osv-npm-identity-plan.md)
+is approved and inline execution is explicitly authorized: two new Go files,
+offline tests/vet, scoped commits and publication in draft PR #28, no merge.
 Tracking: [issue #13](https://github.com/landroval/PackTrace/issues/13).
 Authority: [design decisions](../design-decisions.md#10-advisory-matching-semantics).
 Prerequisites: integrated [header evidence](issue-12-osv-header.md) and
@@ -227,7 +228,8 @@ identity cases cannot qualify installed/origin/matching/runtime/native/producer/
 ## Coordination
 
 Owner: landroval, preparation only. Bookmark: issue-13-osv-npm-identity-spec.
-Keep #13 Preparation until written spec, plan and explicit execution approvals.
+Written spec/plan and inline execution are approved; #13 may move to In progress.
+Completion moves it to Review, not Done, pending independent review/integration.
 Independent review/integration retain their own gates. PR #27 is ready with jsustt
 requested, not approved/integrated merely because this preparation proceeds.
 
