@@ -1,9 +1,10 @@
 # Issue 15: strict concrete-version and OSV fixture contract
 
-Status: **local draft, not an approved written specification**. The user authorized
-preparation, selected strict SemVer 2 syntax and approved this single-document
-design plus consultation of public specifications. No specification publication,
-evaluator/dependency acquisition, implementation, CI/native work or merge is authorized.
+Status: **written specification approved**. The user authorized preparation,
+selected strict SemVer 2 syntax, approved the single-document design/reference
+consultation, then approved this written artifact and publication in a draft PR.
+No evaluator/dependency acquisition, implementation, CI/native work, ready/reviewer
+request or merge is authorized. #15 remains Preparation pending its later gates.
 Tracking: [issue #15](https://github.com/landroval/PackTrace/issues/15).
 Authority: [matching decisions](../design-decisions.md#10-advisory-matching-semantics).
 Base: integrated development `89a76e5f`; reviewed [range structure](issue-14-osv-range-structure.md)
@@ -321,7 +322,8 @@ aggregation need their own acceptance rather than being inferred from these tabl
 - Self-review checks JSON literal readability, links, grammar/precedence/boundary
   expectations, ambiguity, contradictions, scope and unchanged existing tracked files.
   Syntax/link checks are not executions of a version evaluator or conformance tests.
-- The user must review/approve this written artifact before publication/planning.
+- The user approved this written artifact and draft publication. The future written
+  qualification/acquisition/execution plan and its approvals remain separate.
   A separately agreed independent reviewer must review the final published artifact;
   a request is not approval. #15 remains open/Preparation until its own gates advance.
 - No shared milestone edit, production Go, new Go tests, dependencies/go.sum, public
