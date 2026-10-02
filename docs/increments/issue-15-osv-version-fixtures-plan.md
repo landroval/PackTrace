@@ -3,7 +3,8 @@
 > **For agentic workers:** use `superpowers:executing-plans` for the preserved
 > inline workflow only after the relevant written approval and explicit execution
 > authorization. Checkboxes distinguish pending work from observed preparation.
-> This is a **local, unapproved plan**, not permission to create or run a probe.
+> The user **approved this written plan and its documentary publication** in
+> draft PR #29. This is not permission to create, acquire inputs for or run a probe.
 
 **Goal:** hand off a reviewable fixture contract and a gated plan to determine whether
 one pinned candidate is useful as a concrete-version primitive, without adopting it.
@@ -17,9 +18,9 @@ may confirm gaps. OSV event/aggregation implementation is a separate later incre
 
 ## Global constraints
 
-- Current permitted work: prepare this one local plan and inspect already cached
-  candidate source. No plan publication, probe implementation, compile/execution,
-  acquisition, ready/reviewer request, CI/native work or merge is authorized.
+- Current permitted work: prepare/publish this documentary plan and inspect already
+  cached candidate source. No probe implementation, compile/execution, acquisition,
+  ready/reviewer request, CI/native work or merge is authorized.
 - Keep the approved specification and its 114 expectations unchanged: 34 syntax,
   16 precedence, 28 SEMVER range, 20 aggregation and 16 abstention cases.
 - The specification remains fixture authority. A future runnable snapshot cites
@@ -102,13 +103,14 @@ unchanged. No production signatures, Go files, JSON fixture artifact or shared m
 **Consumes:** the approved 114-row contract and selected static-source findings above.
 **Produces:** this proposed qualification scope and independently reviewable dispositions.
 
-- [ ] Review every specification section against the coverage/disposition table below.
-- [ ] Review the five source-risk classes, historical provenance limits and explicit
-  rejection of direct adoption. Do not relabel source inspection as test execution.
-- [ ] Run documentary ID/JSON/link/scope checks, excluding inline/fenced code from
-  Markdown-link extraction; record actual check results, not Go/evaluator results.
-- [ ] Obtain the user's written-plan approval before publication. Publication is a
-  separate authorization; push only the issue bookmark and verified documentary files.
+- [x] Author self-review mapped every specification section against the coverage table.
+- [x] Author self-review covered the five source-risk classes, provenance limits and
+  direct-adoption rejection. Source inspection is not measured test execution.
+- [x] Documentary ID/JSON/link/scope checks and Nushell parse-only checks passed;
+  the approved specification and existing tracked bytes stayed unchanged.
+- [x] User approved the written plan and separately authorized draft publication;
+  push only the issue bookmark and verified documentary files. None of these
+  checks/approvals is independent peer review or probe execution authorization.
 - [ ] Obtain separate ready/reviewer-request permission and an agreed second-person
   reviewer for final-head PR #29. Review must cover both contract and future gates.
   Resolve authorized feedback without treating author review/request as approval.
