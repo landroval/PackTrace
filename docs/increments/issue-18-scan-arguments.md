@@ -4,9 +4,9 @@
 
 - Issue: [#18](https://github.com/landroval/PackTrace/issues/18); owner: landroval.
 - Design agreed: complete argv without the executable name; request/default/provenance output, not effective policy; a bounded lexer for the eight approved options.
-- Written specification: **local draft, not yet approved or published**.
+- Written specification: **approved by the user for documentary publication in a draft PR**; independent peer review is pending.
 - Base: integrated `development` at `235347cc0be03e3cc5019db40a1e3b710920be9b`, independently of PR #29. The existing CLI exit selector is retained unchanged.
-- Preparation authority permits this local document and ownership coordination only. I have no implementation-plan/execution, specification-publication, dependency/target acquisition, native/CI or merge authority.
+- Separate authorization permits this specification's documentary publication and coordination in Preparation. I have no implementation-plan/execution, ready/reviewer-request, dependency/target acquisition, native/CI or merge authority.
 
 ## Purpose and boundaries
 
@@ -207,6 +207,6 @@ Category parsing must inspect at most three members for a successful list and re
 
 ## Documentary review and next approvals
 
-I must review the proposed grammar, 52 literal expectations, privacy/zero-output rules, defaults/origins and source-independent boundaries against the approved design before requesting written-specification approval. JSON syntax/link checks alone do not prove semantic correctness.
+I self-reviewed the grammar, 52 literal expectations, privacy/zero-output rules, defaults/origins and source-independent boundaries against the approved design. I checked unique IDs, JSON syntax, seven local links/anchors, mask arithmetic and unchanged existing tracked bytes; I identified no critical/important documentary issue. The user then approved this written specification and its separate draft publication. These are documentary/author checks, not independent peer approval, semantic parser execution, new Go test results or native qualification.
 
 After that approval, a separate written implementation plan must define the two-file scope, literal behavioral RED/GREEN, source mutations targeting default-origin/repetition/help bypass/privacy, exact-tree offline tests/vet and independent review. Specification approval or publication is not that plan/execution permission. No capability/shipping parent closes from this parser alone.
