@@ -4,9 +4,9 @@
 
 - Issue: [#17](https://github.com/landroval/PackTrace/issues/17); owner: landroval.
 - Design agreed: separate presence/usability, a concrete npm interpretation profile, only the two root lockfile inputs, and a fixed pure decision with preflight guards.
-- Written specification: **local draft, not yet approved or published**.
+- Written specification: **approved by the user for documentary publication in a draft PR**; independent peer review is pending.
 - Base: integrated development `235347cc0be03e3cc5019db40a1e3b710920be9b`, independently of open PR #29/#30.
-- Authority covers ownership/coordination and local drafting only. No specification publication, implementation plan/execution, acquisition/native/CI, ready/reviewer or merge permission follows.
+- Separate authorization permits this written specification's documentary draft publication and coordination. No implementation plan/execution, acquisition/native/CI, ready/reviewer or merge permission follows.
 
 ## Purpose and binding references
 
@@ -142,6 +142,6 @@ These41 authored reference rows are documentary expectations, not executed tests
 
 Two scalar input pairs and one output give constant-space decision work; exact profile comparison is bounded to the three fixed names while arbitrary outside text is retained as an immutable string. No list quota, path budget, raw-byte copying, hard-RSS claim, native observation or in-memory filesystem scaffold is added.
 
-Author self-review must check tuple coherence, profile abstention, candidate versus usability, all41 literal expectations, caller-retained auxiliary evidence and preflight despite abstention. JSON/link checks alone do not establish semantic correctness.
+I self-reviewed tuple coherence, profile abstention, candidate versus usability, all41 literal expectations, caller-retained auxiliary evidence and preflight despite abstention; I identified no critical/important documentary issue. I checked unique IDs/JSON, seven local links/anchors and unchanged existing tracked bytes. The user then approved this written specification and its documentary publication. These are author/documentary checks, not independent review, selector execution, Go test results or native/producer qualification.
 
 After written-specification approval, a separate plan must name the two Go files, independent literal RED/GREEN, fallback/profile/preflight mutations, actual-tree fresh offline tests/vet, scoped evidence and independent review. Native/source acquisition, ready/reviewer/publication/integration and global inventory/coverage/shipping acceptance remain separately gated.
