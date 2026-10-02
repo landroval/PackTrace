@@ -132,6 +132,13 @@ and expected optional-package absence is not classified as malware.
     unsupported canonical majors and uninterpreted schema values. 928 root
     tests/subtests and vet pass; second-person PR review/integration are pending.
     Full conformance, identity qualification and matching remain unimplemented.
+  - [x] [Bounded npm identity candidates](increments/issue-13-osv-npm-identity.md)
+    preserve source claims/case and locators; explicit npm/name plus optional
+    bounded unversioned PURL retains unqualified states and usable-name conflicts.
+    Code `95f4504c`, 1,143 root tests/subtests (198 new) and offline vet pass on
+    this branch; independent review/integration pending. Lexical candidates do
+    not confirm registration, public origin, installed identity, advisory activity,
+    matching, enforcement eligibility or complete coverage.
   - [x] [Bounded OSV range structure checks](increments/issue-14-osv-range-structure.md)
     inspect the selected SEMVER/ECOSYSTEM v1 profile while preserving source locators,
     abstention and complete diagnostics. 1033 root tests/subtests (88 new) and offline
