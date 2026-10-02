@@ -12,7 +12,7 @@
 
 ## Status and authority
 
-The user **approved this written plan and explicitly authorized inline implementation here**, offline owned tests/mutations/root verification/vet, scoped evidence and publication in draft PR #31. I record/publish this authorization before Go source/test creation. The two new Go files and spec/plan/nested-milestone evidence are the only authorized changes; target/native/acquisition/CI, ready/reviewer and merge remain excluded. At this pre-code record no selector/source test has been created or executed.
+The user **approved this written plan and explicitly authorized inline implementation here**, offline owned tests/mutations/root verification/vet, scoped evidence and publication in draft PR #31. I record/publish this authorization before Go source/test creation. The two new Go files and spec/plan/nested-milestone evidence are the only authorized changes; target/native/acquisition/CI, ready/reviewer and merge remain excluded. At that historical pre-code record no selector/source test had been created or executed. The bounded task is now implemented and author-reviewed; observed evidence below does not replace independent review.
 
 I use the existing `issue-17-npm-input-selection-spec` bookmark/workspace from development `235347cc0be03e3cc5019db40a1e3b710920be9b`, not pending PR #29/#30. A previously recorded integrated tree had1,231 tests/subtests; PR #30's1,543 results belong to that different tree and must not be added/imported here. Execution must run a fresh actual-tree baseline/final count rather than treating either historical count as current evidence.
 
@@ -48,13 +48,13 @@ I use the existing `issue-17-npm-input-selection-spec` bookmark/workspace from d
 
 ### Approval and baseline
 
-- [ ] Obtain written-plan approval **and explicit inline source/test/offline verification/evidence publication authorization**. If approved, record and push authorization before any Go creation; failed push stops source work. Preparation/assignment/board state is not permission.
-- [ ] Recheck issue owner/live comments, exact selected branch/base/clean tree, intended two source files absent and unchanged spec. Keep the existing workspace; no rebase/merge of sibling work without separate authority.
-- [ ] Run a fresh offline root baseline and vet; retain JSON result stream/toolchain outside the repo and count actual `Action=="pass"` records with nonempty Test. Do not count package-pass records or sum parallel branches.
+- [x] Obtain written-plan approval **and explicit inline source/test/offline verification/evidence publication authorization**. If approved, record and push authorization before any Go creation; failed push stops source work. Preparation/assignment/board state is not permission.
+- [x] Recheck issue owner/live comments, exact selected branch/base/clean tree, intended two source files absent and unchanged spec. Keep the existing workspace; no rebase/merge of sibling work without separate authority.
+- [x] Run a fresh offline root baseline and vet; retain JSON result stream/toolchain outside the repo and count actual `Action=="pass"` records with nonempty Test. Do not count package-pass records or sum parallel branches.
 
 ### Independent tests and RED
 
-- [ ] Write `TestSelectNPMInputReference` first. Transcribe all31 success and10 guard rows C01–C31/G01–G10 from the spec as Go literals; do not load Markdown at runtime, derive expected outcomes from production guards/switches or generate expectations by running the candidate implementation. Each named subtest compares the full result, exact error type/code/text, nil-error classification and unchanged inputs.
+- [x] Write `TestSelectNPMInputReference` first. Transcribe all31 success and10 guard rows C01–C31/G01–G10 from the spec as Go literals; do not load Markdown at runtime, derive expected outcomes from production guards/switches or generate expectations by running the candidate implementation. Each named subtest compares the full result, exact error type/code/text, nil-error classification and unchanged inputs.
 
 The following complete initial test pins a reference outcome and an otherwise non-governing malformed state. Extend its file with the other literal rows and the specific tests listed immediately below; the source types are defined in the API block, not invented by fixtures.
 
@@ -96,12 +96,12 @@ func TestSelectNPMInputReference(t *testing.T) {
 }
 ```
 
-- [ ] Add `TestSelectNPMInputLayouts`: literal18-pair validity table (Unknown: true,false,true,true,false,false; Absent: true,false,false,false,false,false; Present: alltrue). Test every pair in both slots, keeping the other present-usable, across the three anchors, empty and npm12 profiles. Add first outside-domain values (presence3, usability6) and enum255 in both domains/slots. Invalid cases always exact fatal/zero; valid cases retain exact scalar input/profile and nonzero successful State/Diagnostic. Do not call the production guard for expected validity.
-- [ ] Add `TestSelectNPMInputPrecedence`: for each anchor, use a usable package-lock against shrinkwrap Unknown+0/2/3 and Present+0/2/3/4/5; pin no fallback, exact governing candidate/diagnostic and the difference between unknown presence and known presence. Pin Absent+usable package-lock, both absent, unknown package-lock and usable shrinkwrap with lower Unknown+Unreadable or Present+Invalid. Keep every case in its own subtest so an early fatal cannot suppress later cases.
-- [ ] Add `TestSelectNPMInputProfiles`: empty/auto/npm/npm12/next-patch/case/leading and trailing whitespace, newline, NUL, private-marker URL-like and Unicode profile strings. All coherent inputs retain exact profile/pairs and abstain; malformed either slot remains fatal even for outside profiles. Pin all three anchors, not an npm-prefix heuristic.
-- [ ] Add `TestSelectNPMInputOwnership`: copy input snapshots before calls; alter original scalar variables after success and check saved result unchanged; alter a returned result and check originals/second fresh call unchanged. Preserve a lower-priority Unknown+Unreadable source rather than converting it to absent. No unsafe/concurrency test is needed for immutable-string/value ownership.
-- [ ] Add `TestSelectNPMInputSeparation`: inspect only the two new source files for no production imports/IO/printing/global state; exercise arbitrary opaque profiles with malformed states and assert exact private error/zero result, no `%w`/raw text. Native/source safety and caller-owned manifest/hidden preservation cannot be established by a synthetic file read: no temp-directory scaffold or false physical-absence claim.
-- [ ] Run focused tests before declarations; inspect expected missing-API compilation RED. Then add exactly the API declarations and temporary zero/nil stub below; rerun to observe behavioral failures of all41 reference rows (every success has nonzero State/Diagnostic; every guard needs a typed error). Keep compile RED separate from behavioral pass/fail counts. A compilation failure alone does not pin precedence.
+- [x] Add `TestSelectNPMInputLayouts`: literal18-pair validity table (Unknown: true,false,true,true,false,false; Absent: true,false,false,false,false,false; Present: alltrue). Test every pair in both slots, keeping the other present-usable, across the three anchors, empty and npm12 profiles. Add first outside-domain values (presence3, usability6) and enum255 in both domains/slots. Invalid cases always exact fatal/zero; valid cases retain exact scalar input/profile and nonzero successful State/Diagnostic. Do not call the production guard for expected validity.
+- [x] Add `TestSelectNPMInputPrecedence`: for each anchor, use a usable package-lock against shrinkwrap Unknown+0/2/3 and Present+0/2/3/4/5; pin no fallback, exact governing candidate/diagnostic and the difference between unknown presence and known presence. Pin Absent+usable package-lock, both absent, unknown package-lock and usable shrinkwrap with lower Unknown+Unreadable or Present+Invalid. Keep every case in its own subtest so an early fatal cannot suppress later cases.
+- [x] Add `TestSelectNPMInputProfiles`: empty/auto/npm/npm12/next-patch/case/leading and trailing whitespace, newline, NUL, private-marker URL-like and Unicode profile strings. All coherent inputs retain exact profile/pairs and abstain; malformed either slot remains fatal even for outside profiles. Pin all three anchors, not an npm-prefix heuristic.
+- [x] Add `TestSelectNPMInputOwnership`: copy input snapshots before calls; alter original scalar variables after success and check saved result unchanged; alter a returned result and check originals/second fresh call unchanged. Preserve a lower-priority Unknown+Unreadable source rather than converting it to absent. No unsafe/concurrency test is needed for immutable-string/value ownership.
+- [x] Add `TestSelectNPMInputSeparation`: inspect only the two new source files for no production imports/IO/printing/global state; exercise arbitrary opaque profiles with malformed states and assert exact private error/zero result, no `%w`/raw text. Native/source safety and caller-owned manifest/hidden preservation cannot be established by a synthetic file read: no temp-directory scaffold or false physical-absence claim.
+- [x] Run focused tests before declarations; inspect expected missing-API compilation RED. Then add exactly the API declarations and temporary zero/nil stub below; rerun to observe behavioral failures of all41 reference rows (every success has nonzero State/Diagnostic; every guard needs a typed error). Keep compile RED separate from behavioral pass/fail counts. A compilation failure alone does not pin precedence.
 
 ### Exact API for the temporary RED stub
 
@@ -167,7 +167,7 @@ func SelectNPMInput(profile string, shrinkwrap, packageLock NPMInputState) (NPMI
 
 ### Minimum GREEN
 
-- [ ] Replace the zero stub with a preflight and the fixed two-slot decision below. Keep declarations unchanged; add comments on caller-qualified states, governing-candidate/non-authority and whole-zero fatal errors. No generic registry/list or extra copy helper.
+- [x] Replace the zero stub with a preflight and the fixed two-slot decision below. Keep declarations unchanged; add comments on caller-qualified states, governing-candidate/non-authority and whole-zero fatal errors. No generic registry/list or extra copy helper.
 
 ```go
 func validNPMInputState(input NPMInputState) bool {
@@ -238,19 +238,19 @@ func SelectNPMInput(profile string, shrinkwrap, packageLock NPMInputState) (NPMI
 }
 ```
 
-- [ ] Run focused GREEN and inspect results, including all reference rows, both-slot guards and the five review focus classes. Unexpected failures require diagnosis before changing expectations; do not weaken the approved tuple/profile/no-fallback contract to pass.
+- [x] Run focused GREEN and inspect results, including all reference rows, both-slot guards and the five review focus classes. Unexpected failures require diagnosis before changing expectations; do not weaken the approved tuple/profile/no-fallback contract to pass.
 
 ### Targeted mutations and final review
 
-- [ ] Snapshot source SHA, temporarily treat Unknown/Unusable shrinkwrap as absent or fall through to package-lock; run the focused precedence/reference tests and inspect an expected failure such as C07/C13. Restore and verify original SHA before continuing.
-- [ ] Temporarily skip package-lock preflight when shrinkwrap is usable or move preflight below profile abstention; run guard/layout tests and inspect G08/G09/G10 failure. Restore and verify SHA.
-- [ ] Temporarily qualify family/npm12 or strip profile whitespace; run profile/reference tests and inspect C25/C27/C30 failure. Restore and verify SHA. No mutation remains in a commit.
-- [ ] Format only the two new Go files; run fresh offline root JSON tests/vet, count the actual final tree plus its new selector tests, and report exact toolchain/method. Verify preexisting Go/module/probe bytes, absent go.sum and unchanged top-level gates.
-- [ ] Self-review the five focus classes against implementation and tests. A source purity guard is not native safety qualification. Record no critical/important issue only if actually reviewed; never label author review independent.
-- [ ] Make a scoped jj code commit for only the two new Go files after observed checks. Then, only within authorized evidence/publication scope, update the spec/plan and nested milestone with observed counts/RED/mutations/limits, commit those documents and push only the issue bookmark. Exact PR head/body/file-scope read-back must reflect the actual tree, not planned counts.
+- [x] Snapshot source SHA, temporarily treat Unknown/Unusable shrinkwrap as absent or fall through to package-lock; run the focused precedence/reference tests and inspect an expected failure such as C07/C13. Restore and verify original SHA before continuing.
+- [x] Temporarily skip package-lock preflight when shrinkwrap is usable or move preflight below profile abstention; run guard/layout tests and inspect G08/G09/G10 failure. Restore and verify SHA.
+- [x] Temporarily qualify family/npm12 or strip profile whitespace; run profile/reference tests and inspect C25/C27/C30 failure. Restore and verify SHA. No mutation remains in a commit.
+- [x] Format only the two new Go files; run fresh offline root JSON tests/vet, count the actual final tree plus its new selector tests, and report exact toolchain/method. Verify preexisting Go/module/probe bytes, absent go.sum and unchanged top-level gates.
+- [x] Self-review the five focus classes against implementation and tests. A source purity guard is not native safety qualification. Record no critical/important issue only if actually reviewed; never label author review independent.
+- [x] Make a scoped jj code commit for only the two new Go files after observed checks. Then, only within authorized evidence/publication scope, update the spec/plan and nested milestone with observed counts/RED/mutations/limits, commit those documents and push only the issue bookmark. Exact PR head/body/file-scope read-back must reflect the actual tree, not planned counts.
 - [ ] Independent review handoff, ready/requested reviewer, integration and queue closure remain pending separate authority. Keep PR #31 draft unless the user authorizes otherwise; keep capability/shipping gates open. No auto-close keyword replaces its acceptance.
 
-## Future Nushell commands — not executed for preparation
+## Offline commands and preparation boundary
 
 Focused RED/GREEN/mutation checks use:
 
@@ -270,10 +270,20 @@ with-env {GOTOOLCHAIN: "local", GOPROXY: "off", GOWORK: "off", CGO_ENABLED: "0"}
 }
 ```
 
-Capture outputs/status outside the repo, stop on unexpected failure and never infer vet from the previous command. Format with `gofmt -w internal/inventory/npm_input_selection.go internal/inventory/npm_input_selection_test.go` only after authorized creation. Commands in this document are planned, not run, and do not approve a download/target/native runner.
+Capture outputs/status outside the repo, stop on unexpected failure and never infer vet from the previous command. Format with `gofmt -w internal/inventory/npm_input_selection.go internal/inventory/npm_input_selection_test.go` only after authorized creation. These examples were syntax-checked, not run, during plan preparation. Equivalent command-scoped offline Go checks were later executed under separate implementation approval; they do not approve a download/target/native runner.
 
 ## Plan coverage and handoff
 
-The single task owns the complete fixed API and test cycle. Reference/layout/precedence/profile/ownership/separation tests map to all spec sections and all five focus classes; no shared-reader change or new subsystem is needed. I self-reviewed spec coverage, exact type/constant/signature consistency, tuple/profile/fallback/ownership focus mapping and placeholders; I found no missing contract item or critical/important documentary issue. I checked three local links, three Go snippets with gofmt (syntax only, not compilation) and two Nushell snippets with nu-check (syntax only), plus unchanged prior tracked bytes. This file is documentary preparation only:41 fixture rows remain unexecuted and all quoted RED/GREEN outcomes are expected, not observed.
+The single task owns the complete fixed API and test cycle. Reference/layout/precedence/profile/ownership/separation tests map to all spec sections and all five focus classes; no shared-reader change or new subsystem is needed. I self-reviewed spec coverage, exact type/constant/signature consistency, tuple/profile/fallback/ownership focus mapping and placeholders; I found no missing contract item or critical/important documentary issue. I checked three local links, three Go snippets with gofmt (syntax only, not compilation) and two Nushell snippets with nu-check (syntax only), plus unchanged prior tracked bytes. Those preparation checks did not execute the41 rows; later authorized RED/GREEN and final observations are recorded below.
 
-The user approved this written plan and separately authorized source/test/offline execution/evidence publication before Task1 begins; this approval does not authorize ready/reviewer, target/native or merge actions. I preserve inline execution plus GitHub second-person review, with no workflow/subagent dispatch or implied native qualification. Publication alone can add this plan to the draft PR, but cannot create the Go files or move the issue into execution.
+The user approved this written plan and separately authorized source/test/offline execution/evidence publication before Task1 begins; this approval does not authorize ready/reviewer, target/native or merge actions. I preserve inline execution plus GitHub second-person review, with no workflow/subagent dispatch or implied native qualification. Publication alone cannot authorize source creation; the separate pre-code execution authority above enabled that completed task.
+
+## Observed execution evidence
+
+- Pre-code authorization `234c8d5d343521ac056b051ddd4c442566c4b6da` was committed/pushed and read back before Go creation. Code: `d31fd7a9c8174b9a5ab3b47bd0cd2ae9782138e0`.
+- Fresh baseline1,231+vet; missing API compilation RED; zero stub374 failures/1 pass including41 reference failures; initial GREEN1,606/375new.
+- Author review strengthened coherent two-slot coverage with an independent literal10x10 matrix at three anchors; its new tests failed under forbidden fallback and passed after restoration. No production/contract change was needed.
+- Four restored expected mutations: fallbackC07/C13/matrix, lower-preflightG08, abstention-preflightG09/G10, profile-expansionC27. Source SHA matched after each restoration.
+- Fresh final **1,907 root tests/subtests,676new selector**, offline vet/gofmt pass. Compiler `go1.27.1-X:nodwarf5 linux/amd64`, environment GOTOOLCHAIN=local/GOPROXY=off/GOWORK=off/CGO_ENABLED=0; actual selected tree excludes pending CLI source from PR #30.
+- Existing tracked bytes unchanged before authorized documentary completion; no go.sum/dependency/shared-reader/type/error change or target/native/manager/CI operation. All top-level shipping gates remain as before.
+- Final author self-review of five focus classes found no critical/important source issue or deferred minor. No independent subagent review was dispatched; GitHub peer review remains pending. PR #31 stays draft, #17 open, with no ready/reviewer/merge permission.

@@ -6,7 +6,7 @@
 - Design agreed: separate presence/usability, a concrete npm interpretation profile, only the two root lockfile inputs, and a fixed pure decision with preflight guards.
 - Written specification: **approved by the user for documentary publication in a draft PR**; independent peer review is pending.
 - Base: integrated development `235347cc0be03e3cc5019db40a1e3b710920be9b`, independently of open PR #29/#30.
-- Separate authorization permits this written specification's documentary draft publication and coordination. No implementation plan/execution, acquisition/native/CI, ready/reviewer or merge permission follows.
+- Separate approval later authorized the [written plan](issue-17-npm-input-selection-plan.md), inline two-file implementation, owned offline tests/mutations and scoped evidence/publication. Pre-code authorization was published at `234c8d5d343521ac056b051ddd4c442566c4b6da`. Acquisition/target/native/CI, ready/reviewer and merge remain excluded; independent review is pending.
 
 ## Purpose and binding references
 
@@ -21,7 +21,7 @@ The existing `FieldState` describes JSON fields, not availability of filesystem 
 
 ## Scope and caller obligations
 
-This is internal analysis data, not an operational scanner, public report/IPC schema or complete inventory. Only an eventual new `internal/inventory/npm_input_selection.go` and its `_test.go` are intended, after later approvals.
+This is internal analysis data, not an operational scanner, public report/IPC schema or complete inventory. The approved bounded implementation added only [npm_input_selection.go](../../internal/inventory/npm_input_selection.go) and [npm_input_selection_test.go](../../internal/inventory/npm_input_selection_test.go); existing source/modules remain unchanged.
 
 The caller supplies two records from the same qualified explicit-root interpretation/view. Availability and usability are observations/classifications, not instructions or authentication. A successful `ParseNPMLock` result validates recorded JSON structure only; it does not prove input selection, producer, native safety or physical presence at the root. This helper does not turn parser success into any of those claims.
 
@@ -136,7 +136,7 @@ Notation: input `s`/`p` are literal `[presence,usability]` pairs. Output `q`, `c
 | G09 | `{"profile":"npm@12.1.0","s":[255,0],"p":[1,0]}` | `{"error":"inventory: invalid-shape"}` |
 | G10 | `{"profile":"","s":[1,0],"p":[255,0]}` | `{"error":"inventory: invalid-shape"}` |
 
-These41 authored reference rows are documentary expectations, not executed tests or native/producer qualification. Future tests must expand coherent-state combinations, guard both slots under every profile gate, preserve copied input/status/provenance, assert no fallback from all unknown/unusable shrinkwrap states, and prove whole-zero privacy/ownership. Fixtures/observations outside the supported profile are retained, not normalized into an eligible selection.
+These41 authored reference rows began as documentary expectations. They are now pinned by executed owned tests, alongside coherent-pair combinations, both-slot guards under profile gates, copied input/status preservation, no fallback and whole-zero privacy/ownership. This synthetic execution is not native/producer qualification. Fixtures/observations outside the supported profile are retained, not normalized into an eligible selection.
 
 ## Resource and completion boundaries
 
@@ -144,4 +144,16 @@ Two scalar input pairs and one output give constant-space decision work; exact p
 
 I self-reviewed tuple coherence, profile abstention, candidate versus usability, all41 literal expectations, caller-retained auxiliary evidence and preflight despite abstention; I identified no critical/important documentary issue. I checked unique IDs/JSON, seven local links/anchors and unchanged existing tracked bytes. The user then approved this written specification and its documentary publication. These are author/documentary checks, not independent review, selector execution, Go test results or native/producer qualification.
 
-After written-specification approval, a separate plan must name the two Go files, independent literal RED/GREEN, fallback/profile/preflight mutations, actual-tree fresh offline tests/vet, scoped evidence and independent review. Native/source acquisition, ready/reviewer/publication/integration and global inventory/coverage/shipping acceptance remain separately gated.
+## Observed bounded implementation evidence
+
+I published pre-code authorization before creating Go source/tests, then committed the two files at `d31fd7a9c8174b9a5ab3b47bd0cd2ae9782138e0`.
+
+- Fresh baseline:1,231 root tests/subtests and offline vet.
+- Missing-API compilation RED, then zero/nil-stub behavioral RED:374 failing/1 passing test/subtests, including all41 reference rows failing.
+- Initial GREEN:1,606 root/375new. Author review added an independent literal10x10 coherent-pair matrix at each of the three anchors; this matrix failed under the fallback mutation then passed after restoration.
+- Four expected temporary mutation failures across three classes: forbidden fallback (C07/C13/matrix), skipped lower-priority preflight (G08), abstention before preflight (G09/G10), npm12 profile expansion (C27). Each was removed with matching original source SHA.
+- Final actual branch: **1,907 root tests/subtests,676 new selector**, offline vet/gofmt pass. These counts include41 references and300 coherent-pair subtests; neither is added again. Toolchain: `go1.27.1-X:nodwarf5 linux/amd64`; GOTOOLCHAIN=local, GOPROXY=off, GOWORK=off, CGO_ENABLED=0.
+- Existing tracked Go/module/probe bytes unchanged before authorized documentary evidence. No dependency/go.sum, shared-type/error/CLI change, parser/target/native/manager/coverage/scanner operation or sibling integration.
+- I completed author self-review of the five plan focus classes and found no critical/important source issue or deferred minor. This is not independent peer approval or official/native/runtime/producer/pilot/release qualification.
+
+PR #31 remains draft and #17 open. Ready/reviewer, acquisition/native/CI and integration remain separately gated; global inventory/coverage/shipping acceptance remains open.
