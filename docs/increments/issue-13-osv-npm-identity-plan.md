@@ -21,7 +21,17 @@ Status: plan approved; inline execution explicitly authorized, including two new
 Go files, offline RED/GREEN/root tests/vet, scoped commits and publication in draft
 PR #28. No new dependencies/targets/corpus, CI/native work, ready/reviewer request
 or merge is authorized.
-The specification is published in [draft PR #28](https://github.com/landroval/PackTrace/pull/28).
+Published in [draft PR #28](https://github.com/landroval/PackTrace/pull/28).
+Completed code: `95f4504c`; compile/behavioral RED observed (198 new failing cases
+against zero stub), post-review focused/root tests 1,143 total/198 new and offline
+vet pass. Case-folding mutation failed both conflict fixtures and was removed.
+Gofmt/old Go/module/probe bytes/no go.sum verified. Toolchain:
+go1.27.1-X:nodwarf5 linux/amd64; no native/producer/product qualification.
+Author self-review, not independent review; PR remains draft, no merge.
+
+Workspace ruling: use the selected jj feature workspace and external execution ledger
+rather than git-script/root workspace scaffolding. This matches the approved workspace
+preference; the cost is manual bookkeeping/base/scope verification.
 
 ## Global constraints
 
@@ -78,7 +88,7 @@ The specification is published in [draft PR #28](https://github.com/landroval/Pa
   (name string, usable bool); qualifyOSVNPMIdentityEntry(entry OSVAffectedEntry)
   OSVNPMIdentityEntry. No exported parser/validator or shared-type change.
 
-- [ ] **Step 1: recheck authority, live ownership and independent base.**
+- [x] **Step 1: recheck authority, live ownership and independent base.**
 
 Read both documents, docs/development-guidelines.md and docs/github-collaboration.md.
 Confirm explicit plan+execution approval before code. Inspect #13/PR #28 comments,
@@ -92,7 +102,7 @@ Use the existing selected workspace; do not create a generic git branch/worktree
 new root task file or subagent/workflow dispatch. Current preference is inline; the
 user must confirm method/authority at the handoff before implementation starts.
 
-- [ ] **Step 2: fresh offline baseline and record exact toolchain.**
+- [x] **Step 2: fresh offline baseline and record exact toolchain.**
 
 Commands below are Nushell; run only after execution authorization:
 
@@ -108,7 +118,7 @@ Inspect each exit status/output before proceeding; a failed baseline is not RED
 for this feature. Stop for missing toolchain/dependency; never enable auto-download.
 Record actual branch tests/toolchain, not sums of sibling branches.
 
-- [ ] **Step 3: write fixtures and literal behavioral assertions first.**
+- [x] **Step 3: write fixtures and literal behavioral assertions first.**
 
 Use real envelopes, a local fixture helper and deep independent expected values:
 
@@ -226,7 +236,7 @@ valid lexical candidates do not parse versions, URLs, registry origin, withdrawa
 installed claims. Preserve unrelated raw siblings. Reader 4 MiB/depth-128 success and
 rejections remain existing reader behavior, not a new full-schema acceptance claim.
 
-- [ ] **Step 4: observe API compile RED, then behavioral RED.**
+- [x] **Step 4: observe API compile RED, then behavioral RED.**
 
 Run only the new suite first. Observe undefined QualifyOSVNPMIdentities/types, record
 compiler error outside repo. Add exact five types/constants from approved spec and
@@ -240,7 +250,7 @@ with-env {GOTOOLCHAIN: local, GOPROXY: off, GOWORK: off, CGO_ENABLED: '0'} {
 }
 ```
 
-- [ ] **Step 5: implement the smallest helpers, no generalized parser.**
+- [x] **Step 5: implement the smallest helpers, no generalized parser.**
 
 Private name and PURL algorithms are fixed by these plan snippets:
 
@@ -395,7 +405,7 @@ parents do not allocate Problems or derive PURL. The result has no raw JSON, cop
 versions/ranges or generic-parser dependency. Preflight allocation of tiny local
 claim tuples is not output allocation or a hard-RSS claim.
 
-- [ ] **Step 6: GREEN, self-review and one focused mutation check.**
+- [x] **Step 6: GREEN, self-review and one focused mutation check.**
 
 Run focused tests, then full fresh root tests and vet under offline environment.
 Review every guard/abstention path, problem ordering, case handling and source ownership.
@@ -403,7 +413,7 @@ Temporarily make the conflict comparison case-insensitive; the Foo vs foo litera
 case must fail. Restore the original code immediately and verify diff contains no
 mutation. This is author verification, not independent review or product qualification.
 
-- [ ] **Step 7: final verification and code-only commit.**
+- [x] **Step 7: final verification and code-only commit.**
 
 Gofmt only the two new Go files; git diff --check (jj diff --check is unsupported).
 Re-run focused/root tests and vet after restored mutation/review edits. Verify old
@@ -414,7 +424,7 @@ Stop on unexpected scope, failures or unavailable tooling; no acquisition fallba
 Commit only the two Go files with jj using subject feat: qualify OSV npm identity
 candidates. Inspect exact paths/hash and clean workspace before evidence docs.
 
-- [ ] **Step 8: completion evidence and authorized publication, without integration.**
+- [x] **Step 8: completion evidence and authorized publication, without integration.**
 
 Record observed RED/GREEN, toolchain, actual counts, code hash, bounds and unqualified
 work in separate scoped spec/plan documentation commit; add one nested milestone,

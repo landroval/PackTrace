@@ -4,6 +4,9 @@ Status: written specification approved; publication in a draft PR and preparatio
 of the implementation plan explicitly authorized. The [plan](issue-13-osv-npm-identity-plan.md)
 is approved and inline execution is explicitly authorized: two new Go files,
 offline tests/vet, scoped commits and publication in draft PR #28, no merge.
+Implementation complete: code `95f4504c`; fresh 1,143 root tests/subtests (198 new)
+and offline vet pass on the development toolchain. Independent review/integration
+remain pending.
 Tracking: [issue #13](https://github.com/landroval/PackTrace/issues/13).
 Authority: [design decisions](../design-decisions.md#10-advisory-matching-semantics).
 Prerequisites: integrated [header evidence](issue-12-osv-header.md) and
@@ -221,9 +224,18 @@ Reader-valid in-memory envelopes, except clearly marked forged-guard/budget fixt
 - Observed compile then behavioral RED, fresh root tests/vet after inline review and
   actual tested-branch counts only, after separate spec/plan/execution authorization.
 
-No implementation or new test execution is claimed. Preparation is based directly on
-integrated development c5337ea8; unreviewed #14 source is absent on this branch. Synthetic
-identity cases cannot qualify installed/origin/matching/runtime/native/producer/release.
+Implementation uses only the two new Go files. Compile RED was observed for the
+missing API; zero-stub behavioral RED had all 198 new tests/subtests fail. After
+implementation and author self-review, a temporary case-insensitive comparison
+mutation failed both exact-case conflict fixtures; it was restored before fresh
+focused/root tests and vet. Final: 1,143 root tests/subtests, 198 new; gofmt clean,
+old Go/module/probe bytes unchanged against c5337ea8, no dependencies/go.sum.
+Toolchain: go1.27.1-X:nodwarf5 linux/amd64, development/synthetic evidence only.
+
+The branch starts directly from integrated development c5337ea8; unreviewed #14
+source is absent. Counts belong to this tested branch, not sums of sibling branches.
+Synthetic identity cases cannot qualify installed/origin/matching/runtime/native/
+producer/release. Author self-review is not independent GitHub review.
 
 ## Coordination
 
@@ -233,6 +245,7 @@ Completion moves it to Review, not Done, pending independent review/integration.
 Independent review/integration retain their own gates. PR #27 is ready with jsustt
 requested, not approved/integrated merely because this preparation proceeds.
 
-No Go code, downloads/dependencies/corpus/targets, origin equivalence, version/interval
-assessment, generic identity model, matcher/negative results, worker/CLI/report/storage,
-CI/native probes or capability/shipping closure is authorized by this draft.
+Downloads/dependencies/corpus/targets, origin equivalence, version/interval assessment,
+generic identity model, matcher/negative results, worker/CLI/report/storage, CI/native
+probes, ready/reviewer request, merge or capability/shipping closure remain outside
+this approved execution. The two-file implementation does not authorize these gaps.
