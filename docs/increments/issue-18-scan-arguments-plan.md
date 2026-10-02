@@ -12,7 +12,11 @@
 
 ## Status and authority
 
-I prepare this **local, unapproved implementation plan** after written-specification/publication approval. I have no authority to publish this plan, create Go source/tests, run the planned tests/mutations, mark ready/request a reviewer, acquire dependencies/targets/corpus, activate native/CI work or merge.
+The user **approved this written plan, its documentary publication and explicit inline execution**. I may create only the two listed Go files, run the offline baseline/API RED/behavioral RED/GREEN/focused/root tests/vet and four restored mutations, and publish scoped implementation/evidence in this specification/plan and a nested shared milestone. I must record/publish this authorization before source creation. I have no ready/reviewer-request, target/policy/state access, dependency/target/corpus acquisition, native/CI or merge authority.
+
+### Explicit execution record
+
+I execute in the existing issue-specific jj workspace/bookmark, directly based on development235347cc. Scope: new `internal/cli/arguments.go` and `internal/cli/arguments_test.go`; documentary evidence only in the issue18 specification/plan and `docs/pre-1.0-features.md` nested milestone. Existing code/modules/probes and top-level shipping gates remain unchanged. The approved tests concern owned in-memory strings and owned source, not investigated projects. Independent peer review remains pending and is not replaced by author self-review.
 
 The issue branch originated from integrated development235347cc and does not depend on PR #29. Its single published artifact is the specification. This plan changes no specification semantics; any discovered contract gap must return to specification review instead of being silently decided during implementation.
 
@@ -237,4 +241,4 @@ This plan does not authorize execution of these snippets. Store RED/GREEN/mutati
 - [x] Check API/type/field/error constant names against the unchanged specification; check scalar masks/locators independently, including Provided52, maximal19-token grammar and error codes6/11 in the example.
 - [x] Parse the three Go snippets with gofmt (syntax only, no type checking/compilation/execution of proposed code) and both Nushell examples with nu-check (parse only, commands not run).
 - [x] Check four local links/anchors, no placeholder/reference gaps, unchanged existing tracked bytes and only this new document. Go's legitimate ./... command wildcard is not a placeholder.
-- [ ] Obtain user written-plan approval and publication decision. Explicit execution authority, its precise files/tests/evidence scope and independent review still follow separately.
+- [x] Obtain user written-plan approval, documentary publication and explicit inline execution decision with the exact files/tests/evidence scope above. Independent review, ready/reviewer and merge authority remain separate.
