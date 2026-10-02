@@ -6,7 +6,7 @@
 - Design agreed: complete argv without the executable name; request/default/provenance output, not effective policy; a bounded lexer for the eight approved options.
 - Written specification: **approved by the user for documentary publication in a draft PR**; independent peer review is pending.
 - Base: integrated `development` at `235347cc0be03e3cc5019db40a1e3b710920be9b`, independently of PR #29. The existing CLI exit selector is retained unchanged.
-- Separate authorization permits this specification's documentary publication and coordination in Preparation. I have no implementation-plan/execution, ready/reviewer-request, dependency/target acquisition, native/CI or merge authority.
+- The user separately approved the [implementation plan](issue-18-scan-arguments-plan.md), inline two-file execution, owned offline tests/four restored mutations and scoped documentary evidence publication. I pushed pre-code authorization `9cb7874c6293ac3344b7ef91cb13c2675868dc89` before source creation. I have no ready/reviewer-request, target access, acquisition, native/CI or merge authority.
 
 ## Purpose and boundaries
 
@@ -209,4 +209,12 @@ Category parsing must inspect at most three members for a successful list and re
 
 I self-reviewed the grammar, 52 literal expectations, privacy/zero-output rules, defaults/origins and source-independent boundaries against the approved design. I checked unique IDs, JSON syntax, seven local links/anchors, mask arithmetic and unchanged existing tracked bytes; I identified no critical/important documentary issue. The user then approved this written specification and its separate draft publication. These are documentary/author checks, not independent peer approval, semantic parser execution, new Go test results or native qualification.
 
-After that approval, a separate written implementation plan must define the two-file scope, literal behavioral RED/GREEN, source mutations targeting default-origin/repetition/help bypass/privacy, exact-tree offline tests/vet and independent review. Specification approval or publication is not that plan/execution permission. No capability/shipping parent closes from this parser alone.
+## Implementation evidence — bounded development result
+
+I implemented only `internal/cli/arguments.go` and `arguments_test.go`, code commit `1804884ec9033e3a0130b9dd761468a3ec0df2b9`, after separately approved plan/execution. Existing exit/inventory/intelligence code, modules and probes remained byte-for-byte unchanged against pre-code authorization. No dependency or go.sum was introduced.
+
+I observed missing-API compilation RED, then zero/nil-stub behavioral RED with221 failing/15 passing new tests/subtests, including all52 failing reference rows. I implemented the strings-only lexer and strengthened repeated-different/invalid-value and non-suppressing default/policy test grouping during author review. Four temporary default-origin/repetition/help/private-error mutations failed the expected tests and were restored to the original source fingerprint.
+
+Fresh final root verification: **1,543 tests/subtests**, including **312 new CLI cases/parents**, plus offline vet and gofmt. Baseline was1,231. I used `go1.27.1-X:nodwarf5 linux/amd64` with GOTOOLCHAIN=local, GOPROXY=off, GOWORK=off, CGO_ENABLED=0; these are owned development checks, not official/native toolchain qualification. The52 documentary rows are included through real reference tests, not added again to the count.
+
+I self-reviewed the five plan focus classes and found no critical/important source issue; that is author review, not independent peer approval. PR #30 remains draft, and the issue/capability/shipping gates remain open pending separately authorized review/integration. No scanner/entry point, display, effective policy, target/environment/state access, output publication or native/producer qualification was implemented. Specification/plan/execution/evidence approvals do not authorize ready/reviewer/merge actions.

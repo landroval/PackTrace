@@ -18,6 +18,8 @@ The user **approved this written plan, its documentary publication and explicit 
 
 I execute in the existing issue-specific jj workspace/bookmark, directly based on development235347cc. Scope: new `internal/cli/arguments.go` and `internal/cli/arguments_test.go`; documentary evidence only in the issue18 specification/plan and `docs/pre-1.0-features.md` nested milestone. Existing code/modules/probes and top-level shipping gates remain unchanged. The approved tests concern owned in-memory strings and owned source, not investigated projects. Independent peer review remains pending and is not replaced by author self-review.
 
+Execution status: the bounded code/test task is implemented and author-reviewed; evidence below records observed results. PR #30 remains draft and independent review/integration are pending.
+
 The issue branch originated from integrated development235347cc and does not depend on PR #29. Its single published artifact is the specification. This plan changes no specification semantics; any discovered contract gap must return to specification review instead of being silently decided during implementation.
 
 ## Global constraints
@@ -58,14 +60,14 @@ Named production interfaces are exactly `ArgumentAction`, `ArgumentChecks`, `Arg
 
 ### Step 1 — authorize and establish baseline
 
-- [ ] Obtain this written plan's approval, plus explicit inline implementation, offline-test/mutation and publication/evidence scope. Record that authorization before the first source file, as done for preceding increments; assignment or generic continuation is insufficient.
-- [ ] Refresh issue18 owner/comments, PR30 head/files/draft/review state and branch/base; preserve sibling work. If any shared signature/contract or ownership changed, stop and agree the change rather than rebase/rewrite automatically.
-- [ ] Keep the existing jj workspace and issue-18 bookmark. Verify no uncommitted unrelated bytes. Record actual compiler and module metadata; no toolchain acquisition or dependency preparation.
-- [ ] Run the approved offline root baseline, save output externally, and count actual JSON test pass events. Historical development235347cc passed1,231 tests/subtests, but that is not a fresh result or a promised current count.
+- [x] Obtain this written plan's approval, plus explicit inline implementation, offline-test/mutation and publication/evidence scope. Record that authorization before the first source file, as done for preceding increments; assignment or generic continuation is insufficient.
+- [x] Refresh issue18 owner/comments, PR30 head/files/draft/review state and branch/base; preserve sibling work. If any shared signature/contract or ownership changed, stop and agree the change rather than rebase/rewrite automatically.
+- [x] Keep the existing jj workspace and issue-18 bookmark. Verify no uncommitted unrelated bytes. Record actual compiler and module metadata; no toolchain acquisition or dependency preparation.
+- [x] Run the approved offline root baseline, save output externally, and count actual JSON test pass events. Historical development235347cc passed1,231 tests/subtests, but that is not a fresh result or a promised current count.
 
 ### Step 2 — literal tests, API RED, behavioral RED
 
-- [ ] Create `arguments_test.go` first. Copy all52 independent P01-P20/E01-E32 argv/outcome expectations from the approved specification into a named `TestParseArgsReference` table, expanding each successful scan against the literal baseline. Do not parse the document at runtime or derive expected values from production helpers. Example runnable assertion shape follows; it pins P07, E11 and E21 and must be supplemented by the remaining49 exact rows.
+- [x] Create `arguments_test.go` first. Copy all52 independent P01-P20/E01-E32 argv/outcome expectations from the approved specification into a named `TestParseArgsReference` table, expanding each successful scan against the literal baseline. Do not parse the document at runtime or derive expected values from production helpers. Example runnable assertion shape follows; it pins P07, E11 and E21 and must be supplemented by the remaining49 exact rows.
 
 ```go
 func TestParseArgsRedPins(t *testing.T) {
@@ -114,8 +116,8 @@ func TestParseArgsRedPins(t *testing.T) {
 }
 ```
 
-- [ ] Define focused tests named `TestParseArgsOptions`, `TestParseArgsDefaults`, `TestParseArgsBoundaries`, `TestParseArgsScope`, `TestParseArgsPrivacy`, `TestParseArgsOwnership`, `TestParseArgsSeparation` and `TestArgumentErrorLayout`. Use the complete case matrix below, with literal expectations and no production formatter/mask used to construct an oracle.
-- [ ] Run the focused test command before production declarations; confirm missing API compilation failure and retain it separately. Add only the exact type/constant declarations and fixed `Error` formatter from the contract, plus this deliberate temporary RED stub:
+- [x] Define focused tests named `TestParseArgsOptions`, `TestParseArgsDefaults`, `TestParseArgsBoundaries`, `TestParseArgsScope`, `TestParseArgsPrivacy`, `TestParseArgsOwnership`, `TestParseArgsSeparation` and `TestArgumentErrorLayout`. Use the complete case matrix below, with literal expectations and no production formatter/mask used to construct an oracle.
+- [x] Run the focused test command before production declarations; confirm missing API compilation failure and retain it separately. Add only the exact type/constant declarations and fixed `Error` formatter from the contract, plus this deliberate temporary RED stub:
 
 ```go
 func ParseArgs(_ []string) (Invocation, error) {
@@ -123,11 +125,11 @@ func ParseArgs(_ []string) (Invocation, error) {
 }
 ```
 
-- [ ] Re-run focused tests, inspect and save genuine assertion failures. All52 reference rows must fail against the zero/nil stub; layout/formatter checks may already pass. Record observed rows/parents, not an invented future total. A compile failure alone is not behavioral RED.
+- [x] Re-run focused tests, inspect and save genuine assertion failures. All52 reference rows must fail against the zero/nil stub; layout/formatter checks may already pass. Record observed rows/parents, not an invented future total. A compile failure alone is not behavioral RED.
 
 ### Step 3 — minimal GREEN lexer
 
-- [ ] Replace the RED stub with the bounded grammar in this order, preserving the specification rather than adopting standard-library parser permissiveness:
+- [x] Replace the RED stub with the bounded grammar in this order, preserving the specification rather than adopting standard-library parser permissiveness:
 
 | Order | Exact implementation action |
 | --- | --- |
@@ -143,7 +145,7 @@ func ParseArgs(_ []string) (Invocation, error) {
 | Local scope | After root success, `FailOn &^ Checks != 0` returns enforcement-outside-checks at the recorded fail-on option-token index and bit4 |
 | Output | Return scan intent plus local request; every fatal branch returns zero Invocation and a newly allocated typed fixed-code error |
 
-- [ ] Use a small exact-name switch, not a configurable flag registry. Category membership can use this complete private helper; it recognizes only fixed members and creates no split slice:
+- [x] Use a small exact-name switch, not a configurable flag registry. Category membership can use this complete private helper; it recognizes only fixed members and creates no split slice:
 
 ```go
 func parseArgumentChecks(text string, allowNone bool) (ArgumentChecks, bool) {
@@ -176,9 +178,9 @@ func parseArgumentChecks(text string, allowNone bool) (ArgumentChecks, bool) {
 }
 ```
 
-- [ ] Implement `(*ArgumentError).Error()` as a fixed switch over all11 code constants/texts in the spec, defaulting to `cli: invalid-arguments`. Neither formatting nor error construction may accept/retain a rejected string. No generic wrapped lexer error or partial result.
-- [ ] Keep production imports restricted to `strings`; no `flag`, `fmt`, `os`, `io`, `filepath`, native/network packages, global mutable state, `init`, goroutines, subprocesses or built-in print/println. Only local private scalar helpers are justified; no framework/extra files/cache/context scaffold.
-- [ ] Run focused GREEN checks, then the whole root tests/vet. Read the output, including any unchanged-package regression. A new scope/contract requirement stops execution for approval rather than broadening this helper.
+- [x] Implement `(*ArgumentError).Error()` as a fixed switch over all11 code constants/texts in the spec, defaulting to `cli: invalid-arguments`. Neither formatting nor error construction may accept/retain a rejected string. No generic wrapped lexer error or partial result.
+- [x] Keep production imports restricted to `strings`; no `flag`, `fmt`, `os`, `io`, `filepath`, native/network packages, global mutable state, `init`, goroutines, subprocesses or built-in print/println. Only local private scalar helpers are justified; no framework/extra files/cache/context scaffold.
+- [x] Run focused GREEN checks, then the whole root tests/vet. Read the output, including any unchanged-package regression. A new scope/contract requirement stops execution for approval rather than broadening this helper.
 
 ### Additional literal/parameterized case matrix
 
@@ -200,22 +202,22 @@ The URI-looking and non-UTF-8 strings are literal in-memory test inputs, not acq
 
 ### Step 4 — mutation and focused self-review
 
-- [ ] Temporarily omit setting a Provided bit for an explicit default; the corresponding Defaults/P07 expectations must fail. Restore exactly before proceeding.
-- [ ] Temporarily allow a repeated option to overwrite instead of error; E08/E09 and per-option repetition cases must fail. Restore.
-- [ ] Temporarily let help ignore trailing arguments or reinterpret terminated `--help` as help; E04/P05/Boundaries must fail. Restore.
-- [ ] Temporarily include a rejected synthetic string in Error formatting; Privacy must fail. Restore. Mutations are local short-lived changes only, not commits/PRs or permission to weaken final protections.
-- [ ] Verify source fingerprints before/after restoration, then self-review the five focus classes, zero-result/error priority, category allocation, unchanged existing exits and absence of I/O/authority expansion. Author review is not the agreed second-person review.
+- [x] Temporarily omit setting a Provided bit for an explicit default; the corresponding Defaults/P07 expectations must fail. Restore exactly before proceeding.
+- [x] Temporarily allow a repeated option to overwrite instead of error; E08/E09 and per-option repetition cases must fail. Restore.
+- [x] Temporarily let help ignore trailing arguments or reinterpret terminated `--help` as help; E04/P05/Boundaries must fail. Restore.
+- [x] Temporarily include a rejected synthetic string in Error formatting; Privacy must fail. Restore. Mutations are local short-lived changes only, not commits/PRs or permission to weaken final protections.
+- [x] Verify source fingerprints before/after restoration, then self-review the five focus classes, zero-result/error priority, category allocation, unchanged existing exits and absence of I/O/authority expansion. Author review is not the agreed second-person review.
 
 ### Step 5 — fresh verification and scoped evidence
 
-- [ ] Format only the two new Go files. Run fresh focused/root checks and vet after every mutation is removed, recording actual compiler, baseline/new/current test pass events, errors and exact tested tree. No sum across branches or addition of52 documentary rows to Go counts.
-- [ ] Compare every preexisting Go/module/probe byte to the agreed execution base; check only approved new files and separately authorized documentary evidence. No go.sum, unexpected import, producer/native/coverage claim or top-level shipping-parent closure.
-- [ ] If execution/evidence publication is authorized, commit only the two Go files with jj and publish only the issue bookmark. Update specification/plan completion evidence and the nested shared milestone only if those exact documentary paths are included in that later authority; otherwise request it first. No automatic ready/reviewer or merge action.
+- [x] Format only the two new Go files. Run fresh focused/root checks and vet after every mutation is removed, recording actual compiler, baseline/new/current test pass events, errors and exact tested tree. No sum across branches or addition of52 documentary rows to Go counts.
+- [x] Compare every preexisting Go/module/probe byte to the agreed execution base; check only approved new files and separately authorized documentary evidence. No go.sum, unexpected import, producer/native/coverage claim or top-level shipping-parent closure.
+- [x] If execution/evidence publication is authorized, commit only the two Go files with jj and publish only the issue bookmark. Update specification/plan completion evidence and the nested shared milestone only if those exact documentary paths are included in that later authority; otherwise request it first. No automatic ready/reviewer or merge action.
 - [ ] Obtain separate review-handoff authorization, agree the second-person reviewer and verify the final PR head is what that reviewer approves. Keep issue/parent gates open until their own reviewed acceptance/integration. Subsequent integrated-tree verification/queue cleanup is separately authorized.
 
-## Future commands — not executed here
+## Offline commands and execution boundary
 
-These are Nushell examples for separately authorized tests. Environment is command-scoped; no module/toolchain/download fallback:
+These are Nushell examples for the approved owned tests. Equivalent command-scoped offline invocations were executed during this increment; no module/toolchain/download fallback:
 
 ```nu
 with-env {GOTOOLCHAIN: local, GOPROXY: off, GOWORK: off, CGO_ENABLED: "0"} {
@@ -233,7 +235,17 @@ gofmt -w internal/cli/arguments.go internal/cli/arguments_test.go
 jj diff --stat
 ```
 
-This plan does not authorize execution of these snippets. Store RED/GREEN/mutation outputs outside the repository, inspect exit status and results before subsequent commits, and retain only approved scoped evidence. The normal isolated/native/producer/pilot gates remain unqualified.
+The explicit execution record above authorized only these owned checks, not target/native work. RED/GREEN/mutation outputs were retained outside the repository and inspected before scoped commits. The normal isolated/native/producer/pilot gates remain unqualified.
+
+## Observed execution and review evidence
+
+- Pre-code authorization: `9cb7874c6293ac3344b7ef91cb13c2675868dc89`; code: `1804884ec9033e3a0130b9dd761468a3ec0df2b9`.
+- Fresh baseline1,231 root tests/subtests and vet; missing API compilation RED then behavioral221 failing/15 passing, including all52 failed reference rows.
+- First GREEN1,525/294new; author review strengthened repeated-different/invalid cases and isolated default/policy prerequisite assertions into subtests so later cases could not be suppressed.
+- Four expected mutation failures: omitted default origin, skipped repetition rejection, help ignoring extra arguments, private formatter disclosing a synthetic marker. All restored; original source SHA matched.
+- Final actual branch: **1,543 root tests/subtests,312new CLI**, offline vet/gofmt pass. Toolchain `go1.27.1-X:nodwarf5 linux/amd64`; GOTOOLCHAIN=local, GOPROXY=off, GOWORK=off, CGO_ENABLED=0.
+- Existing tracked bytes were unchanged before authorized documentary completion evidence. No dependency/go.sum, scanner/entry point, target/policy/environment/state/output operation, producer/native/official-runtime qualification, race/fuzz/CI work or sibling integration was introduced.
+- Final review is author self-review of the five focus classes, not native subagent/independent peer review. No critical/important source issue or deferred minor identified. Ready/reviewer/merge remain separately gated.
 
 ## Plan self-review — documentary, not implementation
 
