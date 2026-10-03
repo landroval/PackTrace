@@ -16,8 +16,9 @@ The owner **approved this written plan and explicitly authorized inline executio
 I may publish this pre-code authority, create only the two planned Go files, run
 owned synthetic RED/GREEN/restored mutations/offline root tests/vet, then make
 scoped code/evidence commits and publish in draft PR #33. I record/push/read back
-this approval before source/test creation. At this pre-code record no snippet or
-new reader/test has been compiled/executed. Ready/reviewer, target/object storage,
+this approval before source/test creation in `ced92531da31aa8c16fab9157455d81a05882521`.
+That historical pre-code record preceded every new Go file; the completion evidence
+below records the now-executed bounded slice. Ready/reviewer, target/object storage,
 consumer/clock/HTTP/acquisition/native/CI, shared changes and merge remain excluded.
 
 I retain the selected existing bookmark `issue-21-intel-snapshot-manifest-spec`,
@@ -52,6 +53,10 @@ stops execution. This approval does not authorize sibling integration.
 5. Sensitive success versus private fatal/non-authority: hostile source IDs/locators/methods remain data, errors contain no markers, unsupported content never activates/reads objects or implies snapshot-complete coverage.
 
 ## Task 1 — reader, owned synthetic tests and scoped evidence
+
+The steps/snippets below preserve the approved pre-execution plan, including its
+original unchecked template. The live execution checklist is in Completion evidence;
+I do not rewrite approved technical instructions as if they were fresh observations.
 
 **Files:**
 - Create `internal/intel/snapshot_manifest.go`: exact four API structs, one parser, three private bounded JSON/scalar/reference helpers.
@@ -465,6 +470,73 @@ unique declared bytes/logical repeated-reference budgets without adding a consum
 I self-reviewed coverage, placeholders, type/signature/constant consistency,
 compound precedence and all five test mappings. I pin fixtures/expected states
 independently of production helpers and preserve the exact approved API/body.
-Syntax-format and Nushell checks during preparation are not compilation,
-executed fixtures/Go tests or independent review. I retain the inline method, and
-wait for explicit approval/execution/evidence publication before beginning Task1.
+Syntax-format and Nushell checks during preparation were not compilation,
+executed fixtures/Go tests or independent review. I retained the explicitly approved
+inline method; author review does not replace the future GitHub peer review.
+
+## Completion evidence
+
+### Live execution checklist
+
+- [x] Written approval/pre-code publication/read-back and fresh offline baseline.
+- [x] Independently authored reference/focused tests, compilation RED and stub RED.
+- [x] Approved reader/API, focused/root GREEN and all five author-review classes.
+- [x] Expected mutation failures, restorations and fresh final root tests/vet.
+- [x] Scoped two-file implementation plus test-strengthening commits; local evidence.
+- [ ] Scoped documentation commit/draft push/exact final read-back (receipt in live PR).
+
+I implemented only `internal/intel/snapshot_manifest.go` and its owned test file in
+`aac473dbc062dedd80839b6600b49266c0562457`, above the unchanged approved spec/plan
+and published pre-code authority. Final author review added explicit late-block
+nonobject and reordered-original-reference assertions within existing subtests in
+`bb40e8b8`; I reran the whole root stream/vet afterward, with the same measured
+2,578 root/359 new count and unchanged production SHA. All four production function bodies match the
+approved GREEN listing; I reuse existing JSON/string/time/error behavior unchanged.
+
+- I observed the fresh pre-code baseline: 2,219 root tests/subtests and offline vet.
+  Missing-API compilation RED was followed by a zero/nil stub: 354 failing/1 passing
+  tests/subtests, with all C01–C48 failing. Initial GREEN was 2,574 root/355 new +vet.
+- I strengthened missing core, unknown-field retention and whole-zero assertions.
+  I observed 17 whole-zero strengthening failures, then restored the source.
+  A first uppercase-AA/zero-byte fixture masked the lowercase mutation via the
+  independent empty-digest guard; uppercase actual empty H isolated that guard,
+  failed under the mutation, and passed after restoration. No production change
+  was needed and no shared helper was mutated.
+- I observed and restored logical-dedup, per-slot byte overcount, length/count
+  coherence, index/lowercase and acquisition-time substitution mutations. The
+  respective repeated-five-slot excess, C30, C31/C32, C21/C22 and temporal/import
+  assertions failed. I restored the last temporal substitution when resuming.
+- Earlier `/tmp` receipts/fingerprints were no longer available on resumption.
+  Those RED/initial-GREEN observations above are historical, not reconstructed
+  JSON streams or fresh measurements. I verified all production functions against
+  the approved plan, saved a new source fingerprint, and regenerated final checks.
+  Additional separate late-partial and locator-disclosure mutations produced 92
+  and 2 failing tests/subtests respectively, including `core-before-claims`; I
+  restored and SHA-verified each before the final GREEN. I do not claim the missing
+  historical fingerprint was rechecked after resumption.
+- I freshly executed the final restored tree: **2,578 root tests/subtests, 359 new**,
+  all C01–C48 plus the seven focused suites passing, and offline root vet. I count
+  nonempty `Test` pass records from that one root JSON stream, not package records
+  or added parallel runs. Compiler: `go1.27.1-X:nodwarf5 linux/amd64`; all checks use
+  `GOTOOLCHAIN=local GOPROXY=off GOWORK=off CGO_ENABLED=0`. This compiler/run does
+  not qualify an official toolchain, native platform or operational scanner.
+- I reviewed all five focus classes against the complete source/tests: independent
+  role/logical/unique-byte budgets; canonical/core/error precedence; separately owned
+  raw parents/nested/sibling data; exact zero/future/import/time claims; sensitive
+  successful evidence versus fixed private fatal/non-authority. I found no remaining
+  in-scope blocker. Independent review remains pending; no subagent/workflow or
+  GitHub reviewer handoff was authorized/dispatched by this evidence.
+- I checked all preexisting tracked bytes before the scoped documentation updates,
+  except eight unrelated `.pi/todos` deletions which the owner explicitly chose to
+  preserve outside #21. I leave those pending in the working copy and exclude them
+  from every code/evidence commit and push. No previous Go/module/probe byte or
+  top-level shipping checkbox changed; no go.sum, dependency or consumer was added.
+
+I decline storage/content/routing/freshness/activation/coverage/native/pilot behavior
+as explicit separate contracts/gates, not as silent omissions from this reader.
+The budget is declared metadata, not disk quota; timestamps are claims, not renewed
+freshness; owned sensitive results are not public-log/report/IPC-safe values.
+At this evidence record draft publication/read-back is the final pending checkbox
+above; its verified final head/receipt belongs in the live PR/issue, not a fabricated
+self-referential commit ID. #21 remains open/In progress and PR #33 remains draft.
+No ready/reviewer/merge or shipping completion is authorized here.

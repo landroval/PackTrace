@@ -6,9 +6,13 @@ I record this **approved written specification** for [#21](https://github.com/la
 from integrated `development` commit `63b5873d747419e494432b2d1b80e10a611875d3`.
 The owner explicitly approved the reviewed local draft `66cd372391f9b7157bede60dadeb728ccf67ce71`
 and authorized publication of its one-document bookmark/draft PR. This approves
-this contract, not a plan, Go/consumer/clock execution, native/storage/HTTP/acquisition/CI
-work, ready/reviewer handoff or merge. I preserve its technical body unchanged.
-I keep #21 in Preparation and its [storage parent #9](https://github.com/landroval/PackTrace/issues/9) open.
+this contract alone; the later [approved implementation plan](issue-21-intel-snapshot-manifest-plan.md)
+and pre-code authority `ced92531da31aa8c16fab9157455d81a05882521` separately authorized
+inline reader/tests, offline checks, restored mutations and scoped draft publication.
+I preserve the technical contract unchanged. I implemented the two-file slice in
+`aac473dbc062dedd80839b6600b49266c0562457`: fresh 2,578 root tests/subtests (359 new)
+and offline vet pass. This is author verification, not independent review.
+I keep #21 open/In progress, PR #33 draft and its [storage parent #9](https://github.com/landroval/PackTrace/issues/9) open.
 
 I need a small manifest that names immutable snapshot objects and retains acquisition
 claims without mistaking metadata for verified content, publisher trust or freshness.
@@ -309,7 +313,7 @@ I do not close those gates or weaken [shipping acceptance](../pre-1.0-features.m
 I ask independent future consumer review specifically for strict-core versus claimed
 counts, unknown fields/compatibility, digest sharing/roles, freshness preservation,
 privacy and reader activation boundaries. Assignment/approval of this draft cannot
-serve as that review or as implementation permission. After written-spec approval,
-I will prepare a separately approved bounded plan and ask for explicit execution/
-evidence-publication authorization. No root test count, measured scanner capability,
-object conformance, native support or peer approval is claimed by this document.
+serve as that review or as implementation permission. I executed only the separately
+approved plan/authority above; its completion evidence records synthetic tests, not
+measured scanner capability, object conformance, native support or peer approval.
+Storage/consumer/clock/HTTP/acquisition/CI, ready/reviewer and merge remain excluded.

@@ -178,6 +178,12 @@ scope; it never claims that a malicious payload executed.
   redistribution constraints, and measured storage/download sizes.
 - [ ] **Reliable snapshots:** validate updates, publish atomically, and retain a
   last-known-good snapshot when synchronization fails.
+  - [x] [Bounded in-memory snapshot manifest](increments/issue-21-intel-snapshot-manifest.md)
+    validates format 1.0 core/256 slots, retains owned references/source/time claims,
+    and separates repeated logical records from unique declared bytes. Code `aac473db`;
+    2,578 root tests/subtests (359 new) and offline vet pass. Author verification only,
+    independent review/integration pending. No object content/binding/routing,
+    freshness, activation, disk quota, sync/recovery, native or coverage qualification.
 - [ ] **Incremental updates and reconciliation:** incorporate modifications,
   withdrawals, corrections, and removals without indefinitely retaining stale data.
 - [ ] **Freshness visibility:** report snapshot identity, acquisition and available
