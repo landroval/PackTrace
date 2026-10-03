@@ -61,7 +61,11 @@ cross-compilation, release builds and native filesystem tests are excluded.
 
 I do not use `pull_request_target`, schedules or workflow chaining to execute PR
 code with elevated trust. A manual fuzz dispatch does not authorize other jobs,
-downloads or targets. Hosted execution itself remains separately gated.
+downloads or targets. Hosted execution itself remains separately gated. A future
+push, PR or development update containing the workflow can trigger hosted root
+checks and setup downloads: before that publication I require explicit approval
+of those acquisitions and runner executions. Workflow publication is not a passive
+documentation operation, and manual-only fuzzing does not make root checks manual.
 
 ## Acquisition and immutable-pinning policy
 
