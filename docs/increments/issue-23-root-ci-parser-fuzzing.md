@@ -1,10 +1,12 @@
 # Issue 23: root CI and parser-fuzzing qualification contract
 
-Status: **draft specification; written approval pending**. I have approval for
-issue reservation and local documentary preparation only. I keep
+Status: **written specification approved**. The user approved this complete
+written artifact and authorized local plan preparation plus bounded public
+Go/Actions metadata/text consultation, not distribution acquisition or execution. I keep
 [#23](https://github.com/landroval/PackTrace/issues/23) OPEN / Preparation, owned by
-`landroval`. I have not prepared its written plan, enabled workflows, run hosted
-jobs/fuzzing, acquired toolchains/Actions, changed protections or requested review.
+`landroval`. Its plan remains unapproved. I have not enabled workflows, run hosted
+jobs/fuzzing, acquired executable toolchain/Action distributions, changed protections
+or requested review.
 
 Base: integrated development `76ef90daf36c4b4fae2b234369859108440fc24e`.
 Authority: [official toolchain baseline](../design-decisions.md#24-toolchain-and-dependency-baseline),
@@ -102,7 +104,9 @@ For a later explicitly approved acquisition plan I require:
    not an unconsulted revision or checksum. The later plan must contain the exact
    verified pins before implementation approval; their absence blocks activation.
 
-This preparation fetched no external toolchain/Action metadata or archive. I do
+Initial specification preparation fetched no external toolchain/Action metadata
+or archive. The subsequently authorized plan consultation records public metadata
+and texts separately in the plan; no executable distribution was acquired. I do
 not fabricate checksums, commit pins, audits or acquisition evidence. The selected
 sources are explicit; exact-pin approval remains a defined later gate, not a claim
 that #23's acquisition acceptance is already complete.
@@ -259,7 +263,7 @@ open until their own acceptance; #23 is not blanket qualification of #11.
 
 ## Documentary acceptance
 
-- [ ] I obtain approval of this written specification before preparing its plan.
+- [x] I obtain approval of this written specification before preparing its plan.
 - [x] I verify local links, 18 unique seed-family IDs, reader names/budgets, event
   rules, pin/acquisition gates, privacy/timeout/retention semantics and exact file scope.
 - [ ] I record a local one-document commit and distinguish documentary checks from
