@@ -2,10 +2,12 @@
 
 ## Status and intent
 
-I prepare this **unapproved written specification** for [#21](https://github.com/landroval/PackTrace/issues/21)
+I record this **approved written specification** for [#21](https://github.com/landroval/PackTrace/issues/21)
 from integrated `development` commit `63b5873d747419e494432b2d1b80e10a611875d3`.
-I have authorization for agreed ownership, design and a local documentary draft,
-not publication, implementation planning/execution, native/storage/HTTP work or merge.
+The owner explicitly approved the reviewed local draft `66cd372391f9b7157bede60dadeb728ccf67ce71`
+and authorized publication of its one-document bookmark/draft PR. This approves
+this contract, not a plan, Go/consumer/clock execution, native/storage/HTTP/acquisition/CI
+work, ready/reviewer handoff or merge. I preserve its technical body unchanged.
 I keep #21 in Preparation and its [storage parent #9](https://github.com/landroval/PackTrace/issues/9) open.
 
 I need a small manifest that names immutable snapshot objects and retains acquisition
