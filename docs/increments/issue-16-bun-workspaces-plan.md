@@ -12,19 +12,23 @@
 
 ## Status and authority
 
-I prepare this **local unapproved implementation-plan draft** after written-spec
-approval and the owner's request to prepare the next plan. This authorizes the
-plan document only: no plan push/PR update, Go source/test creation, compilation,
-reader/fixture execution, mutation/root checks, acquisition or implementation.
-The owner must review this written plan and explicitly authorize its execution
-and any pre-code/implementation/evidence publication before the first Go file.
-Approval of this plan without execution permission does not authorize those actions.
+I prepared this plan as a local draft at
+`ae77c923808d8891f004345ff1f73b264de70040`. The owner then approved the written
+plan and explicitly selected **“Aprobar y ejecutar aquí”**: inline creation of the
+two Go files, owned offline RED/GREEN/root tests/vet, restored mutations, scoped
+code/evidence commits and publication in draft PR34, and #16 In progress.
+I must publish and read back this pre-code authority before creating Go.
+
+This does not authorize target/producer/native/CI/dependency/toolchain/shared-source
+work, authentication/security changes, ready/reviewer handoff, integration or closure.
+A publication/authentication failure stops me without fallback or Go execution.
 
 I retain the agreed isolated issue bookmark `issue-16-bun-workspaces-spec` and
 direct integrated base `63b5873d747419e494432b2d1b80e10a611875d3`. I do not rebase,
 merge siblings, change workspace or include the separate local-only unrelated
-ledger-deletion checkpoint. PR #32/#33 are not dependencies. #16 remains OPEN/
-Preparation, PR #34 draft. Ready/reviewer/merge/closure remain separate gates.
+ledger-deletion checkpoint. PR #32/#33 are not dependencies. #16 stays OPEN and
+moves only to In progress; PR #34 stays draft. Ready/reviewer/merge/closure remain
+separate gates.
 
 ## Global Constraints
 
@@ -82,7 +86,7 @@ func ProjectBunWorkspaces(doc BunLockDocument) (BunWorkspaceProjection, error)
 
 ### Authority and fresh baseline
 
-- [ ] Obtain written-plan approval and **explicit inline source/test, owned offline checks/restored mutations, scoped code/evidence/pre-code publication authorization**. Record/commit/push/read back the pre-code approval before creating Go. If that push/read-back fails, stop source execution; do not change authentication or silently publish a different bookmark.
+- [x] Obtain written-plan approval and **explicit inline source/test, owned offline checks/restored mutations, scoped code/evidence/pre-code publication authorization**. Record/commit/push/read back the pre-code approval before creating Go. If that push/read-back fails, stop source execution; do not change authentication or silently publish a different bookmark.
 - [ ] Recheck exact approved spec bytes/PR/head/owner/comments/bookmark/base; existing two Go files absent, tree clean, unrelated checkpoint intact. Declare the two files/helper reuse/no shared changes in the issue under coordination authorization. No sibling base sync or new workspace.
 - [ ] Capture exact toolchain and fresh offline root JSON tests/vet outside the repo. Count Action=pass records with nonempty Test, never package records or summed parallel runs. Historical2,219 is context, not this baseline. Save all preexisting tracked source/module/checklist fingerprints.
 
