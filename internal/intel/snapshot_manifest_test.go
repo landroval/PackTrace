@@ -291,6 +291,11 @@ func TestParseSnapshotManifestCore(t *testing.T) {
 				m := snapshotTestBase()
 				m[location] = v
 				snapshotTestError(t, snapshotTestBytes(t, m), "invalid-shape")
+				if location == "blocks" {
+					m = snapshotTestBase()
+					m["blocks"].([]any)[255] = v
+					snapshotTestError(t, snapshotTestBytes(t, m), "invalid-shape")
+				}
 			})
 		}
 	}
@@ -544,6 +549,13 @@ func TestParseSnapshotManifestOwnership(t *testing.T) {
 		b := snapshotTestSuccess(t, append([]byte(" \n"), data...))
 		if a.SHA256 == b.SHA256 {
 			t.Fatal("manifest silently canonicalized")
+		}
+		reordered := bytes.Replace(data,
+			[]byte(`{"bytes":0,"records":0,"sha256":"`+snapshotTestEmpty+`"}`),
+			[]byte(`{"sha256":"`+snapshotTestEmpty+`","records":0,"bytes":0}`), 1)
+		c := snapshotTestSuccess(t, reordered)
+		if bytes.Equal(data, reordered) || a.SHA256 == c.SHA256 || !reflect.DeepEqual(a.Originals, c.Originals) {
+			t.Fatal("original reference order lost byte identity or changed typed evidence")
 		}
 	})
 }
