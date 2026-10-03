@@ -78,6 +78,15 @@ alone does not authorize probes, dependency installation, or publication.
     kept as unknown records. 877 root tests/subtests and vet pass; INFO contents,
     workspace/override semantics, installed layouts, and producer-generated
     compatibility remain open.
+  - [x] [Bounded Bun workspace declarations](increments/issue-16-bun-workspaces.md)
+    preserve exact sorted lockfile-recorded locations, explicit name/version states,
+    and four separate requirement groups with original-byte source linkage. Two
+    independent 20,000-row/20,000-membership bounds count repetitions and unusable
+    values; late fatal results are whole-zero and private. 2,350 branch-local root
+    tests/subtests (131 new, all48 reference IDs) and offline vet pass after restored
+    mutations. PR #34 remains draft; author review is not independent peer approval.
+    Producer/native qualification, discovery/containment, effective/installed
+    inventory, configuration/INFO/override semantics, consumers and shipping remain open.
 - [ ] **Workspaces and monorepos:** discover supported workspace structures and
   retain workspace attribution where actually known.
 - [ ] **Separate evidence classes:** distinguish declared dependencies,

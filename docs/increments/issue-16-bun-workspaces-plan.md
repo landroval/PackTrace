@@ -465,9 +465,53 @@ local deletion checkpoint remain unchanged. Legal Go variadic and CLI ./... toke
 are not placeholders. These checks neither compile the API/tests nor execute a reader,
 fixture, root test/vet, mutation, native probe or qualification job; no new test count.
 
-I preserve inline execution as the previously selected method; no new agent workflow
-is recommended or dispatched. After syntax/link/type/coverage self-review, the next
-gate is **owner review of this written plan**, with a separate explicit execution/
-pre-code/evidence-publication choice. Plan preparation/approval alone does not grant
-those permissions. I do not push this plan, change Project state or start Go work
-without that authorization.
+At that preparation record I preserved inline execution and requested written-plan
+review plus explicit execution/pre-code/evidence-publication authority; no agent
+workflow was dispatched. The later owner approval and execution below supersede
+that pending preparation status, not the technical contract or historical RED stub.
+
+## Execution completion record
+
+I record owner approval of plan `ae77c923808d8891f004345ff1f73b264de70040` and explicit
+**“Aprobar y ejecutar aquí”**, followed by published/read-back pre-code authority
+`fb7fdca6f95be92025f3820b6e40fa4d20c258a8` before either Go file. I kept the agreed
+workspace/bookmark and independent63b5873d base. No acquisition/shared-source changes
+or sibling sync occurred; the unrelated eight-deletion local checkpoint is intact.
+The original task checkboxes/examples are the pre-execution template, not current
+completion claims; this live checklist records executed evidence separately.
+
+- [x] Exact pre-code head/body/two-document scope/draft/owner read-back and fresh
+  baseline2,219 root pass tests/subtests plus offline vet before Go.
+- [x] Tests first, undefined API/type build RED observed in Go JSON build-output.
+  An added fixture used an elided map literal under any; I fixed that test-only
+  construction before runtime RED, without weakening expectations.
+- [x] Zero/nil stub behavioral RED:126 failing/5 passing tests/subtests, all47
+  projection IDs failed. C29 reader-only duplicate cases and AST purity can pass.
+- [x] Exact planned minimum GREEN body; helpers/types/readers/package projection/
+  JSONC/shared validator/module/probes unchanged; no go.sum or source fallback.
+- [x] All C01–C48, eight suites and scalar/group/member state variants run; exact
+  nil/empty/opaque text, usable siblings, repetitions, budgets, digest and ownership.
+- [x] Seven independent planned mutants restored/SHA-verified: reset6fail,
+  combined8, usable-only4, name fallback94, reversed14, partial18, disclosure18.
+- [x] Expanded positional assertions independently pin every row/entry, not only
+  first/last or observed locations. Middle attribution mutant:3fail including C37/
+  C47 and parent; restored and source SHA matched, no production change.
+- [x] Fresh final root **2,350 pass tests/subtests**, **131 new**, all48/eight suites;
+  offline vet exit0; go1.27.1-X:nodwarf5 linux/amd64. One actual root JSON stream
+  counted Action=pass/nonempty Test. No native/official/platform qualification.
+- [x] Full source/test author review of all five focus classes and helper contracts;
+  no remaining in-scope blocker/deferred minor. No dispatched subagent or independent
+  GitHub approval. Declined/gated behavior remains explicitly unqualified.
+- [x] Scoped two-Go-file implementation commit
+  `05807188aeeabcaa5df1684804531b5bf7dc7a6c`; original approved GREEN exactly matched,
+  source restored and unrelated bytes preserved before commit.
+- [ ] Publish/read back final scoped code/evidence head/files/body, preserving
+  draft/open/In progress/no reviewer and other Project items. This last push
+  receipt belongs in live PR/issue/external ledger, not an invented self-reference.
+
+I keep only one nested inventory milestone checked; all85 top-level shipping gates
+stay unchanged. Author source/synthetic checks cannot qualify actual Bun producers,
+native containment/platforms, RSS/runtime budgets, discovery/effective/installed
+inventory, INFO/config/overrides, consumers/operational scanner/output/IPC/coverage,
+pilots or releases. Ready/reviewer handoff, integration and issue closure remain
+separate authorization and independent-review gates.

@@ -8,11 +8,15 @@ The owner explicitly approved the reviewed local draft
 `ffe68e285bf10630c01a9e7adff845de0dc73af1` and separately authorized publishing only
 this document/bookmark in a draft PR. I preserve its technical contract unchanged:
 minimum typed evidence, independent20,000-workspace/20,000-cumulative-declaration
-bounds and unchanged shared helpers. This authorizes no implementation plan,
-Go creation/execution, dependency acquisition, ready/reviewer handoff or merge.
-I reserve #16 for landroval in Preparation under
+bounds and unchanged shared helpers. That original one-document publication did
+not authorize an implementation plan or Go execution. The owner subsequently
+approved the [written plan](issue-16-bun-workspaces-plan.md) and explicitly authorized
+inline execution/pre-code/code/evidence publication; I record that later stage below.
+No dependency/native/producer/consumer/ready/reviewer/merge authority is included.
+I originally reserved #16 for landroval in Preparation under
 [separate preparation-only coordination authority](https://github.com/landroval/PackTrace/issues/16#issuecomment-5971191443).
-I do not base it on unreviewed PR #32/#33 or change their heads/status.
+I do not base it on unreviewed PR #32/#33 or change their heads/status. After the
+later authorized execution I keep #16 OPEN/In progress and PR34 draft.
 
 I need to retain declarations recorded in each Bun lockfile workspace object,
 without mistaking them for current manifest declarations, resolved package edges,
@@ -277,11 +281,56 @@ report/redaction/IPC/CLI, HTTP/acquisition, native/CI/fuzz/race work or release 
 here. No shared API/helper/source/module change or probe rerun is proposed. Raw/typed
 success is not complete coverage, safety, authenticity or an effective dependency tree.
 
-I preserve the pending PR #32/#33 review gates and all capability/shipping parents.
-The owner has reviewed/approved this written specification. A written implementation
-plan is the next preparation stage, not authorized by this publication-only handoff;
-its approval and explicit execution remain separate.
-Source/tests, owned RED/GREEN/root tests/vet, evidence publication, peer handoff and
-integration each remain their recorded gates. This documentary preparation claims
-no new compiled API, executed fixture/Go count, native/producer/pilot qualification or
-independent approval. I do not push this draft or create a PR without separate authority.
+I preserve the PR #32/#33 review gates and all capability/shipping parents. The
+original specification-publication handoff authorized no implementation plan or
+Go execution; its documentary checks were not compiled/executed evidence. The owner
+subsequently approved the written plan and explicit execution described below.
+Peer handoff, integration and closure still require their separately recorded gates.
+
+## Bounded implementation evidence
+
+I received written-plan approval and explicit **“Aprobar y ejecutar aquí”** for the
+two new Go files, inline owned offline tests/vet/restored mutations, scoped commits
+and pre-code/code/evidence publication in draft PR34, with #16 OPEN/In progress.
+I published/read back authority `fb7fdca6f95be92025f3820b6e40fa4d20c258a8` before
+creating any Go. The preceding approved plan is
+`ae77c923808d8891f004345ff1f73b264de70040`; the specification/API/technical contract
+is unchanged. I retained direct integrated base63b5873d and the separate local-only
+eight-deletion checkpoint; no sibling merge or shared-source/module change.
+
+I implemented only `internal/inventory/bunlock_workspaces.go` and
+`internal/inventory/bunlock_workspaces_test.go` in scoped code commit
+`05807188aeeabcaa5df1684804531b5bf7dc7a6c`. The production module is the approved
+minimum GREEN listing with two structs and one function, reusing unchanged
+rawObjectMembers/projectField/projectDependencyGroups and existing20k constants.
+
+I observed API compilation RED (undefined ProjectBunWorkspaces and
+BunWorkspaceProjection, JSON build-output), then behavioral zero/nil-stub RED:
+**126 fail/5 pass tests/subtests**; all47 projection reference IDs failed. C29's
+reader-only duplicate regressions and the AST purity subtest correctly passed.
+I corrected one explicit-map test fixture compilation error before behavioral RED;
+that failed build was not counted as behavioral evidence. Expectations use literals,
+not a production oracle or runtime Markdown.
+
+Fresh actual-tree offline root tests pass **2,350 tests/subtests**, **131 new** across
+eight TestProjectBunWorkspaces suites, including all48 reference IDs and state/
+ownership/privacy/boundary variants; baseline was2,219. Counts use JSON Action=pass
+with nonempty Test, not packages or summed runs. Offline root vet exits0. Toolchain
+is **go1.27.1-X:nodwarf5 linux/amd64**, not official/native release qualification.
+
+I observed and restored eight mutations with original-source SHA verification:
+per-row reset(6 failures), combined counters(8), usable-only consumption(4),
+location-derived name(94), reversed sorting(14), late partial result(18),
+private error disclosure(18), and middle boundary attribution(3). The final middle
+check strengthened C37/C47 to pin every expanded row position and C39/C47 every entry
+position independently. Production remained identical to approved GREEN; no mutation
+is active. The final whole suite/vet was rerun after restoration/strengthening.
+
+I author-reviewed all five focus classes against full source/tests and unchanged
+helpers, with no remaining in-scope blocker or deferred minor. This is **self-review,
+not independent approval**. Native containment/producer/platforms, actual resource use,
+workspace discovery/effective/installed inventory, INFO/config/overrides, consumers,
+public output safety, scanner coverage and all shipping/pilot/release claims remain
+unqualified. I update only this evidence, the plan and one nested milestone; all85
+top-level shipping items remain unchanged. #16 stays OPEN/In progress and PR34 draft;
+no reviewer/ready, merge or closure is implied.
