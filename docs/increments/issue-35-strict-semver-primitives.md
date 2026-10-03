@@ -1,9 +1,9 @@
 # Issue 35: strict concrete-SemVer primitives
 
-Status: **draft specification; written approval pending**. I have approval for this
-scope, issue reservation and local drafting only. I have not obtained written-spec
-approval, prepared its implementation plan, executed Go, published a branch/PR or
-requested independent review. I keep [#35](https://github.com/landroval/PackTrace/issues/35)
+Status: **written specification approved**. The user approved this complete
+written artifact and separately authorized local implementation-plan preparation.
+I have no approved plan or execution/publication authority; I have not executed
+Go, published a branch/PR or requested independent review. I keep [#35](https://github.com/landroval/PackTrace/issues/35)
 OPEN / Preparation, owned by `landroval`, under capability #6.
 
 Base: integrated development `76ef90daf36c4b4fae2b234369859108440fc24e`.
@@ -207,7 +207,7 @@ change CI/runners or claim operational/native/producer/pilot qualification here.
 
 ## Documentary acceptance
 
-- [ ] I obtain approval of this complete written specification before preparing its plan.
+- [x] I obtain approval of this complete written specification before preparing its plan.
 - [x] I verify API syntax, all 50 source reference IDs, 26 new row IDs, literal/recipe
   boundaries, links, scope and unchanged integrated source without executing Go tests.
 - [ ] I record the local scoped specification commit and actual review limits.
