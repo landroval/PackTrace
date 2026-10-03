@@ -56,6 +56,13 @@ alone does not authorize probes, dependency installation, or publication.
     enforce a 20,000-record projection bound. The root suite has 139 passing
     tests/subtests plus `go vet`; inferred identities, installation, semantic
     reconciliation, and matching remain outside this milestone.
+  - [x] [Pure npm input selection](increments/issue-17-npm-input-selection.md)
+    preserves caller-qualified presence/usability for both root lockfiles, exact
+    selected interpretation and governing candidate, without silent fallback.
+    1,907 branch-local root tests/subtests (676 new selector) and offline vet pass;
+    PR #31 remains draft and author review is not independent peer approval.
+    Native discovery/access, producer/installed qualification, auxiliary collection,
+    complete coverage, operational scanner and shipping gates remain open.
 - [ ] **Bun projects:** inspect modern text-based `bun.lock` versions and installed
   layouts in the approved compatibility matrix.
   - [x] [Bun text lockfile reader](increments/12-bun-lock-reader.md) normalizes JSONC
