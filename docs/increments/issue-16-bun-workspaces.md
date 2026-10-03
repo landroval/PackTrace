@@ -2,13 +2,15 @@
 
 ## Status and intent
 
-I prepare this **local written-specification draft** for [#16](https://github.com/landroval/PackTrace/issues/16)
+I record this **approved written specification** for [#16](https://github.com/landroval/PackTrace/issues/16)
 from integrated `development` commit `63b5873d747419e494432b2d1b80e10a611875d3`.
-The owner approved the conversational design: minimum typed evidence, independent
-20,000-workspace/20,000-cumulative-declaration bounds and unchanged shared helpers.
-That approves writing this draft, **not this written artifact**, an implementation
-plan, Go creation/execution, dependency acquisition, specification push/PR,
-ready/reviewer handoff or merge. I reserve #16 for landroval in Preparation under
+The owner explicitly approved the reviewed local draft
+`ffe68e285bf10630c01a9e7adff845de0dc73af1` and separately authorized publishing only
+this document/bookmark in a draft PR. I preserve its technical contract unchanged:
+minimum typed evidence, independent20,000-workspace/20,000-cumulative-declaration
+bounds and unchanged shared helpers. This authorizes no implementation plan,
+Go creation/execution, dependency acquisition, ready/reviewer handoff or merge.
+I reserve #16 for landroval in Preparation under
 [separate preparation-only coordination authority](https://github.com/landroval/PackTrace/issues/16#issuecomment-5971191443).
 I do not base it on unreviewed PR #32/#33 or change their heads/status.
 
@@ -252,8 +254,10 @@ syntax/formatted one proposed Go API fragment with gofmt only. This does **not**
 compile that API, execute fixtures or add a new root test count. All preexisting
 tracked bytes/module/checklist remain identical to the integrated base. The eight
 unrelated deletions are preserved in a separate local-only jj checkpoint, not this
-issue bookmark. I change one specification document only: no Go source/test,
-plan, dependency or workspace probe; no specification push/PR or execution.
+issue bookmark. At that local draft record I changed one specification document
+only: no Go source/test, plan, dependency, workspace probe, push/PR or execution.
+The later written approval and one-document draft-publication authority are
+recorded above; neither turns documentary expectations into executed tests.
 
 ## Review focus, exclusions and next gates
 
@@ -274,8 +278,9 @@ here. No shared API/helper/source/module change or probe rerun is proposed. Raw/
 success is not complete coverage, safety, authenticity or an effective dependency tree.
 
 I preserve the pending PR #32/#33 review gates and all capability/shipping parents.
-The next deliverable is **owner review of this written specification**; only afterward
-may I prepare a separately approved implementation plan and request explicit execution.
+The owner has reviewed/approved this written specification. A written implementation
+plan is the next preparation stage, not authorized by this publication-only handoff;
+its approval and explicit execution remain separate.
 Source/tests, owned RED/GREEN/root tests/vet, evidence publication, peer handoff and
 integration each remain their recorded gates. This documentary preparation claims
 no new compiled API, executed fixture/Go count, native/producer/pilot qualification or
