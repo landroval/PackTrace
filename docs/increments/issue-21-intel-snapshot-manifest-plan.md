@@ -12,18 +12,20 @@
 
 ## Status and authority
 
-I prepare this **unapproved local written plan** after contract approval. Generic
-continuation permits planning, not source/test creation, execution or publication.
-No snippet below has been compiled/executed during preparation. I keep #21 in
-Preparation and PR #33 draft; ready/reviewer, source/consumer/native/acquisition/CI
-and merge permissions remain separate.
+The owner **approved this written plan and explicitly authorized inline execution here**:
+I may publish this pre-code authority, create only the two planned Go files, run
+owned synthetic RED/GREEN/restored mutations/offline root tests/vet, then make
+scoped code/evidence commits and publish in draft PR #33. I record/push/read back
+this approval before source/test creation. At this pre-code record no snippet or
+new reader/test has been compiled/executed. Ready/reviewer, target/object storage,
+consumer/clock/HTTP/acquisition/native/CI, shared changes and merge remain excluded.
 
 I retain the selected existing bookmark `issue-21-intel-snapshot-manifest-spec`,
 whose independent integrated base is `63b5873d747419e494432b2d1b80e10a611875d3`.
 PR #32 is not a base dependency or implemented coverage consumer. Source execution
-must follow explicit plan approval and inline owned-test/mutation/evidence-publication
-authority recorded and published before Go creation. A failed authorization push
-stops execution. The current plan is not that record.
+follows the explicit plan/inline owned-test/mutation/evidence-publication approval
+recorded here and must wait for exact remote read-back. A failed authorization push
+stops execution. This approval does not authorize sibling integration.
 
 ## Global constraints
 
