@@ -4,9 +4,9 @@
 
 - Tracking: [#20](https://github.com/landroval/PackTrace/issues/20); owner: landroval; **Preparation**, not Ready.
 - Design agreed: four outcomes, attempt yes/no/unknown, evidence-qualified non-applicability satisfying a required scope, minimal closure/retention and a consumer map.
-- Written contract: **local draft, not approved or published**. No consumer implementation or independent review has occurred.
+- Written contract: **approved by the user for documentary publication in a draft PR**. No implementation of this contract's consumers or independent peer review has occurred.
 - Base: integrated development `235347cc0be03e3cc5019db40a1e3b710920be9b`, independently of open PR #29/#30/#31. Their branch-local tests are not cumulative evidence for this document.
-- Authority permits reservation/coordination and local documentary preparation only. No spec publication, shared Go/public/wire schema, worker/target/native/CI execution, acquisition, ready/reviewer or merge permission follows.
+- Separate authorization permits this approved written contract's documentary draft publication and coordination. No shared Go/public/wire schema, consumer/worker/target/native/CI execution, acquisition, ready/reviewer or merge permission follows.
 
 ## Goal and binding sources
 
@@ -181,4 +181,4 @@ Before **any shared Go model or consumer implementation**, agree exact input/out
 
 The deliverable for #20 is a reviewed contract ready to inform separate increments, not operational coverage/scanning. Author/user documentary review can establish local intent and table consistency; second-person review/integration remains separate before claiming the issue's reviewed delivery. Parents/shipping gates remain open.
 
-I self-reviewed all four states, required/excluded/non-applicable authority, tri-state attempt, total/scope qualification, validity-dependent retention, minimal closure/global execution, consumer links and all48 rows. I clarified that only supervisor-qualified dependency invalidation affects prior valid facts, and made partial comparison/unknown-total examples explicit. I found no critical/important documentary issue or placeholder. I checked unique IDs,48 authored exit-condition rows against an independent literal16-case matrix,14 local links/anchors and unchanged existing tracked bytes. Those checks do not execute producer/worker/matching/report semantics or Go tests. No new root test count or toolchain qualification follows from this document-only preparation.
+I self-reviewed all four states, required/excluded/non-applicable authority, tri-state attempt, total/scope qualification, validity-dependent retention, minimal closure/global execution, consumer links and all48 rows. I clarified that only supervisor-qualified dependency invalidation affects prior valid facts, and made partial comparison/unknown-total examples explicit. I found no critical/important documentary issue or placeholder. I checked unique IDs,48 authored exit-condition rows against an independent literal16-case matrix,14 local links/anchors and unchanged existing tracked bytes. The user then approved this written contract and its separate documentary draft publication. Those checks/approvals do not execute producer/worker/matching/report semantics or Go tests and are not independent peer approval. No new root test count or toolchain qualification follows from this document-only preparation.
