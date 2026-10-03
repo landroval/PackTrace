@@ -273,6 +273,12 @@ findings and completeness. An empty findings array cannot hide failed checks.
   requirements must complete; disclose exclusions and their effect.
 - [ ] **Trusted policy precedence:** prevent untrusted project configuration from
   silently weakening organization-approved policy.
+  - [x] [Pure CLI request parser](increments/issue-18-scan-arguments.md) records
+    typed scan/help/version intents, eight requested options/defaults/origins and
+    private whole-zero errors without I/O. 1,543 branch-local root tests/subtests
+    (312 new CLI) and offline vet pass; author review is not independent review.
+    PR #30 remains draft. Effective policy, operational CLI, native destination
+    safety, display/scanner execution and shipping gates remain unimplemented.
 - [ ] **Scoped exceptions:** require a reason, expiry, and narrow rule/advisory plus
   package/version scope; require artifact/file digest scope for integrity findings.
 - [ ] **Visible acceptance:** keep accepted findings in reports with exception status.
