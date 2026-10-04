@@ -10,7 +10,7 @@
 
 **Spec:** [approved #23 contract](issue-23-root-ci-parser-fuzzing.md), approved local commit `2f68d4ab302626b4c34078338979d46961138465`.
 
-Status: **draft plan; review/publication pending**. The user approved the written contract and local plan drafting with bounded public metadata/text consultation. I have not acquired executable distributions, enabled workflows, run Go/fuzz/CI, requested review or published a branch. I keep #23 OPEN / Preparation. Documentary completion requires peer review/integration; it is not executable-delivery permission.
+Status: **written plan approved; peer review/publication pending**. The user approved the written contract and this complete documentary plan, including its observed proposed pins. Approval is recorded locally, not executable adoption/activation authority; the public metadata/text consultation was separately authorized. I have not acquired executable distributions, enabled workflows, run Go/fuzz/CI, requested review or published a branch. I keep #23 OPEN / Preparation. Documentary completion requires peer review/integration; it is not executable-delivery permission.
 
 ## Global constraints
 
@@ -101,7 +101,7 @@ interfaces, YAML, fuzz functions, acquired artifacts or qualified runner evidenc
 - [x] **Step 5 — Define selected-target commands and evidence closure.** I use the
   exact commands/environment and receipt rules below, including not-run/unknown
   phases. I do not pretend they have executed under this documentary task.
-- [ ] **Step 6 — Review this plan against the spec.** I check source pins, event/security
+- [x] **Step 6 — Review this plan against the spec.** I check source pins, event/security
   decisions, all 18 family IDs, time/resource semantics, reader-role distinctions and
   absence of executable changes. The owner reviews this written artifact before its
   separately authorized publication. Inline/agent critique is not peer approval.
