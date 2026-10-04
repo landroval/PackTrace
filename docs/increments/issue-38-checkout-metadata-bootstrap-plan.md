@@ -196,16 +196,16 @@ The directory is an owned evidence location, not scanner/native-safe-storage evi
 
 - [x] Obtain approval of this exact two-URL manifest, collector, limits and evidence semantics. Written approval alone did not make a request.
 - [x] Obtain explicit transfer/owned-collector execution permission for these two anonymous metadata GETs only. The user's selection grants no bundle/raw source or actual Action/runner execution.
-- [ ] Verify candidate/collector text still equals the approved proposal and local output space is available. Do not change URLs, trust settings or authentication to bypass a failure.
-- [ ] If authorized, save the exact block to the external filename and run only:
+- [x] Verify candidate/collector text still equals the approved proposal and local output space is available. No URLs, trust settings or authentication were changed.
+- [x] Save the exact approved block to the external filename and run only:
 
 ```nu
 python3 /tmp/packtrace-checkout-metadata-collector.py
 ```
 
-- [ ] Read actual exit/status/receipt, request count, received/retained bytes and hashes; independently inspect the two saved JSON objects and relations. Never manufacture a completed second response after first-phase failure.
+- [x] Read actual exit/status/receipt, request count, received/retained bytes and hashes; independently inspect the two saved JSON objects and relations. Both actual responses completed with HTTP 200; no request repeated.
 - [ ] Use completed tree metadata to propose the next explicit raw-file URL/size/blob manifest for owner review. Do not follow entry `url` fields, fetch blobs, execute scripts or incrementally consume the rest of the assessment allowance automatically.
-- [ ] Preserve PR39/sibling/default/checkpoint/routing identities and record the limited outcome without GitHub/public status mutations or adoption claims.
+- [x] Verify PR39/sibling published local bookmark identities, clean sibling workspaces, checkpoint and routing; leave unrelated default-checkout changes untouched. Historical default working-child before/after preservation cannot be fully established because old temporary baseline receipts are absent. No GitHub/public status mutations or adoption claims.
 
 ## Documentary acceptance table
 
@@ -226,3 +226,43 @@ Preparation checks are local links/whitespace, Python syntax only, exact manifes
 M01-M08 mapping and preserved workspaces/bookmarks. No behavioral fixture, HTTP
 request, raw file, distribution, agent, runner, publication or acquisition was
 performed by drafting this procedure.
+
+## Authorized metadata acquisition result
+
+I subsequently executed the exact approved owned collector, after recording the
+explicit two-GET authority locally. Both GETs returned HTTP 200; exit 0, empty
+stderr, 2.222604 seconds observed elapsed, no redirect/retry/authenticated fallback.
+I independently read the retained objects and operation receipt and recomputed their
+byte counts and SHA-256. These are one operation's actual counts, not summed runs.
+
+| Observation | Actual metadata evidence |
+| --- | --- |
+| Commit JSON | 2,741 bytes; SHA-256 `967dc9f673f6280830d4deb1334297ca377facceb8cd85c17f7227bb66241ac2` |
+| Tree JSON | 26,510 bytes; SHA-256 `3bb7bedde1040f22b4afc6a731006c2a88d1f0a05314b837c8aa600d8381b402` |
+| Total response bytes read/retained | 29,251 bytes, exactly two requests |
+| Metadata relation | Candidate commit/tree claims equal the expected fixed identities |
+| Tree listing | 113 distinct entries, explicit `truncated: false` |
+| Collector identity | SHA-256 `2312a435a3dad729bfb988685e0155fe4a921919131c504e580eb22f26d54195`; unchanged approved block |
+| Evidence location | Owned `/tmp/packtrace-checkout-metadata-z62a94ug`; directory 0700, three collector output files 0600 |
+
+The tree lists `package-lock.json`, `dist/index.js`, `dist/package.json`,
+`dist/problem-matcher.json` and `.licenses/npm/` records. It declares the main/post
+bundle as 1,452,503 bytes/blob `06ae5d221b3dc83259d396ec60027972181e51b9`, and
+`package-lock.json` as 294,209 bytes/blob `faf0e22120b3e68dd2d480968fe3ae5227079ad4`.
+Those are metadata declarations: I did **not** transfer those files or verify their
+raw bytes, dependency graph, bundled versions, license notices or security behavior.
+
+This closes only the two-object metadata acquisition, not M01-M08 behavioral tests,
+independent authentication of raw Git objects/signatures, reproducible build,
+complete Action assessment/adoption, credential cleanup, platform qualification or
+CI installation. No raw-file URL was followed and no additional transfer permission
+was inferred. The next selected raw-file manifest/procedure and transfer permission
+remain pending. Temporary evidence may disappear; its existence is not authority.
+
+Post-acquisition verification encountered missing historical `/tmp` baseline/approval
+receipts. I did not repeat successful GETs. I verified the approved scope against
+actual `4c69e4eb` Git content and the exact existing sibling/checkpoint/routing
+identities. The three sibling PR workspaces are clean. The default checkout has
+unrelated changes in 15 `.pi/todos` paths; I leave them untouched, without attributing
+their origin or claiming a full historical before/after comparison. This task writes
+only its assessment-workspace document and owned temporary acquisition evidence.
