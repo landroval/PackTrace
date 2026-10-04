@@ -1,11 +1,11 @@
 # Issue 35: strict concrete-SemVer primitives
 
-Status: **written specification approved**. The user approved this complete
+Status: **approved specification; local implementation verified; peer review/publication pending**. The user approved this complete
 written artifact and its complete implementation plan. The user then explicitly
 authorized local inline execution of #35: its two Go files, TDD, owned offline
-tests/vet, restored mutations and scoped local code/evidence commits. I have not
-yet executed Go for this increment; publication, agents/workflows, executable or
-dependency acquisition, CI, merge and closure are not authorized. I keep [#35](https://github.com/landroval/PackTrace/issues/35)
+tests/vet, restored mutations and scoped local code/evidence commits. I completed
+that local increment with the observed evidence below; publication, agents/workflows,
+executable or dependency acquisition, CI, merge and closure are not authorized. I keep [#35](https://github.com/landroval/PackTrace/issues/35)
 OPEN / Preparation, owned by `landroval`, under capability #6.
 
 Base: integrated development `76ef90daf36c4b4fae2b234369859108440fc24e`.
@@ -139,9 +139,10 @@ not the concrete text `"null"` or a silently invented version.
 
 ## Independent reference and boundary expectations
 
-These are documentary expectations, **not executed tests**. Future tests must
-carry independent literal expected outcomes and cite their IDs; they must not
-read Markdown at runtime or derive expectations through this parser/comparator.
+These tables are documentary expectations, not a runtime corpus. My corresponding
+Go tests now carry independently authored literal expected outcomes and cite their
+IDs; they do not read Markdown at runtime or derive expectations through this
+parser/comparator. Actual execution evidence appears below.
 
 I reuse all **S01–S34** and **O01–O16** from #15, unchanged:
 
@@ -195,12 +196,13 @@ I require five review classes: exact grammar; numeric/prerelease precedence;
 independent allowance/error precedence; immutable text/zero-value guards; and
 privacy plus the distinction between ordering and advisory conclusions.
 
-A later approved plan must specify observed API RED, behavioral RED/GREEN, fresh
+The approved plan requires observed API RED, behavioral RED/GREEN, fresh
 owned offline focused/root tests and vet, and independent restored mutations for
 normalization, leading zeroes, lexical numeric comparison, build-as-precedence,
 missing qualification guards, and byte-boundary/late-identifier errors. Compiler
 failure is not behavioral RED, zero selected tests are not evidence, and every
-mutation must be restored before final checks/commits. This draft executes none.
+mutation must be restored before final checks/commits. I observed these gates in
+local execution, without treating them as product or native qualification.
 
 I will request independent final-head review separately; author review or an agent
 critic is not peer approval. I will not close #35/#6, check shipping milestones,
@@ -212,6 +214,41 @@ change CI/runners or claim operational/native/producer/pilot qualification here.
 - [x] I obtain approval of this complete written specification before preparing its plan.
 - [x] I verify API syntax, all 50 source reference IDs, 26 new row IDs, literal/recipe
   boundaries, links, scope and unchanged integrated source without executing Go tests.
-- [ ] I record the local scoped specification commit and actual review limits.
+- [x] I record local scoped specification/approval, implementation and evidence commits,
+  with actual author-review limits. Publication and independent review remain separate.
 - [ ] I obtain separately authorized publication/review and final-head peer approval;
   no draft publication or review request is implied by local drafting.
+
+## Local implementation evidence and limits
+
+I recorded explicit local inline execution authority in `ca2b00b0` before Go,
+then committed only the two planned Go files in `79e5db47`. I reused the complete
+approved GREEN bodies and unchanged private error implementation; I added no
+consumer, dependency, go.sum, workflow or shipping milestone.
+
+I observed fresh offline baseline **2,709** tests/subtests plus vet exit 0;
+missing-API compilation RED; then a compiling stub with **79 failed / 1 passed**
+tests/subtests (all 75 nontrivial reference IDs failed, zero Text P21 passed).
+Initial GREEN was **80 focused / 2,789 root** plus vet. I independently observed
+and SHA-restored 12 grammar/order/guard/privacy/count mutants. In author review,
+a patch-omission mutant survived the initial tests; I added six literal
+axis-discriminating cases in the same test file and observed five failures against
+that mutant before restoration and full GREEN.
+
+My fresh final root JSON stream has **2,796 passed tests/subtests**, including
+**87 SemVer** (4 suites / 83 leaves), all **50 S/O + 26 P source IDs**; no
+fail/build-fail events or stderr. Final owned offline vet exits 0. I count one
+root stream, not a sum of focused/parallel runs. The compiler is the existing local
+`go1.27.1-X:nodwarf5 linux/amd64`, not official reproducible/native qualification.
+The [plan](issue-35-strict-semver-primitives-plan.md#observed-local-execution)
+records individual mutant results, review classes, methodological rulings and
+limitations.
+
+I completed author self-review only; no independent agent/human approval occurred.
+No remaining in-scope blocker or deferred minor was identified by that review.
+Backing-storage cloning/component views were reviewed in source, not qualified
+through RSS measurements or unsafe mutation experiments. Tests/order equality do
+not prove matching, completeness, safety, producer compatibility or platform support.
+I keep the original checkout, #23, the local-only unrelated deletion checkpoint,
+shared design/milestones and routing untouched. Publication, final-head peer
+review, integration and issue/parent closure remain separately gated.

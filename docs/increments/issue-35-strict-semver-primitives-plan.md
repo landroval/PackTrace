@@ -10,7 +10,7 @@
 
 **Spec:** [approved #35 specification](issue-35-strict-semver-primitives.md), approved local commit `6aedaa99558f1d562bd50d2bd01868d2e9bdfbd0`.
 
-Status: **written plan approved; local inline execution authorized; publication pending**. The user approved the written specification and this complete written plan, then explicitly selected “Ejecutar #35 local” and “Inline sin workflow”. I may create the two Go files, observe TDD, run owned offline tests/vet and restored mutations, and make scoped local code/evidence commits. I may not publish, launch agents/workflows, acquire executables/dependencies, activate CI, merge or close issues/parents. My base is integrated `76ef90daf36c4b4fae2b234369859108440fc24e`; this issue's workspace/bookmark is independent of #23. I have not compiled or executed any fragment below.
+Status: **written plan approved; local inline execution verified; peer review/publication pending**. The user approved the written specification and this complete written plan, then explicitly selected “Ejecutar #35 local” and “Inline sin workflow”. I may create the two Go files, observe TDD, run owned offline tests/vet and restored mutations, and make scoped local code/evidence commits. I may not publish, launch agents/workflows, acquire executables/dependencies, activate CI, merge or close issues/parents. My base is integrated `76ef90daf36c4b4fae2b234369859108440fc24e`; this issue's workspace/bookmark is independent of #23. I transcribed and executed the authorized owned Go listings with the evidence below; no native, official-toolchain, producer or operational qualification follows.
 
 ## Global constraints
 
@@ -39,8 +39,8 @@ Status: **written plan approved; local inline execution authorized; publication 
 
 **Produces:** exactly `type SemVer` with private `text string`, `core [3]string`, `prerelease string`, `qualified bool`; `ParseSemVer(string) (SemVer,error)`; `(SemVer).Text() string`; `CompareSemVer(SemVer,SemVer) (int,error)`.
 
-- [ ] **Step 1 — Revalidate authority/base/scope.** I inspect live ownership/PRs, approved spec, this complete plan and explicit execution permission before writing Go. The coordinator alone controls GitHub, jj and publication. I record unchanged shared-source fingerprints and run fresh owned offline baseline tests/vet only when authorized. The earlier integrated 2,709 count is history, not this future baseline result.
-- [ ] **Step 2 — Write the complete initial independent tests first.** I use the following file, with literal expected outcomes and all source IDs. I do not print input/error payloads or infer expectations from production helpers.
+- [x] **Step 1 — Revalidate authority/base/scope.** I inspect live ownership/PRs, approved spec, this complete plan and explicit execution permission before writing Go. The coordinator alone controls GitHub, jj and publication. I record unchanged shared-source fingerprints and run fresh owned offline baseline tests/vet only when authorized. The earlier integrated 2,709 count is history, not this future baseline result.
+- [x] **Step 2 — Write the complete initial independent tests first.** I use the following file, with literal expected outcomes and all source IDs. I do not print input/error payloads or infer expectations from production helpers.
 
 ```go
 package intel
@@ -211,8 +211,8 @@ for i := 0; i < 3; i++ {
 }
 ```
 
-- [ ] **Step 3 — Observe API compilation RED.** I run the focused offline test command below, inspect JSON build-output and stderr, and record missing `SemVer`/`ParseSemVer`/`CompareSemVer` API diagnostics. I do not count build failure as behavioral RED.
-- [ ] **Step 4 — Add the exact shape and deliberately failing stub; observe behavioral RED.** I copy the approved struct declaration and these bodies into the production file. I fix test-only compilation mistakes before interpreting runtime failures; I record actual failed/passed reference IDs, not an invented universal count.
+- [x] **Step 3 — Observe API compilation RED.** I run the focused offline test command below, inspect JSON build-output and stderr, and record missing `SemVer`/`ParseSemVer`/`CompareSemVer` API diagnostics. I do not count build failure as behavioral RED.
+- [x] **Step 4 — Add the exact shape and deliberately failing stub; observe behavioral RED.** I copy the approved struct declaration and these bodies into the production file. I fix test-only compilation mistakes before interpreting runtime failures; I record actual failed/passed reference IDs, not an invented universal count.
 
 ```go
 func ParseSemVer(text string) (SemVer, error) { return SemVer{}, nil }
@@ -220,7 +220,7 @@ func (v SemVer) Text() string { return v.text }
 func CompareSemVer(left, right SemVer) (int, error) { return 0, nil }
 ```
 
-- [ ] **Step 5 — Replace the stub with this minimum complete GREEN module.** I preserve its input/output/guard contract; no dependency, extra public type or consumer adapter is added.
+- [x] **Step 5 — Replace the stub with this minimum complete GREEN module.** I preserve its input/output/guard contract; no dependency, extra public type or consumer adapter is added.
 
 ```go
 package intel
@@ -295,7 +295,7 @@ func CompareSemVer(left,right SemVer) (int,error) {
 }
 ```
 
-- [ ] **Step 6 — Observe focused/root GREEN and vet.** I format the two Go files, use the owned offline environment and record actual selected tests/subtests from a single stream. I verify every S/O/P ID is represented and all five review classes are exercised. A successful example is not a native/RSS/profile qualification.
+- [x] **Step 6 — Observe focused/root GREEN and vet.** I format the two Go files, use the owned offline environment and record actual selected tests/subtests from a single stream. I verify every S/O/P ID is represented and all five review classes are exercised. A successful example is not a native/RSS/profile qualification.
 
 ```nu
 with-env {GOTOOLCHAIN: "local", GOPROXY: "off", GOWORK: "off", CGO_ENABLED: "0"} {
@@ -309,7 +309,7 @@ with-env {GOTOOLCHAIN: "local", GOPROXY: "off", GOWORK: "off", CGO_ENABLED: "0"}
 }
 ```
 
-- [ ] **Step 7 — Independently mutate, observe and restore.** I fingerprint the approved GREEN source first; apply only one mutant at a time; record actual targeted behavioral failures; restore and verify the fingerprint before the next mutant. I do not leave mutation source active.
+- [x] **Step 7 — Independently mutate, observe and restore.** I fingerprint the approved GREEN source first; apply only one mutant at a time; record actual targeted behavioral failures; restore and verify the fingerprint before the next mutant. I do not leave mutation source active.
 
 | Mutant | Targeted independent discriminator |
 | --- | --- |
@@ -322,12 +322,34 @@ with-env {GOTOOLCHAIN: "local", GOPROXY: "off", GOWORK: "off", CGO_ENABLED: "0"}
 | Return qualified/partial late rejection or disclose text | P24 and whole-zero fixed error helper |
 | Ignore late equal-prefix identifier count | P25/P26 and O03/P19 |
 
-- [ ] **Step 8 — Author/agent review and final checks.** I review the complete branch against the spec, not the initial RED stub. I inspect clone/component ownership, grammar/order, error privacy, base/source fingerprints, no go.sum and exact two-Go-file scope. Any reviewer fixes need observed regression evidence and another restored-source root/vet run. Agent criticism is not independent human GitHub approval.
-- [ ] **Step 9 — Scoped local implementation/evidence commits, only if authorized.** I commit just the two Go files with `jj commit -m 'feat(intel): parse strict SemVer (#35)' internal/intel/semver.go internal/intel/semver_test.go` from this workspace. I record actual evidence in the issue documents through a separate scoped docs commit; shared milestone changes require additional approval. No push follows implicitly.
+- [x] **Step 8 — Author/agent review and final checks.** I review the complete branch against the spec, not the initial RED stub. I inspect clone/component ownership, grammar/order, error privacy, base/source fingerprints, no go.sum and exact two-Go-file scope. Any reviewer fixes need observed regression evidence and another restored-source root/vet run. Agent criticism is not independent human GitHub approval.
+- [x] **Step 9 — Scoped local implementation/evidence commits, only if authorized.** I commit just the two Go files with `jj commit -m 'feat(intel): parse strict SemVer (#35)' internal/intel/semver.go internal/intel/semver_test.go` from this workspace. I record actual evidence in the issue documents through a separate scoped docs commit; shared milestone changes require additional approval. No push follows implicitly.
 - [ ] **Step 10 — Publication/review handoff is separately gated.** The coordinator obtains explicit authority, pushes only this issue bookmark, reads back exact head/base/files, and separately requests final-head peer review. No merge/closure or sibling synchronization is implied; #6 remains open.
 
 ## Preparation verification and handoff
 
-I self-review spec coverage, signatures, all literal IDs, exact arithmetic and five focus classes. Syntax-only Go/Nushell checks are permitted documentary checks; this plan has no compilation, behavioral RED/GREEN, mutation or root/vet execution evidence yet.
+I self-review spec coverage, signatures, all literal IDs, exact arithmetic and five focus classes. The original Go/Nushell checks were syntax-only preparation. I separately observed actual compilation RED, behavioral RED/GREEN, restored mutations and owned root/vet runs under explicit execution authority; their local receipts are not substitutes for independent review.
 
 The earlier proposed method was disjoint multi-agent ownership with centralized coordination. The owner explicitly changed #35 execution to inline without a workflow; I keep #23 untouched. I will perform author self-review, not substitute it for independent human final-head review. I preserve the existing workspaces/checkpoint and keep publication/review handoff separately gated; no routing override or new agent round is authorized.
+
+## Observed local execution
+
+- I recorded explicit local execution authority before creating Go in `ca2b00b0`.
+- I ran a fresh 2,709-test/subtest baseline and vet (exit 0), offline with the existing local compiler.
+- I wrote the complete approved initial test listing plus its repeated/reversed O augmentation first. Missing APIs produced compilation RED (JSON build-output), not behavioral evidence.
+- I observed a compiling stub with 79 failed / 1 passed tests/subtests: 75/76 reference IDs failed; zero Text P21 alone passed. The split P15 supplies two leaf cases.
+- I transcribed the complete minimum GREEN module with trust-boundary comments. Initial focused/root passes were 80 / 2,789, with vet exit 0.
+- I observed and SHA-restored 12 independent mutants: coercion (8 failures), core leading zero (4), prerelease leading zero (4), lexical numeric order (5), build precedence (11), missing left qualification (5), missing right qualification (2), exclusive byte boundary (5), omitted byte boundary (3), late partial result (10), late disclosure (10), late identifier count (5). These are individual behavioral failure observations, not aggregate test counts.
+- I found an Important test gap during author review: omitting patch comparison survived the original 80 focused passes. Six independent decisive-axis cases strengthen the same test file; four patch leaves plus their suite then failed against that mutant (5 failures). I restored the exact GREEN fingerprint and observed 87 focused / 2,796 root passes and vet exit 0.
+- My fresh final **single root JSON stream** contains **2,796** passed tests/subtests, including **87 SemVer** (4 suites / 83 leaves), all 50 S/O and 26 P reference IDs. There are no fail/build-fail events and stderr is empty; final vet exits 0. I do not add counts from separate runs.
+- I committed only `internal/intel/semver.go` and `internal/intel/semver_test.go` in `79e5db47`. Existing source/error/readers/module/design/shipping files remain fingerprint-identical; no go.sum, shared milestone, range/matcher or #23 changes.
+
+### Author review and rulings
+
+I reviewed all five focus classes against the full GREEN module. No remaining in-scope blocker or deferred minor was identified by this author review; it is not independent approval or a merge-ready claim.
+
+1. I used native jj checks and an external ledger instead of Git-HEAD-based SDD scripts/repo-local process files. If this choice is wrong, automatic bookkeeping is lost; actual heads, diffs and verification receipts must establish progress.
+2. I performed author self-review because the owner explicitly prohibited new agents/workflow. If it misses a defect, author blind spots remain pending separately authorized human final-head review.
+3. Range/list/matching semantics and same-package fabricated or unsafely mutated values stay outside the approved precondition. Treating primitives as authentication could produce false ordering/matching claims; separately approved consumers must enforce their evidence gates.
+
+I preserved both workspaces, the original checkout, the unrelated local-only deletion checkpoint and global routing. #35 remains OPEN / Preparation under its live reservation; no public mutation, push/PR/review request, hosted CI/fuzz, download, merge or closure occurred. Step 10 remains unapproved.
