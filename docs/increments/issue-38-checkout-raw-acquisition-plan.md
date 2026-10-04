@@ -2,7 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans only after explicit approval of this actual manifest/procedure and its transfer permission. No agents, acquired-code execution or CI changes.
 
-Status: **local draft; no raw-file acquisition authorized**.
+Status: **exact 37-file procedure approved; raw data-only acquisition authorized**.
+I recorded the user's explicit “Aprobar y adquirir 37” before transfer. Permission
+covers only this unchanged collector/fixed manifest/local evidence within stated
+limits; no retry, additional request, acquired-code/credential execution, agent,
+security/license approval, CI, publication or scope expansion.
 
 **Goal:** I collect a bounded, identified corpus for later static assessment of the
 pinned Action, without treating acquisition as dependency/license/security adoption.
@@ -238,8 +242,8 @@ I do not erase them, automatically prune/delete, restart the phase or replay GET
 
 ## Task: approve, acquire and verify this corpus only
 
-- [ ] Approve this exact procedure/manifest and explicitly allocate up to 37 raw GET attempts from the remaining 38 scope requests. This does not grant the last request or any scope expansion.
-- [ ] Obtain separate raw-transfer/owned-collector execution permission. Acquired-code execution, credential probes, static-review verdicts, agents, CI/publication/merge are absent.
+- [x] Approve this exact procedure/manifest and explicitly allocate up to 37 raw GET attempts from the remaining 38 scope requests. The user grants no last request or scope expansion.
+- [x] Obtain explicit raw-transfer/owned-collector execution permission: “Aprobar y adquirir 37”. Acquired-code execution, credential probes, static-review verdicts, agents, CI/publication/merge are absent.
 - [ ] Before transferring, compare the actual candidate/tree receipt and every selected path/size/blob to the literal manifest, and verify no other assessment request has consumed budget since the two bootstrap GETs. Any missing evidence/changed manifest/additional consumption blocks automatic execution pending owner clarification.
 - [ ] Save the unchanged approved collector block externally, confirm space for <=8 MiB, and execute only:
 
