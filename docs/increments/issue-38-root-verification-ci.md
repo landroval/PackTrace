@@ -28,8 +28,9 @@ runner, without bundling fuzzing or native qualification into the first workflow
 I keep the smallest executable delivery: **only**
 `.github/workflows/root-verification.yml`, if later separately approved.
 
-Current documentary ownership is this file alone. A complete issue-keyed written
-implementation plan follows only after approval of this actual specification.
+Current documentary ownership is this specification and its separately authorized
+issue-keyed local implementation plan. Plan drafting followed approval of this
+actual specification; executable delivery still has separate gates.
 I do not create a workflow, helper script, Go test, receipt library, public schema,
 fixture file or new dependency through this draft. Future inline workflow scripts
 must be complete in the approved plan rather than invented at installation time.
@@ -54,12 +55,18 @@ parser completeness, producer/platform support, native safety, coverage or safet
 | `pull_request` targeting `development` | Selected | Not a fuzz pass |
 | `push` to `development` | Selected | Not a fuzz pass |
 | `workflow_dispatch` | Selected, root only | No fuzz control/selection |
-| Other branch/event, schedule or privileged PR event | Not selected | Not-run, never a pass |
+| Non-development push/PR, other event, schedule or privileged PR event | Not selected | Not-run, never a pass |
 
 I select `ubuntu-24.04`, Linux amd64, exactly one job and no matrix. The label is
 not an immutable runner image. A receipt records actual runner image/version,
 architecture, kernel and available CPU/RAM, without environment values or secrets.
-A profile mismatch blocks qualification; I do not select a fallback platform.
+A detected profile mismatch blocks setup/qualification; I do not select a fallback
+platform. The user explicitly approved external environment closure: checks may
+run after qualified Action adoption, observed Node 24, profile and credential gates.
+I close actual runner-package version/image evidence against platform `Set up job`
+metadata at acceptance, not by relaunching Runner.Listener or granting API access.
+Absent/contradictory platform evidence leaves qualification pending/failed even if
+the bounded checks and nominal job conclusion succeed.
 
 I bind evidence to the actual checked-out commit and tree being tested. For a PR,
 automatic merge-checkout evidence is not silently attributed to its head alone:
@@ -133,7 +140,9 @@ prepare that assessment; this contract does not authorize it.
    The root module remains standard-library-only at this slice's approved baseline;
    a changed dependency/toolchain policy requires review, not permission from cache.
 
-An unqualified Action/runtime/credential gate or failed setup prevents root checks.
+An unqualified Action/observed-Node-runtime/credential gate or failed setup prevents
+root checks. Runner-package version provenance is the separately approved external
+closure; it is not inferred from a PATH Node binary or nominal job success.
 I retain the limitation and blocked/not-run phases; I do not turn fail-closed setup
 into successful verification. No privilege, sandbox/security-setting change or
 additional dependency is silently introduced to make a gate pass.
@@ -167,8 +176,10 @@ from repository code. No firewall/container/privilege change is authorized here.
 
 I keep bounded phase diagnostics and a compact receipt in ordinary job logs/summary,
 without adding an upload/artifact Action or claiming immutable archival. My proposed
-ceilings are **16 MiB aggregate captured phase stdout/stderr** and **64 KiB for the
-compact receipt** per run, independent of Go memory and artifact-byte limits. The
+ceilings are **16 MiB aggregate captured owned-command stdout/stderr** and **64 KiB
+for the compact receipt** per run, independent of Go memory and artifact-byte limits.
+These bound supervisor capture, not checkout/service logs. Diagnostic encoding has
+bounded representation overhead; no platform-log hard byte ceiling is claimed. The
 complete plan defines enforcement/draining, retention and closure before executable
 approval. Reaching a ceiling does not invent a complete JSON stream: I retain the
 limit/evidence failure and do not certify a pass, even if the test process exits 0.
@@ -181,8 +192,10 @@ I require independent statuses for checkout/setup, tests, vet and receipt closur
 passed, failed, blocked, not-run, cancelled, timed-out or unknown. These documentary
 terms are not a new shared Go/wire/report schema or a scan exit-code computation.
 
-- Overall completed verification requires qualified setup, successful tests and
-  vet, and a complete receipt for the actual selected source/environment.
+- Completed qualified verification requires qualified setup, successful tests/vet,
+  complete captured receipt and external platform environment closure. A successful
+  bounded-check job alone has qualification pending; it does not certify an unknown
+  runner-package version/image or silently satisfy external acceptance.
 - An ordinary failed selected phase fails verification even if its siblings pass.
   Interruption/deadline/unknown/missing evidence cannot be relabeled completed.
 - Go JSON stdout `build-output` may contain compilation diagnostics; build failure
@@ -210,8 +223,8 @@ there are no executable fixtures or runtime Markdown consumers in this draft.
 | R01 | PR targets development | Root selected; actual checkout/head/base identities distinguished |
 | R02 | Push to development | Root selected for actual pushed/checked-out source |
 | R03 | Manual dispatch | Root only; no fuzz input/job or fuzz-pass claim |
-| R04 | Other branch/event or privileged PR event | Outside profile; not selected, never fabricated root pass |
-| R05 | Runtime/runner/version/architecture differs | Blocked qualification, no fallback |
+| R04 | Non-development push/PR or other/privileged event | Outside profile; not selected, never fabricated root pass |
+| R05 | Node/profile differs, or platform runner/image proof differs/is absent | Setup blocked when detected before Go; external qualification failed/pending otherwise; no fallback |
 | R06 | Only catalog digest/pin/texts available | Not acquired/adopted/runner-qualified evidence |
 | R07 | Action audit/notice/cleanup incomplete | Activation gate remains blocked; no assumed safe adoption |
 | R08 | Credential residue or presence-check uncertainty | Go not run; no token/key/config values disclosed |
@@ -249,4 +262,7 @@ I keep #38/#11 open until their distinct acceptances; I do not close #23/#35, ch
 The original checkout, #23/#35 workspaces/bookmarks and unrelated local-only deletion
 checkpoint remain outside this change. Public reservation is complete; local
 plan drafting is authorized, but publication/review, executable implementation,
-new consultations/acquisitions and runner execution remain unauthorized.
+acquisitions and runner execution remain unauthorized. The user separately approved
+up to 10 public texts/headers, 256 KiB each and 2 MiB total, for plan preparation;
+9 documents/headers totaling 137,837 bytes were consulted without bundles or Go
+archive bodies. This is not distribution, notice/security or runner qualification.
