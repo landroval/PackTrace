@@ -2,7 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans only after separate approval of this actual procedure and exact transfer permission. No new agents or acquired-code execution are authorized.
 
-Status: **local procedure draft; no acquisition permission**.
+Status: **exact procedure approved; two-GET metadata acquisition authorized**.
+I recorded the user's explicit “Aprobar y adquirir metadatos” before acquisition:
+only this owned collector/two anonymous fixed metadata GETs and local evidence,
+without raw sources/bundle, acquired-code/credential execution, CI, publication or
+permission expansion.
 
 **Goal:** I obtain two bounded public metadata objects to prepare the later exact
 raw-file assessment manifest, without acquiring the Action bundle or qualifying it.
@@ -190,8 +194,8 @@ The directory is an owned evidence location, not scanner/native-safe-storage evi
 
 ## Approval and future operation steps
 
-- [ ] Obtain approval of this exact two-URL manifest, collector, limits and evidence semantics. Written approval alone does not make a request.
-- [ ] Obtain explicit transfer/owned-collector execution permission for these two anonymous metadata GETs only. No bundle/raw source or actual Action/runner execution is included.
+- [x] Obtain approval of this exact two-URL manifest, collector, limits and evidence semantics. Written approval alone did not make a request.
+- [x] Obtain explicit transfer/owned-collector execution permission for these two anonymous metadata GETs only. The user's selection grants no bundle/raw source or actual Action/runner execution.
 - [ ] Verify candidate/collector text still equals the approved proposal and local output space is available. Do not change URLs, trust settings or authentication to bypass a failure.
 - [ ] If authorized, save the exact block to the external filename and run only:
 
