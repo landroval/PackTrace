@@ -10,7 +10,7 @@
 
 **Spec:** [approved #35 specification](issue-35-strict-semver-primitives.md), approved local commit `6aedaa99558f1d562bd50d2bd01868d2e9bdfbd0`.
 
-Status: **draft plan; approval/execution/publication pending**. The user approved the written specification and local plan drafting only. My base is integrated `76ef90daf36c4b4fae2b234369859108440fc24e`; this issue's workspace/bookmark is independent of #23. I have not compiled or executed any fragment below.
+Status: **written plan approved; execution/publication pending**. The user approved the written specification and this complete written plan. Approval is recorded locally only; no implementation, agent execution or publication is authorized. My base is integrated `76ef90daf36c4b4fae2b234369859108440fc24e`; this issue's workspace/bookmark is independent of #23. I have not compiled or executed any fragment below.
 
 ## Global constraints
 
