@@ -250,7 +250,7 @@ parameters are a future actual approved manifest, not permission tokens in code.
 - [ ] Execute self-tests only with their separate owned-code permission.
 
 ```python
-import argparse, hashlib, json, os, re, selectors, signal, stat
+import argparse, errno, hashlib, json, os, re, selectors, stat
 import platform, subprocess, sys, time, unittest
 from pathlib import Path
 
@@ -457,6 +457,21 @@ def inside(mode):
     elif mode == 'pipe':
         subprocess.Popen([PYTHON, '-c', 'import time;time.sleep(120)'], env=env())
     elif mode == 'metadata':
+        routes = bounded('/proc/net/route').decode().splitlines()[1:]
+        ipv6 = bounded('/proc/net/ipv6_route').decode().splitlines()
+        devices = bounded('/proc/net/dev').decode().splitlines()[2:]
+        if (any(line.strip() for line in routes) or any(line.split()[-1] != 'lo' for line in ipv6)
+                or any(line.split(':', 1)[0].strip() != 'lo' for line in devices)):
+            raise Blocked('network-namespace-routes')
+        for protected in ['/action/dist/index.js', '/probe/git.py']:
+            try:
+                fd = os.open(protected, os.O_WRONLY | os.O_APPEND)
+            except OSError as error:
+                if error.errno != errno.EROFS:
+                    raise Blocked('readonly-mount-unqualified')
+            else:
+                os.close(fd)
+                raise Blocked('readonly-mount-writable')
         if sys.version_info < (3, 12) or platform.machine() != 'x86_64' or platform.system() != 'Linux':
             raise Blocked('runtime-platform')
         release = bounded('/etc/os-release').decode()
@@ -472,6 +487,7 @@ def inside(mode):
         write_json('/case/metadata.json', {'node': node_version.decode().strip(),
                    'git': git_version.decode().strip(), 'ubuntu': '24.04',
                    'python': platform.python_version(), 'nonroot': True,
+                   'externalRoutesAbsent': True, 'mountWriteDenialObserved': True,
                    'netNamespace': os.readlink('/proc/self/ns/net')})
     elif mode == 'action':
         values = dict(INPUTS)
