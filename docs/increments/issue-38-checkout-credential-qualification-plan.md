@@ -82,7 +82,9 @@ remain unchanged. I test their credential-name classification, not install it.
 
 ## Files and exact external input contract
 
-Today I create only **this Markdown document**. Future proposed files, not created:
+Documentary preparation initially created only **this Markdown document**. The
+subsequent authorized owned-code checkpoint created these three files; their native/
+acquired-code execution is still unapproved. The table records their responsibilities:
 
 | Path | Responsibility |
 | --- | --- |
@@ -1027,13 +1029,42 @@ authorized. I do not use environment secrets to populate either input.
   Reviewed #23 integration, workflow installation/acquisition/activation permissions,
   final peer review and issue/Project acceptance remain separate #38 gates.
 
+## Local owned-code implementation checkpoint
+
+I created the three owned scripts exactly from this approved proposal, composing
+Task 1's `ContractTests` before Task 2's entry branch. I executed only the permitted
+pure Python suite with `-I -S -B` (isolated standard library, no bytecode writes).
+
+- Initial missing-name API run: eight methods selected, 14 error/subtest records;
+  not behavioral RED and not a credential observation.
+- Always-deny stub: eight selected, one failure (`test_C01_clean_positive`), seven
+  passes. Actual guard then passed all eight methods.
+- Three owned counterfactual copies (ignore residue, ignore query failure, ignore
+  lifecycle) each selected eight methods and failed one. Original bytes unchanged.
+- Final pure suite: **8/8 methods**, exit 0, under an additional process/network/
+  private-input audit guard. Runs are not added together; no controlled C05-C26 case
+  or main/post/bundle/native probe was executed.
+- Python AST and exact proposal/script composition were checked. Node/JS syntax,
+  Git wrapper execution, supervisor/native/resource behavior and all controlled
+  fixture predictions remain **NOT RUN / NOT QUALIFIED**. I do not infer them from
+  a pure suite or syntax parse. Root Go tests/vet were not authorized or run.
+
+The owned source is present, but this is **not a runtime-qualified finished probe**.
+Independent final-head code/assessment review remains NOT RECEIVED. Missing actual
+runtime/catalog/tool/manifest identities and controlled execution permission still
+block the experiment. No namespace/cgroup, worker, new download/request, real
+credential/config, agent, workflow, publication, issue/Project transition or teardown
+has occurred. Existing approved code fences are unchanged; this checkpoint is not
+new authority for their native branches.
+
 ## Preparation checks and handoff
 
-I only parse the authored Python code fragments, inspect JS as text and validate
-local links, IDs, sizes, explicit code/parameter definitions and preservation against
-a fresh baseline. `ast.parse` proves syntax only: these scripts, tests, hooks, sandbox,
-cgroup controls and main/post have **NOT RUN**. I do not claim missing runtimes are
-available or the proposed failure predictions have occurred.
+During documentary preparation I parsed the authored Python fragments, inspected JS
+as text and validated local links, IDs, sizes, definitions and fresh preservation.
+At that stage all tests/scripts were NOT RUN. The later checkpoint above adds only
+eight executed owned pure methods; `ast.parse` still proves syntax only. Hooks,
+supervisor/native/cgroup/sandbox and main/post remain **NOT RUN / NOT QUALIFIED**.
+I do not claim missing runtimes are available or failure predictions have occurred.
 
 I save this one-document proposal with a scoped local `jj` commit/bookmark. Existing
 scope/bootstrap/raw/report documents, published PR39/PR37/PR36 local heads, default
