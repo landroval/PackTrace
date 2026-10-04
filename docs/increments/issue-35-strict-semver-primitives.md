@@ -1,9 +1,11 @@
 # Issue 35: strict concrete-SemVer primitives
 
 Status: **written specification approved**. The user approved this complete
-written artifact and separately authorized local implementation-plan preparation.
-I have no approved plan or execution/publication authority; I have not executed
-Go, published a branch/PR or requested independent review. I keep [#35](https://github.com/landroval/PackTrace/issues/35)
+written artifact and its complete implementation plan. The user then explicitly
+authorized local inline execution of #35: its two Go files, TDD, owned offline
+tests/vet, restored mutations and scoped local code/evidence commits. I have not
+yet executed Go for this increment; publication, agents/workflows, executable or
+dependency acquisition, CI, merge and closure are not authorized. I keep [#35](https://github.com/landroval/PackTrace/issues/35)
 OPEN / Preparation, owned by `landroval`, under capability #6.
 
 Base: integrated development `76ef90daf36c4b4fae2b234369859108440fc24e`.

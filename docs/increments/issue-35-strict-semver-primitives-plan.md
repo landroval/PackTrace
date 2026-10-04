@@ -1,6 +1,6 @@
 # Issue 35 Strict SemVer Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development for the agreed multi-agent method, or superpowers:executing-plans only if the owner changes that method. Steps use checkbox tracking. No agent or implementation execution is authorized by this draft.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development for the agreed multi-agent method, or superpowers:executing-plans only if the owner changes that method. Steps use checkbox tracking. The owner has explicitly selected local inline execution; no new agent or publication is authorized.
 
 **Goal:** Build one bounded strict concrete-SemVer parser and precedence comparator.
 
@@ -10,7 +10,7 @@
 
 **Spec:** [approved #35 specification](issue-35-strict-semver-primitives.md), approved local commit `6aedaa99558f1d562bd50d2bd01868d2e9bdfbd0`.
 
-Status: **written plan approved; execution/publication pending**. The user approved the written specification and this complete written plan. Approval is recorded locally only; no implementation, agent execution or publication is authorized. My base is integrated `76ef90daf36c4b4fae2b234369859108440fc24e`; this issue's workspace/bookmark is independent of #23. I have not compiled or executed any fragment below.
+Status: **written plan approved; local inline execution authorized; publication pending**. The user approved the written specification and this complete written plan, then explicitly selected “Ejecutar #35 local” and “Inline sin workflow”. I may create the two Go files, observe TDD, run owned offline tests/vet and restored mutations, and make scoped local code/evidence commits. I may not publish, launch agents/workflows, acquire executables/dependencies, activate CI, merge or close issues/parents. My base is integrated `76ef90daf36c4b4fae2b234369859108440fc24e`; this issue's workspace/bookmark is independent of #23. I have not compiled or executed any fragment below.
 
 ## Global constraints
 
@@ -330,4 +330,4 @@ with-env {GOTOOLCHAIN: "local", GOPROXY: "off", GOWORK: "off", CGO_ENABLED: "0"}
 
 I self-review spec coverage, signatures, all literal IDs, exact arithmetic and five focus classes. Syntax-only Go/Nushell checks are permitted documentary checks; this plan has no compilation, behavioral RED/GREEN, mutation or root/vet execution evidence yet.
 
-The agreed future method is disjoint multi-agent ownership with centralized coordination. I must resolve routing and prevent repeated full-context exploration through a bounded evidence packet before any new workflow is authorized; the earlier post-response token budget is not a spending cap. I request plan review and separate execution/publication authority rather than restart agents or write Go now.
+The earlier proposed method was disjoint multi-agent ownership with centralized coordination. The owner explicitly changed #35 execution to inline without a workflow; I keep #23 untouched. I will perform author self-review, not substitute it for independent human final-head review. I preserve the existing workspaces/checkpoint and keep publication/review handoff separately gated; no routing override or new agent round is authorized.
