@@ -1,11 +1,12 @@
 # Issue 38: bounded root-verification CI installation contract
 
-Status: **design approved; written specification draft**. I have approval to reserve
-[#38](https://github.com/landroval/PackTrace/issues/38) and prepare this local written
-artifact only. I keep it OPEN / Preparation, owned by `landroval`, under #11 and
+Status: **written specification approved; local plan drafting authorized**. The
+user approved this complete artifact, including its proposed evidence ceilings,
+and separately authorized local complete-plan drafting for
+[#38](https://github.com/landroval/PackTrace/issues/38). I keep it OPEN / Preparation, owned by `landroval`, under #11 and
 blocked by #23 for implementation. I have not installed YAML, executed Go/hosted
 jobs, acquired distributions, published this bookmark/PR or requested peer review.
-This draft is not specification approval, an executable plan or activation authority.
+Written-artifact approval is not complete-plan approval or activation authority.
 
 Base: integrated development `76ef90daf36c4b4fae2b234369859108440fc24e`.
 I use the independent `issue-38-root-verification-ci-spec` bookmark/workspace.
@@ -229,8 +230,8 @@ there are no executable fixtures or runtime Markdown consumers in this draft.
 
 ## Approval, review and later delivery gates
 
-I first request approval of this complete written specification. Only then may I
-prepare the complete issue-38 implementation plan, including actual workflow code,
+I obtained approval of this complete written specification and may now prepare
+the complete issue-38 implementation plan, including actual workflow code,
 validation details, finite capture/setup limits and explicit blocked adoption gates.
 Before executable code I require reviewed #23 integration, plan approval and exact
 permission for applicable security/notice consultation, acquisition/installation,
@@ -246,5 +247,6 @@ nominal successful job or merged PR alone is insufficient evidence for these gat
 I keep #38/#11 open until their distinct acceptances; I do not close #23/#35, change
 #22/native rows, or grant fuzz/native/scanner/producer/pilot/release permissions.
 The original checkout, #23/#35 workspaces/bookmarks and unrelated local-only deletion
-checkpoint remain outside this change. Public reservation is complete; this draft
-has no publication/review or implementation authority.
+checkpoint remain outside this change. Public reservation is complete; local
+plan drafting is authorized, but publication/review, executable implementation,
+new consultations/acquisitions and runner execution remain unauthorized.
