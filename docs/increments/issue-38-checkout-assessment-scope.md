@@ -1,8 +1,8 @@
 # Issue 38: pinned checkout assessment scope and permission proposal
 
-Status: **local documentary draft; assessment acquisition/execution not authorized**.
-I have explicit permission to prepare this scope, limits and permission request
-locally, without new consultations, downloads, execution, agents or publication.
+Status: **written scope and proposed limits approved; assessment acquisition/execution not authorized**.
+I recorded the user's explicit “Aprobar sólo alcance”: local documentary approval
+only, without consultations, downloads, execution, agents or publication.
 I do not change the published specification/plan or head of PR #39.
 
 **Goal:** I define a bounded assessment of the proposed checkout Action before
@@ -118,7 +118,7 @@ digests separately; neither field alone authenticates the publisher or build.
 
 ### Task 1: establish acquisition/identity permission
 
-- [ ] Obtain approval of this actual scope and ceilings, not an assumption from #38 plan approval.
+- [x] Obtain approval of this actual scope and ceilings: the user explicitly approved only this documentary artifact, not acquisition, execution or publication.
 - [ ] Obtain separate data-only acquisition permission and exact-manifest/procedure approval; keep runtime permission absent.
 - [ ] Confirm immutable commit/tree and selected blob identities against acquired raw bytes; preserve uncertainty in unavailable metadata.
 - [ ] Record URL/role/commit/blob ID/expected metadata size, actual bytes/SHA-256, retrieval observation and completeness for each selected file.
@@ -197,6 +197,8 @@ publication/integration and issue closure remain distinct permissions. The exist
 #23/#38 integration/review requirements, source heads and native/product gates remain
 unchanged. I do not ask for a single bundled permission that implicitly grants them.
 
+The owner approved this written scope only; the exact acquisition manifest/procedure,
+transfer permission and complete executable credential-probe plan remain separate gates.
 Preparation verification is local links/anchors, exact one-document scope, preserved
 sibling/bookmark/default/checkpoint/routing identities, cached named-text fingerprint
 consistency and A01-A14 coverage. These checks do not run A01-A14 as tests or complete
