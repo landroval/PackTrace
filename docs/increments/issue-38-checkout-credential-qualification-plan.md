@@ -4,10 +4,15 @@
 > inline implementation. This plan grants no agents, implementation, execution or
 > publication. Checkboxes below describe future steps, not completed tests.
 
-Status: **complete proposed procedure/code; written plan not yet approved**.
-I recorded the user's **“Plan de credenciales” / “Bundle intacto”**: I may write
-this document only, locally and without network. I do not approve its contents on
-behalf of the owner or extend the preceding permission to execute acquired code.
+Status: **written plan approved; owned harness implementation and pure Python tests authorized**.
+I initially recorded **“Plan de credenciales” / “Bundle intacto”** as documentary
+permission only. After reviewing the actual written proposal at `3ab6bca8`, the owner
+explicitly chose **“AProbar y empezar implementación”**, followed by **“Implementar y
+probar”** for exclusively owned pure Python unit tests. I record this before code.
+I may create the three owned harness files and execute those pure tests locally;
+I may not execute checkout/Node/Git/bubblewrap, controlled runtime fixtures,
+namespaces/cgroups, downloads, agents, real credentials, Go, CI or publication.
+Independent review and actual runtime-artifact/execution permissions remain absent.
 
 **Goal:** I specify an executable, bounded synthetic-credential experiment that
 can distinguish actual main/post residue observations from warnings, exit success,
@@ -1034,5 +1039,7 @@ I save this one-document proposal with a scoped local `jj` commit/bookmark. Exis
 scope/bootstrap/raw/report documents, published PR39/PR37/PR36 local heads, default
 unrelated `.pi/todos`, deletion checkpoint and routing remain unchanged. No push,
 network, test execution, namespace/cgroup mutation, real credential access or CI.
-The owner must review this actual written plan; the subsequent independent review,
-artifact/preflight closure, implementation and execution require separate permissions.
+The owner approved this actual written plan and separately authorized owned-file
+implementation/pure Python tests. Independent review, actual artifact/preflight
+closure and controlled bundle/tool/native execution still require their distinct
+permissions. Approval does not convert authored C01-C26 expectations into observations.
