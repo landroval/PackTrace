@@ -244,16 +244,16 @@ I do not erase them, automatically prune/delete, restart the phase or replay GET
 
 - [x] Approve this exact procedure/manifest and explicitly allocate up to 37 raw GET attempts from the remaining 38 scope requests. The user grants no last request or scope expansion.
 - [x] Obtain explicit raw-transfer/owned-collector execution permission: “Aprobar y adquirir 37”. Acquired-code execution, credential probes, static-review verdicts, agents, CI/publication/merge are absent.
-- [ ] Before transferring, compare the actual candidate/tree receipt and every selected path/size/blob to the literal manifest, and verify no other assessment request has consumed budget since the two bootstrap GETs. Any missing evidence/changed manifest/additional consumption blocks automatic execution pending owner clarification.
-- [ ] Save the unchanged approved collector block externally, confirm space for <=8 MiB, and execute only:
+- [x] Before transferring, compare the actual candidate/tree receipt and every selected path/size/blob to the literal manifest; the recorded task work was still two bootstrap GETs. No missing/changed manifest evidence or additional task request was accepted.
+- [x] Save the unchanged approved collector block externally, confirm space for <=8 MiB, and execute only:
 
 ```nu
 python3 /tmp/packtrace-checkout-raw-collector.py
 ```
 
-- [ ] Independently read actual exit/receipt and each retained file; recompute byte counts, actual SHA-256 and Git blob SHA-1. Record completed-file counts separately from attempted requests/whole-corpus state; never sum reruns or infer missing files.
-- [ ] Record acquisition-only outcome and remaining budget. Do not automatically parse lock/YAML into effective inventory, trace runtime credentials, visit embedded URLs, claim complete notice/security qualification or start the remaining request.
-- [ ] Preserve approved assessment/bootstrap docs and published sibling bookmarks, checkpoint, global routing and unrelated default `.pi/todos` changes. Make only this local documentary change; no push, GitHub status mutation, workflow or source edit.
+- [x] Independently read actual exit/receipt and every retained file; recompute byte counts, SHA-256 and Git blob SHA-1. All 37 actual attempts completed and file identities agreed; no rerun or inferred file.
+- [x] Record acquisition-only outcome and one unallocated request remaining. No lock/YAML effective-inventory parsing, runtime credential trace, embedded URL visit, complete notice/security claim or final request.
+- [x] Verify approved assessment/bootstrap docs, published local sibling bookmarks, checkpoint, global routing and unrelated default `.pi/todos` state against the fresh preparation snapshot. Only this local document and owned temporary acquisition artifacts change; no push, GitHub mutation, workflow or source edit.
 
 ## Documentary acceptance expectations
 
@@ -275,3 +275,34 @@ Preparation verification: Python syntax only, all 37 literal triples/full URLs
 compared locally to received tree metadata, roles/counts/expected sums, D01-D09
 coverage and workspace preservation. No owned collector, transfer, behavioral test,
 raw-source/notice/bundle review, agent or runtime/CI action has run while drafting.
+
+## Authorized acquisition outcome
+
+I subsequently recorded the explicit 37-file transfer authority locally, then ran the
+unchanged approved collector once. Exit 0, empty stderr, 37 HTTP 200 responses,
+21.619832 seconds observed raw-phase elapsed. This includes no retry/redirect or
+additional request. The two collector phases consumed 23.842436 observed seconds.
+I independently read the operation receipt and all 37 retained files and recomputed
+actual byte counts, Git blob SHA-1 and SHA-256; every expected identity agreed.
+
+| Actual outcome | Evidence |
+| --- | --- |
+| New attempts/completed files | 37 / 37, including six source and 24 publisher-license-record files |
+| New owned body bytes read/retained | 1,865,014; bundle 1,452,503 and other text/metadata 412,511 |
+| Cumulative requests/owned body bytes | 39 / 1,894,265, counting the two preceding metadata GETs once |
+| Scope budget remaining | One request, unallocated and not authorized for use |
+| Raw evidence directory | Owned `/tmp/packtrace-checkout-raw-qqtkiw2_`, 0700; `001.data`–`037.data` and receipt 0600 |
+| Retention | 1,893,544 bytes including the external collector; operation receipt 20,211 bytes |
+| Actual bundle SHA-256 | `b604bf1c08a471aedf51ddddbd3e8d03041683db270692d66cd1b4b097457818` |
+| Actual lockfile SHA-256 | `4f8c64aa3807a20365c0b9c1ef4c4639549146a1ebd9ebe379e8fde1dff7938e` |
+| Actual receipt SHA-256 | `de81bab194f5fd3f3cfb91dca9a33fcd824031ee11feb28bfec2cee95f482e8e` |
+| Collector SHA-256 | `d56c86f002a8f1a41e3f796e580b22345c3a5d4b10850e5d1163b66970830238`, unchanged approved proposal |
+
+I close acquisition of this selected corpus only. I have not executed acquired
+code, parsed the dependency graph/license records into effective inventory, assessed
+bundle/source security, qualified notices/credential cleanup/platforms/CI, run
+D01-D09 behavioral fixtures or obtained independent Action adoption review. Actual
+hash equality establishes agreement with received fixed metadata, not a safety or
+publisher/build-authentication claim. Temporary files may disappear and are not
+permission. Further static assessment and any new query/transfer/runtime activity
+remain separately gated; the last request is not implicitly granted.
