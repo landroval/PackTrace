@@ -8,7 +8,9 @@
 
 **Tech Stack:** GitHub-hosted Ubuntu 24.04 Linux amd64, qualified pinned checkout/Node 24, official Go 1.27.1, preinstalled Python 3.12+, Bash/Git and Python standard library.
 
-**Spec:** [Approved issue-38 specification](issue-38-root-verification-ci.md), including the user's explicit external-environment-closure adjustment. Status: **local complete-plan draft; not approved for execution**.
+**Spec:** [Approved issue-38 specification](issue-38-root-verification-ci.md), including the user's explicit external-environment-closure adjustment. Status: **complete written plan approved; execution/publication not authorized**.
+I recorded the user's explicit “Aprobar sólo plan”: artifact approval only, without
+additional audits/acquisitions, executable implementation, runners or publication.
 
 ## Global constraints
 
@@ -71,7 +73,7 @@ operator permissions and independently reviewed adoption evidence.
 **Produces:** External dated/head-bound authorization receipt; no public Go API.
 
 - [ ] Read current issue/PR ownership, final-head approvals/threads and development identity; stop on an overlapping owner, changed contract or absent #23 reviewed integration. Do not sync/rebase/rewrite sibling changes without permission.
-- [ ] Obtain approval of this actual complete plan, including proposed setup/extraction/capture bounds and external closure. Do not infer it from specification approval.
+- [x] Obtain approval of this actual complete plan, including proposed setup/extraction/capture bounds and external closure. The user explicitly approved only the documentary plan; I did not infer implementation/adoption authority from it.
 - [ ] Obtain separate explicit bounded acquisition/security/notice assessment permissions covering the exact checkout source/bundle/dependencies and official archive. No bundle/archive download is permitted through current documentary authority.
 - [ ] Require the assessment to enumerate SHA/version/license/notices, bundled/transitive dependencies, executable main/post paths and credential/temp-file cleanup. Read-only named-source inspection/cached licenses alone cannot mark this gate qualified.
 - [ ] Obtain permission for future controlled local checks, own-process timeout/kill fixtures, official-Go setup and GitHub-hosted acquisition/execution. Mark missing/failed gate blocked, not successful or silently waived.
@@ -726,9 +728,11 @@ no fuzz/native/scanner/producer/release qualification.
 | R11-R17 | Task 2 phase/count/capture/timeout privacy fixtures; Task 3 exact stream/hash/receipt closure |
 | R18-R20 | Global constraints and Task 3 unknown/soft-limit/nonqualification/unchanged-protection checks |
 
-I do not mark future task checkboxes performed from documentary review. Plan approval,
-complete Action adoption assessment and reviewed #23 integration remain pending.
+I checked only the actual written-plan approval step; future task checkboxes remain
+unperformed. Complete Action adoption assessment, reviewed #23 integration and all
+execution/acquisition/publication permissions remain separate pending gates.
 No actual hosted event, official-Go/archive/Action execution, local subprocess fixture,
 Go test/vet, fuzz, agent, push, PR or merge was performed by drafting this artifact.
-The plan needs owner review and correction of any proposed code gaps before approval;
-no executable delivery is currently authorized.
+The owner approved the written plan. Proposed behavior remains unexecuted and
+unqualified; future discovered gaps must be corrected/reapproved within exact scope.
+No executable delivery is currently authorized.

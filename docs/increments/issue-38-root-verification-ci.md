@@ -1,12 +1,13 @@
 # Issue 38: bounded root-verification CI installation contract
 
-Status: **written specification approved; local plan drafting authorized**. The
+Status: **written specification and complete written plan approved; no execution/publication authority**. The
 user approved this complete artifact, including its proposed evidence ceilings,
 and separately authorized local complete-plan drafting for
 [#38](https://github.com/landroval/PackTrace/issues/38). I keep it OPEN / Preparation, owned by `landroval`, under #11 and
 blocked by #23 for implementation. I have not installed YAML, executed Go/hosted
 jobs, acquired distributions, published this bookmark/PR or requested peer review.
-Written-artifact approval is not complete-plan approval or activation authority.
+The user subsequently approved only the complete written plan. Neither artifact's
+approval grants adoption/acquisition, executable implementation or activation authority.
 
 Base: integrated development `76ef90daf36c4b4fae2b234369859108440fc24e`.
 I use the independent `issue-38-root-verification-ci-spec` bookmark/workspace.
