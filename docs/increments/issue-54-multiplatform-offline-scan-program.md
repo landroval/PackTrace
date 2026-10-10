@@ -1718,10 +1718,10 @@ func readSnapshotStream(ctx context.Context, r io.Reader, expected uint64, budge
         select { case <-ctx.Done(): return [32]byte{}, observed, false, "canceled"; default: }
         if !validCount { return [32]byte{}, observed, false, "read-failed" }
         if !charged { return [32]byte{}, observed, false, "limit-exceeded" }
+        if observed > expected { return [32]byte{}, observed, false, "length-mismatch" }
         if n > 0 {
             _, _ = h.Write(buf[:n])
             if code := sink(buf[:n]); code != "" { return [32]byte{}, observed, false, code }
-            if observed > expected { return [32]byte{}, observed, false, "length-mismatch" }
         }
         if err != nil {
             if err != io.EOF { return [32]byte{}, observed, false, "read-failed" }
@@ -1969,14 +1969,19 @@ func validateSnapshotNPMManifest(manifest SnapshotManifest) string {
     return ""
 }
 
-func snapshotAddDeclaration(lengths map[[32]byte]uint64, digest [32]byte, size uint64, remaining *uint64, retained *snapshotRetainedBudget) string {
+func snapshotAddDeclaration(lengths map[[32]byte]uint64, digest [32]byte, size uint64, remaining *uint64, retained *snapshotRetainedBudget, overflow *bool) string {
     if old, ok := lengths[digest]; ok {
         if old != size { return "invalid-shape" }
         return ""
     }
-    if size > *remaining { return "limit-exceeded" }
     if !retained.metadataEntry() || !retained.logicalBytes(40) { return "resource" }
-    *remaining -= size
+    if size > *remaining {
+        if overflow == nil { return "limit-exceeded" }
+        *overflow = true
+        *remaining = 0
+    } else {
+        *remaining -= size
+    }
     lengths[digest] = size
     return ""
 }
@@ -2072,17 +2077,18 @@ func ReadSnapshotNPMIdentity(ctx context.Context, manifest SnapshotManifest, nam
     lengths := make(map[[32]byte]uint64)
     remainingDeclared := uint64(maxSnapshotManifestObjectBytes)
     addDirect := func(ref SnapshotObjectReference) string {
-        return snapshotAddDeclaration(lengths, ref.SHA256, ref.Bytes, &remainingDeclared, &retained)
+        return snapshotAddDeclaration(lengths, ref.SHA256, ref.Bytes, &remainingDeclared, &retained, nil)
     }
     if code = addDirect(manifest.Originals); code != "" { if code == "resource" { out.Gaps = snapshotAddGap(out.Gaps, SnapshotGapResource); return out, nil }; return fail(code) }
     for _, block := range manifest.Blocks {
         if code = addDirect(block.Reference); code != "" { if code == "resource" { out.Gaps = snapshotAddGap(out.Gaps, SnapshotGapResource); return out, nil }; return fail(code) }
     }
+    declarationOverflow := false
     catalogState, resource, code := readSnapshotJSONL(ctx, streams.Catalog, manifest.Originals, &readBudget, func(line []byte, physical uint64) string {
         row, code := parseSnapshotCatalogRow(line)
         if code != "" { return code }
         if row.ordinal != physical { return "invalid-shape" }
-        if code = snapshotAddDeclaration(lengths, row.digest, row.bytes, &remainingDeclared, &retained); code != "" { return code }
+        if code = snapshotAddDeclaration(lengths, row.digest, row.bytes, &remainingDeclared, &retained, &declarationOverflow); code != "" { return code }
         for _, index := range selected[row.ordinal] {
             if pending[index].digest != row.digest || pending[index].bytes != row.bytes { return "invalid-shape" }
             pending[index].catalogBound = true
@@ -2098,6 +2104,7 @@ func ReadSnapshotNPMIdentity(ctx context.Context, manifest SnapshotManifest, nam
     for _, binding := range pending {
         if !binding.catalogBound { return fail("invalid-shape") }
     }
+    if declarationOverflow { return fail("limit-exceeded") }
     out.Declaration = SnapshotDeclarationVerified
 
     supplied := make(map[[32]byte]io.Reader, len(streams.Originals))
@@ -2516,6 +2523,6 @@ Only the four listed Go paths and this existing brief are approved public paths.
 - [x] Task 2: missing-API compiler RED (0 behavioral failures); initial compiling-stub RED recorded 46 failures before a test-index panic. The guard was corrected and the replay reached all 17 top-level tests without panic/build failure: 85 failing events across 16 runtime top-level tests, with counter arithmetic and the static AST policy check explicitly passing. Restored focused GREEN **447**, root GREEN **3,167**. Code checkpoint `49e5c03369114550bf19d68f4ebc130646c05967`; test-only review fixes `369fec21930fd3200c2af258a3af5da4d0ef1b7a`. Fresh task review first required fixes, then approved spec and quality after resolving all three findings: guarded indexing/full RED, exact cancellation mutation selectors and unsupported-header integration. No API/profile/production behavior changed in that fix.
 - [x] All **17** compiling mutations discriminated and restored exactly: **16 runtime-fixture** mutations and **1 static AST-scope** mutation for forbidden version evaluation. The corrected replay retained actual patches and pre/mutated/post hashes; the coordinator independently reconstructed every patch hash and checked all 19 failing invocation artifacts. Mutation 06 includes the private budget assertion plus both consumer cancellation cases; compiler-only mutation credit is zero.
 - [x] Coordinator fresh restored-source root **3,167**, vet, all-package build, separate CLI build and gofmt checks; all **162** synthetic legacy stdout/stderr/exit comparisons are byte-identical against a separate fresh exact-base executable. Resource/privacy/ownership/sibling evidence remains bounded supplied-stream evidence, not filesystem or native qualification.
-- [ ] Fresh whole-branch review.
+- [ ] Fresh whole-branch review. Initial review found two Important precedence defects, also present in illustrative snippets: detection bytes reached the sink before length rejection; a catalog-prefix declaration overflow bypassed complete object verification. Both controlling approved rules remain unchanged. The root helper now rejects charged detection bytes after cancellation but before hash/sink; catalog overflow is remembered while bounded parsing/coherence/duplicate checks and full framing/count/length/digest/EOF verification continue. New pre-fix regressions compiled and demonstrated the concrete wrong codes, then passed; two compiling defect mutations failed and restored exactly. Fresh focused **465**, root **3,185**, vet/gofmt passed. The reference bodies above were corrected, without API/profile expansion; independent follow-up acceptance remains pending.
 - [ ] Exact public head, combined prospect and actual merged-tree acceptance.
 - [ ] Child #56 completed closure and only its Project item Done after verified development integration.
