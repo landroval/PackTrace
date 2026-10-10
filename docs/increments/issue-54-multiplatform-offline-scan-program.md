@@ -416,6 +416,42 @@ work, **not ready-to-run placeholder tasks or fabricated Go APIs**. Each accepte
 milestone uses this brief and a precise scoped contract before code; no additional
 ceremonial document chain or generic framework is required.
 
+### 8.1 Executed bounded source-only analysis
+
+**Baseline:** `45b3424cc5120a479dbacefa34de6a8d737d9514`  
+**Scope:** the four authorized source groups only. No prototype, build, type-check command, native query, or execution occurred.
+
+#### Conclusion: BLOCKED
+
+The bounded sources do not establish an end-to-end macOS mechanism that obtains a stable metadata-only reference, verifies that the referenced object is regular, and then opens **that same object** for content without first risking a device-driver open. This is not a finding that macOS support is impossible; it is a finding that the approved API/source surface supplies no proved chain.
+
+#### Attempted chain and break
+
+1. Go 1.27.1 `os.Root` provides beneath-root path containment and follows only links that remain beneath the root. Its contract expressly says Root methods do **not** prohibit filesystem-boundary traversal or access to Unix device files ([`Root`](https://pkg.go.dev/os@go1.27.1#Root)). `Root.Lstat` returns metadata, while `Root.Open` opens for reading ([`Root.Lstat`](https://pkg.go.dev/os@go1.27.1#Root.Lstat), [`Root.Open`](https://pkg.go.dev/os@go1.27.1#Root.Open)). Therefore `Lstat → Open` has a replacement window and provides no same-object guarantee.
+2. The repository pin is `golang.org/x/sys v0.44.0` (`probes/scalibr-inventory/go.mod:47`, `go.sum:152-153`). Its Darwin arm64 and amd64 generated files are selected by `darwin && arm64` / `darwin && amd64`, with no `cgo` build predicate ([arm64](https://github.com/golang/sys/blob/v0.44.0/unix/zsyscall_darwin_arm64.go#L1-L10), [amd64](https://github.com/golang/sys/blob/v0.44.0/unix/zsyscall_darwin_amd64.go#L1-L10)). The selected declarations expose `Openat`, `Fstat`, and `Fstatat` ([arm64 open](https://github.com/golang/sys/blob/v0.44.0/unix/zsyscall_darwin_arm64.go#L1806-L1841), [arm64 stat](https://github.com/golang/sys/blob/v0.44.0/unix/zsyscall_darwin_arm64.go#L2602-L2629)); `Stat_t.Mode` and `S_IFMT`/`S_IFREG` make a source-level regular-file test expressible ([type](https://github.com/golang/sys/blob/v0.44.0/unix/ztypes_darwin_arm64.go#L65-L84), [mode constants](https://github.com/golang/sys/blob/v0.44.0/unix/zerrors_darwin_arm64.go#L1420-L1427)). These declarations are compatible with the stated Darwin architectures and CGO-disabled constraint at the source/build-tag level, but no compile or type-check result is claimed.
+3. `Fstatat` returns metadata, not a stable object reference. A later `Openat` resolves the name again. `Fstat` binds metadata to the returned descriptor only **after** open. Thus `Fstatat → mode check → Openat → Fstat` cannot exclude a regular-to-device substitution before the open.
+4. Flag declarations alone do not establish the missing same-object/pre-driver chain. `O_NOFOLLOW`/`O_NOFOLLOW_ANY` address symlink following, not a leaf changing from regular to special; rejecting all links also cannot satisfy the required positive in-root-link behavior. `O_SYMLINK` references a symlink rather than yielding a regular-content descriptor. `O_EVTONLY` and `O_NONBLOCK` remain open flags, not regular-only predicates ([Darwin constants](https://github.com/golang/sys/blob/v0.44.0/unix/zerrors_darwin_arm64.go#L1121-L1143)).
+
+#### Kernel-side consequence
+
+Within a call to pinned XNU `VNOP_OPEN`, the reviewed wrapper dispatches through the vnode open operation ([`kpi_vfs.c:2534-2553`](https://github.com/apple-oss-distributions/xnu/blob/xnu-11215.1.10/bsd/vfs/kpi_vfs.c#L2534-L2553)). If that dispatch reaches `spec_open` for a special vnode, `spec_open` calls the character driver's `d_open` at line 397 or the block driver's `d_open` at line 447 ([`spec_vnops.c:353-481`](https://github.com/apple-oss-distributions/xnu/blob/xnu-11215.1.10/bsd/miscfs/specfs/spec_vnops.c#L353-L481)); successful special opens can also proceed to device-specific ioctls. The reviewed callee bodies contain no `O_EVTONLY` bypass, but the upstream user-open path was outside the authorized source groups, so this review does not prove that every candidate flag combination reaches `VNOP_OPEN`. It proves only that, **if** special-open dispatch reaches these callees, driver `d_open` occurs. Neither the reviewed flag declarations nor these callee bodies establish that `O_EVTONLY` or `O_NONBLOCK` avoids that dispatch; therefore they do not establish pre-driver exclusion.
+
+#### Missing evidence and required next decision
+
+Unblocking requires either (a) an established public API/flag that atomically returns a metadata-only stable reference without invoking special-device open and permits content-open of the same verified regular object, or (b) separately approved design change for a new binding, helper, sandbox, special mount, or altered build. Later native approval must also provide instrumentation proving no driver-open callback occurs before rejection, descriptor/object identity across the content-open transition, deterministic replacement-race coverage, and the actual macOS kernel/API match. Source inspection alone cannot provide those proofs.
+
+#### Native matrix
+
+| Environment | Architecture | Status |
+| --- | --- | --- |
+| macOS 15 | arm64 | NOT RUN |
+| macOS 15 | amd64 | NOT RUN |
+| Ubuntu 24.04 | amd64 | NOT RUN |
+| Ubuntu 24.04 | arm64 | NOT RUN |
+| Windows Server 2022 | amd64 | NOT RUN |
+
+**Uncertainty:** XNU `11215.1.10` is a pinned reasoning reference, not evidence for any future runner’s installed kernel. Absence of a proved mechanism in these four groups is not proof that no mechanism exists elsewhere.
+
 ## 9. Program acceptance and abort criteria
 
 The program is complete only with executed approved fixtures for npm/Bun,
@@ -450,4 +486,51 @@ operational failure. Do not reinterpret refusal or unexecuted acceptance as succ
 - [x] Only local Linux is listed; runner availability and native evidence remain gaps.
 - [x] Owner approved the program direction and exact first portable delivery, including scoped publication/integration/closure; other stages remain gated.
 - [ ] Record separate prototype/runner/toolchain/execution gates before those actions.
-- [ ] Production code, tests, publication and integration: not performed by preparation.
+- [x] Preparation did not execute production code/tests/publication/integration.
+  The separately approved first-delivery execution follows below; native gates remain open.
+
+
+## 11. First portable delivery execution ledger — issue #54
+
+I approved section 7 and the bounded section 8 source-only analysis before Go,
+recorded in `cd8319f8210d22e3ae1089ea413b843262e4a998`. I selected one scoped
+issue under #9, PR publication and development-only verified integration under
+my ongoing PR-only administrator waiver, followed by scoped closure/Done.
+This is not permission to execute the remaining program or close a parent.
+
+- [x] Frozen interfaces: existing `SnapshotObjectReference`/`ParseError` unchanged;
+  exact section 7 scalar comparison API and 4 MiB declared/supplied bounds.
+  Implementer owns only the new Go pair; analyst owns no product source.
+  One coordinator owns brief/GitHub/jj/final evidence. No shared-write conflict.
+- [x] Missing-API RED: one compiler build-fail, zero behavioral fail actions.
+- [x] Compiling-stub RED: 11 expected test/subtest failures, no build-fail or
+  stderr. GREEN: 11 focused passes, root 3,079 passes (baseline 3,068).
+- [x] Fresh independent task agent: spec and quality approved, no Critical,
+  Important or Minor findings. Agent review is not GitHub peer approval.
+- [x] Four actually compiling mutations detected and byte-exactly restored:
+  omitted digest branch (3 test failures), omitted length branch (3), reversed
+  mismatch priority (2), omitted 4 MiB preflight (1). None is compile-only.
+- [x] Coordinator fresh restored-source focused/root tests, vet/build/gofmt.
+  162 owned legacy CLI case/format comparisons were stdout/stderr/exit-identical:
+  72 npm inspect, 40 batch, 12 demo, 38 Bun (19 cases in both formats).
+- [x] Parallel source-only macOS analysis completed; result BLOCKED in section
+  8.1, five native rows NOT RUN. Callee evidence does not prove the upstream
+  flag path; I narrowed the report instead of claiming event-only always unsafe.
+- [x] Reviewer declines ruled: suite/mutation repetition was reserved for the
+  coordinator and performed there; no named unchanged-source risk required
+  extra crawling; macOS/native execution lies outside the Go task. Accepted.
+- [ ] Final documentation delta/whole-branch review and exact public head checks.
+- [ ] PR publication, combined-tree and actual merged-tree verification.
+- [ ] Accepted bounded issue closure/completed and existing Project item Done.
+
+All executed Go evidence is modified local `go1.27.1-X:nodwarf5 linux/amd64`,
+`GOTOOLCHAIN=local GOPROXY=off GOWORK=off CGO_ENABLED=0`. These command settings
+do not prove OS-enforced network denial, official/native/producer/hosted-CI/release
+qualification or authenticated/active intelligence. `scan` remains unavailable;
+equality is literal supplied-byte evidence, not manifest/schema/record validation.
+The manifest's separate 32 GiB declared-object ceiling is unchanged.
+
+Issue #9 remains incomplete; #22/#38/PR #40, other epics, native gates and
+unrelated work are unchanged. The 21 unrelated task-ledger deletions also visible
+in the new workspace were excluded from every explicit file-scoped commit,
+left unpublished and un-restored. Source bookmarks/workspaces remain preserved.
