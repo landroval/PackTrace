@@ -56,4 +56,39 @@ new bypass, release, issue closure or Project Done changes.
 - Modified local `go1.27.1-X:nodwarf5 linux/amd64`; checks use
   `GOTOOLCHAIN=local GOPROXY=off GOWORK=off CGO_ENABLED=0`. This is synthetic/local
   development evidence, not native safety, named-producer/platform or hosted CI.
-- Implementation and independent-review evidence pending.
+- API compilation RED observed, followed by compiling-stub behavioral RED:
+  18 failing tests/subtests and no compiler stderr. Focused GREEN: 90;
+  root GREEN: **3,031** (3,013 prerequisite + 18 new); vet/gofmt clean.
+- Thirteen owned executable cases ran in terminal/JSON, including partial/all-invalid
+  records, independent comparisons, profiles, unknown withdrawal, empty inventory,
+  exact 4,096 pairs, malformed wire, invalid lock and advisory/global-slot overflow.
+  Usable reports exit 3, fatal reports exit 2; no confirmed findings or enforcement.
+- Seventy-two inspect invocations (18 inputs, two profiles, two formats) and twelve
+  original demo invocations preserve stdout/stderr/exits byte-for-byte against the
+  integrated prerequisite executable. Only top-level help advertises the new command.
+- Three compiling mutants (sibling discard, advisory-reference mixing, aggregate
+  budget reset) caused intended behavioral failures; exact source bytes restored
+  and root/vet/build checks repeated.
+- Author review covered wire/record/global-slot guards before repeated evaluation,
+  raw evidence/projection boundaries, sibling isolation/order, private failure/view,
+  unknown/empty scopes and unchanged single-record/profile semantics. No known
+  in-scope important/critical issue remains; this is not independent approval.
+- Execution ruling: an initial documentation commit accidentally used the original
+  cwd and produced an empty, unpublished local commit (no paths committed). The
+  original 21 ledger deletions remain intact; the actual brief commit used the
+  isolated workspace, before tests/code. That local marker is not in this PR.
+- Independent final-head review and integration remain pending; no renewed bypass.
+
+## Owned example (Bash)
+
+```bash
+bin="$(mktemp -d)/packtrace"
+GOTOOLCHAIN=local GOPROXY=off GOWORK=off CGO_ENABLED=0 go build -o "$bin" ./cmd/packtrace
+cat <<'JSON' | "$bin" inspect-batch --format json
+{"lockfile":{"lockfileVersion":3,"packages":{"node_modules/example-package":{"name":"example-package","version":"1.2.3"}}},"advisories":[{"id":"EXAMPLE-OSV-001","modified":"2026-01-01T00:00:00Z","affected":[{"package":{"ecosystem":"npm","name":"example-package"},"versions":["1.2.3"]}]},42]}
+JSON
+# Expected exit 3: one limited candidate comparison, one invalid-advisory gap.
+```
+
+This is not an installed-package scan, canonical/source authentication, feed
+completeness, supported-producer declaration, security clearance or release.

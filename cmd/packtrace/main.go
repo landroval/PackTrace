@@ -16,6 +16,9 @@ import (
 func main() { os.Exit(runInput(os.Args[1:], os.Stdin, os.Stdout, os.Stderr)) }
 
 func runInput(args []string, in io.Reader, out, diagnostic io.Writer) int {
+	if len(args) > 0 && args[0] == "inspect-batch" {
+		return runBatch(args[1:], in, out, diagnostic)
+	}
 	if len(args) == 0 || args[0] != "inspect" {
 		return run(args, out, diagnostic)
 	}
@@ -36,6 +39,31 @@ func runInput(args []string, in io.Reader, out, diagnostic io.Writer) int {
 	data, err := inspect.Render(result, format)
 	if err != nil {
 		return failure(diagnostic, "inspect: report-failed")
+	}
+	if !writeOutput(out, data) {
+		return failure(diagnostic, "cli: output-failed")
+	}
+	return result.ExitCode
+}
+
+func runBatch(args []string, in io.Reader, out, diagnostic io.Writer) int {
+	if len(args) == 1 && args[0] == "--help" {
+		if !writeOutput(out, []byte("packtrace inspect-batch [--format terminal|json] [--identity-profile explicit-only|npm-lock-v2-v3]\nRead one stdin JSON envelope with lockfile and advisories (1–16 supplied records).\nLimits: 1 MiB wire, 64 lock records, 64 total affected slots, 4096 pairs.\nPortable-only experimental hypotheses; invalid advisory metadata leaves a gap. No target access.\n")) {
+			return failure(diagnostic, "cli: output-failed")
+		}
+		return 0
+	}
+	format, profile, ok := inspectArgs(args)
+	if !ok {
+		return failure(diagnostic, "inspect-batch: invalid-arguments")
+	}
+	result, e := inspect.ReadBatchProfile(in, profile)
+	if e != nil {
+		return failure(diagnostic, e.Error())
+	}
+	data, e := inspect.RenderBatch(result, format)
+	if e != nil {
+		return failure(diagnostic, "inspect-batch: report-failed")
 	}
 	if !writeOutput(out, data) {
 		return failure(diagnostic, "cli: output-failed")
@@ -94,7 +122,7 @@ func run(args []string, out, diagnostic io.Writer) int {
 	var text string
 	switch invocation.Action {
 	case cli.ArgumentActionHelp:
-		text = "PackTrace development — experimental metadata tools only\nUsage: packtrace inspect [--format terminal|json] (stdin JSON; portable only)\n       packtrace demo [--scenario NAME] [--format terminal|json]\nScenarios: candidate, no-version-match, unsupported, withdrawn, different-identity, malformed\nControls: --help, --version, scan --help\nActual scan execution is unavailable; demo never opens target projects.\n"
+		text = "PackTrace development — experimental metadata tools only\nUsage: packtrace inspect [--format terminal|json] (stdin JSON; portable only)\n       packtrace inspect-batch [--format terminal|json] (bounded stdin advisory array)\n       packtrace demo [--scenario NAME] [--format terminal|json]\nScenarios: candidate, no-version-match, unsupported, withdrawn, different-identity, malformed\nControls: --help, --version, scan --help\nActual scan execution is unavailable; demo never opens target projects.\n"
 	case cli.ArgumentActionVersion:
 		text = "packtrace development (experimental demo; not a qualified release)\n"
 	case cli.ArgumentActionScanHelp:
