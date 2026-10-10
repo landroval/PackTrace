@@ -58,6 +58,14 @@ type SnapshotManifest struct {
 // data concurrently. Failures are whole-zero with fixed ParseError codes; byte and
 // declared-reference bounds are not hard RSS, actual quota or coverage guarantees.
 func ParseSnapshotManifest(data []byte) (SnapshotManifest, error) {
+	return parseSnapshotManifestVersion(data, "1.0")
+}
+
+func ParseSnapshotManifestV11(data []byte) (SnapshotManifest, error) {
+	return parseSnapshotManifestVersion(data, "1.1")
+}
+
+func parseSnapshotManifestVersion(data []byte, requiredVersion string) (SnapshotManifest, error) {
 	fields, code := jsoninput.Object(data, maxSnapshotManifestBytes)
 	if code != "" {
 		return SnapshotManifest{}, &ParseError{Code: code}
@@ -66,7 +74,7 @@ func ParseSnapshotManifest(data []byte) (SnapshotManifest, error) {
 	if version.State != OSVFieldValue || version.Value == "" {
 		return SnapshotManifest{}, &ParseError{Code: "invalid-shape"}
 	}
-	if version.Value != "1.0" {
+	if version.Value != requiredVersion {
 		return SnapshotManifest{}, &ParseError{Code: "unsupported-version"}
 	}
 	sourceFields, code := snapshotManifestObject(fields["source"])
