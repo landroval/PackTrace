@@ -1,4 +1,4 @@
-// Command packtrace exposes a runnable synthetic demo, not an operational scan.
+// Command packtrace exposes experimental metadata inspection, not a project scan.
 package main
 
 import (
@@ -10,9 +10,57 @@ import (
 
 	"packtrace/internal/cli"
 	"packtrace/internal/demo"
+	"packtrace/internal/inspect"
 )
 
-func main() { os.Exit(run(os.Args[1:], os.Stdout, os.Stderr)) }
+func main() { os.Exit(runInput(os.Args[1:], os.Stdin, os.Stdout, os.Stderr)) }
+
+func runInput(args []string, in io.Reader, out, diagnostic io.Writer) int {
+	if len(args) == 0 || args[0] != "inspect" {
+		return run(args, out, diagnostic)
+	}
+	if len(args) == 2 && args[1] == "--help" {
+		if !writeOutput(out, []byte("packtrace inspect [--format terminal|json]\nRead one bounded stdin JSON envelope containing lockfile and advisory objects.\nPortable-only experimental metadata inspection; no project access or complete applicability.\n")) {
+			return failure(diagnostic, "cli: output-failed")
+		}
+		return 0
+	}
+	format, ok := inspectArgs(args[1:])
+	if !ok {
+		return failure(diagnostic, "inspect: invalid-arguments")
+	}
+	result, err := inspect.Read(in)
+	if err != nil {
+		return failure(diagnostic, err.Error())
+	}
+	data, err := inspect.Render(result, format)
+	if err != nil {
+		return failure(diagnostic, "inspect: report-failed")
+	}
+	if !writeOutput(out, data) {
+		return failure(diagnostic, "cli: output-failed")
+	}
+	return result.ExitCode
+}
+
+func inspectArgs(args []string) (string, bool) {
+	if len(args) == 0 {
+		return "terminal", true
+	}
+	var format string
+	if len(args) == 1 {
+		name, value, attached := strings.Cut(args[0], "=")
+		if name != "--format" || !attached {
+			return "", false
+		}
+		format = value
+	} else if len(args) == 2 && args[0] == "--format" {
+		format = args[1]
+	} else {
+		return "", false
+	}
+	return format, format == "terminal" || format == "json"
+}
 
 func run(args []string, out, diagnostic io.Writer) int {
 	if len(args) > 0 && args[0] == "demo" {
@@ -40,7 +88,7 @@ func run(args []string, out, diagnostic io.Writer) int {
 	var text string
 	switch invocation.Action {
 	case cli.ArgumentActionHelp:
-		text = "PackTrace development — experimental demo only\nUsage: packtrace demo [--scenario NAME] [--format terminal|json]\nScenarios: candidate, no-version-match, unsupported, withdrawn, different-identity, malformed\nControls: --help, --version, scan --help\nActual scan execution is unavailable; demo never opens target projects.\n"
+		text = "PackTrace development — experimental metadata tools only\nUsage: packtrace inspect [--format terminal|json] (stdin JSON; portable only)\n       packtrace demo [--scenario NAME] [--format terminal|json]\nScenarios: candidate, no-version-match, unsupported, withdrawn, different-identity, malformed\nControls: --help, --version, scan --help\nActual scan execution is unavailable; demo never opens target projects.\n"
 	case cli.ArgumentActionVersion:
 		text = "packtrace development (experimental demo; not a qualified release)\n"
 	case cli.ArgumentActionScanHelp:

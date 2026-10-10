@@ -140,4 +140,24 @@ Those environment controls are not OS sandbox evidence or official qualification
 
 - Issue #46 created/read back: owner landroval, parent #8, native blocked-by #43.
 - Approval recorded before new Go; dependency head remains exact and unchanged.
-- Execution checks and publication are pending; no independent approval claimed.
+- API compilation RED and compiling-stub behavioral RED observed (28 failed
+  tests/subtests; unchanged demo regressions remained valid).
+- Focused GREEN: 80 passing tests/subtests. Stacked root GREEN: **2,977**
+  (2,942 dependency + 35 new); vet/gofmt clean. Source guards are not a sandbox.
+- Eleven owned stdin cases ran as a compiled executable in both terminal and JSON:
+  ten usable partial cases exit 3; malformed exits 2 without a report. Positive
+  has one identity/version-only candidate and zero confirmed findings.
+- The six original compiled demo scenarios remain byte-identical in both formats,
+  including stderr and exits, compared against the prior executable.
+- Compiling cross-slot and portable-leak mutations caused behavioral failures;
+  production bytes restored exactly, then root checks/vet repeated.
+- Terminal support locator test observed RED before its rendering addition.
+- Ruling: corrected a test's double-escaped surrogate literal to an actual lone
+  surrogate escape; the original represented valid literal text. No production
+  validator weakened; retaining the bad expectation would reject valid JSON.
+- Author review checked unchanged evidence/slot binding, missing query/name/link
+  gaps, bounded input and upstream guards, portable allowlist and no raw/hash
+  export, private failures, original demo output and seven-file scope. No remaining
+  in-scope important/critical issue identified; this is not independent approval.
+- Publication pending at ledger write. Keep the draft dependent on #43/#45; no
+  merge into the dependency branch, issue closure/Done or independent review claim.

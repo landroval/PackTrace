@@ -1,5 +1,5 @@
-// Package demo connects real evidence readers with owned inert inputs only.
-// Its experimental result is not a production scan report or qualification.
+// Package demo evaluates experimental metadata and incorporated inert scenarios.
+// Its internal analysis contains raw claims; it is not a portable public report.
 package demo
 
 import (
@@ -32,10 +32,13 @@ type Inputs struct {
 }
 
 type Observation struct {
-	Location    string `json:"location"`
-	Name        string `json:"name"`
-	Version     string `json:"version"`
-	Observation string `json:"observation"`
+	Location             string `json:"location"`
+	Name                 string `json:"name"`
+	Version              string `json:"version"`
+	Observation          string `json:"observation"`
+	NameQualification    string `json:"-"`
+	VersionQualification string `json:"-"`
+	LinkQualification    string `json:"-"`
 }
 
 type Evaluation struct {
@@ -75,16 +78,34 @@ type Coverage struct {
 	Reason  string `json:"reason"`
 }
 
-// EvaluateScenario parses and derives a fresh result from incorporated inert
-// fixtures. It accepts scenario names, never target paths or caller data.
+// EvaluateScenario retains its incorporated-input contract and original view.
 func EvaluateScenario(name string) (Result, error) {
 	lockBytes, advisoryBytes, err := scenarioInputs(name)
 	if err != nil {
 		return Result{}, err
 	}
+	result, err := EvaluateMetadata(lockBytes, advisoryBytes)
+	if err != nil {
+		return Result{}, err
+	}
+	result.Schema, result.Scope, result.Scenario = "packtrace.demo.v1", "owned-synthetic-fixture", name
+	result.Coverage = result.Coverage[:5]
+	result.Coverage[0] = Coverage{"fixture-inventory", "completed", "owned-fixture-only"}
+	if result.Coverage[1].Outcome == "completed" {
+		result.Coverage[1].Reason = "qualified-fixture-conditions"
+	}
+	return result, nil
+}
+
+// EvaluateMetadata consumes unchanged successful projections. Its raw internal
+// result must pass through the inspect allowlist before user-supplied export.
+func EvaluateMetadata(lockBytes, advisoryBytes []byte) (Result, error) {
 	lock, err := inventory.ParseNPMLock(lockBytes)
 	if err != nil {
 		return Result{}, errors.New("demo: invalid-lockfile")
+	}
+	if len(lock.Packages) > 64 {
+		return Result{}, errors.New("demo: limit-exceeded")
 	}
 	locked, err := inventory.ProjectNPMLock(lock)
 	if err != nil {
@@ -102,6 +123,9 @@ func EvaluateScenario(name string) (Result, error) {
 	if err != nil {
 		return Result{}, errors.New("demo: invalid-advisory")
 	}
+	if len(affected.Entries) > 64 {
+		return Result{}, errors.New("demo: limit-exceeded")
+	}
 	identities, err := intel.QualifyOSVNPMIdentities(header, affected)
 	if err != nil {
 		return Result{}, errors.New("demo: invalid-advisory")
@@ -111,37 +135,62 @@ func EvaluateScenario(name string) (Result, error) {
 		return Result{}, errors.New("demo: invalid-advisory")
 	}
 
-	result := Result{Schema: "packtrace.demo.v1", Experimental: true, Scenario: name,
-		Scope: "owned-synthetic-fixture", Inputs: Inputs{fmt.Sprintf("%x", locked.SourceSHA256), fmt.Sprintf("%x", header.SourceSHA256), header.ID.Value},
+	result := Result{Schema: "packtrace.internal.metadata.v1", Experimental: true,
+		Scope: "supplied-metadata", Inputs: Inputs{fmt.Sprintf("%x", locked.SourceSHA256), fmt.Sprintf("%x", header.SourceSHA256), header.ID.Value},
 		Inventory: []Observation{}, Evaluations: []Evaluation{}, Candidates: []Candidate{}, Findings: []string{}}
-	versionComplete := true
+	versionComplete := len(identities.Entries) > 0
+	recordsComplete := true
 	for _, record := range locked.Records {
 		if record.Location == "" {
 			continue
 		} // Project root, not a dependency instance.
-		if record.Name.State != inventory.FieldValue || record.Name.Value == "" || record.Version.State != inventory.FieldValue {
-			return Result{}, errors.New("demo: unqualified-locked-record")
+		nameState, versionState := fieldLabel(record.Name.State), fieldLabel(record.Version.State)
+		if nameState == "value" && record.Name.Value == "" {
+			nameState = "empty"
 		}
-		query, err := intel.ParseSemVer(record.Version.Value)
-		if err != nil {
-			return Result{}, errors.New("demo: unqualified-locked-version")
+		linkState := fieldLabel(record.Link.State)
+		if record.Link.State == inventory.FieldValue {
+			linkState = "non-link"
+			if record.Link.Value {
+				linkState = "link"
+			}
 		}
-		conditions, err := intel.EvaluateOSVVersionConditions(header, affected, query)
-		if err != nil {
-			return Result{}, errors.New("demo: invalid-version-conditions")
+		query, queryErr := intel.ParseSemVer(record.Version.Value)
+		queryOK := record.Version.State == inventory.FieldValue && queryErr == nil
+		if record.Version.State == inventory.FieldValue {
+			versionState = "qualified"
+			if !queryOK {
+				versionState = "invalid-semver"
+			}
 		}
-		// All projections are from the same unchanged successful owned document.
-		if len(conditions.Entries) != len(identities.Entries) {
-			return Result{}, errors.New("demo: inconsistent-projections")
+		var conditions intel.OSVVersionConditions
+		if queryOK {
+			conditions, err = intel.EvaluateOSVVersionConditions(header, affected, query)
+			if err != nil {
+				return Result{}, errors.New("demo: invalid-version-conditions")
+			}
+			if len(conditions.Entries) != len(identities.Entries) {
+				return Result{}, errors.New("demo: inconsistent-projections")
+			}
+		} else {
+			versionComplete = false
 		}
+		nameOK := nameState == "value"
+		linkOK := linkState == "absent" || linkState == "non-link"
+		recordsComplete = recordsComplete && nameOK && queryOK && linkOK
 		packageIndex := len(result.Inventory)
-		result.Inventory = append(result.Inventory, Observation{record.Location, record.Name.Value, record.Version.Value, "locked"})
+		result.Inventory = append(result.Inventory, Observation{Location: record.Location, Name: record.Name.Value, Version: record.Version.Value, Observation: "locked", NameQualification: nameState, VersionQualification: versionState, LinkQualification: linkState})
 		for i, identity := range identities.Entries {
-			condition := conditions.Entries[i]
-			equal := identity.Name.State == intel.OSVFieldValue && identity.Name.Value == record.Name.Value
+			equal := nameOK && identity.Name.State == intel.OSVFieldValue && identity.Name.Value == record.Name.Value
 			e := Evaluation{PackageIndex: packageIndex, AffectedIndex: identity.Index, IdentityEqual: equal,
-				IdentityQualification: identityLabel(identity.Qualification), VersionOutcome: versionLabel(condition.Outcome),
-				VersionFullyEvaluated: condition.FullyEvaluated, Withdrawal: withdrawalLabel(times.Withdrawal), Support: []Support{}, Problems: []Problem{}}
+				IdentityQualification: identityLabel(identity.Qualification), VersionOutcome: "not-evaluated",
+				Withdrawal: withdrawalLabel(times.Withdrawal), Support: []Support{}, Problems: []Problem{}}
+			if !queryOK {
+				result.Evaluations = append(result.Evaluations, e)
+				continue
+			}
+			condition := conditions.Entries[i]
+			e.VersionOutcome, e.VersionFullyEvaluated = versionLabel(condition.Outcome), condition.FullyEvaluated
 			for _, support := range condition.Support {
 				e.Support = append(e.Support, Support{support.VersionIndex, support.RangeIndex})
 			}
@@ -150,24 +199,43 @@ func EvaluateScenario(name string) (Result, error) {
 			}
 			result.Evaluations = append(result.Evaluations, e)
 			versionComplete = versionComplete && condition.FullyEvaluated
-			if equal && identity.Qualification == intel.OSVNPMIdentityCandidate && condition.Outcome == intel.OSVVersionMatch && times.Withdrawal == intel.WithdrawalNotDeclared {
+			if equal && linkOK && identity.Qualification == intel.OSVNPMIdentityCandidate && condition.Outcome == intel.OSVVersionMatch && times.Withdrawal == intel.WithdrawalNotDeclared {
 				result.Candidates = append(result.Candidates, Candidate{packageIndex, identity.Index, "identity-version-only", false})
 			}
 		}
 	}
-	versionState, versionReason := "completed", "qualified-fixture-conditions"
+	versionComplete = versionComplete && len(result.Inventory) > 0
+	versionState, versionReason := "completed", "qualified-supplied-conditions"
 	if !versionComplete {
 		versionState, versionReason = "incomplete", "unsupported-or-unqualified"
 	}
 	result.Coverage = []Coverage{
-		{"fixture-inventory", "completed", "owned-fixture-only"},
+		{"supplied-inventory", "completed", "supplied-document-only"},
 		{"version-conditions", versionState, versionReason},
 		{"advisory-applicability", "incomplete", "origin-freshness-category-unqualified"},
 		{"installed-inventory", "not-run", "no-target-access"},
 		{"integrity", "not-run", "no-target-access"},
 	}
+	recordState, recordReason := "completed", "explicit-inspectable-claims"
+	if !recordsComplete || len(result.Inventory) == 0 {
+		recordState, recordReason = "incomplete", "missing-unqualified-or-link-claims"
+	}
+	result.Coverage = append(result.Coverage, Coverage{"record-qualification", recordState, recordReason})
 	result.ExitCode = cli.SelectScanExit(cli.ScanExitConditions{RequiredCoverageIncomplete: true})
 	return result, nil
+}
+
+func fieldLabel(state inventory.FieldState) string {
+	switch state {
+	case inventory.FieldAbsent:
+		return "absent"
+	case inventory.FieldNull:
+		return "null"
+	case inventory.FieldValue:
+		return "value"
+	default:
+		return "invalid-type"
+	}
 }
 
 func identityLabel(q intel.OSVNPMIdentityQualification) string {

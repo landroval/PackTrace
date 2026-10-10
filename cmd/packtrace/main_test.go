@@ -107,6 +107,66 @@ func (w failedWriter) Write(p []byte) (int, error) {
 	return 0, errors.New("PRIVATE-WRITER-MARKER")
 }
 
+type forbiddenReader struct{}
+
+func (forbiddenReader) Read([]byte) (int, error) { panic("stdin read on control/invalid invocation") }
+
+const inspectPacket = `{"lockfile":{"lockfileVersion":3,"packages":{"node_modules/PRIVATE-PATH":{"name":"private-marker-package","version":"1.2.3"}}},"advisory":{"id":"PRIVATE-ID","modified":"2026-01-01T00:00:00Z","affected":[{"package":{"ecosystem":"npm","name":"private-marker-package"},"versions":["1.2.3"]}]}}`
+
+func TestRunInspect(t *testing.T) {
+	for _, format := range []string{"terminal", "json"} {
+		var out, diagnostic bytes.Buffer
+		if exit := runInput([]string{"inspect", "--format", format}, strings.NewReader(inspectPacket), &out, &diagnostic); exit != 3 || diagnostic.Len() != 0 {
+			t.Fatal("inspect exit", exit, diagnostic.String())
+		}
+		if strings.Contains(out.String(), "PRIVATE") || strings.Contains(out.String(), "private-marker-package") || strings.Contains(out.String(), "1.2.3") {
+			t.Fatal("command leaked metadata")
+		}
+		if format == "terminal" && !strings.Contains(out.String(), "Candidates: 1") {
+			t.Fatal("terminal candidate missing")
+		}
+		if format == "json" {
+			var r struct {
+				Schema               string
+				Candidates, Findings []json.RawMessage
+			}
+			if json.Unmarshal(out.Bytes(), &r) != nil || r.Schema != "packtrace.inspect.v1" || len(r.Candidates) != 1 || len(r.Findings) != 0 {
+				t.Fatal("incorrect JSON")
+			}
+		}
+		for _, short := range []bool{false, true} {
+			if runInput([]string{"inspect", "--format", format}, strings.NewReader(inspectPacket), failedWriter{short}, &diagnostic) != 2 {
+				t.Fatal("output failure")
+			}
+		}
+	}
+	var out, diagnostic bytes.Buffer
+	if runInput([]string{"inspect"}, strings.NewReader("PRIVATE-MALFORMED"), &out, &diagnostic) != 2 || out.Len() != 0 || strings.Contains(diagnostic.String(), "PRIVATE") {
+		t.Fatal("malformed input report/privacy")
+	}
+}
+
+func TestInspectArgsBeforeReading(t *testing.T) {
+	for _, args := range [][]string{{"inspect", "--format=PRIVATE"}, {"inspect", "--PRIVATE"}, {"inspect", "--format=json", "--format=terminal"}, {"inspect", "--format"}, {"inspect", "--format="}, {"inspect", "PRIVATE"}, {"inspect", "--help", "--format=json"}, {"inspect", "--privacy=local"}} {
+		var out, diag bytes.Buffer
+		if runInput(args, forbiddenReader{}, &out, &diag) != 2 || out.Len() != 0 || diag.Len() == 0 || strings.Contains(diag.String(), "PRIVATE") {
+			t.Fatal("args/private/no-read")
+		}
+	}
+	for _, args := range [][]string{{"inspect", "--help"}, {"--help"}, {"--version"}, {"scan", "--help"}} {
+		var out, diag bytes.Buffer
+		if runInput(args, forbiddenReader{}, &out, &diag) != 0 || out.Len() == 0 || diag.Len() != 0 {
+			t.Fatal("control/no-read")
+		}
+	}
+	for _, args := range [][]string{{"inspect"}, {"inspect", "--format=json"}} {
+		var out, diag bytes.Buffer
+		if runInput(args, strings.NewReader(inspectPacket), &out, &diag) != 3 {
+			t.Fatal("default/attached")
+		}
+	}
+}
+
 func TestRunOutputFailure(t *testing.T) {
 	for _, args := range [][]string{{"--help"}, {"demo"}, {"demo", "--format=json"}} {
 		for _, short := range []bool{false, true} {
