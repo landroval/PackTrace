@@ -2511,7 +2511,11 @@ Only the four listed Go paths and this existing brief are approved public paths.
 
 - [x] Exact plan/API/profile/full-cycle approval recorded before new Go.
 - [x] Current base, live scope, agreed ownership and parent #9 verified; baseline checks recorded.
-- [ ] Task 1 missing-API/behavioral RED, GREEN, compatible old tests and fresh task review.
+- [x] Task 1: missing-API compiler RED (0 behavioral failures), compiling-stub
+  behavioral RED (1 failure), focused GREEN **360** and root GREEN **3,080**
+  tests/subtests. Checkpoint `bd22c1dcb15fa5047812118615afd456a9d985ae`.
+  Fresh task review approved spec compliance and quality, with no findings.
+  The 1.0 parser body/error order is unchanged except its private version parameter.
 - [ ] Task 2 missing-API/behavioral RED, GREEN, resource/privacy/ownership/sibling fixtures and fresh task review.
 - [ ] Compiling mutations discriminated; exact restoration and fresh checks.
 - [ ] Fresh root tests/vet/build/gofmt and all 162 legacy stdout/stderr/exit comparisons.
