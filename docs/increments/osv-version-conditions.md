@@ -2,7 +2,7 @@
 
 ## Status, intent and authority
 
-**Written specification and complete plan approved; local execution authorized.**
+**Written specification/plan approved; local implementation verified; peer review pending.**
 The owner selected evaluation of OSV version conditions as the next product increment,
 reviewed and approved this complete specification and its separate
 [implementation plan](osv-version-conditions-plan.md), then explicitly authorized
@@ -273,3 +273,34 @@ No native, producer, feed, scanner or release qualification is claimed. CI #38
 and macOS #22 remain independent; they do not block this pure in-memory delivery.
 The next product steps are advisory applicability and coverage/report integration,
 with separately approved scope; their implementation is not smuggled into this API.
+
+## Observed local delivery
+
+The implementation is scoped commit `2ddf20cf5b1c9bfe84f65f3acba4246e0219db70`,
+containing only the two proposed Go files. Existing readers, projections, SemVer,
+CLI, module and workflow files are unchanged. Documentary authority was written
+before code, but the first scoped jj commit failed due to cwd-relative fileset
+resolution; documentary commit `d4179603` was made after initial RED/GREEN and
+before the code commit. It must not be described as a pre-code committed receipt.
+
+Observed API compilation RED was followed by a compiling-stub behavioral RED
+with 89 failed/0 passed tests/subtests, including all 64 R/A/U reference IDs.
+The final actual workspace passes **2,897 root tests/subtests**, including **101
+new** and all 64 reference IDs, with `go vet ./...` exit 0 and clean gofmt.
+The compiler is local `go1.27.1-X:nodwarf5 linux/amd64`, using
+`GOTOOLCHAIN=local GOPROXY=off GOWORK=off CGO_ENABLED=0`. These are owned synthetic
+checks, not official-toolchain, native, producer or scanner qualification; module
+acquisition settings are not an OS network sandbox.
+
+Eleven distinct production mutations were caught and exactly restored. The first
+source-order mutation survived the R18-only check because its fixed event lay
+above that query; adding literal E05 at the fixed boundary caught it. Author
+review also added multiple-affected-slot and root-state checks, each observed
+RED against its corresponding mutation, then GREEN after source restoration.
+The 64 approved reference cases and production implementation remained unchanged.
+
+This is author self-review, not independent peer approval or reviewed integration.
+No remaining in-scope critical/important issue or deferred minor was identified
+in that pass. No issue/PR, push, merge, release, new agent, acquisition, target
+scan, probe or hosted CI operation was performed. The original checkout and its
+unrelated deletion checkpoint remain intact; the new workspace is retained.

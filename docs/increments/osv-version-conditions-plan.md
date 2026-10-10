@@ -612,3 +612,54 @@ later gate; author review is not its substitute.
   exact paths/parent afterward, and do not claim pre-code committed ancestry.
   The cost is that documentary commit timing follows initial RED/GREEN, not the
   stronger intended pre-code commit chronology; explicit owner authority remains.
+- Documentary authority commit: `d41796034d0dcb6329062841a4b1a870fdc9193b`;
+  code commit: `2ddf20cf5b1c9bfe84f65f3acba4246e0219db70`, verified to contain only
+  the two Go files. Both descend from the exact planned integrated baseline.
+- Mutation pass: all nine planned forms now fail their discriminating checks.
+  The first unsorted-order check survived at R18 (its fixed bound was above the
+  query), so E05 tests the same ordering at `2.0.0`; observed RED then restored
+  GREEN. This changes neither R18 nor any of the 64 R/A/U reference expectations.
+- Author review: multiple affected entries and affected root states lacked direct
+  whole-result tests. Added two focused tests: isolated outcomes/source indices
+  across four entries; absent/null/wrong-type/inspectable-empty root distinction.
+  Observed RED against index collapse and empty-root-as-gap mutations, then GREEN
+  after restoration. No production change was needed. One improvement pass only.
+- Final tree checks: 2,897 root tests/subtests pass, including 101 new and all
+  64 R/A/U IDs. `go vet ./...` exit 0; gofmt reports no changed file.
+- Exact restored production SHA-256:
+  `2d9be47662fc8b34e6b512ab26615c2fc9f5c12c2131af251b78f8661109cb69`.
+  Final test SHA-256:
+  `330fd9d8bb8b0630ea530365420968d3c368ec51711b2c0f0d67a6a2e06bc925`.
+- Temporary receipts (not durable repository fixtures):
+  `/tmp/packtrace-osv-execution-ls0dxhbl/`, including API/stub RED, initial GREEN,
+  surviving initial source-order check, E05 RED/GREEN, final mutation records,
+  review-test RED/GREEN and `final-root.jsonl`. Do not assume these survive cleanup.
+- Task 1: local implementation/checks complete; independent human final-head review
+  and integration remain pending. No acquisition, probes, GitHub operations or CI.
+
+### Author review disposition
+
+Strengths: reused real reader/structure/SemVer paths, preflight shape/text bounds,
+zero-on-fatal privacy, original locators and separation of positive evidence from
+incomplete evaluation. Important test gaps above were addressed with literal
+regressions and mutation discrimination. No remaining in-scope critical/important
+issue or deferred minor was identified; author review cannot certify its own blind
+spots. Verdict: retain locally, not ready for **reviewed integration**.
+
+Declined to judge / executor rulings:
+
+- Advisory identity/origin/activity and package matching: deferred deliberately by
+  the approved API boundary. Version match alone is not advisory applicability;
+  next separately approved increment must supply that authority.
+- Full OSV/ECOSYSTEM/GIT semantics: deferred by strict supported profile. Unknown
+  evidence remains indeterminate, never a clean negative.
+- Authenticated producer/snapshot evidence: deferred because only owned projections
+  are consumed here; digest/shape checks cannot authenticate fabricated evidence.
+- CLI/report/coverage/policy decisions and target installation: deferred because
+  none is wired or executed here. Consumers must preserve gaps before reporting.
+- Official toolchain/native qualification and probes: deferred by current execution
+  authority and platform gates. Modified local toolchain results do not close them.
+- Hosted CI and independent human review: deferred, not silently passed; neither
+  was authorized/executed. A separate reviewed final head is required for integration.
+- Hard memory/sandbox guarantees: declined; cardinality/text checks are work bounds,
+  not resident-memory or OS isolation evidence. No such guarantees are reported.
