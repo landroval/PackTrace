@@ -1,8 +1,9 @@
 # Bun stdin inspection: compact design and execution outline
 
-Status: **proposed; execution/publication not yet authorized**. The owner selected
-Bun stdin as the next direction. This single compact brief follows the agreed
-low-ceremony increment process; no Go change, issue or PR is included in preparation.
+Status: **design, compact execution, publication and integration approved**. The
+owner selected Bun stdin and then explicitly chose “Ejecutar ciclo completo”,
+waiving additional document handoffs, not verification. Inline execution; issue
+#52, CLI parent #8, related Bun capability #3. No new agents or target access.
 Base: development `c4919e02b706615fdd9c51f1057359f24da49a63`.
 
 ## Usable deliverable
@@ -69,7 +70,7 @@ Usable reports exit 3 even for empty/unsupported scopes; private fatal input,
 metadata, budget/read/report failures exit 2. No vacuous completed record/version
 coverage; recognized and unknown siblings remain independently observable.
 
-## Compact execution proposal (requires approval)
+## Approved compact execution
 
 1. Record authorization in this brief before Go. Create an issue under CLI #8 and
    link Bun inventory #3; do not close/move parent capabilities or touch #40/ledgers.
@@ -113,6 +114,16 @@ coverage; recognized and unknown siblings remain independently observable.
   kind/provenance and all expected semantic states remain visible. Old commands,
   both npm profiles, batches and six demos retain their byte/exit contracts.
 
-Implementation evidence is pending. Checks use the modified local Go toolchain;
+## Execution ledger
+
+- Authorization recorded before Go; shared normalization/matching interfaces reviewed.
+- Ruling: this approved brief is spec, plan and ledger; no redundant documents or
+  new agents. Author review and the integration waiver are not independent approval.
+  Preserve all source workspaces and unrelated ledger deletions.
+- GitHub rejected historical issue_id with required sub_issue_id; verified no parent
+  before corrected POST, then verified parent #8. No duplicate issue was created.
+- TDD, executable/mutation/regression and final integration evidence pending.
+
+Checks use the modified local Go toolchain;
 synthetic/runtime-owned evidence does not qualify actual Bun/npm producers,
 platforms, native acquisition, CI or a release.
