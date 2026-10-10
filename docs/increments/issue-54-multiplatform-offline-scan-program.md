@@ -535,7 +535,7 @@ unrelated work are unchanged. The 21 unrelated task-ledger deletions also visibl
 in the new workspace were excluded from every explicit file-scoped commit,
 left unpublished and un-restored. Source bookmarks/workspaces remain preserved.
 
-## 12. Approved next portable format contract — implementation plan proposed
+## 12. Approved portable format contract — implementation approved for #56
 
 I selected **Contrato + macOS (recomendado)** to prepare this continuation and
 execute only the explicitly bounded public-source study in section 13. That
@@ -671,7 +671,9 @@ Coordinator budget read-back: the analyst chat was created at
 168 seconds, below the approved 15 minutes; it is not a monotonic native-runtime
 measurement or platform qualification. No additional source groups were followed.
 
-## 14. Continuation preparation ledger and open approval gate
+## 14. Historical continuation preparation ledger
+
+This records the preparation stage. Its no-execution/no-publication statements apply to that stage; the later bounded approval and execution are recorded in section 16.
 
 - [x] Current development verified; exactly eight existing issues and draft PR
   #40 remain outside this design's tracking scope. No new issue, PR or push.
@@ -711,12 +713,7 @@ measurement or platform qualification. No additional source groups were followed
   supplied-stream increment by selecting **Ciclo completo (recomendado)**.
   Section 16 records that scope before the first new Go change; other gates remain closed.
 
-No new Go, native prototypes/queries/runs, dependencies/toolchains, privilege or
-security change, real-target access, provisioning, CI or release was authorized
-or executed. `scan` remains unavailable. Preserve all five qualification rows,
-#22/#38/PR #40 and all capability parents; do not narrow to local Linux or close
-#22 from a source argument. Unrelated task-ledger deletions remain unpublished
-and un-restored. This proposed format is not complete scanner authorization.
+At the preparation stage, no new Go or product execution was authorized or performed. Section 16 subsequently authorized only the bounded supplied-stream delivery. Native prototypes/queries/runs, dependencies/toolchains, privilege or security changes, real-target access, provisioning, CI and release remain unauthorized and unperformed in this continuation. `scan` remains unavailable. Preserve all five qualification rows, #22/#38/PR #40 and all capability parents; do not narrow to local Linux or close #22 from a source argument. Unrelated task-ledger deletions remain unpublished and un-restored. This approved format and consumer are not complete scanner authorization.
 
 ## 15. Supplied-stream npm snapshot-block consumer implementation plan — approved for #56
 
@@ -2516,8 +2513,9 @@ Only the four listed Go paths and this existing brief are approved public paths.
   tests/subtests. Checkpoint `bd22c1dcb15fa5047812118615afd456a9d985ae`.
   Fresh task review approved spec compliance and quality, with no findings.
   The 1.0 parser body/error order is unchanged except its private version parameter.
-- [ ] Task 2 missing-API/behavioral RED, GREEN, resource/privacy/ownership/sibling fixtures and fresh task review.
-- [ ] Compiling mutations discriminated; exact restoration and fresh checks.
-- [ ] Fresh root tests/vet/build/gofmt and all 162 legacy stdout/stderr/exit comparisons.
-- [ ] Fresh whole-branch review; exact-head/combined/merged-tree acceptance.
+- [x] Task 2: missing-API compiler RED (0 behavioral failures); initial compiling-stub RED recorded 46 failures before a test-index panic. The guard was corrected and the replay reached all 17 top-level tests without panic/build failure: 85 failing events across 16 runtime top-level tests, with counter arithmetic and the static AST policy check explicitly passing. Restored focused GREEN **447**, root GREEN **3,167**. Code checkpoint `49e5c03369114550bf19d68f4ebc130646c05967`; test-only review fixes `369fec21930fd3200c2af258a3af5da4d0ef1b7a`. Fresh task review first required fixes, then approved spec and quality after resolving all three findings: guarded indexing/full RED, exact cancellation mutation selectors and unsupported-header integration. No API/profile/production behavior changed in that fix.
+- [x] All **17** compiling mutations discriminated and restored exactly: **16 runtime-fixture** mutations and **1 static AST-scope** mutation for forbidden version evaluation. The corrected replay retained actual patches and pre/mutated/post hashes; the coordinator independently reconstructed every patch hash and checked all 19 failing invocation artifacts. Mutation 06 includes the private budget assertion plus both consumer cancellation cases; compiler-only mutation credit is zero.
+- [x] Coordinator fresh restored-source root **3,167**, vet, all-package build, separate CLI build and gofmt checks; all **162** synthetic legacy stdout/stderr/exit comparisons are byte-identical against a separate fresh exact-base executable. Resource/privacy/ownership/sibling evidence remains bounded supplied-stream evidence, not filesystem or native qualification.
+- [ ] Fresh whole-branch review.
+- [ ] Exact public head, combined prospect and actual merged-tree acceptance.
 - [ ] Child #56 completed closure and only its Project item Done after verified development integration.
