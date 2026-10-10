@@ -186,6 +186,88 @@ func TestInspectAdditionalShapes(t *testing.T) {
 	}
 }
 
+func TestInspectNameProfile(t *testing.T) {
+	lock := `{"lockfileVersion":3,"packages":{"node_modules/private-marker-package":{"version":"1.2.3"}}}`
+	for _, tc := range []struct {
+		name, lock, ad   string
+		count            int
+		kind, comparison string
+	}{
+		{"derived", lock, literalAd, 1, "installation-name-version-only", "installation-claim-equal"},
+		{"explicit", strings.Replace(lock, `"version":`, `"name":"private-marker-package","version":`, 1), literalAd, 1, "identity-version-only", "equal"},
+		{"alias-blocked", strings.Replace(lock, `"packages":{`, `"packages":{"":{"dependencies":{"private-marker-package":"npm:other@1"}},`, 1), literalAd, 0, "", "indeterminate"},
+		{"fixed", strings.Replace(lock, `"1.2.3"`, `"2.0.0"`, 1), literalAd, 0, "", "installation-claim-equal"},
+		{"withdrawn", lock, strings.Replace(literalAd, `"modified":`, `"withdrawn":"2026-01-02T00:00:00Z","modified":`, 1), 0, "", "installation-claim-equal"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got, e := ReadProfile(strings.NewReader(packet(tc.lock, tc.ad)), "npm-lock-v2-v3")
+			if e != nil || got.IdentityProfile != "npm-lock-v2-v3" || len(got.Candidates) != tc.count || got.ExitCode != 3 || got.Evaluations[0].IdentityComparison != tc.comparison {
+				t.Fatal("profile mismatch", got, e)
+			}
+			if tc.count > 0 && (got.Candidates[0].Kind != tc.kind || got.Candidates[0].EnforcementEligible || len(got.Findings) != 0) {
+				t.Fatal("hypothesis promoted", got.Candidates)
+			}
+			for _, fmt := range []string{"terminal", "json"} {
+				b, e := Render(got, fmt)
+				if e != nil || bytes.Contains(b, []byte("private-marker-package")) || bytes.Contains(b, []byte("1.2.3")) || bytes.Contains(b, []byte("PRIVATE")) {
+					t.Fatal("profile privacy")
+				}
+				if !bytes.Contains(b, []byte("npm-lock-v2-v3")) {
+					t.Fatal("selected interpretation hidden")
+				}
+			}
+			if tc.name == "derived" {
+				for _, c := range got.Coverage {
+					if c.Check == "record-qualification" && c.Outcome == "completed" {
+						t.Fatal("installation hypothesis called explicit claim")
+					}
+				}
+				found := false
+				for _, c := range got.Coverage {
+					if c.Check == "canonical-name-correspondence" && c.Outcome == "incomplete" {
+						found = true
+					}
+				}
+				if !found || got.Inventory[0].IdentitySource != "locator-profile" {
+					t.Fatal("canonical gap/provenance missing")
+				}
+			}
+		})
+	}
+	for _, profile := range []string{"", "PRIVATE", "explicit-only"} {
+		got, e := ReadProfile(strings.NewReader(packet(lock, literalAd)), profile)
+		if profile == "explicit-only" {
+			old, oe := Read(strings.NewReader(packet(lock, literalAd)))
+			if e != nil || oe != nil || !reflect.DeepEqual(got, old) || len(got.Candidates) != 0 {
+				t.Fatal("default changed")
+			}
+		} else if e == nil || strings.Contains(e.Error(), "PRIVATE") {
+			t.Fatal("profile validation")
+		}
+	}
+}
+
+func TestProfileSlotUncertaintyAndLocators(t *testing.T) {
+	for _, tc := range []struct {
+		name, location, ad string
+		candidates         int
+	}{
+		{"scoped", "node_modules/@scope/a", `{"id":"OWNED","modified":"2026-01-01T00:00:00Z","affected":[{"package":{"ecosystem":"npm","name":"@scope/a"},"versions":["1.2.3"]}]}`, 1},
+		{"nested", "node_modules/b/node_modules/private-marker-package", literalAd, 1},
+		{"unsupported", "node_modules/private-marker-package", strings.Replace(literalAd, `"SEMVER"`, `"ECOSYSTEM"`, 1), 0},
+		{"unknown-withdrawal", "node_modules/private-marker-package", strings.Replace(literalAd, `"modified":`, `"withdrawn":null,"modified":`, 1), 0},
+		{"cross-slot", "node_modules/private-marker-package", `{"id":"OWNED","modified":"2026-01-01T00:00:00Z","affected":[{"package":{"ecosystem":"npm","name":"other"},"versions":["1.2.3"]},{"package":{"ecosystem":"npm","name":"private-marker-package"},"versions":["9.9.9"]}]}`, 0},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			lock := `{"lockfileVersion":3,"packages":{` + fmt.Sprintf(`%q`, tc.location) + `:{"version":"1.2.3"}}}`
+			got, e := ReadProfile(strings.NewReader(packet(lock, tc.ad)), "npm-lock-v2-v3")
+			if e != nil || got.ExitCode != 3 || len(got.Candidates) != tc.candidates || len(got.Findings) != 0 {
+				t.Fatal("profile uncertainty/slot mixed", got, e)
+			}
+		})
+	}
+}
+
 func TestInspectDeterministic(t *testing.T) {
 	a, e := Read(strings.NewReader(packet(literalLock, literalAd)))
 	if e != nil {

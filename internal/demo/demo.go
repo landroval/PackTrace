@@ -12,17 +12,18 @@ import (
 )
 
 type Result struct {
-	Schema       string        `json:"schema"`
-	Experimental bool          `json:"experimental"`
-	Scenario     string        `json:"scenario"`
-	Scope        string        `json:"scope"`
-	Inputs       Inputs        `json:"inputs"`
-	Inventory    []Observation `json:"inventory"`
-	Evaluations  []Evaluation  `json:"evaluations"`
-	Candidates   []Candidate   `json:"candidates"`
-	Findings     []string      `json:"findings"`
-	Coverage     []Coverage    `json:"coverage"`
-	ExitCode     int           `json:"exit_code"`
+	Schema          string        `json:"schema"`
+	Experimental    bool          `json:"experimental"`
+	Scenario        string        `json:"scenario"`
+	Scope           string        `json:"scope"`
+	Inputs          Inputs        `json:"inputs"`
+	Inventory       []Observation `json:"inventory"`
+	Evaluations     []Evaluation  `json:"evaluations"`
+	Candidates      []Candidate   `json:"candidates"`
+	Findings        []string      `json:"findings"`
+	Coverage        []Coverage    `json:"coverage"`
+	ExitCode        int           `json:"exit_code"`
+	IdentityProfile string        `json:"-"`
 }
 
 type Inputs struct {
@@ -32,13 +33,16 @@ type Inputs struct {
 }
 
 type Observation struct {
-	Location             string `json:"location"`
-	Name                 string `json:"name"`
-	Version              string `json:"version"`
-	Observation          string `json:"observation"`
-	NameQualification    string `json:"-"`
-	VersionQualification string `json:"-"`
-	LinkQualification    string `json:"-"`
+	Location              string `json:"location"`
+	Name                  string `json:"name"`
+	Version               string `json:"version"`
+	Observation           string `json:"observation"`
+	NameQualification     string `json:"-"`
+	VersionQualification  string `json:"-"`
+	LinkQualification     string `json:"-"`
+	SelectedName          string `json:"-"`
+	IdentitySource        string `json:"-"`
+	IdentityQualification string `json:"-"`
 }
 
 type Evaluation struct {
@@ -97,9 +101,17 @@ func EvaluateScenario(name string) (Result, error) {
 	return result, nil
 }
 
-// EvaluateMetadata consumes unchanged successful projections. Its raw internal
-// result must pass through the inspect allowlist before user-supplied export.
+// EvaluateMetadata retains explicit-name-only comparison by default.
 func EvaluateMetadata(lockBytes, advisoryBytes []byte) (Result, error) {
+	return EvaluateMetadataProfile(lockBytes, advisoryBytes, "explicit-only")
+}
+
+// EvaluateMetadataProfile selects an experimental interpretation, not producer
+// proof. Raw analysis must pass through the inspect allowlist before export.
+func EvaluateMetadataProfile(lockBytes, advisoryBytes []byte, profile string) (Result, error) {
+	if profile != "explicit-only" && profile != "npm-lock-v2-v3" {
+		return Result{}, errors.New("demo: invalid-profile")
+	}
 	lock, err := inventory.ParseNPMLock(lockBytes)
 	if err != nil {
 		return Result{}, errors.New("demo: invalid-lockfile")
@@ -110,6 +122,13 @@ func EvaluateMetadata(lockBytes, advisoryBytes []byte) (Result, error) {
 	locked, err := inventory.ProjectNPMLock(lock)
 	if err != nil {
 		return Result{}, errors.New("demo: invalid-lockfile")
+	}
+	var names inventory.NPMLockNames
+	if profile == "npm-lock-v2-v3" {
+		names, err = inventory.ProjectNPMLockNames(locked)
+		if err != nil || names.SourceSHA256 != locked.SourceSHA256 || len(names.Entries) != len(locked.Records) {
+			return Result{}, errors.New("demo: invalid-name-projection")
+		}
 	}
 	advisory, err := intel.ParseOSVRecord(advisoryBytes)
 	if err != nil {
@@ -140,7 +159,11 @@ func EvaluateMetadata(lockBytes, advisoryBytes []byte) (Result, error) {
 		Inventory: []Observation{}, Evaluations: []Evaluation{}, Candidates: []Candidate{}, Findings: []string{}}
 	versionComplete := len(identities.Entries) > 0
 	recordsComplete := true
-	for _, record := range locked.Records {
+	hypotheses := false
+	if profile == "npm-lock-v2-v3" {
+		result.IdentityProfile = profile
+	}
+	for recordIndex, record := range locked.Records {
 		if record.Location == "" {
 			continue
 		} // Project root, not a dependency instance.
@@ -175,13 +198,23 @@ func EvaluateMetadata(lockBytes, advisoryBytes []byte) (Result, error) {
 		} else {
 			versionComplete = false
 		}
+		selectedName, identitySource, identityQualification := record.Name.Value, "", ""
 		nameOK := nameState == "value"
+		if profile == "npm-lock-v2-v3" {
+			selection := names.Entries[recordIndex]
+			if selection.Index != recordIndex || selection.Location != record.Location || selection.DeclaredName != record.Name {
+				return Result{}, errors.New("demo: inconsistent-name-projection")
+			}
+			selectedName, identitySource, identityQualification = selection.SelectedName, selection.Source, selection.Qualification
+			nameOK = selectedName != ""
+			hypotheses = hypotheses || identitySource == "locator-profile"
+		}
 		linkOK := linkState == "absent" || linkState == "non-link"
-		recordsComplete = recordsComplete && nameOK && queryOK && linkOK
+		recordsComplete = recordsComplete && nameState == "value" && queryOK && linkOK
 		packageIndex := len(result.Inventory)
-		result.Inventory = append(result.Inventory, Observation{Location: record.Location, Name: record.Name.Value, Version: record.Version.Value, Observation: "locked", NameQualification: nameState, VersionQualification: versionState, LinkQualification: linkState})
+		result.Inventory = append(result.Inventory, Observation{Location: record.Location, Name: record.Name.Value, Version: record.Version.Value, Observation: "locked", NameQualification: nameState, VersionQualification: versionState, LinkQualification: linkState, SelectedName: selectedName, IdentitySource: identitySource, IdentityQualification: identityQualification})
 		for i, identity := range identities.Entries {
-			equal := nameOK && identity.Name.State == intel.OSVFieldValue && identity.Name.Value == record.Name.Value
+			equal := nameOK && identity.Name.State == intel.OSVFieldValue && identity.Name.Value == selectedName
 			e := Evaluation{PackageIndex: packageIndex, AffectedIndex: identity.Index, IdentityEqual: equal,
 				IdentityQualification: identityLabel(identity.Qualification), VersionOutcome: "not-evaluated",
 				Withdrawal: withdrawalLabel(times.Withdrawal), Support: []Support{}, Problems: []Problem{}}
@@ -200,7 +233,11 @@ func EvaluateMetadata(lockBytes, advisoryBytes []byte) (Result, error) {
 			result.Evaluations = append(result.Evaluations, e)
 			versionComplete = versionComplete && condition.FullyEvaluated
 			if equal && linkOK && identity.Qualification == intel.OSVNPMIdentityCandidate && condition.Outcome == intel.OSVVersionMatch && times.Withdrawal == intel.WithdrawalNotDeclared {
-				result.Candidates = append(result.Candidates, Candidate{packageIndex, identity.Index, "identity-version-only", false})
+				kind := "identity-version-only"
+				if identitySource == "locator-profile" {
+					kind = "installation-name-version-only"
+				}
+				result.Candidates = append(result.Candidates, Candidate{packageIndex, identity.Index, kind, false})
 			}
 		}
 	}
@@ -221,6 +258,9 @@ func EvaluateMetadata(lockBytes, advisoryBytes []byte) (Result, error) {
 		recordState, recordReason = "incomplete", "missing-unqualified-or-link-claims"
 	}
 	result.Coverage = append(result.Coverage, Coverage{"record-qualification", recordState, recordReason})
+	if hypotheses {
+		result.Coverage = append(result.Coverage, Coverage{"canonical-name-correspondence", "incomplete", "installation-name-hypothesis"})
+	}
 	result.ExitCode = cli.SelectScanExit(cli.ScanExitConditions{RequiredCoverageIncomplete: true})
 	return result, nil
 }

@@ -108,6 +108,19 @@ func TestEvaluateMetadata(t *testing.T) {
 	}
 }
 
+func TestMetadataNameProfileBinding(t *testing.T) {
+	lock := `{"lockfileVersion":3,"packages":{"node_modules/a":{"version":"1.2.3"}}}`
+	ad := `{"id":"OWNED","modified":"2026-01-01T00:00:00Z","affected":[{"package":{"ecosystem":"npm","name":"a"},"versions":["1.2.3"]}]}`
+	base, e := EvaluateMetadata([]byte(lock), []byte(ad))
+	if e != nil {
+		t.Fatal(e)
+	}
+	got, e := EvaluateMetadataProfile([]byte(lock), []byte(ad), "npm-lock-v2-v3")
+	if e != nil || got.Inputs != base.Inputs || got.Inventory[0].Name != "" || got.Inventory[0].SelectedName != "a" || got.Inventory[0].IdentitySource != "locator-profile" || len(got.Candidates) != 1 || got.Candidates[0].Kind != "installation-name-version-only" {
+		t.Fatal("evidence mutated or hypothesis hidden", got, e)
+	}
+}
+
 func TestEvaluateMetadataEmptyEvidence(t *testing.T) {
 	for _, lock := range []string{`{"lockfileVersion":3,"packages":{"":{}}}`, `{"lockfileVersion":3,"packages":{"node_modules/a":{"name":"a","version":"1.2.3"}}}`} {
 		got, err := EvaluateMetadata([]byte(lock), []byte(`{"id":"OWNED","modified":"2026-01-01T00:00:00Z","affected":[]}`))

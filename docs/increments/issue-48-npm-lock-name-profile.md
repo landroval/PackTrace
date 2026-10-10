@@ -143,3 +143,25 @@ examples use Bash; local instructions for the operator use Nushell.
 
 - Owner approval recorded before code; issue #48 read back with landroval,
   parent #5 and native blocked-by #46. No independent approval claimed.
+- API compilation RED and compiling-stub behavioral RED observed: 30 failing
+  tests/subtests; implementation GREEN retained all dependency suites.
+- Root GREEN: **3,013 passing tests/subtests** (2,977 dependency + 36 new);
+  focused four-package run: 1,544. Vet/gofmt clean on the modified local toolchain.
+- Twelve compiled owned stdin cases ran in terminal/JSON: direct/scoped/nested
+  installation hypotheses and explicit alias claim produce one limited candidate;
+  alias/link/null/non-profile/fixed/withdrawal/unknown/cross-slot cases produce none.
+  All usable cases exit 3, findings empty, candidates not enforcement eligible.
+- For these twelve inputs, default-mode stdout/stderr/exits remain byte-identical
+  to #47's executable in both formats. All six original demo scenarios likewise.
+- Compiling alias-blocker bypass and canonical-kind promotion mutations failed
+  their intended behavioral tests; restored exact production bytes and root checks.
+- Author review found a qualification-label issue: fallback had made the existing
+  explicit-record coverage completed. Added a literal failing test, observed RED,
+  retained the explicit-claim gap and repeated root/vet/build checks. No evidence
+  was normalized or promoted to actual canonical correspondence.
+- Author review covered grammar/bounds, source/index/record binding, whole-document
+  blockers, raw evidence preservation, same-slot/withdrawal gates, hypothesis kind,
+  portable labels/no raw or hashes, and original/default behavior. No remaining
+  in-scope important/critical issue identified; independent review remains pending.
+- Publication pending at ledger write. Only the new bookmark may be pushed; keep
+  the PR draft and do not merge into the dependency branch or close issues/Done.
