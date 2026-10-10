@@ -195,8 +195,8 @@ branch deletion, new security setting, #40 execution or release is included.
 
 ## 7. First exact portable delivery: reference-to-bytes comparison
 
-This is a proposed small implementation plan within the program, **not approved
-code**. It adds a necessary missing content check without any filesystem or new
+This small implementation plan is approved for the first portable delivery only;
+other program implementation stages remain gated. It adds a necessary missing content check without any filesystem or new
 CLI wrapper. It is portable across the target matrix, but its tests do not
 qualify native safety or producer compatibility.
 
@@ -267,7 +267,7 @@ projection/original binding, complete snapshot or source qualification.
   publication/integration/closure. A native row remains NOT RUN despite unit passes.
 
 The first behavioral RED cases are independent expected outcomes, not captured
-implementation output. Start the proposed test file with this executable core,
+implementation output. Start the approved test file with this executable core,
 then add the exact-limit, ownership/duplicate-call and raw-field-indifference
 cases named above:
 
