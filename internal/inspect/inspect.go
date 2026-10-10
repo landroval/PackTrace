@@ -29,13 +29,15 @@ type Result struct {
 }
 
 type Observation struct {
-	Reference             string `json:"reference"`
-	Observation           string `json:"observation"`
-	NameQualification     string `json:"name_qualification"`
-	VersionQualification  string `json:"version_qualification"`
-	LinkQualification     string `json:"link_qualification"`
-	IdentitySource        string `json:"identity_source,omitempty"`
-	IdentityQualification string `json:"identity_qualification,omitempty"`
+	TupleKind               string `json:"tuple_kind,omitempty"`
+	ResolutionQualification string `json:"resolution_qualification,omitempty"`
+	Reference               string `json:"reference"`
+	Observation             string `json:"observation"`
+	NameQualification       string `json:"name_qualification"`
+	VersionQualification    string `json:"version_qualification"`
+	LinkQualification       string `json:"link_qualification"`
+	IdentitySource          string `json:"identity_source,omitempty"`
+	IdentityQualification   string `json:"identity_qualification,omitempty"`
 }
 
 type Evaluation struct {
@@ -76,25 +78,35 @@ func ReadProfile(in io.Reader, profile string) (Result, error) {
 	if err != nil {
 		return Result{}, errors.New("inspect: invalid-metadata")
 	}
-	result := Result{Schema: "packtrace.inspect.v1", Experimental: true, Scope: "supplied-metadata", Privacy: "portable", IdentityProfile: raw.IdentityProfile, AdvisoryReference: "advisory-0", Inventory: []Observation{}, Evaluations: []Evaluation{}, Candidates: raw.Candidates, Findings: raw.Findings, Coverage: raw.Coverage, ExitCode: raw.ExitCode}
+	return portableResult(raw, "packtrace.inspect.v1"), nil
+}
+
+func portableResult(raw demo.Result, schema string) Result {
+	result := Result{Schema: schema, Experimental: true, Scope: "supplied-metadata", Privacy: "portable", IdentityProfile: raw.IdentityProfile, AdvisoryReference: "advisory-0", Inventory: []Observation{}, Evaluations: []Evaluation{}, Candidates: raw.Candidates, Findings: raw.Findings, Coverage: raw.Coverage, ExitCode: raw.ExitCode}
 	for i, o := range raw.Inventory {
-		result.Inventory = append(result.Inventory, Observation{Reference: fmt.Sprintf("package-%d", i), Observation: o.Observation, NameQualification: o.NameQualification, VersionQualification: o.VersionQualification, LinkQualification: o.LinkQualification, IdentitySource: o.IdentitySource, IdentityQualification: o.IdentityQualification})
+		result.Inventory = append(result.Inventory, Observation{TupleKind: o.TupleKind, ResolutionQualification: o.ResolutionQualification, Reference: fmt.Sprintf("package-%d", i), Observation: o.Observation, NameQualification: o.NameQualification, VersionQualification: o.VersionQualification, LinkQualification: o.LinkQualification, IdentitySource: o.IdentitySource, IdentityQualification: o.IdentityQualification})
 	}
 	for _, e := range raw.Evaluations {
 		comparison := "indeterminate"
 		o := raw.Inventory[e.PackageIndex]
-		if (o.NameQualification == "value" || o.IdentitySource == "locator-profile") && e.IdentityQualification == "candidate" {
+		nameOK := o.NameQualification == "value" || o.IdentitySource == "locator-profile"
+		if o.IdentitySource == "bun-tuple" {
+			nameOK = o.SelectedName != "" && o.IdentityQualification == "tuple-claim"
+		}
+		if nameOK && e.IdentityQualification == "candidate" {
 			comparison = "different"
 			if e.IdentityEqual {
 				comparison = "equal"
 			}
 			if o.IdentitySource == "locator-profile" {
 				comparison = "installation-claim-" + comparison
+			} else if o.IdentitySource == "bun-tuple" {
+				comparison = "tuple-claim-" + comparison
 			}
 		}
 		result.Evaluations = append(result.Evaluations, Evaluation{e.PackageIndex, e.AffectedIndex, comparison, e.IdentityQualification, e.VersionOutcome, e.VersionFullyEvaluated, e.Withdrawal, e.Support, e.Problems})
 	}
-	return result, nil
+	return result
 }
 
 // Render accepts only the allowlisted portable result, not the raw analysis type.
@@ -117,6 +129,9 @@ func Render(r Result, format string) ([]byte, error) {
 	fmt.Fprintf(&text, "Locked entries: %d\n", len(r.Inventory))
 	for _, o := range r.Inventory {
 		fmt.Fprintf(&text, "  %s [%s]: name=%s version=%s link=%s\n", o.Reference, o.Observation, o.NameQualification, o.VersionQualification, o.LinkQualification)
+		if o.TupleKind != "" {
+			fmt.Fprintf(&text, "    tuple kind: %s; resolution=%s\n", o.TupleKind, o.ResolutionQualification)
+		}
 		if o.IdentitySource != "" {
 			fmt.Fprintf(&text, "    identity source: %s (%s)\n", o.IdentitySource, o.IdentityQualification)
 		}

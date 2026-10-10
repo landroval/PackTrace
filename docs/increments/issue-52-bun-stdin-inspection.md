@@ -60,7 +60,8 @@ budgets. These bounds are not stdin deadlines, RSS limits or a network sandbox.
 
 `packtrace.inspect.bun.v1`, experimental, supplied-metadata, portable, fixed profile
 `bun-npm-tuples`; positional `package-N`/`advisory-0`. Both formats expose tuple kind,
-field/query qualification, provenance, comparisons, support/problem positions,
+original resolution field state independently of query qualification, provenance,
+comparisons, support/problem positions,
 candidates, findings and coverage. Tuple comparisons use `tuple-claim-equal` /
 `tuple-claim-different`, or indeterminate when not qualified.
 
@@ -122,7 +123,36 @@ coverage; recognized and unknown siblings remain independently observable.
   Preserve all source workspaces and unrelated ledger deletions.
 - GitHub rejected historical issue_id with required sub_issue_id; verified no parent
   before corrected POST, then verified parent #8. No duplicate issue was created.
-- TDD, executable/mutation/regression and final integration evidence pending.
+- Missing-API RED, then compiling-stub behavioral RED: 34 failing tests/subtests,
+  no compiler stderr. Focused GREEN; final root **3,068**, including **37 new**
+  above 3,031; vet/build/gofmt clean. Acquisition disabled, local modified toolchain.
+- Four compiling mutants independently failed: unknown-as-npm, key-derived identity,
+  cross-slot mixing and original-source binding loss. Exact source bytes restored.
+- Author review found resolution states flattened behind query qualification.
+  TestBunResolutionFieldStates failed RED; original resolution state added to the
+  private/portable allowlist with old-schema omission; GREEN and root rechecked.
+- Nineteen owned compiled cases ran in terminal/JSON: npm/scoped/empty-key/root,
+  duplicate names, non-npm and unknown siblings, invalid query, fixed/withdrawn/
+  unknown-withdrawal/cross-slot, empty inventory, exactly 4,096 pairs and fatal
+  package/workspace/affected/inner-input errors. Usable exit 3, fatal 2; no leaks.
+- Legacy stdout/stderr/exits are byte-identical against integrated prerequisite:
+  72 inspect invocations, 40 batch invocations, twelve demos. Root help alone
+  advertises Bun; old identity/profile/schema behavior is preserved.
+- Final review: author review (new agents explicitly excluded), not independent
+  approval. No known remaining in-scope important/critical issue. Native/producer,
+  project acquisition, stdin deadlines/RSS and Bun batches deliberately excluded.
+- Scoped publication and exact final-head/combined/merged-tree checks pending.
+
+## Owned example (Bash)
+
+```bash
+bin="$(mktemp -d)/packtrace"
+GOTOOLCHAIN=local GOPROXY=off GOWORK=off CGO_ENABLED=0 go build -o "$bin" ./cmd/packtrace
+cat <<'JSON' | "$bin" inspect-bun --format json
+{"lockfile_text":"{\"lockfileVersion\":1,\"workspaces\":{},\"packages\":{\"alias-key\":[\"example-package@1.2.3\",\"\",{},\"synthetic-integrity-claim\"]}}","advisory":{"id":"EXAMPLE-OSV-001","modified":"2026-01-01T00:00:00Z","affected":[{"package":{"ecosystem":"npm","name":"example-package"},"versions":["1.2.3"]}]}}
+JSON
+# Exit 3: one tuple-name/version-only candidate, zero confirmed findings.
+```
 
 Checks use the modified local Go toolchain;
 synthetic/runtime-owned evidence does not qualify actual Bun/npm producers,
