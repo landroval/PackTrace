@@ -183,6 +183,67 @@ func TestInspectProfileArguments(t *testing.T) {
 	}
 }
 
+const batchInput = `{"lockfile":{"lockfileVersion":3,"packages":{"node_modules/PRIVATE-PATH":{"name":"private-marker-package","version":"1.2.3"}}},"advisories":[{"id":"PRIVATE-ID","modified":"2026-01-01T00:00:00Z","affected":[{"package":{"ecosystem":"npm","name":"private-marker-package"},"versions":["1.2.3"]}]},42]}`
+
+func TestRunInspectBatch(t *testing.T) {
+	for _, format := range []string{"terminal", "json"} {
+		t.Run(format, func(t *testing.T) {
+			var out, diag bytes.Buffer
+			if exit := runInput([]string{"inspect-batch", "--format=" + format}, strings.NewReader(batchInput), &out, &diag); exit != 3 || diag.Len() != 0 {
+				t.Fatal("batch executable failed", exit, diag.String())
+			}
+			for _, secret := range []string{"PRIVATE", "private-marker-package", "1.2.3"} {
+				if strings.Contains(out.String(), secret) {
+					t.Fatal("batch command leak")
+				}
+			}
+			if format == "json" {
+				var r struct {
+					Schema         string
+					CandidateCount int `json:"candidate_count"`
+					Advisories     []json.RawMessage
+					Findings       []json.RawMessage
+				}
+				if json.Unmarshal(out.Bytes(), &r) != nil || r.Schema != "packtrace.inspect.batch.v1" || r.CandidateCount != 1 || len(r.Advisories) != 2 || len(r.Findings) != 0 {
+					t.Fatal("batch JSON wrong", out.String())
+				}
+			} else if !strings.Contains(out.String(), "Candidate comparisons: 1") || !strings.Contains(out.String(), "advisory-1: invalid-advisory") {
+				t.Fatal("terminal gap/candidate missing")
+			}
+			for _, short := range []bool{false, true} {
+				if runInput([]string{"inspect-batch", "--format", format}, strings.NewReader(batchInput), failedWriter{short}, &diag) != 2 {
+					t.Fatal("batch writer error ignored")
+				}
+			}
+		})
+	}
+	var out, diag bytes.Buffer
+	if runInput([]string{"inspect-batch"}, strings.NewReader("PRIVATE-MALFORMED"), &out, &diag) != 2 || out.Len() != 0 || !strings.HasPrefix(diag.String(), "inspect-batch:") || strings.Contains(diag.String(), "PRIVATE") {
+		t.Fatal("batch fatal contract", diag.String())
+	}
+}
+
+func TestBatchArgumentsBeforeStdin(t *testing.T) {
+	for _, args := range [][]string{{"inspect-batch", "--PRIVATE"}, {"inspect-batch", "PRIVATE"}, {"inspect-batch", "--format=PRIVATE"}, {"inspect-batch", "--format"}, {"inspect-batch", "--format="}, {"inspect-batch", "--format=json", "--format=terminal"}, {"inspect-batch", "--identity-profile=PRIVATE"}, {"inspect-batch", "--identity-profile"}, {"inspect-batch", "--identity-profile=explicit-only", "--identity-profile=npm-lock-v2-v3"}, {"inspect-batch", "--help", "--format=json"}} {
+		var out, diag bytes.Buffer
+		if runInput(args, forbiddenReader{}, &out, &diag) != 2 || out.Len() != 0 || !strings.HasPrefix(diag.String(), "inspect-batch:") || strings.Contains(diag.String(), "PRIVATE") {
+			t.Fatal("batch flags/no-read/privacy", diag.String())
+		}
+	}
+	var out, diag bytes.Buffer
+	if runInput([]string{"inspect-batch", "--help"}, forbiddenReader{}, &out, &diag) != 0 || diag.Len() != 0 || !strings.Contains(out.String(), "advisories") || !strings.Contains(out.String(), "16") {
+		t.Fatal("batch help/no-read failed")
+	}
+	payload := strings.Replace(strings.Replace(batchInput, `node_modules/PRIVATE-PATH`, `node_modules/private-marker-package`, 1), `"name":"private-marker-package",`, "", 1)
+	for _, args := range [][]string{{"inspect-batch", "--format", "json", "--identity-profile=npm-lock-v2-v3"}, {"inspect-batch", "--identity-profile", "npm-lock-v2-v3", "--format=json"}} {
+		out.Reset()
+		diag.Reset()
+		if runInput(args, strings.NewReader(payload), &out, &diag) != 3 || diag.Len() != 0 || !strings.Contains(out.String(), "installation-name-version-only") || strings.Contains(out.String(), "private-marker-package") {
+			t.Fatal("batch profile not applied", diag.String())
+		}
+	}
+}
+
 func TestRunOutputFailure(t *testing.T) {
 	for _, args := range [][]string{{"--help"}, {"demo"}, {"demo", "--format=json"}} {
 		for _, short := range []bool{false, true} {
