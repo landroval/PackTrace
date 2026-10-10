@@ -299,6 +299,39 @@ func containsSnapshotGap(gaps []SnapshotGapKind, want SnapshotGapKind) bool {
 	return false
 }
 
+func TestReadSnapshotNPMIdentityDetectionBytePrecedence(t *testing.T) {
+	original := []byte(streamTestOriginal)
+	validCatalog := streamTestRows(streamTestCatalogLine(0, original))
+	validBlock := streamTestRows(streamTestBlockLine("left-pad", 0, original, 0))
+	for _, object := range []string{"block", "catalog"} {
+		for _, nonzero := range []bool{false, true} {
+			for _, extra := range []byte{'\n', '\r'} {
+				name := fmt.Sprintf("%s-%t-%s", object, nonzero, map[byte]string{'\n': "lf", '\r': "cr"}[extra])
+				t.Run(name, func(t *testing.T) {
+					var catalog, block []byte
+					if nonzero && object == "block" {
+						block = validBlock
+					}
+					if nonzero && object == "catalog" {
+						catalog = validCatalog
+					}
+					manifest := streamTestManifest(t, catalog, 0x2a, block)
+					suppliedBlock := append([]byte(nil), block...)
+					suppliedCatalog := append([]byte(nil), catalog...)
+					if object == "block" {
+						suppliedBlock = append(suppliedBlock, extra)
+					} else {
+						suppliedCatalog = append(suppliedCatalog, extra)
+					}
+					streamTestFatal(t, manifest, SnapshotNPMStreams{
+						Block: bytes.NewReader(suppliedBlock), Catalog: bytes.NewReader(suppliedCatalog),
+					}, "length-mismatch")
+				})
+			}
+		}
+	}
+}
+
 func TestReadSnapshotNPMIdentityDistinctSameBlockPrefix(t *testing.T) {
 	one := []byte(`{"id":"ONE","modified":"2026-10-02T00:00:00Z","affected":[{"package":{"ecosystem":"npm","name":"pkg-3"}}]}`)
 	two := []byte(`{"id":"TWO","modified":"2026-10-02T00:00:00Z","affected":[{"package":{"ecosystem":"npm","name":"pkg-6"}}]}`)
@@ -440,6 +473,25 @@ func (snapshotTestErrorReader) Read([]byte) (int, error) {
 	return 0, errors.New("private-path:/secret/raw-marker")
 }
 
+type snapshotErrorAfterReader struct {
+	data      []byte
+	offset    int
+	failAfter int
+}
+
+func (r *snapshotErrorAfterReader) Read(p []byte) (int, error) {
+	if r.offset >= r.failAfter {
+		return 0, errors.New("private-path:/secret/late-marker")
+	}
+	remaining := r.failAfter - r.offset
+	if len(p) > remaining {
+		p = p[:remaining]
+	}
+	n := copy(p, r.data[r.offset:])
+	r.offset += n
+	return n, nil
+}
+
 type eofWithDataReader struct {
 	data []byte
 	done bool
@@ -522,6 +574,22 @@ func TestSnapshotReadBudgetAndEOF(t *testing.T) {
 			t.Fatal("reread was not charged")
 		}
 	})
+}
+
+func TestSnapshotReadBudgetDetectionPrecedesSink(t *testing.T) {
+	for _, extra := range []byte{'\n', '\r'} {
+		t.Run(map[byte]string{'\n': "lf", '\r': "cr"}[extra], func(t *testing.T) {
+			budget := snapshotReadBudget{}
+			called := false
+			_, observed, resource, code := readSnapshotStream(context.Background(), bytes.NewReader([]byte{extra}), 0, &budget, func([]byte) string {
+				called = true
+				return "invalid-shape"
+			})
+			if code != "length-mismatch" || resource || observed != 1 || budget.used != 1 || called {
+				t.Fatal("positive detection byte reached hash/parser sink")
+			}
+		})
+	}
 }
 
 func TestReadSnapshotNPMIdentityStreamReadErrors(t *testing.T) {
@@ -702,6 +770,57 @@ func TestReadSnapshotNPMIdentityTimesAndUnevaluatedConditions(t *testing.T) {
 	if len(got.Records) != 4 || got.Records[0].Times.Withdrawal != WithdrawalReported || got.Records[1].Times.Withdrawal != WithdrawalNotDeclared || got.Records[2].Times.Withdrawal != WithdrawalUnknown || got.Records[0].Affected.Entries[0].Versions.Entries[0].Value != "not-semver" || got.Records[0].Affected.Entries[0].Ranges.Entries[0].Type.Value != "ECOSYSTEM" || got.Records[3].State != SnapshotOriginalVerified || got.Records[3].Header.Schema != OSVHeaderSchemaUnsupported || len(got.Records[3].Bindings) != 1 || got.Records[3].Bindings[0].State != SnapshotBindingGap || got.Records[3].Bindings[0].Problem != SnapshotBindingProblemIdentity {
 		t.Fatal("times, unsupported header, or unevaluated version/range evidence changed")
 	}
+}
+
+func streamTestOverLimitCatalog(contradictoryLast bool) []byte {
+	const count = 8194
+	lines := make([]string, count)
+	firstDigest := sha256.Sum256([]byte("overflow-0"))
+	for i := range count {
+		digest := sha256.Sum256([]byte(fmt.Sprintf("overflow-%d", i)))
+		size := uint64(4 << 20)
+		if contradictoryLast && i == count-1 {
+			digest, size = firstDigest, 1
+		}
+		lines[i] = streamTestCatalogRefLine(uint64(i), digest, size)
+	}
+	return streamTestRows(lines...)
+}
+
+func TestReadSnapshotNPMIdentityDeclarationOverflowPrecedence(t *testing.T) {
+	t.Run("late-read-error", func(t *testing.T) {
+		catalog := streamTestOverLimitCatalog(false)
+		manifest := streamTestManifest(t, catalog, 0x2a, nil)
+		streamTestFatal(t, manifest, SnapshotNPMStreams{
+			Block:   bytes.NewReader(nil),
+			Catalog: &snapshotErrorAfterReader{data: catalog, failAfter: len(catalog) - 1},
+		}, "read-failed")
+	})
+	t.Run("late-digest-mismatch", func(t *testing.T) {
+		catalog := streamTestOverLimitCatalog(false)
+		catalog = append(append(append([]byte(nil), catalog[:len(catalog)-1]...), ' '), '\n')
+		manifest := streamTestManifest(t, catalog, 0x2a, nil)
+		supplied := append([]byte(nil), catalog...)
+		supplied[len(supplied)-2] = '\t'
+		streamTestFatal(t, manifest, SnapshotNPMStreams{Block: bytes.NewReader(nil), Catalog: bytes.NewReader(supplied)}, "digest-mismatch")
+	})
+	t.Run("late-final-lf", func(t *testing.T) {
+		catalog := streamTestOverLimitCatalog(false)
+		manifest := streamTestManifest(t, catalog, 0x2a, nil)
+		supplied := append([]byte(nil), catalog...)
+		supplied[len(supplied)-1] = 'x'
+		streamTestFatal(t, manifest, SnapshotNPMStreams{Block: bytes.NewReader(nil), Catalog: bytes.NewReader(supplied)}, "invalid-shape")
+	})
+	t.Run("late-contradictory-length", func(t *testing.T) {
+		catalog := streamTestOverLimitCatalog(true)
+		manifest := streamTestManifest(t, catalog, 0x2a, nil)
+		streamTestFatal(t, manifest, SnapshotNPMStreams{Block: bytes.NewReader(nil), Catalog: bytes.NewReader(catalog)}, "invalid-shape")
+	})
+	t.Run("structured-over-limit", func(t *testing.T) {
+		catalog := streamTestOverLimitCatalog(false)
+		manifest := streamTestManifest(t, catalog, 0x2a, nil)
+		streamTestFatal(t, manifest, SnapshotNPMStreams{Block: bytes.NewReader(nil), Catalog: bytes.NewReader(catalog)}, "limit-exceeded")
+	})
 }
 
 func TestReadSnapshotNPMIdentityLimits(t *testing.T) {

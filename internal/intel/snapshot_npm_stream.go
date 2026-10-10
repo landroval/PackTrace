@@ -235,13 +235,13 @@ func readSnapshotStream(ctx context.Context, r io.Reader, expected uint64, budge
 		if !charged {
 			return [32]byte{}, observed, false, "limit-exceeded"
 		}
+		if observed > expected {
+			return [32]byte{}, observed, false, "length-mismatch"
+		}
 		if n > 0 {
 			_, _ = h.Write(buf[:n])
 			if code := sink(buf[:n]); code != "" {
 				return [32]byte{}, observed, false, code
-			}
-			if observed > expected {
-				return [32]byte{}, observed, false, "length-mismatch"
 			}
 		}
 		if err != nil {
@@ -593,20 +593,25 @@ func validateSnapshotNPMManifest(manifest SnapshotManifest) string {
 	return ""
 }
 
-func snapshotAddDeclaration(lengths map[[32]byte]uint64, digest [32]byte, size uint64, remaining *uint64, retained *snapshotRetainedBudget) string {
+func snapshotAddDeclaration(lengths map[[32]byte]uint64, digest [32]byte, size uint64, remaining *uint64, retained *snapshotRetainedBudget, overflow *bool) string {
 	if old, ok := lengths[digest]; ok {
 		if old != size {
 			return "invalid-shape"
 		}
 		return ""
 	}
-	if size > *remaining {
-		return "limit-exceeded"
-	}
 	if !retained.metadataEntry() || !retained.logicalBytes(40) {
 		return "resource"
 	}
-	*remaining -= size
+	if size > *remaining {
+		if overflow == nil {
+			return "limit-exceeded"
+		}
+		*overflow = true
+		*remaining = 0
+	} else {
+		*remaining -= size
+	}
 	lengths[digest] = size
 	return ""
 }
@@ -735,7 +740,7 @@ func ReadSnapshotNPMIdentity(ctx context.Context, manifest SnapshotManifest, nam
 	lengths := make(map[[32]byte]uint64)
 	remainingDeclared := uint64(maxSnapshotManifestObjectBytes)
 	addDirect := func(ref SnapshotObjectReference) string {
-		return snapshotAddDeclaration(lengths, ref.SHA256, ref.Bytes, &remainingDeclared, &retained)
+		return snapshotAddDeclaration(lengths, ref.SHA256, ref.Bytes, &remainingDeclared, &retained, nil)
 	}
 	if code = addDirect(manifest.Originals); code != "" {
 		if code == "resource" {
@@ -753,6 +758,7 @@ func ReadSnapshotNPMIdentity(ctx context.Context, manifest SnapshotManifest, nam
 			return fail(code)
 		}
 	}
+	declarationOverflow := false
 	catalogState, resource, code := readSnapshotJSONL(ctx, streams.Catalog, manifest.Originals, &readBudget, func(line []byte, physical uint64) string {
 		row, code := parseSnapshotCatalogRow(line)
 		if code != "" {
@@ -761,7 +767,7 @@ func ReadSnapshotNPMIdentity(ctx context.Context, manifest SnapshotManifest, nam
 		if row.ordinal != physical {
 			return "invalid-shape"
 		}
-		if code = snapshotAddDeclaration(lengths, row.digest, row.bytes, &remainingDeclared, &retained); code != "" {
+		if code = snapshotAddDeclaration(lengths, row.digest, row.bytes, &remainingDeclared, &retained, &declarationOverflow); code != "" {
 			return code
 		}
 		for _, index := range selected[row.ordinal] {
@@ -790,6 +796,9 @@ func ReadSnapshotNPMIdentity(ctx context.Context, manifest SnapshotManifest, nam
 		if !binding.catalogBound {
 			return fail("invalid-shape")
 		}
+	}
+	if declarationOverflow {
+		return fail("limit-exceeded")
 	}
 	out.Declaration = SnapshotDeclarationVerified
 
