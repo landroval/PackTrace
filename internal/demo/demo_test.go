@@ -77,6 +77,51 @@ func TestEvaluateScenario(t *testing.T) {
 	}
 }
 
+func TestEvaluateMetadata(t *testing.T) {
+	ad := `{"id":"OWNED-TEST","modified":"2026-01-01T00:00:00Z","affected":[{"package":{"ecosystem":"npm","name":"owned-package"},"versions":["1.2.3"]}]}`
+	for _, tc := range []struct {
+		name, record, outcome string
+		candidates            int
+	}{
+		{"positive", `{"name":"owned-package","version":"1.2.3"}`, "match", 1},
+		{"absent-name", `{"version":"1.2.3"}`, "match", 0},
+		{"null-name", `{"name":null,"version":"1.2.3"}`, "match", 0},
+		{"invalid-name-type", `{"name":7,"version":"1.2.3"}`, "match", 0},
+		{"empty-name", `{"name":"","version":"1.2.3"}`, "match", 0},
+		{"absent-version", `{"name":"owned-package"}`, "not-evaluated", 0},
+		{"invalid-version", `{"name":"owned-package","version":"file:PRIVATE"}`, "not-evaluated", 0},
+		{"link", `{"name":"owned-package","version":"1.2.3","link":true}`, "match", 0},
+		{"null-link", `{"name":"owned-package","version":"1.2.3","link":null}`, "match", 0},
+		{"invalid-link", `{"name":"owned-package","version":"1.2.3","link":"false"}`, "match", 0},
+		{"false-link", `{"name":"owned-package","version":"1.2.3","link":false}`, "match", 1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			lock := `{"lockfileVersion":3,"packages":{"":{},"node_modules/owned-package":` + tc.record + `}}`
+			got, err := EvaluateMetadata([]byte(lock), []byte(ad))
+			if err != nil || got.Scope != "supplied-metadata" || len(got.Inventory) != 1 || len(got.Evaluations) != 1 || len(got.Candidates) != tc.candidates || len(got.Findings) != 0 || got.ExitCode != 3 || got.Evaluations[0].VersionOutcome != tc.outcome {
+				t.Fatal("metadata lost, inferred or promoted", got, err)
+			}
+			if got.Inventory[0].NameQualification == "" || got.Inventory[0].VersionQualification == "" || got.Inventory[0].LinkQualification == "" {
+				t.Fatal("qualification states missing")
+			}
+		})
+	}
+}
+
+func TestEvaluateMetadataEmptyEvidence(t *testing.T) {
+	for _, lock := range []string{`{"lockfileVersion":3,"packages":{"":{}}}`, `{"lockfileVersion":3,"packages":{"node_modules/a":{"name":"a","version":"1.2.3"}}}`} {
+		got, err := EvaluateMetadata([]byte(lock), []byte(`{"id":"OWNED","modified":"2026-01-01T00:00:00Z","affected":[]}`))
+		if err != nil || len(got.Candidates) != 0 || got.ExitCode != 3 {
+			t.Fatal(got, err)
+		}
+		for _, c := range got.Coverage {
+			if c.Check == "version-conditions" && c.Outcome == "completed" {
+				t.Fatal("vacuous completion")
+			}
+		}
+	}
+}
+
 func TestEvaluateScenarioFailurePrivacy(t *testing.T) {
 	for _, name := range []string{"malformed", "PRIVATE-SCENARIO-MARKER"} {
 		got, err := EvaluateScenario(name)
