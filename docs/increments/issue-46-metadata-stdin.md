@@ -7,9 +7,11 @@ incorporated demo scenarios. It is an offline metadata inspector, not a project
 scanner, installed inventory, authenticated feed or complete threat assessment.
 
 The owner authorized preparing this compact brief after the demo promotion.
-**This brief is awaiting approval as specification/plan and execution authority.**
-No new Go, issue, publication, dependency acquisition or target access is authorized
-by the preparation alone. Use one brief with the code, not a separate docs PR.
+**Approved:** the owner selected “Ejecutar y publicar apilado (recomendado)”,
+explicitly approving this written specification/plan, inline TDD, owned stdin
+checks, scoped jj commits, issue #46 and dependent draft publication.
+No dependency acquisition or target access is authorized. Use one brief with
+the code, not a separate docs PR.
 
 Preparation workspace: `metadata-stdin`, parent
 `05b4f99748f4e4af323d026fd4d934166311c935`; promotion PR #45 targets `development`.
@@ -133,3 +135,9 @@ JSON
 
 Local verification uses the existing modified Go toolchain with acquisition off.
 Those environment controls are not OS sandbox evidence or official qualification.
+
+## Execution ledger
+
+- Issue #46 created/read back: owner landroval, parent #8, native blocked-by #43.
+- Approval recorded before new Go; dependency head remains exact and unchanged.
+- Execution checks and publication are pending; no independent approval claimed.
