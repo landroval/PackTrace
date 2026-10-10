@@ -33,16 +33,19 @@ type Inputs struct {
 }
 
 type Observation struct {
-	Location              string `json:"location"`
-	Name                  string `json:"name"`
-	Version               string `json:"version"`
-	Observation           string `json:"observation"`
-	NameQualification     string `json:"-"`
-	VersionQualification  string `json:"-"`
-	LinkQualification     string `json:"-"`
-	SelectedName          string `json:"-"`
-	IdentitySource        string `json:"-"`
-	IdentityQualification string `json:"-"`
+	SourceIndex             int    `json:"-"`
+	ResolutionQualification string `json:"-"`
+	TupleKind               string `json:"-"`
+	Location                string `json:"location"`
+	Name                    string `json:"name"`
+	Version                 string `json:"version"`
+	Observation             string `json:"observation"`
+	NameQualification       string `json:"-"`
+	VersionQualification    string `json:"-"`
+	LinkQualification       string `json:"-"`
+	SelectedName            string `json:"-"`
+	IdentitySource          string `json:"-"`
+	IdentityQualification   string `json:"-"`
 }
 
 type Evaluation struct {
@@ -130,6 +133,38 @@ func EvaluateMetadataProfile(lockBytes, advisoryBytes []byte, profile string) (R
 			return Result{}, errors.New("demo: invalid-name-projection")
 		}
 	}
+	observations := []Observation{}
+	for recordIndex, record := range locked.Records {
+		if record.Location == "" {
+			continue // npm project root, not a dependency instance.
+		}
+		nameState := fieldLabel(record.Name.State)
+		if nameState == "value" && record.Name.Value == "" {
+			nameState = "empty"
+		}
+		linkState := fieldLabel(record.Link.State)
+		if record.Link.State == inventory.FieldValue {
+			linkState = "non-link"
+			if record.Link.Value {
+				linkState = "link"
+			}
+		}
+		selectedName, identitySource, identityQualification := record.Name.Value, "", ""
+		if profile == "npm-lock-v2-v3" {
+			selection := names.Entries[recordIndex]
+			if selection.Index != recordIndex || selection.Location != record.Location || selection.DeclaredName != record.Name {
+				return Result{}, errors.New("demo: inconsistent-name-projection")
+			}
+			selectedName, identitySource, identityQualification = selection.SelectedName, selection.Source, selection.Qualification
+		}
+		observations = append(observations, Observation{SourceIndex: recordIndex, Location: record.Location, Name: record.Name.Value, Version: record.Version.Value, Observation: "locked", NameQualification: nameState, VersionQualification: fieldLabel(record.Version.State), LinkQualification: linkState, SelectedName: selectedName, IdentitySource: identitySource, IdentityQualification: identityQualification})
+	}
+	return evaluateObservations(locked.SourceSHA256, observations, advisoryBytes, profile)
+}
+
+// evaluateObservations correlates already source-qualified claims; each source
+// normalizer owns its root, kind and name interpretation. No fabricated lockfile.
+func evaluateObservations(source [32]byte, observations []Observation, advisoryBytes []byte, profile string) (Result, error) {
 	advisory, err := intel.ParseOSVRecord(advisoryBytes)
 	if err != nil {
 		return Result{}, errors.New("demo: invalid-advisory")
@@ -155,32 +190,19 @@ func EvaluateMetadataProfile(lockBytes, advisoryBytes []byte, profile string) (R
 	}
 
 	result := Result{Schema: "packtrace.internal.metadata.v1", Experimental: true,
-		Scope: "supplied-metadata", Inputs: Inputs{fmt.Sprintf("%x", locked.SourceSHA256), fmt.Sprintf("%x", header.SourceSHA256), header.ID.Value},
+		Scope: "supplied-metadata", Inputs: Inputs{fmt.Sprintf("%x", source), fmt.Sprintf("%x", header.SourceSHA256), header.ID.Value},
 		Inventory: []Observation{}, Evaluations: []Evaluation{}, Candidates: []Candidate{}, Findings: []string{}}
 	versionComplete := len(identities.Entries) > 0
 	recordsComplete := true
 	hypotheses := false
-	if profile == "npm-lock-v2-v3" {
+	if profile != "explicit-only" {
 		result.IdentityProfile = profile
 	}
-	for recordIndex, record := range locked.Records {
-		if record.Location == "" {
-			continue
-		} // Project root, not a dependency instance.
-		nameState, versionState := fieldLabel(record.Name.State), fieldLabel(record.Version.State)
-		if nameState == "value" && record.Name.Value == "" {
-			nameState = "empty"
-		}
-		linkState := fieldLabel(record.Link.State)
-		if record.Link.State == inventory.FieldValue {
-			linkState = "non-link"
-			if record.Link.Value {
-				linkState = "link"
-			}
-		}
-		query, queryErr := intel.ParseSemVer(record.Version.Value)
-		queryOK := record.Version.State == inventory.FieldValue && queryErr == nil
-		if record.Version.State == inventory.FieldValue {
+	for _, record := range observations {
+		nameState, versionState, linkState := record.NameQualification, record.VersionQualification, record.LinkQualification
+		query, queryErr := intel.ParseSemVer(record.Version)
+		queryOK := versionState == "value" && queryErr == nil
+		if versionState == "value" {
 			versionState = "qualified"
 			if !queryOK {
 				versionState = "invalid-semver"
@@ -198,21 +220,17 @@ func EvaluateMetadataProfile(lockBytes, advisoryBytes []byte, profile string) (R
 		} else {
 			versionComplete = false
 		}
-		selectedName, identitySource, identityQualification := record.Name.Value, "", ""
+		selectedName, identitySource := record.SelectedName, record.IdentitySource
 		nameOK := nameState == "value"
-		if profile == "npm-lock-v2-v3" {
-			selection := names.Entries[recordIndex]
-			if selection.Index != recordIndex || selection.Location != record.Location || selection.DeclaredName != record.Name {
-				return Result{}, errors.New("demo: inconsistent-name-projection")
-			}
-			selectedName, identitySource, identityQualification = selection.SelectedName, selection.Source, selection.Qualification
+		if profile != "explicit-only" {
 			nameOK = selectedName != ""
-			hypotheses = hypotheses || identitySource == "locator-profile"
 		}
+		hypotheses = hypotheses || identitySource == "locator-profile"
 		linkOK := linkState == "absent" || linkState == "non-link"
-		recordsComplete = recordsComplete && nameState == "value" && queryOK && linkOK
+		recordsComplete = recordsComplete && nameState == "value" && queryOK && linkOK && nameOK
 		packageIndex := len(result.Inventory)
-		result.Inventory = append(result.Inventory, Observation{Location: record.Location, Name: record.Name.Value, Version: record.Version.Value, Observation: "locked", NameQualification: nameState, VersionQualification: versionState, LinkQualification: linkState, SelectedName: selectedName, IdentitySource: identitySource, IdentityQualification: identityQualification})
+		record.VersionQualification = versionState
+		result.Inventory = append(result.Inventory, record)
 		for i, identity := range identities.Entries {
 			equal := nameOK && identity.Name.State == intel.OSVFieldValue && identity.Name.Value == selectedName
 			e := Evaluation{PackageIndex: packageIndex, AffectedIndex: identity.Index, IdentityEqual: equal,
@@ -236,6 +254,8 @@ func EvaluateMetadataProfile(lockBytes, advisoryBytes []byte, profile string) (R
 				kind := "identity-version-only"
 				if identitySource == "locator-profile" {
 					kind = "installation-name-version-only"
+				} else if identitySource == "bun-tuple" {
+					kind = "bun-tuple-name-version-only"
 				}
 				result.Candidates = append(result.Candidates, Candidate{packageIndex, identity.Index, kind, false})
 			}
@@ -257,7 +277,13 @@ func EvaluateMetadataProfile(lockBytes, advisoryBytes []byte, profile string) (R
 	if !recordsComplete || len(result.Inventory) == 0 {
 		recordState, recordReason = "incomplete", "missing-unqualified-or-link-claims"
 	}
+	if profile == "bun-npm-tuples" && recordState == "completed" {
+		recordReason = "inspectable-tuple-claims"
+	}
 	result.Coverage = append(result.Coverage, Coverage{"record-qualification", recordState, recordReason})
+	if profile == "bun-npm-tuples" {
+		result.Coverage = append(result.Coverage, Coverage{"canonical-name-correspondence", "incomplete", "tuple-name-claim"})
+	}
 	if hypotheses {
 		result.Coverage = append(result.Coverage, Coverage{"canonical-name-correspondence", "incomplete", "installation-name-hypothesis"})
 	}

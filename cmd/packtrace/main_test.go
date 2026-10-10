@@ -244,6 +244,51 @@ func TestBatchArgumentsBeforeStdin(t *testing.T) {
 	}
 }
 
+const bunCommandPacket = `{"lockfile_text":"{\"lockfileVersion\":1,\"workspaces\":{},\"packages\":{\"PRIVATE-KEY\":[\"private-marker-package@1.2.3\",\"\",{},\"PRIVATE-INTEGRITY\"]}}","advisory":{"id":"PRIVATE-ID","modified":"2026-01-01T00:00:00Z","affected":[{"package":{"ecosystem":"npm","name":"private-marker-package"},"versions":["1.2.3"]}]}}`
+
+func TestRunBunInspection(t *testing.T) {
+	for _, args := range [][]string{{"inspect-bun"}, {"inspect-bun", "--format=terminal"}, {"inspect-bun", "--format", "json"}} {
+		var out, diag bytes.Buffer
+		if exit := runInput(args, strings.NewReader(bunCommandPacket), &out, &diag); exit != 3 || diag.Len() != 0 || !strings.Contains(out.String(), "bun-tuple-name-version-only") {
+			t.Fatal("Bun command missing", exit, diag.String(), out.String())
+		}
+		for _, s := range []string{"PRIVATE", "private-marker-package", "1.2.3"} {
+			if strings.Contains(out.String()+diag.String(), s) {
+				t.Fatal("Bun command leak")
+			}
+		}
+		for _, short := range []bool{false, true} {
+			diag.Reset()
+			if runInput(args, strings.NewReader(bunCommandPacket), failedWriter{short}, &diag) != 2 || strings.Contains(diag.String(), "PRIVATE") {
+				t.Fatal("Bun output failure hidden/leaked")
+			}
+		}
+	}
+	var out, diag bytes.Buffer
+	if runInput([]string{"inspect-bun"}, strings.NewReader("PRIVATE-MALFORMED"), &out, &diag) != 2 || out.Len() != 0 || !strings.HasPrefix(diag.String(), "inspect-bun:") || strings.Contains(diag.String(), "PRIVATE") {
+		t.Fatal("Bun fatal/private")
+	}
+}
+
+func TestBunArgumentsBeforeStdin(t *testing.T) {
+	for _, tail := range [][]string{{"--PRIVATE"}, {"PRIVATE"}, {"--format"}, {"--format="}, {"--format=PRIVATE"}, {"--format=json", "--format=terminal"}, {"--identity-profile=explicit-only"}, {"--identity-profile", "npm-lock-v2-v3"}, {"--help", "--format=json"}} {
+		args := append([]string{"inspect-bun"}, tail...)
+		var out, diag bytes.Buffer
+		if runInput(args, forbiddenReader{}, &out, &diag) != 2 || out.Len() != 0 || !strings.HasPrefix(diag.String(), "inspect-bun:") || strings.Contains(diag.String(), "PRIVATE") {
+			t.Fatal("Bun arguments/private/no-read", diag.String())
+		}
+	}
+	var out, diag bytes.Buffer
+	if runInput([]string{"inspect-bun", "--help"}, forbiddenReader{}, &out, &diag) != 0 || diag.Len() != 0 || !strings.Contains(out.String(), "lockfile_text") {
+		t.Fatal("Bun help/no-read")
+	}
+	for _, short := range []bool{false, true} {
+		if runInput([]string{"inspect-bun", "--help"}, forbiddenReader{}, failedWriter{short}, &diag) != 2 {
+			t.Fatal("Bun help output error")
+		}
+	}
+}
+
 func TestRunOutputFailure(t *testing.T) {
 	for _, args := range [][]string{{"--help"}, {"demo"}, {"demo", "--format=json"}} {
 		for _, short := range []bool{false, true} {
