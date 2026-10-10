@@ -5,12 +5,14 @@
 **Written specification/plan approved; local implementation verified; peer review pending.**
 The owner selected evaluation of OSV version conditions as the next product increment,
 reviewed and approved this complete specification and its separate
-[implementation plan](osv-version-conditions-plan.md), then explicitly authorized
+[implementation plan](issue-41-osv-version-conditions-plan.md), then explicitly authorized
 inline local execution, synthetic offline checks, restored mutations, evidence in
 these two documents and scoped local jj commits. The new workspace starts from
-integrated `development` `2c1cad8653e801a1395c2e372a76979dd54c8067`. No GitHub
-issue number is reserved by this filename. Agents, acquisition, probes, CI, GitHub
-coordination/publication and independent review/integration remain separate.
+integrated `development` `2c1cad8653e801a1395c2e372a76979dd54c8067`. This increment
+is tracked as [#41](https://github.com/landroval/PackTrace/issues/41), a child of #6.
+The owner separately authorized scoped jj publication, a PR to `development`, this
+issue's Project update and `landroval` ownership, and designated `jsustt` for
+independent review. Agents, acquisition, probes, CI and integration remain separate.
 
 The goal is to turn existing evidence into executable version-condition decisions,
 not add another raw reader. Success is passing the 64 remaining R/A/U reference
@@ -301,6 +303,6 @@ The 64 approved reference cases and production implementation remained unchanged
 
 This is author self-review, not independent peer approval or reviewed integration.
 No remaining in-scope critical/important issue or deferred minor was identified
-in that pass. No issue/PR, push, merge, release, new agent, acquisition, target
-scan, probe or hosted CI operation was performed. The original checkout and its
+in that pass. At that local-delivery boundary no issue/PR, push, merge, release,
+new agent, acquisition, target scan, probe or hosted CI operation was performed. The original checkout and its
 unrelated deletion checkpoint remain intact; the new workspace is retained.

@@ -8,15 +8,16 @@
 
 **Tech Stack:** Existing Go baseline, standard library only; no module/toolchain acquisition.
 
-**Spec:** [Owner-approved specification](osv-version-conditions.md). The [#15 reference contract](issue-15-osv-version-fixtures.md) travels with this plan.
+**Spec:** [Owner-approved specification](issue-41-osv-version-conditions.md). The [#15 reference contract](issue-15-osv-version-fixtures.md) travels with this plan.
 
 ## Status and global constraints
 
 **Complete plan approved; local inline execution explicitly authorized.** The
 owner approved this exact plan and authorized only its two Go files, synthetic
 offline tests/vet, restored temporary mutations, evidence in these two documents
-and scoped local jj commits. No agents, acquisition, probes, GitHub operations,
-CI or publication are included.
+and scoped local jj commits. That initial execution authority did not include
+agents, acquisition, probes, GitHub operations, CI or publication. The owner has
+subsequently authorized publication under issue #41; see the handoff below.
 Base is `2c1cad8653e801a1395c2e372a76979dd54c8067`; use only the `osv-version-conditions` jj workspace. Preserve the original checkout and all other workspaces/bookmarks.
 
 - Exactly two new Go files; no existing Go/module/CLI/workflow changes.
@@ -630,12 +631,30 @@ later gate; author review is not its substitute.
   `2d9be47662fc8b34e6b512ab26615c2fc9f5c12c2131af251b78f8661109cb69`.
   Final test SHA-256:
   `330fd9d8bb8b0630ea530365420968d3c368ec51711b2c0f0d67a6a2e06bc925`.
-- Temporary receipts (not durable repository fixtures):
-  `/tmp/packtrace-osv-execution-ls0dxhbl/`, including API/stub RED, initial GREEN,
-  surviving initial source-order check, E05 RED/GREEN, final mutation records,
-  review-test RED/GREEN and `final-root.jsonl`. Do not assume these survive cleanup.
+- Temporary receipts (not durable repository fixtures) include API/stub RED,
+  initial GREEN, the surviving initial source-order check, E05 RED/GREEN, final
+  mutation records, review-test RED/GREEN and the final root-test stream. The
+  machine-specific temporary location is omitted from the public handoff; these
+  files may disappear. The recorded observations are not invented durable fixtures.
 - Task 1: local implementation/checks complete; independent human final-head review
-  and integration remain pending. No acquisition, probes, GitHub operations or CI.
+  and integration remain pending. No acquisition, probes or CI was authorized.
+
+### Publication handoff
+
+The owner separately authorized issue creation under #6, scoped jj publication,
+a PR against `development`, this issue's Project update and `landroval` ownership,
+and selected `jsustt` as independent reviewer. The tracking issue is
+[#41](https://github.com/landroval/PackTrace/issues/41); publication bookmark is
+`issue-41-osv-version-conditions`. The specification/plan were renamed to the
+issue-keyed filenames without changing the two verified Go files. This handoff
+preserves the original authorization, code and evidence ancestors; it does not
+rewrite published history or claim removal of text from historic commits.
+
+A review request follows publication of the final head; neither the request nor
+these local checks is independent approval. Parent #6, this issue's closure and
+reviewed integration remain pending. No merge, force-push, security-setting change,
+CI installation, acquisition, target execution or probe is authorized here.
+
 
 ### Author review disposition
 
