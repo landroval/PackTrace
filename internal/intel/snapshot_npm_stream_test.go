@@ -410,6 +410,9 @@ func TestReadSnapshotNPMIdentityBindingFailures(t *testing.T) {
 	}
 	t.Run("projection-source-hashes", func(t *testing.T) {
 		got := streamTestCall(t, original)
+		if len(got.Records) != 1 || len(got.Records[0].Bindings) != 1 {
+			t.Fatal("exact source hash binding missing")
+		}
 		d := sha256.Sum256(original)
 		r := got.Records[0]
 		if r.Header.SourceSHA256 != d || r.Affected.SourceSHA256 != d || r.Identity.SourceSHA256 != d || r.Times.SourceSHA256 != d || r.Bindings[0].State != SnapshotBindingEligible {
@@ -689,14 +692,15 @@ func TestReadSnapshotNPMIdentityTimesAndUnevaluatedConditions(t *testing.T) {
 		[]byte(`{"id":"WITHDRAWN","modified":"2026-10-02T00:00:00Z","withdrawn":"2026-10-03T00:00:00Z","affected":[{"package":{"ecosystem":"npm","name":"left-pad"},"versions":["not-semver"],"ranges":[{"type":"ECOSYSTEM","events":[{"introduced":"raw"}]}]}]}`),
 		[]byte(`{"id":"ABSENT","modified":"2026-10-02T00:00:00Z","affected":[{"package":{"ecosystem":"npm","name":"left-pad"}}]}`),
 		[]byte(`{"id":"UNKNOWN","modified":"2026-10-02T00:00:00Z","withdrawn":"malformed","affected":[{"package":{"ecosystem":"npm","name":"left-pad"}}]}`),
+		[]byte(`{"schema_version":"2.0.0","id":"UNSUPPORTED-HEADER","modified":"2026-10-02T00:00:00Z","affected":[{"package":{"ecosystem":"npm","name":"left-pad"}}]}`),
 	}
 	supplied := make([]SnapshotOriginalStream, len(originals))
 	for i, original := range originals {
 		supplied[i] = SnapshotOriginalStream{SHA256: sha256.Sum256(original), Reader: bytes.NewReader(original)}
 	}
-	got := streamTestEvidence(t, "left-pad", originals, []uint64{0, 0, 0}, supplied)
-	if len(got.Records) != 3 || got.Records[0].Times.Withdrawal != WithdrawalReported || got.Records[1].Times.Withdrawal != WithdrawalNotDeclared || got.Records[2].Times.Withdrawal != WithdrawalUnknown || got.Records[0].Affected.Entries[0].Versions.Entries[0].Value != "not-semver" || got.Records[0].Affected.Entries[0].Ranges.Entries[0].Type.Value != "ECOSYSTEM" {
-		t.Fatal("times or unevaluated version/range evidence changed")
+	got := streamTestEvidence(t, "left-pad", originals, []uint64{0, 0, 0, 0}, supplied)
+	if len(got.Records) != 4 || got.Records[0].Times.Withdrawal != WithdrawalReported || got.Records[1].Times.Withdrawal != WithdrawalNotDeclared || got.Records[2].Times.Withdrawal != WithdrawalUnknown || got.Records[0].Affected.Entries[0].Versions.Entries[0].Value != "not-semver" || got.Records[0].Affected.Entries[0].Ranges.Entries[0].Type.Value != "ECOSYSTEM" || got.Records[3].State != SnapshotOriginalVerified || got.Records[3].Header.Schema != OSVHeaderSchemaUnsupported || len(got.Records[3].Bindings) != 1 || got.Records[3].Bindings[0].State != SnapshotBindingGap || got.Records[3].Bindings[0].Problem != SnapshotBindingProblemIdentity {
+		t.Fatal("times, unsupported header, or unevaluated version/range evidence changed")
 	}
 }
 
