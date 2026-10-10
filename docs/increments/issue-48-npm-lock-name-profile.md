@@ -5,7 +5,9 @@
 Make experimental `inspect` useful with ordinary npm v2/v3 records lacking `name`,
 without turning an installation locator into authenticated canonical identity.
 The owner selected identity npm as the next direction and authorized preparation.
-**This written specification/plan is pending execution/publication approval.**
+**Approved:** the owner selected “Ejecutar y publicar apilado (recomendado)”,
+authorizing this written specification/plan, inline TDD, owned checks, scoped jj
+commits, issue #48 and dependent draft publication; no merge or queue cleanup.
 One compact brief accompanies code; no separate documentation PR.
 
 Workspace `npm-lock-names` starts at #47 head
@@ -82,7 +84,8 @@ installation-name comparison as proven canonical identity equality.
 All raw names (including inferred/alias names), paths, requirement strings, URLs,
 IDs and hashes remain hidden in portable output and diagnostics. Redaction occurs
 after matching through the existing allowlisted view, never by altering evidence.
-Default-mode observable outputs and the six original demo outputs remain unchanged.
+Default-mode usable reports and the six original demo outputs remain unchanged;
+help is updated truthfully to advertise the additional opt-in flag.
 
 Usable partial reports still exit 3, including no candidates; fatal input/argument,
 limit or output failure exits 2 without a success report. Applicability stays
@@ -135,3 +138,8 @@ JSON
 This is synthetic development evidence on the existing modified local Go toolchain
 with acquisition disabled, not named npm producer/platform qualification. Public
 examples use Bash; local instructions for the operator use Nushell.
+
+## Execution ledger
+
+- Owner approval recorded before code; issue #48 read back with landroval,
+  parent #5 and native blocked-by #46. No independent approval claimed.
