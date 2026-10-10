@@ -20,16 +20,16 @@ func runInput(args []string, in io.Reader, out, diagnostic io.Writer) int {
 		return run(args, out, diagnostic)
 	}
 	if len(args) == 2 && args[1] == "--help" {
-		if !writeOutput(out, []byte("packtrace inspect [--format terminal|json]\nRead one bounded stdin JSON envelope containing lockfile and advisory objects.\nPortable-only experimental metadata inspection; no project access or complete applicability.\n")) {
+		if !writeOutput(out, []byte("packtrace inspect [--format terminal|json] [--identity-profile explicit-only|npm-lock-v2-v3]\nDefault explicit-only; opt-in installation-name claims are hypotheses, not canonical proof.\nRead one bounded stdin JSON envelope containing lockfile and advisory objects.\nPortable-only experimental metadata inspection; no project access or complete applicability.\n")) {
 			return failure(diagnostic, "cli: output-failed")
 		}
 		return 0
 	}
-	format, ok := inspectArgs(args[1:])
+	format, profile, ok := inspectArgs(args[1:])
 	if !ok {
 		return failure(diagnostic, "inspect: invalid-arguments")
 	}
-	result, err := inspect.Read(in)
+	result, err := inspect.ReadProfile(in, profile)
 	if err != nil {
 		return failure(diagnostic, err.Error())
 	}
@@ -43,23 +43,29 @@ func runInput(args []string, in io.Reader, out, diagnostic io.Writer) int {
 	return result.ExitCode
 }
 
-func inspectArgs(args []string) (string, bool) {
-	if len(args) == 0 {
-		return "terminal", true
-	}
-	var format string
-	if len(args) == 1 {
-		name, value, attached := strings.Cut(args[0], "=")
-		if name != "--format" || !attached {
-			return "", false
+func inspectArgs(args []string) (string, string, bool) {
+	format, profile := "terminal", "explicit-only"
+	seen := map[string]bool{}
+	for i := 0; i < len(args); i++ {
+		name, value, attached := strings.Cut(args[i], "=")
+		if (name != "--format" && name != "--identity-profile") || seen[name] {
+			return "", "", false
 		}
-		format = value
-	} else if len(args) == 2 && args[0] == "--format" {
-		format = args[1]
-	} else {
-		return "", false
+		seen[name] = true
+		if !attached {
+			i++
+			if i == len(args) || strings.HasPrefix(args[i], "--") {
+				return "", "", false
+			}
+			value = args[i]
+		}
+		if name == "--format" {
+			format = value
+		} else {
+			profile = value
+		}
 	}
-	return format, format == "terminal" || format == "json"
+	return format, profile, (format == "terminal" || format == "json") && (profile == "explicit-only" || profile == "npm-lock-v2-v3")
 }
 
 func run(args []string, out, diagnostic io.Writer) int {

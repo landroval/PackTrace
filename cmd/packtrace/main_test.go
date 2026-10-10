@@ -167,6 +167,22 @@ func TestInspectArgsBeforeReading(t *testing.T) {
 	}
 }
 
+func TestInspectProfileArguments(t *testing.T) {
+	payload := strings.Replace(strings.Replace(inspectPacket, `node_modules/PRIVATE-PATH`, `node_modules/private-marker-package`, 1), `"name":"private-marker-package",`, "", 1)
+	for _, args := range [][]string{{"inspect", "--identity-profile=npm-lock-v2-v3", "--format=json"}, {"inspect", "--format", "json", "--identity-profile", "npm-lock-v2-v3"}} {
+		var out, diag bytes.Buffer
+		if runInput(args, strings.NewReader(payload), &out, &diag) != 3 || !strings.Contains(out.String(), "installation-name-version-only") || strings.Contains(out.String(), "private-marker-package") || diag.Len() != 0 {
+			t.Fatal("opt-in command failed", out.String(), diag.String())
+		}
+	}
+	for _, args := range [][]string{{"inspect", "--identity-profile=PRIVATE"}, {"inspect", "--identity-profile"}, {"inspect", "--identity-profile="}, {"inspect", "--identity-profile=explicit-only", "--identity-profile=npm-lock-v2-v3"}, {"inspect", "--format=json", "--identity-profile=npm-lock-v2-v3", "--format=terminal"}, {"inspect", "--help", "--identity-profile=npm-lock-v2-v3"}} {
+		var out, diag bytes.Buffer
+		if runInput(args, forbiddenReader{}, &out, &diag) != 2 || out.Len() != 0 || strings.Contains(diag.String(), "PRIVATE") {
+			t.Fatal("bad profile arguments read input/leaked")
+		}
+	}
+}
+
 func TestRunOutputFailure(t *testing.T) {
 	for _, args := range [][]string{{"--help"}, {"demo"}, {"demo", "--format=json"}} {
 		for _, short := range []bool{false, true} {
