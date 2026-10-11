@@ -1,24 +1,26 @@
 # Bounded root-verification CI Implementation Plan
 
+## Current preparation status
+
+I approved the complete [native Git amendment](issue-38-root-verification-ci.md#approved-native-git-amendment--complete-review-scope) through **Aprobar y adaptar plan** at specification SHA-256 `022ae86be3bafc670452aef429ec525640221ca4d4c71f28f94735260eac9d75`. The owner subsequently selected **Ciclo completo**, approving this actual complete revised plan and its expressly described execution/publication/activation scope: new jj workspace/bookmark, these two documents and one YAML, existing-tool offline local/owned-process validation, limited official metadata and pinned SDK use within hosted jobs, one independent technical reviewer and jsustt request, reviewed development integration and closure/Done only after accepted evidence. Initial hosting is limited to five jobs of at most 15 minutes each; acquisition has no retries/fallback and each archive is limited to the exact approved 70,553,950 bytes. Normal PR/push-development/manual CI remains active after accepted integration. This authorization does not alter protections, PR40, S64, parent/native gates or unrelated deletions; the existing PR-only waiver is not GitHub approval. The previously approved Action plan is preserved in its jj history and the coordinator's read-only preparation receipt. #23/PR #37 and #38's original documentary PR #39 are integrated; current development was rechecked at `177e8e209b9ba53368323643a3e7c35fc1277606`. #40 remains unchanged and is not needed or qualified by this route. The scoped full-cycle authorization is now recorded before execution; it is not evidence that any check, job, publication or integration has succeeded.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans for authorized inline execution, or superpowers:subagent-driven-development only after separately authorized agent orchestration. Steps use checkbox syntax. No execution method, new agent, installation or publication is authorized by this plan.
 
 **Goal:** I install one bounded root-only tests/vet workflow after explicit adoption, execution and publication gates, without treating CI success as complete environment qualification.
 
-**Architecture:** I keep one workflow with pinned checkout and inline standard-library Python control code. It captures finite owned-command evidence and runs official Go in an explicit environment; GitHub platform metadata closes runner-package/image qualification outside the job. I introduce no repository helper, Go change, dependency or artifact/cache Action.
+**Architecture:** I keep one workflow with anonymous native Git checkout and the existing inline standard-library Python control code. It captures finite owned-command evidence and runs official Go in an explicit environment; GitHub platform metadata closes runner-package/image qualification outside the job. I introduce no repository helper, Go change, dependency or artifact/cache Action.
 
-**Tech Stack:** GitHub-hosted Ubuntu 24.04 Linux amd64, qualified pinned checkout/Node 24, official Go 1.27.1, preinstalled Python 3.12+, Bash/Git and Python standard library.
+**Tech Stack:** GitHub-hosted Ubuntu 24.04 Linux amd64, preinstalled Git/Python 3.12+/Bash, official Go 1.27.1 and Python standard library. No Action or Node runtime.
 
-**Spec:** [Approved issue-38 specification](issue-38-root-verification-ci.md), including the user's explicit external-environment-closure adjustment. Status: **complete written plan approved; execution/publication not authorized**.
-I recorded the user's explicit “Aprobar sólo plan”: artifact approval only, without
-additional audits/acquisitions, executable implementation, runners or publication.
+**Spec:** [Approved issue-38 native Git amendment](issue-38-root-verification-ci.md#approved-native-git-amendment--complete-review-scope). The original “Aprobar sólo plan” approved the historical Action route only; the subsequent **Ciclo completo** approves this native plan and the bounded permissions recorded above.
 
 ## Global constraints
 
 - I own only `.github/workflows/root-verification.yml` in a later executable commit; this preparation owns only the two issue-38 documents.
-- I require reviewed #23 integration, approved complete plan, qualified Action security/notices/credential boundary and explicit acquisition/runner permissions before executable implementation.
+- Reviewed #23 integration is satisfied; require this revised complete plan's approval, qualified anonymous native source/configuration boundary and explicit acquisition/runner permissions before executable implementation.
 - I preserve root standard-library-only policy, module/readers/tests, sibling workspaces/bookmarks, original checkout, unrelated local deletion checkpoint, parent/native/shipping gates and global routing.
 - PRs targeting/pushes to `development` and manual dispatch select root only; no fuzz control/job, schedules, privileged events, matrix or chaining.
-- Exact checkout SHA: `3d3c42e5aac5ba805825da76410c181273ba90b1`; Node 24 and supported runner >=2.327.1. Named-source inspection is not complete bundled/transitive adoption qualification.
+- No `uses:` entries or service token inputs. Only anonymous source remote `https://github.com/landroval/PackTrace.git`; exact event source identity, isolated Git configuration, empty templates/hooks, no tags/submodules/LFS/external filters or authentication fallback. Native checkout at most 60 seconds within setup; do not invoke Node, Runner.Listener or #40.
 - Official `go1.27.1.linux-amd64.tar.gz`: exactly 70,553,950 bytes; SHA-256 `63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445`. These are expected catalog values, not an acquired measured archive.
 - Exact HTTPS allowlist: `https://go.dev/dl/go1.27.1.linux-amd64.tar.gz` and `https://dl.google.com/go/go1.27.1.linux-amd64.tar.gz`; no credentials/proxies/retries/mirrors or unlisted redirect.
 - Job timeout 15 minutes; root command timeout 10 minutes; setup at most 180 seconds, acquisition inside it at most 120 seconds with at most three redirects/10-second socket operations; vet at most 60 seconds and remaining outer time.
@@ -27,18 +29,18 @@ additional audits/acquisitions, executable implementation, runners or publicatio
 - 16 MiB aggregate owned-command captured stdout/stderr, 64 KiB compact receipt; metadata command capture also has a 64 KiB individual ceiling. Exhaustion/timeout/missing JSON is not a pass.
 - Capture ceilings apply to this supervisor's command streams, not service/checkout logs or a hard process/host RSS boundary. Base64 diagnostic representation is bounded by captured bytes plus framing, not misrepresented as a 16 MiB platform-log ceiling.
 - I never relaunch Runner.Listener or inspect `.env`/private key/token contents for version evidence. The version command is not side-effect-free: consulted Program loads `.env` and initializes HostContext/diagnostics.
-- Node/profile/credential/adoption gates precede Go. Actual runner-package version/image proof comes from selected `Set up job` platform metadata at acceptance; missing/mismatch leaves qualification pending/failed even after successful bounded checks.
+- Git/source/profile/noncredential-environment gates precede Go. Actual runner-package version/image proof comes from selected `Set up job` platform metadata at acceptance; missing/mismatch leaves qualification pending/failed even after successful bounded checks. The Node-specific runner floor is not applicable.
 - No added API permission, credentials persistence, cache/upload Action, host-global installation/security change, target acquisition/execution, source normalization or automatic closure.
 
 ## Review focus
 
 1. A fork/untrusted PR ref must remain data, not shell input; default checkout's tested merge commit must not be attributed to head alone. Task 2's literal-control/identity checks pin this.
-2. Credential include-key/residual-file uncertainty must block Go without reading included files or logging values. Task 2's name-only checks and separate privacy fixtures pin this.
+2. Host Git configuration, hooks, authentication or an unexpected source ref must not leak into anonymous checkout. Task 2's isolated-environment, source-ref and own-config name-only checks pin this without inspecting real host credentials.
 3. A socket/read or child process that exceeds bounds must not produce a successful phase from a prefix; an unreturned descendant must not hang capture indefinitely. Task 2's overflow/process-timeout fixtures pin this.
 4. Compilation JSON, zero tests, package-only passes and partial framing must not be converted to behavioral success or inflated counts. Task 2's literal independent streams pin this.
 5. Missing platform package-version/image proof or a truncated service log must survive nominal job success. Task 3's external acceptance worksheet pins this, without pretending it is an executable hosted test today.
 
-## Preparation evidence and unresolved adoption gates
+## Historical consultation evidence and current unresolved execution gates
 
 I consumed 9 public texts/HEAD observations, 137,837 bytes, under the approved
 10-document/256 KiB-per-text/2 MiB-total consultation. I acquired no archive body,
@@ -59,23 +61,21 @@ it does not prove a future hosted worker is built from that source or that its
 Linux process layout/installed binaries are qualified. I require authorized actual
 profile acceptance, rather than calling a blocked probe successful qualification.
 
-The full pinned Action bundle/transitive security/notice assessment, main/post
-credential cleanup qualification, official archive acquisition/extraction and actual
-hosted profile remain **NOT RUN / NOT QUALIFIED**. The following complete proposal
-is reviewable code, not permission to adopt or execute those distributions.
+The paragraphs above preserve historical Action/Node consultation only. Under the approved native amendment its bundle/main/post/Node gates are not applicable, not passed or waived; #40 remains unchanged. Native Git controlled/hosted qualification, official archive acquisition/extraction and actual hosted profile remain **NOT RUN / NOT QUALIFIED**. The following complete native proposal is reviewable code, not permission to acquire, execute, publish or activate it. Revalidate the official archive candidate through separately authorized metadata/acquisition before use; unavailable or inconsistent metadata stops delivery without fallback.
 
 ## Task 1: clear explicit prerequisites, without premature publication
 
 **Files:** Read both issue-38 documents and #23's reviewed integrated contract/plan;
 create no executable file during this gate.
 **Consumes:** Live exact #23 head/review/integration, current development tree,
-operator permissions and independently reviewed adoption evidence.
+operator permissions and independently reviewed native source/environment evidence.
 **Produces:** External dated/head-bound authorization receipt; no public Go API.
 
-- [ ] Read current issue/PR ownership, final-head approvals/threads and development identity; stop on an overlapping owner, changed contract or absent #23 reviewed integration. Do not sync/rebase/rewrite sibling changes without permission.
-- [x] Obtain approval of this actual complete plan, including proposed setup/extraction/capture bounds and external closure. The user explicitly approved only the documentary plan; I did not infer implementation/adoption authority from it.
-- [ ] Obtain separate explicit bounded acquisition/security/notice assessment permissions covering the exact checkout source/bundle/dependencies and official archive. No bundle/archive download is permitted through current documentary authority.
-- [ ] Require the assessment to enumerate SHA/version/license/notices, bundled/transitive dependencies, executable main/post paths and credential/temp-file cleanup. Read-only named-source inspection/cached licenses alone cannot mark this gate qualified.
+- [ ] Read current issue/PR ownership, final-head approvals/threads and development identity; stop on an overlapping owner or changed contract. Reviewed #23 integration is now satisfied; establish a fresh issue-specific execution workspace at verified current development only after execution approval, preserving the old documentation workspace/bookmarks and all unrelated deletions. Do not silently sync/rebase/rewrite any preserved workspace.
+- [ ] Carry only the owner-approved revised specification/plan into the fresh authorized execution workspace and checkpoint those exact two documentation paths separately from the one executable YAML commit. Preserve their approval/hash receipts and the old preparation heads. Final publication path scope is these two documents plus `.github/workflows/root-verification.yml`, not private receipts or #40.
+- [x] Obtain approval of this actual complete native plan and explicit bounded full-cycle execution/publication/activation authority. This tick records the subsequent **Ciclo completo**, not the historical Action-plan approval or runtime success.
+- [ ] Obtain separate explicit official-Go metadata/acquisition/use, controlled owned-process fixture and hosted-execution permissions. No archive, binary or runtime is acquired through documentary authority.
+- [ ] Confirm the repository remains public and the fixed HTTPS source is available without authentication. Qualify the native isolated environment, exact source and planned Git flags through controlled validation and actual authorized hosting; no Action audit/harness run is substituted or required.
 - [ ] Obtain permission for future controlled local checks, own-process timeout/kill fixtures, official-Go setup and GitHub-hosted acquisition/execution. Mark missing/failed gate blocked, not successful or silently waived.
 - [ ] Record authority before creating YAML. Workflow-bearing push/PR and integration remain separate later permissions because they can trigger acquisition/root jobs.
 
@@ -88,7 +88,7 @@ Python/test scripts outside the repository are future authorized validation evid
 pending external platform closure. No public schema/shared CLI status authority.
 
 - [ ] Extract the proposed `run` Python block into an owned temporary `rootci.py` using indentation, without importing/executing it during documentary preparation. At authorized implementation time write the test block below first; a missing module is compilation/import RED, not behavioral RED.
-- [ ] Make the four tested pure helpers return deliberately wrong values while preserving signatures. Run the test block; require actual behavioral failures and nonzero selected tests. Do not count syntax/import failures as behavioral RED.
+- [ ] After the separate missing-helper import/API RED, save the complete `red.py` below and run it to replace only the four pure helper definitions with compiling wrong behavior. Run `pure.py`; require four selected methods with assertion failures, not import/syntax exceptions. Preserve that evidence. Run `extract.py` again to restore the exact complete proposal, then rerun the same pure and controlled tests for GREEN. No doc/source statement is execution evidence.
 - [ ] Install the exact proposal below only after Task 1 is satisfied. Restore complete helper logic, run the same tests and retain one actual result stream; no framework installation or target code is needed.
 
 ```yaml
@@ -99,8 +99,7 @@ on:
   push:
     branches: [development]
   workflow_dispatch:
-permissions:
-  contents: read
+permissions: {}
 jobs:
   root:
     name: Root tests and vet
@@ -118,25 +117,13 @@ jobs:
           root.mkdir(mode=0o700)
           (root / 'start.json').write_text(json.dumps({'start': time.monotonic()}))
           PY
-      - name: Pinned source checkout
-        id: checkout
-        continue-on-error: true
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-          submodules: false
-          lfs: false
-          fetch-depth: 1
-          fetch-tags: false
-          allow-unsafe-pr-checkout: false
-          set-safe-directory: false
       - name: Bounded owned root checks
         if: ${{ always() && !cancelled() }}
         shell: bash
         env:
           INIT_OUTCOME: ${{ steps.init.outcome }}
-          CHECKOUT_OUTCOME: ${{ steps.checkout.outcome }}
           SOURCE_SHA: ${{ github.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_HEAD: ${{ github.event.pull_request.head.sha }}
           PR_BASE: ${{ github.event.pull_request.base.sha }}
         run: |
@@ -155,14 +142,15 @@ jobs:
           WORK = Path(os.environ['GITHUB_WORKSPACE'])
           used = 0
           deadline = time.monotonic()
-          result = {'checkout': os.environ['CHECKOUT_OUTCOME'],
+          result = {'checkout': 'not-run',
                     'setup': 'not-run', 'tests': 'not-run', 'vet': 'not-run',
                     'qualification': 'pending-platform-metadata', 'phases': {},
                     'sourceSHA': os.environ['SOURCE_SHA'],
                     'prHead': os.environ.get('PR_HEAD', ''),
                     'prBase': os.environ.get('PR_BASE', ''),
                     'event': os.environ['GITHUB_EVENT_NAME'],
-                    'checkoutAction': 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1',
+                    'checkoutMethod': 'native-anonymous-git',
+                    'sourceRemote': 'https://github.com/landroval/PackTrace.git',
                     'commands': {'tests': ['go', 'test', '-count=1', '-json', '-timeout=10m', './...'],
                                  'vet': ['go', 'vet', './...']},
                     'settings': {'GOTOOLCHAIN': 'local', 'GOPROXY': 'off', 'GOWORK': 'off',
@@ -172,10 +160,16 @@ jobs:
           class Blocked(Exception):
               pass
 
-          def runner_version(text):
-              if len(text) > 32 or not re.fullmatch(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)', text):
-                  raise ValueError('invalid-runner-version')
-              return tuple(int(p) for p in text.split('.')) >= (2, 327, 1)
+          def source_ref(event, sha, pr):
+              if not re.fullmatch(r'[0-9a-f]{40}', sha):
+                  raise ValueError('invalid-source-identity')
+              if event == 'pull_request':
+                  if not re.fullmatch(r'[1-9][0-9]{0,9}', pr):
+                      raise ValueError('invalid-pr-number')
+                  return 'refs/pull/' + pr + '/merge'
+              if event in ('push', 'workflow_dispatch'):
+                  return sha
+              raise ValueError('event-outside-profile')
 
           def forbidden_keys(raw):
               keys = raw.decode('utf-8').lower().splitlines()
@@ -204,7 +198,10 @@ jobs:
                       'GOTOOLCHAIN': 'local', 'GOPROXY': 'off', 'GOWORK': 'off',
                       'CGO_ENABLED': '0', 'GOENV': 'off', 'GOMAXPROCS': '2',
                       'GOMEMLIMIT': '512MiB', 'GOCACHE': str(ROOT / 'gocache'),
-                      'GOMODCACHE': str(ROOT / 'gomodcache')}
+                      'GOMODCACHE': str(ROOT / 'gomodcache'),
+                      'GIT_CONFIG_NOSYSTEM': '1', 'GIT_CONFIG_GLOBAL': '/dev/null',
+                      'GIT_TERMINAL_PROMPT': '0', 'GIT_ALLOW_PROTOCOL': 'https',
+                      'GIT_LFS_SKIP_SMUDGE': '1'}
 
           def command(label, argv, seconds, env, publish=False, cap=CAP):
               global used
@@ -276,37 +273,48 @@ jobs:
               result['phases'][label] = record
               return state, bytes(streams['stdout'])
 
-          def observed_node():
-              pid = os.getppid()
-              for _ in range(16):
-                  exe = Path(os.readlink('/proc/' + str(pid) + '/exe'))
-                  if exe.name == 'Runner.Worker':
-                      return exe.parent.parent / 'externals/node24/bin/node'
-                  with open('/proc/' + str(pid) + '/stat', 'rb') as f:
-                      stat = f.read(4097)
-                  if len(stat) > 4096:
-                      raise Blocked('process-metadata-limit')
-                  pid = int(stat.rsplit(b')', 1)[1].split()[1])
-                  if pid <= 0:
-                      break
-              raise Blocked('node-runtime-unavailable')
-
-          def no_credentials():
-              if list(Path(os.environ['RUNNER_TEMP']).glob('git-credentials-*.config')):
-                  raise Blocked('credential-residue')
-              hosthome = Path(os.environ['HOME'])
-              files = [WORK / '.git/config', hosthome / '.gitconfig',
-                       hosthome / '.config/git/config', Path('/etc/gitconfig')]
-              if not files[0].is_file():
-                  raise Blocked('checkout-config-unavailable')
-              for i, path in enumerate(files):
-                  if not path.exists():
-                      continue
-                  state, names = command('credential-keys-' + str(i),
-                     ['/usr/bin/git', 'config', '--file', str(path), '--no-includes',
-                      '--name-only', '--list'], 5, clean_env(ROOT / 'home'), cap=RECEIPT_CAP)
-                  if state != 'passed' or forbidden_keys(names):
-                      raise Blocked('credential-state-unqualified')
+          def native_checkout(env):
+              ref = source_ref(result['event'], result['sourceSHA'], os.environ.get('PR_NUMBER', ''))
+              if WORK.is_symlink():
+                  raise Blocked('source-directory-unqualified')
+              WORK.mkdir(exist_ok=True)
+              if any(WORK.iterdir()):
+                  raise Blocked('source-directory-not-empty')
+              git = ['/usr/bin/git', '-c', 'init.templateDir=' + str(ROOT / 'templates'),
+                     '-c', 'core.hooksPath=' + str(ROOT / 'hooks'),
+                     '-c', 'credential.helper=', '-c', 'http.followRedirects=false',
+                     '-c', 'protocol.allow=never', '-c', 'protocol.https.allow=always',
+                     '-c', 'submodule.recurse=false']
+              finish = min(deadline, time.monotonic() + 60)
+              commands = [
+                  ('git-version', ['--version']),
+                  ('source-init', ['init']),
+                  ('source-remote', ['remote', 'add', 'origin', result['sourceRemote']]),
+                  ('source-fetch', ['fetch', '--depth=1', '--no-tags', '--recurse-submodules=no', 'origin', ref]),
+                  ('source-checkout', ['checkout', '--detach', 'FETCH_HEAD']),
+                  ('source-identity', ['rev-parse', 'HEAD', 'HEAD^{tree}']),
+                  ('credential-keys-source', ['config', '--local', '--no-includes', '--name-only', '--list']),
+              ]
+              for label, args in commands:
+                  remaining = finish - time.monotonic()
+                  if remaining <= 0:
+                      raise Blocked('source-timeout')
+                  state, raw = command(label, git + args, remaining, env, cap=RECEIPT_CAP)
+                  if state != 'passed':
+                      result['checkout'] = state
+                      raise Blocked('source-command-unqualified')
+                  if label == 'git-version':
+                      if not re.fullmatch(rb'git version [0-9]+\.[0-9]+\.[0-9]+\n', raw):
+                          raise Blocked('git-profile-unqualified')
+                      result['environment']['gitVersion'] = raw.decode('ascii').strip()
+                  elif label == 'source-identity':
+                      ids = raw.decode('ascii').splitlines()
+                      if len(ids) != 2 or ids[0] != result['sourceSHA'] or not all(re.fullmatch(r'[0-9a-f]{40}', x) for x in ids):
+                          raise Blocked('source-identity-mismatch')
+                      result['tree'] = ids[1]
+                  elif label == 'credential-keys-source' and forbidden_keys(raw):
+                      raise Blocked('source-config-unqualified')
+              result['checkout'] = 'passed'
 
           class NoRedirect(urllib.request.HTTPRedirectHandler):
               def redirect_request(self, *args):
@@ -381,8 +389,8 @@ jobs:
 
           def run():
               global deadline
-              if os.environ['INIT_OUTCOME'] != 'success' or result['checkout'] != 'success':
-                  raise Blocked('checkout-or-initialization-failed')
+              if os.environ['INIT_OUTCOME'] != 'success':
+                  raise Blocked('initialization-failed')
               deadline = json.loads((ROOT / 'start.json').read_text())['start'] + 900
               if (os.geteuid() == 0 or sys.version_info < (3, 12) or platform.system() != 'Linux'
                   or platform.machine() != 'x86_64' or os.environ.get('RUNNER_ARCH') != 'X64'
@@ -395,22 +403,14 @@ jobs:
                  'availableCPUQuota': 'unmeasured', 'availableRAM': 'unmeasured',
                  'runnerPackageVersion': 'pending-platform-metadata',
                  'aggregatePeakRSS': 'unmeasured'}
-              for directory in ('home', 'tmp', 'gocache', 'gomodcache', 'toolchain'):
+              for directory in ('home', 'tmp', 'gocache', 'gomodcache', 'toolchain', 'hooks', 'templates'):
                   (ROOT / directory).mkdir(mode=0o700)
               env = clean_env(ROOT / 'home')
-              state, version = command('node-version', [str(observed_node()), '--version'], 5, env, cap=RECEIPT_CAP)
-              if state != 'passed' or not re.fullmatch(rb'v24\.[0-9]+\.[0-9]+\n', version):
-                  raise Blocked('node-runtime-unqualified')
-              result['environment']['nodeVersion'] = version.decode().strip()
-              no_credentials()
-              state, identity = command('source-identity', ['/usr/bin/git', 'rev-parse', 'HEAD', 'HEAD^{tree}'], 5, env, cap=RECEIPT_CAP)
-              ids = identity.decode('ascii').splitlines()
-              if state != 'passed' or len(ids) != 2 or ids[0] != result['sourceSHA'] or not all(re.fullmatch(r'[0-9a-f]{40}|[0-9a-f]{64}', x) for x in ids):
-                  raise Blocked('source-identity-mismatch')
-              result['tree'] = ids[1]
+              native_checkout(env)
               acquire()
               extract()
               go = str(ROOT / 'toolchain/go/bin/go')
+              env['PATH'] = str(ROOT / 'toolchain/go/bin') + ':/usr/bin:/bin'
               state, version = command('go-version', [go, 'version'], 5, env, cap=RECEIPT_CAP)
               state2, profile = command('go-profile', [go, 'env', 'GOVERSION', 'GOOS', 'GOARCH'], 5, env, cap=RECEIPT_CAP)
               if state != 'passed' or version != b'go version go1.27.1 linux/amd64\n' or state2 != 'passed' or profile != b'go1.27.1\nlinux\namd64\n':
@@ -462,11 +462,7 @@ jobs:
           PY
 ```
 
-The example is a **proposal** until qualified actual runner acceptance. In particular,
-the bounded Linux parent-process metadata lookup must find the actual Worker/bundled
-Node on the authorized hosted profile, not succeed by guessing a version directory
-or replacing it with PATH Node. Failure/absence is blocked, not an always-deny success.
-No Listener/private-config lookup is introduced as a fallback.
+The example is a **proposal** until revised-plan approval and authorized qualified runner acceptance. Native checkout must work anonymously through the exact isolated environment and bind the event SHA/tree; a moved ref or missing source blocks checks. No Action/Node/Listener/host-credential lookup is introduced as a fallback. The verified Go binary directory precedes system paths for root checks and their nested own Go build invocations; no custom system compiler substitutes for it.
 
 - [ ] Pin the setup-only alarm boundary with the fake command callback below; a 180-second setup timer must never cancel the separately bounded ten-minute root command. Retain the corrected proposal's exact code.
 
@@ -483,13 +479,15 @@ m = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(m)
 
 class RootCIContractTests(unittest.TestCase):
-    def test_runner_floor_and_malformed(self):
-        for text, expected in [('2.327.0', False), ('2.327.1', True), ('2.400.0', True)]:
-            with self.subTest(text=text):
-                self.assertEqual(m.runner_version(text), expected)
-        for text in ['', 'v2.327.1', '2.327', '2.327.1-rc', '02.327.1', '9'*33]:
-            with self.subTest(text=text), self.assertRaises(ValueError):
-                m.runner_version(text)
+    def test_exact_source_refs_and_rejection(self):
+        self.assertEqual(m.source_ref('pull_request','a'*40,'17'),'refs/pull/17/merge')
+        for event in ('push','workflow_dispatch'):
+            self.assertEqual(m.source_ref(event,'a'*40,''),'a'*40)
+        for event,sha,pr in [('schedule','a'*40,''),('push','A'*40,''),('push','a'*39,''),
+                             ('pull_request','a'*40,'0'),('pull_request','a'*40,'01'),
+                             ('pull_request','a'*40,'17;exit'),('pull_request','a'*40,'1'*11)]:
+            with self.subTest(event=event,sha=sha,pr=pr), self.assertRaises(ValueError):
+                m.source_ref(event,sha,pr)
     def test_name_only_credentials(self):
         for key in ['include.path', 'includeIf.gitdir:x.path', 'credential.helper',
                     'url.https://example.invalid.insteadOf', 'core.sshCommand',
@@ -536,10 +534,39 @@ Only imports, definitions and literal constants survive extraction. No top-level
 environment/path read, orchestration invocation, download or receipt writer executes
 when these future tests import the resulting module.
 
+Complete future `red.py` (owned temporary helper file only):
+
+```python
+import ast, pathlib
+path = pathlib.Path('/tmp/packtrace-rootci-validation/helpers.py')
+tree = ast.parse(path.read_text())
+stubs = ast.parse('''
+def source_ref(event, sha, pr):
+    return sha
+
+def forbidden_keys(raw):
+    return False
+
+def test_counts(raw):
+    return {'passed':0, 'failed':0, 'failedEvents':0, 'buildFailed':0}
+
+def qualified(checks, platform_complete, platform_compatible):
+    return False
+''')
+replacements = {node.name:node for node in stubs.body}
+seen = set()
+for i, node in enumerate(tree.body):
+    if isinstance(node, ast.FunctionDef) and node.name in replacements:
+        seen.add(node.name)
+        tree.body[i] = replacements[node.name]
+assert seen == set(replacements)
+path.write_text(ast.unparse(ast.fix_missing_locations(tree))+'\n')
+```
+
 Future controlled-fixture block, saved alongside the helper file as `controlled.py`:
 
 ```python
-import hashlib, importlib.util, io, json, pathlib, signal, sys, tarfile
+import gzip, hashlib, importlib.util, io, json, pathlib, signal, sys, tarfile
 import tempfile, time, unittest, urllib.error
 from unittest.mock import patch
 
@@ -567,7 +594,8 @@ class ControlledRootCITests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix='packtrace-rootci-owned-')
         m.ROOT = pathlib.Path(self.temp.name)
-        m.WORK = m.ROOT
+        m.WORK = m.ROOT / 'checkout'
+        m.WORK.mkdir()
         m.deadline = time.monotonic()+10
         m.used = 0
         m.result = {'phases':{}, 'archive':{}}
@@ -640,7 +668,10 @@ class ControlledRootCITests(unittest.TestCase):
         with self.assertRaises(m.Blocked):m.extract()
     def test_declared_expansion_rejects_before_body(self):
         member=tarfile.TarInfo('go/large');member.size=1073741825
-        self.archive([member])
+        with gzip.open(m.ROOT/'go.tar.gz','wb') as out:
+            out.write(member.tobuf(format=tarfile.USTAR_FORMAT))
+            out.write(b'\0'*1024)
+        (m.ROOT/'toolchain').mkdir()
         with self.assertRaises(m.Blocked):m.extract()
         self.assertFalse((m.ROOT/'toolchain/go/large').exists())
     def test_member_count_rejects_before_unsafe_write(self):
@@ -653,28 +684,101 @@ class ControlledRootCITests(unittest.TestCase):
             with self.assertRaises(m.Blocked):m.extract()
             self.assertEqual(extract.call_count,100000)
         self.assertFalse((m.ROOT/'toolchain/go/d100000').exists())
-    def test_credential_residue_precedes_git_commands(self):
-        (m.ROOT/'git-credentials-owned.config').touch()
-        with patch.dict(m.os.environ,{'RUNNER_TEMP':str(m.ROOT),'HOME':str(m.ROOT)}),patch.object(m,'command') as command:
-            with self.assertRaises(m.Blocked):m.no_credentials()
+    def source_case(self, fail_label='', bad_identity=False, bad_keys=False):
+        m.result.update(event='pull_request',sourceSHA='a'*40,
+                        sourceRemote='https://github.com/landroval/PackTrace.git',
+                        checkout='not-run',environment={})
+        calls=[]
+        def commands(label,argv,seconds,env,**kwargs):
+            calls.append((label,argv,dict(env),kwargs))
+            if label==fail_label:return 'failed',b''
+            if label=='git-version':return 'passed',b'git version 2.43.0\n'
+            if label=='source-identity':return 'passed',(('c' if bad_identity else 'a')*40+'\n'+'b'*40+'\n').encode()
+            if label=='credential-keys-source':return 'passed',b'include.path\n' if bad_keys else b'core.bare\nremote.origin.url\n'
+            return 'passed',b''
+        return calls,commands
+    def test_anonymous_checkout_exact_source_and_isolated_environment(self):
+        calls,commands=self.source_case()
+        with patch.dict(m.os.environ,{'PR_NUMBER':'17','GITHUB_TOKEN':'synthetic-ignored',
+                                    'HTTPS_PROXY':'synthetic-ignored','GIT_CONFIG_COUNT':'9'}),patch.object(m,'command',side_effect=commands):
+            m.native_checkout(m.clean_env(m.ROOT/'home'))
+        self.assertEqual(m.result['checkout'],'passed')
+        self.assertEqual(m.result['tree'],'b'*40)
+        self.assertEqual(m.result['environment']['gitVersion'],'git version 2.43.0')
+        fetch=next(argv for label,argv,env,kw in calls if label=='source-fetch')
+        self.assertEqual(fetch[-1],'refs/pull/17/merge')
+        for arg in ('--depth=1','--no-tags','--recurse-submodules=no'):self.assertIn(arg,fetch)
+        for label,argv,env,kwargs in calls:
+            self.assertEqual(argv[0],'/usr/bin/git')
+            self.assertIn('credential.helper=',argv)
+            self.assertIn('http.followRedirects=false',argv)
+            self.assertIn('core.hooksPath='+str(m.ROOT/'hooks'),argv)
+            self.assertIn('init.templateDir='+str(m.ROOT/'templates'),argv)
+            self.assertEqual(env['GIT_CONFIG_NOSYSTEM'],'1')
+            self.assertEqual(env['GIT_CONFIG_GLOBAL'],'/dev/null')
+            self.assertEqual(env['GIT_TERMINAL_PROMPT'],'0')
+            self.assertEqual(env['HOME'],str(m.ROOT/'home'))
+            for key in ('GITHUB_TOKEN','HTTPS_PROXY','GIT_CONFIG_COUNT','GIT_ASKPASS'):
+                self.assertNotIn(key,env)
+            self.assertFalse(kwargs.get('publish',False))
+        own_keys=next(argv for label,argv,env,kw in calls if label=='credential-keys-source')
+        for arg in ('--local','--no-includes','--name-only'):self.assertIn(arg,own_keys)
+    def test_source_failure_and_moved_identity_do_not_fallback(self):
+        for failed,bad in [('source-fetch',False),('',True)]:
+            with self.subTest(failed=failed,bad=bad):
+                calls,commands=self.source_case(fail_label=failed,bad_identity=bad)
+                with patch.dict(m.os.environ,{'PR_NUMBER':'17'}),patch.object(m,'command',side_effect=commands):
+                    with self.assertRaises(m.Blocked):m.native_checkout(m.clean_env(m.ROOT/'home'))
+                self.assertNotEqual(m.result['checkout'],'passed')
+                self.assertEqual(sum(label=='source-fetch' for label,argv,env,kw in calls),1)
+                self.assertFalse(any(label=='credential-keys-source' for label,argv,env,kw in calls))
+    def test_own_include_key_blocks_without_following_or_disclosure(self):
+        calls,commands=self.source_case(bad_keys=True)
+        with patch.dict(m.os.environ,{'PR_NUMBER':'17'}),patch.object(m,'command',side_effect=commands):
+            with self.assertRaises(m.Blocked):m.native_checkout(m.clean_env(m.ROOT/'home'))
+        self.assertNotEqual(m.result['checkout'],'passed')
+        self.assertFalse(any(kw.get('publish',False) for label,argv,env,kw in calls))
+    def test_source_deadline_and_nonempty_directory_precede_git(self):
+        self.source_case()
+        with patch.dict(m.os.environ,{'PR_NUMBER':'17'}),patch.object(m,'command') as command:
+            m.deadline=time.monotonic()-1
+            with self.assertRaises(m.Blocked):m.native_checkout(m.clean_env(m.ROOT/'home'))
             command.assert_not_called()
-    def test_include_key_never_followed_or_logged(self):
-        (m.ROOT/'.git').mkdir();(m.ROOT/'.git/config').touch()
-        with patch.dict(m.os.environ,{'RUNNER_TEMP':str(m.ROOT),'HOME':str(m.ROOT)}),patch.object(m,'command',return_value=('passed',b'include.path\n')) as command:
-            with self.assertRaises(m.Blocked):m.no_credentials()
-            self.assertIn('--no-includes',command.call_args.args[1])
-            self.assertFalse(command.call_args.kwargs.get('publish',False))
+            m.deadline=time.monotonic()+10
+            (m.WORK/'unexpected').touch()
+            with self.assertRaises(m.Blocked):m.native_checkout(m.clean_env(m.ROOT/'home'))
+            command.assert_not_called()
+    def test_unrecognized_git_profile_blocks_before_fetch(self):
+        calls,commands=self.source_case()
+        def invalid(label,*args,**kwargs):
+            if label=='git-version':return 'passed',b'git version unknown\n'
+            return commands(label,*args,**kwargs)
+        with patch.dict(m.os.environ,{'PR_NUMBER':'17'}),patch.object(m,'command',side_effect=invalid):
+            with self.assertRaises(m.Blocked):m.native_checkout(m.clean_env(m.ROOT/'home'))
+        self.assertNotEqual(m.result['checkout'],'passed')
+        self.assertFalse(any(label=='source-fetch' for label,argv,env,kw in calls))
+    def test_failed_native_source_does_not_acquire_or_run_go(self):
+        m.result={'checkout':'not-run','sourceSHA':'a'*40,'phases':{},'tests':'not-run','vet':'not-run'}
+        (m.ROOT/'start.json').write_text(json.dumps({'start':time.monotonic()}))
+        env={'INIT_OUTCOME':'success','RUNNER_ARCH':'X64','ImageOS':'ubuntu24','ImageVersion':'owned-fixture'}
+        with patch.dict(m.os.environ,env),patch.object(m.os,'geteuid',return_value=1001),patch.object(m.platform,'system',return_value='Linux'),patch.object(m.platform,'machine',return_value='x86_64'),patch.object(m.sys,'version_info',(3,12,0)),patch.object(m,'native_checkout',side_effect=m.Blocked('source-command-unqualified')),patch.object(m,'acquire') as acquire,patch.object(m,'command') as command:
+            with self.assertRaises(m.Blocked):m.run()
+            acquire.assert_not_called()
+            command.assert_not_called()
+        self.assertEqual(m.result['tests'],'not-run')
+        self.assertEqual(m.result['vet'],'not-run')
     def test_setup_alarm_disarmed_before_root_tests(self):
-        m.result={'checkout':'success','sourceSHA':'a'*40,'phases':{}}
+        m.result={'checkout':'not-run','sourceSHA':'a'*40,'phases':{}}
         (m.ROOT/'start.json').write_text(json.dumps({'start':time.monotonic()}))
         def commands(label,argv,seconds,env,**kwargs):
-            replies={'node-version':b'v24.1.0\n','source-identity':('a'*40+'\n'+'b'*40+'\n').encode(),
-                     'go-version':b'go version go1.27.1 linux/amd64\n','go-profile':b'go1.27.1\nlinux\namd64\n',
+            replies={'go-version':b'go version go1.27.1 linux/amd64\n','go-profile':b'go1.27.1\nlinux\namd64\n',
                      'tests':b'{"Action":"pass","Test":"owned"}\n','vet':b''}
-            if label=='tests':self.assertEqual(signal.getitimer(signal.ITIMER_REAL)[0],0)
+            if label=='tests':
+                self.assertEqual(signal.getitimer(signal.ITIMER_REAL)[0],0)
+                self.assertEqual(env['PATH'].split(':')[0],str(m.ROOT/'toolchain/go/bin'))
             return 'passed',replies[label]
         env={'INIT_OUTCOME':'success','RUNNER_ARCH':'X64','ImageOS':'ubuntu24','ImageVersion':'owned-fixture'}
-        with patch.dict(m.os.environ,env),patch.object(m.os,'geteuid',return_value=1001),patch.object(m.platform,'system',return_value='Linux'),patch.object(m.platform,'machine',return_value='x86_64'),patch.object(m,'observed_node',return_value=m.ROOT/'node'),patch.object(m,'no_credentials'),patch.object(m,'acquire'),patch.object(m,'extract'),patch.object(m,'command',side_effect=commands):
+        with patch.dict(m.os.environ,env),patch.object(m.os,'geteuid',return_value=1001),patch.object(m.platform,'system',return_value='Linux'),patch.object(m.platform,'machine',return_value='x86_64'),patch.object(m.sys,'version_info',(3,12,0)),patch.object(m,'native_checkout',side_effect=lambda env:m.result.update(checkout='passed',tree='b'*40)),patch.object(m,'acquire'),patch.object(m,'extract'),patch.object(m,'command',side_effect=commands):
             signal.alarm(180)
             m.run()
         self.assertEqual(m.result['tests'],'passed')
@@ -687,6 +791,10 @@ Future execution commands (Nushell; only after explicit local fixture authority)
 
 ```nu
 python3 /tmp/packtrace-rootci-validation/extract.py
+python3 /tmp/packtrace-rootci-validation/red.py
+python3 /tmp/packtrace-rootci-validation/pure.py
+# Preserve the expected assertion-failing RED output, then restore exact helpers.
+python3 /tmp/packtrace-rootci-validation/extract.py
 python3 /tmp/packtrace-rootci-validation/pure.py
 python3 /tmp/packtrace-rootci-validation/controlled.py
 ```
@@ -697,9 +805,9 @@ stream. No program in these blocks is executed by current plan drafting.
 - [ ] Run the controlled-fixture block below under separate local-process execution authority. Its children are owned Python fixtures, never investigated code; its HTTP responses are in-memory stubs with no listener or live request. Root profile/credential gates are mocked, not represented as actual hosting qualification.
 - [ ] Independently retain each failing boundary's result, unchanged GREEN code fingerprints and the one actual stdlib test stream. These fixtures do not authorize live downloads or qualify native hostile-archive opening.
 - [ ] Parse final YAML only with an already installed explicitly permitted validator; otherwise report that check unavailable, never install a framework. Extract Python and `ast.parse` it; Bash heredocs need `bash -n`, not execution during documentary checks.
-- [ ] Verify literal workflow shape: exactly one immutable Action use, contents read, three selected event families, one Ubuntu job/15-minute timeout, no fuzz/privileged/schedule/cache/upload/matrix/secret/OIDC expressions, no PR text in shell.
+- [ ] Verify literal workflow shape: no `uses:` entry, `permissions: {}`, exactly three selected event families, one Ubuntu job/15-minute timeout, no fuzz/privileged/schedule/cache/upload/matrix/token/secret/OIDC expressions and no PR text interpolated into shell. Git arguments come only from fixed commands plus validated event identities.
 - [ ] Obtain separately authorized local official-Go root JSON/vet verification if part of execution permission. Count one stream only; local custom-compiler results are not official/hosted qualification.
-- [ ] Commit only the owned YAML with `jj commit -m 'ci: verify owned root checks (#38)' .github/workflows/root-verification.yml`, set only `issue-38-root-verification-ci-spec` to that scoped head. Never push yet or include sibling/checkpoint changes.
+- [ ] In the newly authorized execution workspace, commit only the owned YAML using `jj -R $env.PACKTRACE_IMPLEMENTATION_WORKSPACE commit -m 'ci: verify owned root checks (#38)' .github/workflows/root-verification.yml`. Use a new `issue-38-root-verification-ci` bookmark; preserve the old `issue-38-root-verification-ci-spec` and all other preparation bookmarks/heads. Never push yet or include sibling/checkpoint changes.
 
 ## Task 3: independently reviewed publication and actual acceptance
 
@@ -712,10 +820,10 @@ no fuzz/native/scanner/producer/release qualification.
 
 - [ ] Self-review all five focus classes and R01-R20; resolve blocker/important gaps without pretending author review is independent approval. If code/gates materially change, return for contract/plan approval before executing the changed proposal.
 - [ ] Obtain explicit workflow-bearing push/PR authority covering actual automatic checkout/official-Go/runner effects. Verify current owner/base/remote exact head and publish only the issue bookmark; use `Refs #38`, not automatic closure. Request `jsustt` review only with permission; changed code needs fresh final-head review.
-- [ ] Collect actual authorized PR/manual root evidence and, after separately authorized reviewed integration, the development push evidence. No token/secrets/private inputs are published. An event never run stays NOT RUN; do not synthesize a pass from selection syntax.
+- [ ] Collect actual authorized PR root evidence before integration. After separately authorized reviewed integration, collect the development-push evidence and dispatch the root workflow explicitly on `development` for the manual-event evidence; manual dispatch requires the workflow to exist on the default branch, so do not require or pretend that pre-integration manual evidence exists. No token/secrets/private inputs are published. An event never run stays NOT RUN; do not synthesize a pass from selection syntax.
 - [ ] Reconstruct diagnostic bytes by phase/stream/offset from `diagnostic` JSON lines; require contiguous offsets, the captured byte totals/SHA-256 and complete service log. Decode the one root stdout JSON stream and count nonempty-Test pass events, not package/parallel/focused sums. Missing/truncated platform logs keep qualification incomplete.
-- [ ] Record source checkout/tree, PR head/base, event, pinned source/artifact, actual compiler/profile/Node, phase exits/bounds and result limitations. Compare actual platform `Set up job` package version >=2.327.1 and runner image/architecture to the inline receipt. Source strings or a nominal job success do not authenticate missing platform evidence.
-- [ ] External acceptance truth table is exactly `checks && platform_complete && platform_compatible`. Missing version/image, contradictory package floor/architecture, partial diagnostic reconstruction or absence of one selected-event proof cannot close qualification/installation. No API/token permission is added merely to automate acceptance.
+- [ ] Record source checkout/tree, PR head/base, event, fixed anonymous source and verified official artifact, actual compiler/profile/Git, phase exits/bounds and result limitations. Compare actual platform `Set up job` runner-package version and image/architecture to the inline receipt; the removed Node-specific floor is not a native Git acceptance predicate. Require actual supported Git command/profile evidence. Source strings or a nominal job success do not authenticate missing platform evidence.
+- [ ] External acceptance truth table is exactly `checks && platform_complete && platform_compatible`. Missing version/image, contradictory supported profile/architecture, partial diagnostic reconstruction or absence of one selected-event proof cannot close qualification/installation. No API/token permission is added merely to automate acceptance.
 - [ ] Re-read actual GitHub approvals/threads/head/base before authorized integration; verify integrated bytes and obtain separate integrated root verification/issue-closure authority. Preserve parents #11/#6, #22/native rows and other Project items. Do not change branch-required-check/security settings through workflow installation.
 
 ## Contract mapping and preparation handoff
@@ -723,16 +831,13 @@ no fuzz/native/scanner/producer/release qualification.
 | Spec rows | Owning plan acceptance |
 | --- | --- |
 | R01-R04 | Task 2 literal event/checkout controls; Task 3 actual three-event source receipts |
-| R05-R08 | Task 1 adoption gates; Task 2 observed Node/profile/name-only credential checks; Task 3 external package/image closure |
+| R05-R08 | Task 1 native source/environment permissions; Task 2 Git/profile/isolated-environment and own-config name-only checks; Task 3 external package/image closure |
 | R09-R10 | Task 1 permission boundary; Task 2 identity/transport/extraction rejection and bounded setup |
 | R11-R17 | Task 2 phase/count/capture/timeout privacy fixtures; Task 3 exact stream/hash/receipt closure |
 | R18-R20 | Global constraints and Task 3 unknown/soft-limit/nonqualification/unchanged-protection checks |
 
-I checked only the actual written-plan approval step; future task checkboxes remain
-unperformed. Complete Action adoption assessment, reviewed #23 integration and all
-execution/acquisition/publication permissions remain separate pending gates.
+The owner subsequently approved this revised complete plan and the bounded full cycle. Its approval checkbox records authority only; execution/acceptance checkboxes remain pending until observed evidence. Reviewed #23 integration is satisfied. Native source/environment qualification and all execution/acquisition/publication permissions remain pending; Action adoption is not applicable to this route.
 No actual hosted event, official-Go/archive/Action execution, local subprocess fixture,
 Go test/vet, fuzz, agent, push, PR or merge was performed by drafting this artifact.
-The owner approved the written plan. Proposed behavior remains unexecuted and
-unqualified; future discovered gaps must be corrected/reapproved within exact scope.
-No executable delivery is currently authorized.
+The owner approved the historical Action plan, the native written amendment, and subsequently this actual revised plan with explicit bounded full-cycle authority. Proposed behavior remains unexecuted and unqualified; future discovered gaps must be corrected/reapproved within exact scope.
+Only the expressly bounded native CI delivery is authorized; no observed result or completion is inferred from that permission.
