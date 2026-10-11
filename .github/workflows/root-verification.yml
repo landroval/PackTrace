@@ -1,0 +1,368 @@
+name: Root verification
+on:
+  pull_request:
+    branches: [development]
+  push:
+    branches: [development]
+  workflow_dispatch:
+permissions: {}
+jobs:
+  root:
+    name: Root tests and vet
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Start owned budget
+        id: init
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, os, time
+          from pathlib import Path
+          root = Path(os.environ['RUNNER_TEMP']) / 'packtrace-root-ci'
+          root.mkdir(mode=0o700)
+          (root / 'start.json').write_text(json.dumps({'start': time.monotonic()}))
+          PY
+      - name: Bounded owned root checks
+        if: ${{ always() && !cancelled() }}
+        shell: bash
+        env:
+          INIT_OUTCOME: ${{ steps.init.outcome }}
+          SOURCE_SHA: ${{ github.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, json, os, platform, re, selectors
+          import signal, subprocess, sys, tarfile, time, urllib.error, urllib.request
+          from pathlib import Path, PurePosixPath
+
+          CAP = 16 * 1024 * 1024
+          RECEIPT_CAP = 64 * 1024
+          SIZE = 70553950
+          SHA = '63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445'
+          SOURCE = 'https://go.dev/dl/go1.27.1.linux-amd64.tar.gz'
+          FINAL = 'https://dl.google.com/go/go1.27.1.linux-amd64.tar.gz'
+          ROOT = Path(os.environ['RUNNER_TEMP']) / 'packtrace-root-ci'
+          WORK = Path(os.environ['GITHUB_WORKSPACE'])
+          used = 0
+          deadline = time.monotonic()
+          result = {'checkout': 'not-run',
+                    'setup': 'not-run', 'tests': 'not-run', 'vet': 'not-run',
+                    'qualification': 'pending-platform-metadata', 'phases': {},
+                    'sourceSHA': os.environ['SOURCE_SHA'],
+                    'prHead': os.environ.get('PR_HEAD', ''),
+                    'prBase': os.environ.get('PR_BASE', ''),
+                    'event': os.environ['GITHUB_EVENT_NAME'],
+                    'checkoutMethod': 'native-anonymous-git',
+                    'sourceRemote': 'https://github.com/landroval/PackTrace.git',
+                    'commands': {'tests': ['go', 'test', '-count=1', '-json', '-timeout=10m', './...'],
+                                 'vet': ['go', 'vet', './...']},
+                    'settings': {'GOTOOLCHAIN': 'local', 'GOPROXY': 'off', 'GOWORK': 'off',
+                                 'CGO_ENABLED': '0', 'GOENV': 'off', 'GOMAXPROCS': '2',
+                                 'GOMEMLIMIT': '512MiB'}}
+
+          class Blocked(Exception):
+              pass
+
+          def source_ref(event, sha, pr):
+              if not re.fullmatch(r'[0-9a-f]{40}', sha):
+                  raise ValueError('invalid-source-identity')
+              if event == 'pull_request':
+                  if not re.fullmatch(r'[1-9][0-9]{0,9}', pr):
+                      raise ValueError('invalid-pr-number')
+                  return 'refs/pull/' + pr + '/merge'
+              if event in ('push', 'workflow_dispatch'):
+                  return sha
+              raise ValueError('event-outside-profile')
+
+          def forbidden_keys(raw):
+              keys = raw.decode('utf-8').lower().splitlines()
+              return any(k.startswith(('include.', 'includeif.', 'credential.', 'url.'))
+                         or k == 'core.sshcommand'
+                         or (k.startswith('http.') and k.endswith('.extraheader'))
+                         for k in keys)
+
+          def test_counts(raw):
+              if not raw or not raw.endswith(b'\n'):
+                  raise ValueError('incomplete-json-stream')
+              events = [json.loads(line) for line in raw.splitlines()]
+              if not all(isinstance(e, dict) for e in events):
+                  raise ValueError('invalid-json-event')
+              return {'passed': sum(e.get('Action') == 'pass' and bool(e.get('Test')) for e in events),
+                      'failed': sum(e.get('Action') == 'fail' and bool(e.get('Test')) for e in events),
+                      'failedEvents': sum(e.get('Action') == 'fail' for e in events),
+                      'buildFailed': sum(e.get('Action') == 'build-fail' for e in events)}
+
+          def qualified(checks, platform_complete, platform_compatible):
+              return bool(checks and platform_complete and platform_compatible)
+
+          def clean_env(home):
+              return {'PATH': '/usr/bin:/bin', 'HOME': str(home),
+                      'TMPDIR': str(ROOT / 'tmp'), 'LANG': 'C.UTF-8',
+                      'GOTOOLCHAIN': 'local', 'GOPROXY': 'off', 'GOWORK': 'off',
+                      'CGO_ENABLED': '0', 'GOENV': 'off', 'GOMAXPROCS': '2',
+                      'GOMEMLIMIT': '512MiB', 'GOCACHE': str(ROOT / 'gocache'),
+                      'GOMODCACHE': str(ROOT / 'gomodcache'),
+                      'GIT_CONFIG_NOSYSTEM': '1', 'GIT_CONFIG_GLOBAL': '/dev/null',
+                      'GIT_TERMINAL_PROMPT': '0', 'GIT_ALLOW_PROTOCOL': 'https',
+                      'GIT_LFS_SKIP_SMUDGE': '1'}
+
+          def command(label, argv, seconds, env, publish=False, cap=CAP):
+              global used
+              started = time.monotonic()
+              end = min(deadline, started + seconds)
+              if time.monotonic() >= end:
+                  raise Blocked('no-remaining-time')
+              streams = {'stdout': bytearray(), 'stderr': bytearray()}
+              state = 'passed'
+              process = subprocess.Popen(argv, cwd=WORK, env=env,
+                          stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                          start_new_session=True)
+              poll = selectors.DefaultSelector()
+              poll.register(process.stdout, selectors.EVENT_READ, 'stdout')
+              poll.register(process.stderr, selectors.EVENT_READ, 'stderr')
+              try:
+                  while poll.get_map():
+                      if time.monotonic() >= end:
+                          state = 'timed-out'
+                          break
+                      for key, mask in poll.select(min(0.1, end-time.monotonic())):
+                          data = os.read(key.fileobj.fileno(), 65536)
+                          if not data:
+                              poll.unregister(key.fileobj)
+                              continue
+                          if used + len(data) > CAP or sum(map(len, streams.values())) + len(data) > cap:
+                              state = 'limit-exceeded'
+                              break
+                          used += len(data)
+                          streams[key.data].extend(data)
+                      if state != 'passed':
+                          break
+                  if state != 'passed':
+                      try:
+                          os.killpg(process.pid, signal.SIGKILL)
+                      except ProcessLookupError:
+                          pass
+                  try:
+                      code = process.wait(timeout=max(0.001, end-time.monotonic()))
+                  except subprocess.TimeoutExpired:
+                      state = 'timed-out'
+                      try:
+                          os.killpg(process.pid, signal.SIGKILL)
+                      except ProcessLookupError:
+                          pass
+                      code = process.wait(timeout=2)
+                  if state == 'passed' and code != 0:
+                      state = 'failed'
+              finally:
+                  poll.close()
+                  try:
+                      os.killpg(process.pid, signal.SIGKILL)
+                  except ProcessLookupError:
+                      pass
+                  if process.poll() is None:
+                      process.wait(timeout=2)
+                  process.stdout.close()
+                  process.stderr.close()
+              record = {'state': state, 'exit': code, 'streams': {},
+                        'durationSeconds': max(0, time.monotonic()-started)}
+              for name, data in streams.items():
+                  record['streams'][name] = {'bytes': len(data)}
+                  if not label.startswith('credential-keys-'):
+                      record['streams'][name]['sha256'] = hashlib.sha256(data).hexdigest()
+                  if publish:
+                      for offset in range(0, len(data), 3072):
+                          print(json.dumps({'diagnostic': label, 'stream': name, 'offset': offset,
+                                'base64': base64.b64encode(data[offset:offset+3072]).decode('ascii')}))
+              result['phases'][label] = record
+              return state, bytes(streams['stdout'])
+
+          def native_checkout(env):
+              ref = source_ref(result['event'], result['sourceSHA'], os.environ.get('PR_NUMBER', ''))
+              if WORK.is_symlink():
+                  raise Blocked('source-directory-unqualified')
+              WORK.mkdir(exist_ok=True)
+              if any(WORK.iterdir()):
+                  raise Blocked('source-directory-not-empty')
+              git = ['/usr/bin/git', '-c', 'init.templateDir=' + str(ROOT / 'templates'),
+                     '-c', 'core.hooksPath=' + str(ROOT / 'hooks'),
+                     '-c', 'credential.helper=', '-c', 'http.followRedirects=false',
+                     '-c', 'protocol.allow=never', '-c', 'protocol.https.allow=always',
+                     '-c', 'submodule.recurse=false']
+              finish = min(deadline, time.monotonic() + 60)
+              commands = [
+                  ('git-version', ['--version']),
+                  ('source-init', ['init']),
+                  ('source-remote', ['remote', 'add', 'origin', result['sourceRemote']]),
+                  ('source-fetch', ['fetch', '--depth=1', '--no-tags', '--recurse-submodules=no', 'origin', ref]),
+                  ('source-checkout', ['checkout', '--detach', 'FETCH_HEAD']),
+                  ('source-identity', ['rev-parse', 'HEAD', 'HEAD^{tree}']),
+                  ('credential-keys-source', ['config', '--local', '--no-includes', '--name-only', '--list']),
+              ]
+              for label, args in commands:
+                  remaining = finish - time.monotonic()
+                  if remaining <= 0:
+                      raise Blocked('source-timeout')
+                  state, raw = command(label, git + args, remaining, env, cap=RECEIPT_CAP)
+                  if state != 'passed':
+                      result['checkout'] = state
+                      raise Blocked('source-command-unqualified')
+                  if label == 'git-version':
+                      if not re.fullmatch(rb'git version [0-9]+\.[0-9]+\.[0-9]+\n', raw):
+                          raise Blocked('git-profile-unqualified')
+                      result['environment']['gitVersion'] = raw.decode('ascii').strip()
+                  elif label == 'source-identity':
+                      ids = raw.decode('ascii').splitlines()
+                      if len(ids) != 2 or ids[0] != result['sourceSHA'] or not all(re.fullmatch(r'[0-9a-f]{40}', x) for x in ids):
+                          raise Blocked('source-identity-mismatch')
+                      result['tree'] = ids[1]
+                  elif label == 'credential-keys-source' and forbidden_keys(raw):
+                      raise Blocked('source-config-unqualified')
+              result['checkout'] = 'passed'
+
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, *args):
+                  return None
+
+          def acquire():
+              client = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
+              url = SOURCE
+              seen = set()
+              finish = min(deadline, time.monotonic() + 120)
+              for _ in range(4):
+                  if url not in (SOURCE, FINAL) or url in seen:
+                      raise Blocked('unapproved-redirect')
+                  seen.add(url)
+                  remaining = finish-time.monotonic()
+                  if remaining <= 0:
+                      raise Blocked('acquisition-timeout')
+                  req = urllib.request.Request(url, headers={'User-Agent': 'PackTrace-root-CI'})
+                  try:
+                      response = client.open(req, timeout=min(10, remaining))
+                  except urllib.error.HTTPError as e:
+                      response = e
+                  with response:
+                      if response.status in (301, 302, 303, 307, 308):
+                          url = response.headers.get('Location', '')
+                          continue
+                      if response.status != 200:
+                          raise Blocked('acquisition-http-failure')
+                      total = 0
+                      digest = hashlib.sha256()
+                      with (ROOT / 'go.tar.gz').open('xb') as output:
+                          while True:
+                              if time.monotonic() >= finish:
+                                  raise Blocked('acquisition-timeout')
+                              data = response.read(min(65536, SIZE-total+1))
+                              if not data:
+                                  break
+                              if total+len(data) > SIZE:
+                                  raise Blocked('archive-byte-limit')
+                              total += len(data)
+                              digest.update(data)
+                              output.write(data)
+                      if total != SIZE or digest.hexdigest() != SHA:
+                          raise Blocked('archive-identity-mismatch')
+                      result['archive'] = {'source': SOURCE, 'final': url, 'bytes': total, 'sha256': digest.hexdigest()}
+                      return
+              raise Blocked('redirect-limit')
+
+          def extract():
+              total = 0
+              seen = set()
+              with tarfile.open(ROOT / 'go.tar.gz', mode='r|gz') as archive:
+                  for member in archive:
+                      name = member.name.rstrip('/') if member.isdir() else member.name
+                      path = PurePosixPath(name)
+                      parts = path.parts
+                      if (not parts or parts[0] != 'go' or member.name.startswith('/')
+                          or '..' in parts or len(parts) > 64 or parts in seen
+                          or name != path.as_posix()
+                          or not (member.isfile() or member.isdir())):
+                          raise Blocked('archive-layout-unqualified')
+                      seen.add(parts)
+                      if len(seen) > 100000:
+                          raise Blocked('archive-member-limit')
+                      if member.isfile():
+                          total += member.size
+                          if total > 1073741824:
+                              raise Blocked('archive-expanded-limit')
+                      archive.extract(member, ROOT / 'toolchain', filter='data')
+              result['archive']['expandedBytes'] = total
+              result['archive']['members'] = len(seen)
+
+          def run():
+              global deadline
+              if os.environ['INIT_OUTCOME'] != 'success':
+                  raise Blocked('initialization-failed')
+              deadline = json.loads((ROOT / 'start.json').read_text())['start'] + 900
+              if (os.geteuid() == 0 or sys.version_info < (3, 12) or platform.system() != 'Linux'
+                  or platform.machine() != 'x86_64' or os.environ.get('RUNNER_ARCH') != 'X64'
+                  or os.environ.get('ImageOS') != 'ubuntu24'
+                  or not os.environ.get('ImageVersion')):
+                  raise Blocked('runner-profile-unqualified')
+              result['environment'] = {'imageOS': os.environ['ImageOS'],
+                 'imageVersion': os.environ['ImageVersion'], 'kernel': platform.release(),
+                 'architecture': platform.machine(), 'reportedLogicalCPU': os.cpu_count(),
+                 'availableCPUQuota': 'unmeasured', 'availableRAM': 'unmeasured',
+                 'runnerPackageVersion': 'pending-platform-metadata',
+                 'aggregatePeakRSS': 'unmeasured'}
+              for directory in ('home', 'tmp', 'gocache', 'gomodcache', 'toolchain', 'hooks', 'templates'):
+                  (ROOT / directory).mkdir(mode=0o700)
+              env = clean_env(ROOT / 'home')
+              native_checkout(env)
+              acquire()
+              extract()
+              go = str(ROOT / 'toolchain/go/bin/go')
+              env['PATH'] = str(ROOT / 'toolchain/go/bin') + ':/usr/bin:/bin'
+              state, version = command('go-version', [go, 'version'], 5, env, cap=RECEIPT_CAP)
+              state2, profile = command('go-profile', [go, 'env', 'GOVERSION', 'GOOS', 'GOARCH'], 5, env, cap=RECEIPT_CAP)
+              if state != 'passed' or version != b'go version go1.27.1 linux/amd64\n' or state2 != 'passed' or profile != b'go1.27.1\nlinux\namd64\n':
+                  raise Blocked('toolchain-profile-mismatch')
+              result['compiler'] = {'version': version.decode().strip(),
+                                    'profile': profile.decode().splitlines()}
+              result['setup'] = 'passed'
+              signal.alarm(0)
+              state, raw = command('tests', [go, 'test', '-count=1', '-json', '-timeout=10m', './...'], 600, env, publish=True)
+              result['tests'] = state
+              if state in ('passed', 'failed'):
+                  try:
+                      result['testCounts'] = test_counts(raw)
+                      counts = result['testCounts']
+                      if state == 'passed' and (counts['passed'] == 0 or counts['failedEvents'] or counts['buildFailed']):
+                          result['tests'] = 'evidence-invalid'
+                  except (ValueError, UnicodeError):
+                      result['tests'] = 'evidence-invalid'
+              if state in ('passed', 'failed') and time.monotonic() < deadline-1:
+                  result['vet'], unused = command('vet', [go, 'vet', './...'], 60, env, publish=True)
+
+          def timeout(signum, frame):
+              raise Blocked('setup-timeout')
+
+          try:
+              signal.signal(signal.SIGALRM, timeout)
+              signal.alarm(180)
+              run()
+          except (Blocked, OSError, ValueError, tarfile.TarError) as error:
+              result['failure'] = str(error) if isinstance(error, Blocked) else 'unqualified-command-or-evidence'
+              if result['setup'] != 'passed':
+                  result['setup'] = 'blocked'
+          finally:
+              signal.alarm(0)
+          checks = result['setup'] == result['tests'] == result['vet'] == 'passed'
+          result['boundedChecksPassed'] = checks
+          result['capturedBytes'] = used
+          receipt = json.dumps(result, sort_keys=True).encode('utf-8')
+          if len(receipt) > RECEIPT_CAP:
+              receipt = b'{"boundedChecksPassed":false,"qualification":"pending-platform-metadata","failure":"receipt-limit"}'
+              checks = False
+          print('ROOTCI_RECEIPT ' + receipt.decode('utf-8'))
+          summary = os.environ.get('GITHUB_STEP_SUMMARY')
+          if summary:
+              with open(summary, 'a', encoding='utf-8') as output:
+                  output.write('Root bounded checks: ' + ('passed' if checks else 'not successful') + '\n\n')
+                  output.write('Environment qualification: pending external platform metadata.\n')
+          sys.exit(0 if checks else 1)
+          PY
