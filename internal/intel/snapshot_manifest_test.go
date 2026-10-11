@@ -48,6 +48,41 @@ func snapshotTestPositive(input map[string]any, index int, digest string, size, 
 	ref["sha256"], ref["bytes"], ref["records"] = strings.Repeat(digest, 64), size, count
 }
 
+func TestParseSnapshotManifestExplicitV11(t *testing.T) {
+	oneOne := snapshotTestBase()
+	oneOne["schemaVersion"] = "1.1"
+	data := snapshotTestBytes(t, oneOne)
+
+	got10, err10 := ParseSnapshotManifest(data)
+	pe10, ok10 := err10.(*ParseError)
+	if !ok10 || pe10.Code != "unsupported-version" ||
+		!reflect.DeepEqual(got10, SnapshotManifest{}) {
+		t.Fatal("1.0 entry point silently accepted 1.1")
+	}
+
+	got11, err11 := ParseSnapshotManifestV11(data)
+	if err11 != nil || got11.SchemaVersion != "1.1" ||
+		got11.Source.ID != "packtrace-synthetic-i21" || len(got11.Blocks) != 256 {
+		t.Fatal("explicit 1.1 manifest result missing")
+	}
+
+	oneZero := snapshotTestBase()
+	gotWrong, errWrong := ParseSnapshotManifestV11(snapshotTestBytes(t, oneZero))
+	peWrong, okWrong := errWrong.(*ParseError)
+	if !okWrong || peWrong.Code != "unsupported-version" ||
+		!reflect.DeepEqual(gotWrong, SnapshotManifest{}) {
+		t.Fatal("1.1 entry point silently accepted 1.0")
+	}
+
+	oneOne["unknown"] = json.RawMessage(`{"dup":0,"\u0064up":1}`)
+	gotBad, errBad := ParseSnapshotManifestV11(snapshotTestBytes(t, oneOne))
+	peBad, okBad := errBad.(*ParseError)
+	if !okBad || peBad.Code != "duplicate-key" ||
+		!reflect.DeepEqual(gotBad, SnapshotManifest{}) {
+		t.Fatal("1.1 bypassed the shared envelope validator")
+	}
+}
+
 func snapshotTestError(t *testing.T, data []byte, code string) {
 	t.Helper()
 	got, err := ParseSnapshotManifest(data)
