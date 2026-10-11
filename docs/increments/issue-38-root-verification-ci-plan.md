@@ -4,7 +4,7 @@
 
 I approved the complete [native Git amendment](issue-38-root-verification-ci.md#approved-native-git-amendment--complete-review-scope) through **Aprobar y adaptar plan** at specification SHA-256 `022ae86be3bafc670452aef429ec525640221ca4d4c71f28f94735260eac9d75`. The owner subsequently selected **Ciclo completo**, approving this actual complete revised plan and its expressly described execution/publication/activation scope: new jj workspace/bookmark, these two documents and one YAML, existing-tool offline local/owned-process validation, limited official metadata and pinned SDK use within hosted jobs, one independent technical reviewer and jsustt request, reviewed development integration and closure/Done only after accepted evidence. Initial hosting is limited to five jobs of at most 15 minutes each; acquisition has no retries/fallback and each archive is limited to the exact approved 70,553,950 bytes. Normal PR/push-development/manual CI remains active after accepted integration. This authorization does not alter protections, PR40, S64, parent/native gates or unrelated deletions; the existing PR-only waiver is not GitHub approval. The previously approved Action plan is preserved in its jj history and the coordinator's read-only preparation receipt. #23/PR #37 and #38's original documentary PR #39 are integrated; current development was rechecked at `177e8e209b9ba53368323643a3e7c35fc1277606`. #40 remains unchanged and is not needed or qualified by this route. The scoped full-cycle authorization is now recorded before execution; it is not evidence that any check, job, publication or integration has succeeded.
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans for authorized inline execution, or superpowers:subagent-driven-development only after separately authorized agent orchestration. Steps use checkbox syntax. No execution method, new agent, installation or publication is authorized by this plan.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans for authorized inline execution, or superpowers:subagent-driven-development only after separately authorized agent orchestration. Steps use checkbox syntax. Only the recorded **Ciclo completo** authorizes inline implementation, one independent reviewer and the bounded delivery; no additional agent orchestration or wider operation is granted.
 
 **Goal:** I install one bounded root-only tests/vet workflow after explicit adoption, execution and publication gates, without treating CI success as complete environment qualification.
 
@@ -17,7 +17,7 @@ I approved the complete [native Git amendment](issue-38-root-verification-ci.md#
 ## Global constraints
 
 - I own only `.github/workflows/root-verification.yml` in a later executable commit; this preparation owns only the two issue-38 documents.
-- Reviewed #23 integration is satisfied; require this revised complete plan's approval, qualified anonymous native source/configuration boundary and explicit acquisition/runner permissions before executable implementation.
+- Reviewed #23 integration and this revised plan's bounded full-cycle permission are satisfied. Controlled source/environment checks gate installation; actual hosted source/profile checks must pass before Go and external qualification must pass before closure.
 - I preserve root standard-library-only policy, module/readers/tests, sibling workspaces/bookmarks, original checkout, unrelated local deletion checkpoint, parent/native/shipping gates and global routing.
 - PRs targeting/pushes to `development` and manual dispatch select root only; no fuzz control/job, schedules, privileged events, matrix or chaining.
 - No `uses:` entries or service token inputs. Only anonymous source remote `https://github.com/landroval/PackTrace.git`; exact event source identity, isolated Git configuration, empty templates/hooks, no tags/submodules/LFS/external filters or authentication fallback. Native checkout at most 60 seconds within setup; do not invoke Node, Runner.Listener or #40.
@@ -61,7 +61,7 @@ it does not prove a future hosted worker is built from that source or that its
 Linux process layout/installed binaries are qualified. I require authorized actual
 profile acceptance, rather than calling a blocked probe successful qualification.
 
-The paragraphs above preserve historical Action/Node consultation only. Under the approved native amendment its bundle/main/post/Node gates are not applicable, not passed or waived; #40 remains unchanged. Native Git controlled/hosted qualification, official archive acquisition/extraction and actual hosted profile remain **NOT RUN / NOT QUALIFIED**. The following complete native proposal is reviewable code, not permission to acquire, execute, publish or activate it. Revalidate the official archive candidate through separately authorized metadata/acquisition before use; unavailable or inconsistent metadata stops delivery without fallback.
+The paragraphs above preserve historical Action/Node consultation only. Under the approved native amendment its bundle/main/post/Node gates are not applicable, not passed or waived; #40 remains unchanged. Controlled local validation has run; actual hosted Git/profile and official archive acquisition/extraction remain **NOT RUN / NOT QUALIFIED**. The listing alone grants no permission; the separate recorded **Ciclo completo** supplies the exact bounded execution/publication authority. Revalidate the official archive candidate through separately authorized metadata/acquisition before use; unavailable or inconsistent metadata stops delivery without fallback.
 
 ## Task 1: clear explicit prerequisites, without premature publication
 
@@ -74,10 +74,10 @@ operator permissions and independently reviewed native source/environment eviden
 - [ ] Read current issue/PR ownership, final-head approvals/threads and development identity; stop on an overlapping owner or changed contract. Reviewed #23 integration is now satisfied; establish a fresh issue-specific execution workspace at verified current development only after execution approval, preserving the old documentation workspace/bookmarks and all unrelated deletions. Do not silently sync/rebase/rewrite any preserved workspace.
 - [ ] Carry only the owner-approved revised specification/plan into the fresh authorized execution workspace and checkpoint those exact two documentation paths separately from the one executable YAML commit. Preserve their approval/hash receipts and the old preparation heads. Final publication path scope is these two documents plus `.github/workflows/root-verification.yml`, not private receipts or #40.
 - [x] Obtain approval of this actual complete native plan and explicit bounded full-cycle execution/publication/activation authority. This tick records the subsequent **Ciclo completo**, not the historical Action-plan approval or runtime success.
-- [ ] Obtain separate explicit official-Go metadata/acquisition/use, controlled owned-process fixture and hosted-execution permissions. No archive, binary or runtime is acquired through documentary authority.
+- [x] Record explicit **Ciclo completo** permission for limited official metadata, SDK acquisition/use only within hosted jobs, existing-tool local checks and owned-process fixtures. This records permission, not archive/runtime qualification.
 - [ ] Confirm the repository remains public and the fixed HTTPS source is available without authentication. Qualify the native isolated environment, exact source and planned Git flags through controlled validation and actual authorized hosting; no Action audit/harness run is substituted or required.
-- [ ] Obtain permission for future controlled local checks, own-process timeout/kill fixtures, official-Go setup and GitHub-hosted acquisition/execution. Mark missing/failed gate blocked, not successful or silently waived.
-- [ ] Record authority before creating YAML. Workflow-bearing push/PR and integration remain separate later permissions because they can trigger acquisition/root jobs.
+- [x] Record **Ciclo completo** permission for those bounded controlled fixtures and hosted setup/execution. Mark missing/failed evidence blocked, not successful or silently waived.
+- [x] Record authority before creating YAML. Workflow-bearing push/PR and reviewed integration are explicitly included, with five initial jobs/75 minutes and accepted evidence required; none is assumed to have run.
 
 ## Task 2: one independently reviewable workflow, RED then bounded GREEN
 
@@ -274,7 +274,13 @@ jobs:
               return state, bytes(streams['stdout'])
 
           def native_checkout(env):
+              result['checkout'] = 'blocked'
               ref = source_ref(result['event'], result['sourceSHA'], os.environ.get('PR_NUMBER', ''))
+              if result['event'] == 'pull_request':
+                  if not all(re.fullmatch(r'[0-9a-f]{40}', result.get(key, '')) for key in ('prHead', 'prBase')):
+                      raise Blocked('pr-identities-unqualified')
+              else:
+                  result['prHead'] = result['prBase'] = ''
               if WORK.is_symlink():
                   raise Blocked('source-directory-unqualified')
               WORK.mkdir(exist_ok=True)
@@ -307,6 +313,7 @@ jobs:
                       if not re.fullmatch(rb'git version [0-9]+\.[0-9]+\.[0-9]+\n', raw):
                           raise Blocked('git-profile-unqualified')
                       result['environment']['gitVersion'] = raw.decode('ascii').strip()
+                      result['environment']['gitPath'] = '/usr/bin/git'
                   elif label == 'source-identity':
                       ids = raw.decode('ascii').splitlines()
                       if len(ids) != 2 or ids[0] != result['sourceSHA'] or not all(re.fullmatch(r'[0-9a-f]{40}', x) for x in ids):
@@ -321,10 +328,31 @@ jobs:
                   return None
 
           def acquire():
+              started = time.monotonic()
+              previous = signal.getitimer(signal.ITIMER_REAL)
+              handler = signal.getsignal(signal.SIGALRM)
+              finish = min(deadline, started + 120)
+              if previous[0] > 0:
+                  finish = min(finish, started + previous[0])
+              if started >= finish:
+                  raise Blocked('acquisition-timeout')
+              def expired(signum, frame):
+                  raise Blocked('acquisition-timeout')
+              signal.signal(signal.SIGALRM, expired)
+              signal.setitimer(signal.ITIMER_REAL, max(0.001, finish-time.monotonic()))
+              try:
+                  acquire_body(finish)
+              finally:
+                  signal.setitimer(signal.ITIMER_REAL, 0)
+                  signal.signal(signal.SIGALRM, handler)
+                  if previous[0] > 0:
+                      remaining = previous[0] - (time.monotonic()-started)
+                      signal.setitimer(signal.ITIMER_REAL, max(0.001, remaining), previous[1])
+
+          def acquire_body(finish):
               client = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
               url = SOURCE
               seen = set()
-              finish = min(deadline, time.monotonic() + 120)
               for _ in range(4):
                   if url not in (SOURCE, FINAL) or url in seen:
                       raise Blocked('unapproved-redirect')
@@ -643,6 +671,39 @@ class ControlledRootCITests(unittest.TestCase):
                     with self.assertRaises((m.Blocked,urllib.error.URLError)):
                         m.acquire()
                 self.assertNotIn('final',m.result['archive'])
+    def test_blocking_body_read_obeys_acquisition_deadline(self):
+        started=[];completed=[]
+        class Stalled(Response):
+            def read(self,n=-1):
+                started.append(True)
+                time.sleep(.4)
+                completed.append(True)
+                return super().read(n)
+        m.deadline=time.monotonic()+.1
+        with patch.object(m,'SIZE',2),patch.object(m,'SHA',hashlib.sha256(b'OK').hexdigest()),patch.object(m.urllib.request,'build_opener',return_value=Opener([Stalled(b'OK')])):
+            with self.assertRaisesRegex(m.Blocked,'acquisition-timeout'):m.acquire()
+        self.assertEqual(started,[True])
+        self.assertEqual(completed,[])
+        self.assertEqual(signal.getitimer(signal.ITIMER_REAL)[0],0)
+    def test_acquisition_does_not_extend_outer_setup_timer(self):
+        observed=[]
+        class Measured(Response):
+            def read(self,n=-1):
+                observed.append(signal.getitimer(signal.ITIMER_REAL)[0])
+                time.sleep(.01)
+                return super().read(n)
+        previous=signal.getsignal(signal.SIGALRM)
+        signal.setitimer(signal.ITIMER_REAL,2)
+        try:
+            with patch.object(m,'SIZE',2),patch.object(m,'SHA',hashlib.sha256(b'OK').hexdigest()),patch.object(m.urllib.request,'build_opener',return_value=Opener([Measured(b'OK')])):
+                m.acquire()
+            remaining=signal.getitimer(signal.ITIMER_REAL)[0]
+            self.assertTrue(all(0<x<=2 for x in observed))
+            self.assertTrue(0<remaining<2)
+            self.assertIs(signal.getsignal(signal.SIGALRM),previous)
+        finally:
+            signal.setitimer(signal.ITIMER_REAL,0)
+            signal.signal(signal.SIGALRM,previous)
     def test_valid_acquisition_owns_measured_bytes(self):
         with patch.object(m,'SIZE',2),patch.object(m,'SHA',hashlib.sha256(b'OK').hexdigest()),patch.object(m.urllib.request,'build_opener',return_value=Opener([Response(b'OK')])):
             m.acquire()
@@ -687,7 +748,7 @@ class ControlledRootCITests(unittest.TestCase):
     def source_case(self, fail_label='', bad_identity=False, bad_keys=False):
         m.result.update(event='pull_request',sourceSHA='a'*40,
                         sourceRemote='https://github.com/landroval/PackTrace.git',
-                        checkout='not-run',environment={})
+                        checkout='not-run',environment={},prHead='c'*40,prBase='d'*40)
         calls=[]
         def commands(label,argv,seconds,env,**kwargs):
             calls.append((label,argv,dict(env),kwargs))
@@ -705,6 +766,7 @@ class ControlledRootCITests(unittest.TestCase):
         self.assertEqual(m.result['checkout'],'passed')
         self.assertEqual(m.result['tree'],'b'*40)
         self.assertEqual(m.result['environment']['gitVersion'],'git version 2.43.0')
+        self.assertEqual(m.result['environment'].get('gitPath'),'/usr/bin/git')
         fetch=next(argv for label,argv,env,kw in calls if label=='source-fetch')
         self.assertEqual(fetch[-1],'refs/pull/17/merge')
         for arg in ('--depth=1','--no-tags','--recurse-submodules=no'):self.assertIn(arg,fetch)
@@ -723,20 +785,42 @@ class ControlledRootCITests(unittest.TestCase):
             self.assertFalse(kwargs.get('publish',False))
         own_keys=next(argv for label,argv,env,kw in calls if label=='credential-keys-source')
         for arg in ('--local','--no-includes','--name-only'):self.assertIn(arg,own_keys)
+    def test_pr_head_and_base_shapes_reject_before_any_git(self):
+        for field in ('prHead','prBase'):
+            for value in ('','A'*40,'a'*39,'a'*41,'../../not-an-identity'):
+                with self.subTest(field=field,value=value):
+                    calls,commands=self.source_case()
+                    m.result[field]=value
+                    with patch.dict(m.os.environ,{'PR_NUMBER':'17'}),patch.object(m,'command',side_effect=commands):
+                        with self.assertRaisesRegex(m.Blocked,'pr-identities-unqualified'):
+                            m.native_checkout(m.clean_env(m.ROOT/'home'))
+                    self.assertEqual(calls,[])
+                    self.assertEqual(m.result['checkout'],'blocked')
+    def test_non_pr_has_no_authoritative_pr_identities(self):
+        for event in ('push','workflow_dispatch'):
+            with self.subTest(event=event):
+                calls,commands=self.source_case()
+                m.result.update(event=event,prHead='malformed',prBase='malformed')
+                with patch.object(m,'command',side_effect=commands):
+                    m.native_checkout(m.clean_env(m.ROOT/'home'))
+                self.assertEqual(m.result['prHead'],'')
+                self.assertEqual(m.result['prBase'],'')
+                fetch=next(argv for label,argv,env,kw in calls if label=='source-fetch')
+                self.assertEqual(fetch[-1],'a'*40)
     def test_source_failure_and_moved_identity_do_not_fallback(self):
         for failed,bad in [('source-fetch',False),('',True)]:
             with self.subTest(failed=failed,bad=bad):
                 calls,commands=self.source_case(fail_label=failed,bad_identity=bad)
                 with patch.dict(m.os.environ,{'PR_NUMBER':'17'}),patch.object(m,'command',side_effect=commands):
                     with self.assertRaises(m.Blocked):m.native_checkout(m.clean_env(m.ROOT/'home'))
-                self.assertNotEqual(m.result['checkout'],'passed')
+                self.assertEqual(m.result['checkout'],'failed' if failed else 'blocked')
                 self.assertEqual(sum(label=='source-fetch' for label,argv,env,kw in calls),1)
                 self.assertFalse(any(label=='credential-keys-source' for label,argv,env,kw in calls))
     def test_own_include_key_blocks_without_following_or_disclosure(self):
         calls,commands=self.source_case(bad_keys=True)
         with patch.dict(m.os.environ,{'PR_NUMBER':'17'}),patch.object(m,'command',side_effect=commands):
             with self.assertRaises(m.Blocked):m.native_checkout(m.clean_env(m.ROOT/'home'))
-        self.assertNotEqual(m.result['checkout'],'passed')
+        self.assertEqual(m.result['checkout'],'blocked')
         self.assertFalse(any(kw.get('publish',False) for label,argv,env,kw in calls))
     def test_source_deadline_and_nonempty_directory_precede_git(self):
         self.source_case()
@@ -755,7 +839,7 @@ class ControlledRootCITests(unittest.TestCase):
             return commands(label,*args,**kwargs)
         with patch.dict(m.os.environ,{'PR_NUMBER':'17'}),patch.object(m,'command',side_effect=invalid):
             with self.assertRaises(m.Blocked):m.native_checkout(m.clean_env(m.ROOT/'home'))
-        self.assertNotEqual(m.result['checkout'],'passed')
+        self.assertEqual(m.result['checkout'],'blocked')
         self.assertFalse(any(label=='source-fetch' for label,argv,env,kw in calls))
     def test_failed_native_source_does_not_acquire_or_run_go(self):
         m.result={'checkout':'not-run','sourceSHA':'a'*40,'phases':{},'tests':'not-run','vet':'not-run'}
@@ -806,7 +890,7 @@ stream. No program in these blocks is executed by current plan drafting.
 - [ ] Independently retain each failing boundary's result, unchanged GREEN code fingerprints and the one actual stdlib test stream. These fixtures do not authorize live downloads or qualify native hostile-archive opening.
 - [ ] Parse final YAML only with an already installed explicitly permitted validator; otherwise report that check unavailable, never install a framework. Extract Python and `ast.parse` it; Bash heredocs need `bash -n`, not execution during documentary checks.
 - [ ] Verify literal workflow shape: no `uses:` entry, `permissions: {}`, exactly three selected event families, one Ubuntu job/15-minute timeout, no fuzz/privileged/schedule/cache/upload/matrix/token/secret/OIDC expressions and no PR text interpolated into shell. Git arguments come only from fixed commands plus validated event identities.
-- [ ] Obtain separately authorized local official-Go root JSON/vet verification if part of execution permission. Count one stream only; local custom-compiler results are not official/hosted qualification.
+- [x] Run existing local modified-compiler root JSON/vet regression checks: 3,185 tests/subtests, zero fail events; vet exit 0. Count one stream only. Official SDK acquisition/execution remains hosted-job-only, not local or already qualified.
 - [ ] In the newly authorized execution workspace, commit only the owned YAML using `jj -R $env.PACKTRACE_IMPLEMENTATION_WORKSPACE commit -m 'ci: verify owned root checks (#38)' .github/workflows/root-verification.yml`. Use a new `issue-38-root-verification-ci` bookmark; preserve the old `issue-38-root-verification-ci-spec` and all other preparation bookmarks/heads. Never push yet or include sibling/checkpoint changes.
 
 ## Task 3: independently reviewed publication and actual acceptance
@@ -819,12 +903,13 @@ permissions and complete bounded job/platform evidence.
 no fuzz/native/scanner/producer/release qualification.
 
 - [ ] Self-review all five focus classes and R01-R20; resolve blocker/important gaps without pretending author review is independent approval. If code/gates materially change, return for contract/plan approval before executing the changed proposal.
-- [ ] Obtain explicit workflow-bearing push/PR authority covering actual automatic checkout/official-Go/runner effects. Verify current owner/base/remote exact head and publish only the issue bookmark; use `Refs #38`, not automatic closure. Request `jsustt` review only with permission; changed code needs fresh final-head review.
+- [x] Record explicit **Ciclo completo** workflow-bearing push/PR and `jsustt` request authority, covering bounded automatic source/SDK/runner effects. This checkbox is permission only.
+- [ ] Verify current owner/base/remote and independently reviewed exact head, then publish only the issue bookmark; use `Refs #38`, not automatic closure. Changed code needs fresh final-head review.
 - [ ] Collect actual authorized PR root evidence before integration. After separately authorized reviewed integration, collect the development-push evidence and dispatch the root workflow explicitly on `development` for the manual-event evidence; manual dispatch requires the workflow to exist on the default branch, so do not require or pretend that pre-integration manual evidence exists. No token/secrets/private inputs are published. An event never run stays NOT RUN; do not synthesize a pass from selection syntax.
 - [ ] Reconstruct diagnostic bytes by phase/stream/offset from `diagnostic` JSON lines; require contiguous offsets, the captured byte totals/SHA-256 and complete service log. Decode the one root stdout JSON stream and count nonempty-Test pass events, not package/parallel/focused sums. Missing/truncated platform logs keep qualification incomplete.
 - [ ] Record source checkout/tree, PR head/base, event, fixed anonymous source and verified official artifact, actual compiler/profile/Git, phase exits/bounds and result limitations. Compare actual platform `Set up job` runner-package version and image/architecture to the inline receipt; the removed Node-specific floor is not a native Git acceptance predicate. Require actual supported Git command/profile evidence. Source strings or a nominal job success do not authenticate missing platform evidence.
 - [ ] External acceptance truth table is exactly `checks && platform_complete && platform_compatible`. Missing version/image, contradictory supported profile/architecture, partial diagnostic reconstruction or absence of one selected-event proof cannot close qualification/installation. No API/token permission is added merely to automate acceptance.
-- [ ] Re-read actual GitHub approvals/threads/head/base before authorized integration; verify integrated bytes and obtain separate integrated root verification/issue-closure authority. Preserve parents #11/#6, #22/native rows and other Project items. Do not change branch-required-check/security settings through workflow installation.
+- [ ] Re-read actual GitHub approvals/threads/head/base before the already authorized conditional reviewed integration; verify exact integrated bytes and actual root evidence. Closure/Done authority is explicitly conditional on complete acceptance, not another implicit permission. Preserve parents #11/#6, #22/native rows and other Project items. Do not change branch-required-check/security settings through workflow installation.
 
 ## Contract mapping and preparation handoff
 
@@ -836,8 +921,7 @@ no fuzz/native/scanner/producer/release qualification.
 | R11-R17 | Task 2 phase/count/capture/timeout privacy fixtures; Task 3 exact stream/hash/receipt closure |
 | R18-R20 | Global constraints and Task 3 unknown/soft-limit/nonqualification/unchanged-protection checks |
 
-The owner subsequently approved this revised complete plan and the bounded full cycle. Its approval checkbox records authority only; execution/acceptance checkboxes remain pending until observed evidence. Reviewed #23 integration is satisfied. Native source/environment qualification and all execution/acquisition/publication permissions remain pending; Action adoption is not applicable to this route.
-No actual hosted event, official-Go/archive/Action execution, local subprocess fixture,
-Go test/vet, fuzz, agent, push, PR or merge was performed by drafting this artifact.
-The owner approved the historical Action plan, the native written amendment, and subsequently this actual revised plan with explicit bounded full-cycle authority. Proposed behavior remains unexecuted and unqualified; future discovered gaps must be corrected/reapproved within exact scope.
+The owner subsequently approved this revised complete plan and the bounded full cycle. Its approval checkbox records authority only; execution/acceptance checkboxes remain pending until observed evidence. Reviewed #23 integration is satisfied. Bounded execution/acquisition/publication permissions are granted; actual hosted source/environment and official-archive qualification remain pending. Action adoption is not applicable to this route.
+Drafting itself performed none of those operations. Subsequent authorized local execution ran the documented pure/controlled fixtures and modified-compiler root tests/vet. No hosted event, official SDK/archive execution, fuzz, push, PR or integration is inferred from local evidence.
+The owner approved the historical Action plan, the native written amendment, and subsequently this actual revised plan with explicit bounded full-cycle authority. Hosted behavior remains unexecuted and unqualified; source-supported implementation/fixture corrections remain within the approved contract and require final-head review. Any material contract/gate change still requires owner reapproval.
 Only the expressly bounded native CI delivery is authorized; no observed result or completion is inferred from that permission.

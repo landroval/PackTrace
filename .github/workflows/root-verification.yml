@@ -180,7 +180,13 @@ jobs:
               return state, bytes(streams['stdout'])
 
           def native_checkout(env):
+              result['checkout'] = 'blocked'
               ref = source_ref(result['event'], result['sourceSHA'], os.environ.get('PR_NUMBER', ''))
+              if result['event'] == 'pull_request':
+                  if not all(re.fullmatch(r'[0-9a-f]{40}', result.get(key, '')) for key in ('prHead', 'prBase')):
+                      raise Blocked('pr-identities-unqualified')
+              else:
+                  result['prHead'] = result['prBase'] = ''
               if WORK.is_symlink():
                   raise Blocked('source-directory-unqualified')
               WORK.mkdir(exist_ok=True)
@@ -213,6 +219,7 @@ jobs:
                       if not re.fullmatch(rb'git version [0-9]+\.[0-9]+\.[0-9]+\n', raw):
                           raise Blocked('git-profile-unqualified')
                       result['environment']['gitVersion'] = raw.decode('ascii').strip()
+                      result['environment']['gitPath'] = '/usr/bin/git'
                   elif label == 'source-identity':
                       ids = raw.decode('ascii').splitlines()
                       if len(ids) != 2 or ids[0] != result['sourceSHA'] or not all(re.fullmatch(r'[0-9a-f]{40}', x) for x in ids):
@@ -227,10 +234,31 @@ jobs:
                   return None
 
           def acquire():
+              started = time.monotonic()
+              previous = signal.getitimer(signal.ITIMER_REAL)
+              handler = signal.getsignal(signal.SIGALRM)
+              finish = min(deadline, started + 120)
+              if previous[0] > 0:
+                  finish = min(finish, started + previous[0])
+              if started >= finish:
+                  raise Blocked('acquisition-timeout')
+              def expired(signum, frame):
+                  raise Blocked('acquisition-timeout')
+              signal.signal(signal.SIGALRM, expired)
+              signal.setitimer(signal.ITIMER_REAL, max(0.001, finish-time.monotonic()))
+              try:
+                  acquire_body(finish)
+              finally:
+                  signal.setitimer(signal.ITIMER_REAL, 0)
+                  signal.signal(signal.SIGALRM, handler)
+                  if previous[0] > 0:
+                      remaining = previous[0] - (time.monotonic()-started)
+                      signal.setitimer(signal.ITIMER_REAL, max(0.001, remaining), previous[1])
+
+          def acquire_body(finish):
               client = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
               url = SOURCE
               seen = set()
-              finish = min(deadline, time.monotonic() + 120)
               for _ in range(4):
                   if url not in (SOURCE, FINAL) or url in seen:
                       raise Blocked('unapproved-redirect')
