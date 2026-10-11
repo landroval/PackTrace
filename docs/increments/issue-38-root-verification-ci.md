@@ -1,5 +1,13 @@
 # Issue 38: bounded root-verification CI installation contract
 
+## Current preparation: native Git amendment approved; revised plan preparation
+
+I selected **Simplificar con Git nativo** to prioritize completion of #38, then approved the complete written amendment through **Aprobar y adaptar plan**, at specification SHA-256 `022ae86be3bafc670452aef429ec525640221ca4d4c71f28f94735260eac9d75`. This approves that amendment and preparation/review of the revised complete plan, not installation, acquisition, hosted execution, publication, integration or closure. The Action-based specification and plan approvals retained below are historical approvals of that route; they do not approve the new native Git implementation. Current `development` was rechecked at `177e8e209b9ba53368323643a3e7c35fc1277606`; #23/PR #37 and the original #38 documentary PR #39 are integrated. The old base and pending-predecessor statements below describe their preparation checkpoints, not the live dependency state.
+
+I subsequently approved the revised complete native plan and selected **Ciclo completo** with explicit scoped local validation, owned-process fixtures, limited official metadata, pinned SDK use inside hosted jobs, one independent technical reviewer and jsustt request, workflow-bearing PR publication, reviewed development integration/normal CI activation and accepted issue-38 closure/Done. Initial acceptance is bounded to five jobs of at most 15 minutes. The original protections/PR-only waiver, PR40, S64, parent/native gates and unrelated deletions remain unchanged. This is authority, not execution or qualification evidence.
+
+## Historical approved Action-based contract
+
 Status: **written specification and complete written plan approved; no execution/publication authority**. The
 user approved this complete artifact, including its proposed evidence ceilings,
 and separately authorized local complete-plan drafting for
@@ -267,3 +275,43 @@ acquisitions and runner execution remain unauthorized. The user separately appro
 up to 10 public texts/headers, 256 KiB each and 2 MiB total, for plan preparation;
 9 documents/headers totaling 137,837 bytes were consulted without bundles or Go
 archive bodies. This is not distribution, notice/security or runner qualification.
+
+## Approved native Git amendment — complete review scope
+
+### Purpose and smallest delivery
+
+I want to finish the assigned root tests/vet CI issue without adopting an unnecessary checkout Action. The repository was confirmed public through GitHub metadata. I use preinstalled Git to obtain only the designated owned repository source and retain the original bounded official-Go setup and root-check evidence requirements. This is source acquisition and repository-code execution, not data-only inspection or a security sandbox.
+
+The only future executable repository path remains `.github/workflows/root-verification.yml`. I revise only this existing specification and its existing issue-38 plan during preparation. I leave #40, its draft status, harness, acquired material, reviews and history unchanged; none is merged, executed or declared qualified. S64 remains paused. No new helper repository, Go source, module dependency, probe, Action or agent is introduced.
+
+### Native source acquisition and identity
+
+- The only source remote is anonymous HTTPS `https://github.com/landroval/PackTrace.git`. A private-repository response, authentication requirement, missing ref or source mismatch blocks setup; there is no token, SSH, mirror or authenticated fallback.
+- Git runs through an explicit isolated environment with a fresh job-owned HOME and scratch directory, disabled system/global configuration and prompts, no inherited credential/proxy/Git configuration environment and no credential helper, extraheader, askpass, SSH command or persisted service credential.
+- A new repository is initialized without host templates. Hooks are disabled through a job-owned empty hooks directory; no submodule recursion, LFS acquisition, tags, external filter configuration, auto-upgrades or host-global safe.directory change is permitted. Repository attributes are not configured as executable drivers.
+- A shallow, no-tags fetch selects the PR merge ref for `pull_request`, or the exact validated event SHA for push/manual dispatch. PR numbers are bounded decimal data used in argument arrays, never interpolated into shell programs. All expected object identities must have the supported hexadecimal shape before Git is invoked.
+- Checkout is detached. Its actual commit must equal the event's expected SHA, and its actual tree is recorded. PR head/base identities remain separate. A moved PR merge ref fails identity qualification rather than causing a second fetch, fallback, retry or substitution.
+- Native checkout has a 60-second aggregate deadline within the unchanged 180-second setup and 15-minute job deadlines. Its command capture shares the existing 16 MiB aggregate budget and uses the 64 KiB individual metadata ceiling. Exhaustion or incomplete process closure blocks setup; no valid-looking prefix qualifies source.
+- Record the actual preinstalled Git version/path and hosted profile. Preinstalled software is not claimed immutable or source-audited by a version string. Controlled validation must cover the actual planned flags and isolation; authorized hosted acceptance must demonstrate the supported profile. No Git distribution is downloaded or installed by this workflow.
+
+### Exact replacement of Action-specific gates
+
+After owner acceptance of this amendment, this route has no `uses:` checkout entry, no Node invocation/runtime lookup, no checkout Action bundle/dependency/notice adoption, no checkout-produced temporary auth file and no main/post Action cleanup experiment. Those Action-specific predicates are **not applicable to the native route**, not passed or waived and not findings about Action safety.
+
+I replace them with demonstrated anonymous native checkout, isolated configuration/environment, disabled hooks/recursive acquisition, exact source identity and actual Git/hosted-profile evidence. Go receives the same explicit noncredential environment and job-owned storage. I do not inspect real host credential/config values or execute the #40 harness to establish these properties. Absence of passed service credentials does not mean the hosted worker has no internal service credentials or that repository tests cannot access filesystem/process/network resources.
+
+The workflow uses no token/secrets/OIDC input and requires no repository write permission. Its permission declaration is empty. Fork and manual-event execution still require GitHub's applicable event approval and explicit owner authorization; anonymous fetch does not authorize arbitrary repository-code execution.
+
+### Unchanged setup, checks, limits and acceptance
+
+The approved official-Go candidate identity, HTTPS allowlist, 70,553,950-byte archive ceiling and expected SHA-256, no retries/fallback/proxies, 120-second acquisition budget, verified extraction limits, job-local caches and exact official compiler/profile validation remain unchanged. Previously observed metadata is historical; availability/identity must be revalidated within separately approved consultation/acquisition authority before actual use. If the candidate cannot be qualified, stop instead of selecting a version or custom compiler automatically.
+
+Root commands remain `go test -count=1 -json -timeout=10m ./...` and separately observed `go vet ./...`, with the existing offline acquisition settings, `GOMAXPROCS=2`, soft `GOMEMLIMIT=512MiB`, 10-minute test/60-second vet bounds, 16 MiB aggregate capture and 64 KiB compact receipt. Preserve the existing independent phase statuses, complete JSON-stream counting, compilation-versus-behavioral evidence, missing/truncated-evidence failure and external actual runner image/package evidence. Dropping Node removes its runner-version floor as a Node compatibility predicate; the actual hosted runner version/image must still be observed, with no claim of immutable image or successful unknown profile.
+
+R01–R04 and R09–R20 remain binding with source acquisition attributed to native Git rather than an Action. For R05 require actual Git/Linux amd64/Ubuntu 24.04/Python profile and external runner/image evidence, not Node. For R06 do not infer acquisition or runtime qualification from candidate metadata or a named binary. R07 requires qualification of the native source/environment prerequisites, not an Action assessment. R08 requires no passed/persisted service credentials and qualified isolated native configuration; uncertainty blocks Go without reading real credential values.
+
+Before closure I require independent final-head review, authorized actual PR/manual/development-push root runs, exact source/tree/toolchain/runner receipts and complete diagnostic reconstruction. No YAML-only installation, merged PR, historical local test count, nominal job success, missing event evidence or parent completion stands in for acceptance. Root success does not install required branch checks, certify scanner safety or qualify fuzz/native/producer/release behavior.
+
+### Approval and execution boundary
+
+I approved this complete amendment and authorized preparation/review of the revised complete executable plan only. The subsequent **Ciclo completo** records those explicit bounded permissions for this native route; it does not grant unspecified acquisitions, environment provisioning, privilege/protection changes or unconditional closure. No proposal here changes branch protections, credentials, runner provisioning or security settings. I preserve all original workspaces/bookmarks and unrelated deletion checkpoints. #38 remains OPEN until its complete accepted delivery; #11 and all other parent states remain unchanged.
