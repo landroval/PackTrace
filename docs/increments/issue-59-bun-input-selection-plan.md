@@ -117,7 +117,7 @@ p, sel, code = None, selectors.DefaultSelector(), None
 out = {'stdout':bytearray(),'stderr':bytearray()}
 failure, cleanup = None, []
 def interrupted(signum, frame):
-    raise InterruptedError('owned supervisor interrupted')
+    raise KeyboardInterrupt('owned supervisor interrupted')
 for termination in (signal.SIGHUP,signal.SIGTERM,signal.SIGQUIT):
     signal.signal(termination,interrupted)
 try:
