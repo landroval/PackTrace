@@ -12,6 +12,16 @@ sections 2, 4, 16–18, and 24–27. Keep all five native targets and the existi
 requirements unless the user explicitly changes them. Do not turn an unavailable
 safeguard into a weaker fallback or an assertion of platform support.
 
+The documentary alternative for issue
+[#22](https://github.com/landroval/PackTrace/issues/22) is recorded in the reviewed
+[macOS opening qualification gap
+report](increments/issue-22-macos-opening-qualification.md). That report preserves
+the conditional source argument, records the unresolved mechanism and exact future
+runner/evidence requirements, and leaves all five native rows NOT RUN. Closing the
+bounded documentary issue does not qualify a source path, runner, platform, device,
+scanner, or parent capability #7; prototype creation, provisioning and native
+execution still require the separate explicit authorizations below.
+
 Further authorization must explicitly cover:
 
 1. Creating the isolated prototype.
