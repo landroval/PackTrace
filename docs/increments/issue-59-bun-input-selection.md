@@ -122,3 +122,35 @@ After written-contract approval, prepare the concrete plan covering:
 5. Fresh authorized focused/root tests, vet/build/format and exact-scope checks, unchanged existing npm/Bun/CLI behavior, followed by separately authorized PR/integration/hosted evidence and read-back.
 
 None of those executions has occurred for #59. Counts, AST/static inspection, prior tests and prior CI success do not qualify this new helper. Passing scalar synthetic tests will not qualify real Bun producers or macOS/Windows/native/scanner support. The issue closes only after its own full accepted implementation delivery; #5 remains open and S64 remains paused.
+
+## Executed local evidence and remaining delivery gates
+
+The sole builder implemented only the two new Go paths. Missing-API compiler RED
+was recorded separately from a compiling wrong stub with **485 named assertion
+failures**, then **486 new named tests/subtests passed**. All six specified controls
+compiled, produced their intended named runtime failures, restored source/test
+bytes exactly, and replayed the complete focused GREEN. The independent private
+adversarial lane found no missing scalar discriminator.
+
+A fresh exact `880ece81d263d04d38c200c42467bd857242cbf7` base archive passed
+**3,185** named tests/subtests; the restored candidate passed **3,671**, with no
+test/package/build failures. Vet, all-package build, separate CLI build and scoped
+gofmt checks passed. Local compiler: `go1.27.1-X:nodwarf5 linux/amd64`, explicitly
+modified and not official/native/producer qualification. Whole exact-candidate
+archive, independent task/whole-branch reviews, final PR prospective parents/tree,
+official PR event and actual merged-development push acceptance remain separate
+delivery gates; completion comments record their eventual outcome.
+
+Private-helper qualification retained the original signal/cleanup and evidence
+review NO findings. Inert runtime evidence then showed Python 3.14's selector
+consuming the old `InterruptedError` signal handler until the command deadline.
+The reviewed one-line correction raises `KeyboardInterrupt`; eleven owned
+cleanup/reservation/capture/client-shadow controls passed. Eleven controlled
+offline decoder checks cover framing, offsets, digests, EOF and endpoint/run
+binding. These are helper fixtures, not real hosted evidence or a sandbox claim.
+
+The earlier source checks ran after the documentation checkpoint: their initial
+whole-base tree binding was corrected with a fresh exact-base archive receipt,
+not by rewriting historical output. Unrelated task-ledger deletions stay outside
+all published heads. No discovery, Bun producer, native prototype, S64 continuation,
+new dependency/toolchain installation, workflow or security change is delivered.
