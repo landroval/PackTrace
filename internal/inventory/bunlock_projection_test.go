@@ -428,7 +428,11 @@ func TestProjectBunLockInfoRequirementsOwnership(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	doc.Packages["a"] = json.RawMessage(`["changed"]`)
+	for _, raw := range doc.Packages {
+		for i := range raw {
+			raw[i] = 'X'
+		}
+	}
 	after, err := json.Marshal(got)
 	if err != nil || !bytes.Equal(before, after) {
 		t.Fatal("requirements alias input data")
