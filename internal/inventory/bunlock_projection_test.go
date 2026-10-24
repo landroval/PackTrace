@@ -195,6 +195,11 @@ func TestProjectBunLockKinds(t *testing.T) {
 				Registry: tt.registry, Integrity: tt.integrity, GitTag: tt.tag}
 			if tt.info != "" {
 				want.Info = json.RawMessage(tt.info)
+				want.Requirements = bunAbsentGroups()
+			}
+			if tt.key == "npm" {
+				want.Requirements[0] = DependencyGroup{Name: "dependencies", State: FieldValue,
+					Entries: []DeclaredDependency{{Name: "x", Requirement: "^1", State: FieldValue}}}
 			}
 			if !reflect.DeepEqual(r, want) {
 				t.Fatalf("got %+v, want %+v", r, want)
@@ -349,6 +354,126 @@ func TestProjectBunLockRecordBound(t *testing.T) {
 		t.Fatal("exact bound must succeed without truncation")
 	}
 	assertBunProjectionError(t, build(maxProjectedRecords+1), "limit-exceeded")
+}
+
+func bunAbsentGroups() []DependencyGroup {
+	return []DependencyGroup{{Name: "dependencies"}, {Name: "devDependencies"},
+		{Name: "optionalDependencies"}, {Name: "peerDependencies"}}
+}
+
+func TestProjectBunLockInfoRequirements(t *testing.T) {
+	const fixture = `{"lockfileVersion":1,"workspaces":{},"packages":{
+"mixed":["m@1.0.0","",{"dependencies":{"b":"2","a":null,"c":1,"":""},"devDependencies":null,"optionalDependencies":[],"peerDependencies":{},"optionalPeers":["b"],"os":["darwin"]},"sha"],
+"escaped":["e@1.0.0","",{"dependencies":{"\u0061":"\u005e1"}},"sha"],
+"empty-info":["ei@1.0.0","",{},"sha"],
+"ws":["w@workspace:packages/w"],
+"ws-info":["wi@workspace:packages/wi",{}],
+"unknown":["u@catalog:",{"dependencies":{"x":"1"}}]
+}}`
+	got, err := ProjectBunLock(parseBunProjectionInput(t, fixture))
+	if err != nil {
+		t.Fatal(err)
+	}
+	mixed := bunAbsentGroups()
+	mixed[0] = DependencyGroup{Name: "dependencies", State: FieldValue, Entries: []DeclaredDependency{
+		{Name: "", Requirement: "", State: FieldValue},
+		{Name: "a", State: FieldNull},
+		{Name: "b", Requirement: "2", State: FieldValue},
+		{Name: "c", State: FieldInvalidType},
+	}}
+	mixed[1].State = FieldNull
+	mixed[2].State = FieldInvalidType
+	mixed[3] = DependencyGroup{Name: "peerDependencies", State: FieldValue, Entries: []DeclaredDependency{}}
+	escaped := bunAbsentGroups()
+	escaped[0] = DependencyGroup{Name: "dependencies", State: FieldValue,
+		Entries: []DeclaredDependency{{Name: "a", Requirement: "^1", State: FieldValue}}}
+	tests := []struct {
+		key  string
+		want []DependencyGroup
+	}{
+		{"mixed", mixed},
+		{"escaped", escaped},
+		{"empty-info", bunAbsentGroups()},
+		{"ws", nil},
+		{"ws-info", bunAbsentGroups()},
+		{"unknown", nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.key, func(t *testing.T) {
+			if r := bunRecordByKey(t, got.Records, tt.key); !reflect.DeepEqual(r.Requirements, tt.want) {
+				t.Fatalf("got %#v, want %#v", r.Requirements, tt.want)
+			}
+		})
+	}
+	if string(bunRecordByKey(t, got.Records, "mixed").Info) == "" {
+		t.Fatal("raw Info must still be retained")
+	}
+}
+
+func TestProjectBunLockInfoRequirementsOwnership(t *testing.T) {
+	const fixture = `{"lockfileVersion":1,"workspaces":{},"packages":{
+"a":["same@1.0.0","",{"dependencies":{"p":"1"}},"sha-a"],
+"b":["same@1.0.0","",{"dependencies":{"p":"1"}},"sha-b"]
+}}`
+	doc := parseBunProjectionInput(t, fixture)
+	got, err := ProjectBunLock(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	a, b := got.Records[0].Requirements, got.Records[1].Requirements
+	if !reflect.DeepEqual(a, b) {
+		t.Fatal("repeated names must be projected independently per record")
+	}
+	before, err := json.Marshal(got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc.Packages["a"] = json.RawMessage(`["changed"]`)
+	after, err := json.Marshal(got)
+	if err != nil || !bytes.Equal(before, after) {
+		t.Fatal("requirements alias input data")
+	}
+	a[0].Entries[0].Requirement = "changed"
+	if b[0].Entries[0].Requirement != "1" {
+		t.Fatal("records share requirement entries")
+	}
+}
+
+func TestProjectBunLockRequirementBound(t *testing.T) {
+	// Four records x two groups x 2,500 members = exactly 20,000 memberships.
+	build := func(extra string) BunLockDocument {
+		packages := map[string]json.RawMessage{}
+		for r := range 4 {
+			info := map[string]map[string]any{"dependencies": {}, "peerDependencies": {}}
+			for i := range 2_500 {
+				info["dependencies"][fmt.Sprintf("d%04d", i)] = "1"
+				info["peerDependencies"][fmt.Sprintf("p%04d", i)] = nil
+			}
+			raw, err := json.Marshal([]any{"p@1.0.0", "", info, "sha"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			packages[fmt.Sprintf("r%d", r)] = raw
+		}
+		if extra != "" {
+			packages["z-late"] = json.RawMessage(extra)
+		}
+		return BunLockDocument{Fields: map[string]json.RawMessage{}, Packages: packages}
+	}
+	got, err := ProjectBunLock(build(""))
+	if err != nil || len(got.Records) != 4 {
+		t.Fatal("exact requirement bound must succeed", err)
+	}
+	total := 0
+	for _, r := range got.Records {
+		for _, g := range r.Requirements {
+			total += len(g.Entries)
+		}
+	}
+	if total != 20_000 {
+		t.Fatal("requirements truncated", total)
+	}
+	assertBunProjectionError(t, build(`["late@1.0.0","",{"optionalDependencies":{"x":[]}},"sha"]`), "limit-exceeded")
 }
 
 func assertBunProjectionError(t *testing.T, doc BunLockDocument, code string) {

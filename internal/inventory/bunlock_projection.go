@@ -33,6 +33,8 @@ type BunLockedRecord struct {
 	Integrity  LockField[string]
 	GitTag     LockField[string]
 	Info       json.RawMessage
+	// Requirements are INFO claims, not resolved edges; nil means no INFO object.
+	Requirements []DependencyGroup
 }
 
 // BunLockProjection links typed claims to the unchanged document's byte digest.
@@ -52,12 +54,26 @@ func ProjectBunLock(doc BunLockDocument) (BunLockProjection, error) {
 		return BunLockProjection{}, &ParseError{Code: "limit-exceeded"}
 	}
 	records := make([]BunLockedRecord, 0, len(doc.Packages))
+	remaining := maxLockedRequirements
 	for _, key := range slices.Sorted(maps.Keys(doc.Packages)) {
 		var tuple []json.RawMessage
 		if err := json.Unmarshal(doc.Packages[key], &tuple); err != nil || tuple == nil {
 			return BunLockProjection{}, &ParseError{Code: "invalid-shape"}
 		}
-		records = append(records, projectBunTuple(key, tuple))
+		record := projectBunTuple(key, tuple)
+		if record.Info != nil {
+			fields, err := rawObjectMembers(record.Info)
+			if err != nil {
+				return BunLockProjection{}, err
+			}
+			groups, used, err := projectDependencyGroups(fields, remaining)
+			if err != nil {
+				return BunLockProjection{}, err
+			}
+			remaining -= used
+			record.Requirements = groups
+		}
+		records = append(records, record)
 	}
 	return BunLockProjection{SourceSHA256: doc.SHA256, Records: records}, nil
 }
