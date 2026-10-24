@@ -25,6 +25,8 @@ batches explicitly; this delivers them without changing any existing command.
   16 advisories, the `inspect-bun` lockfile limits (64 package tuples, 64 workspaces),
   64 aggregate `affected` slots including malformed records/members, the existing
   nested OSV budget, and at most 4,096 locked-entry × slot pairs. No truncation.
+  The pair bound is kept for parity with `inspect-batch`; within the 64-tuple and
+  64-slot caps it cannot be exceeded, so it is never the deciding check.
 - Locked entries count projected package records except the `root:` tuple.
 - Each advisory keeps its input position and reference `advisory-N`. A usable record
   is evaluated through `ReadBun` with the original `lockfile_text` bytes and that
@@ -52,8 +54,9 @@ command; no other default output changes. If the advisory preflight is shared wi
 ## Acceptance and exclusions
 
 Synthetic RED/GREEN tests cover: usable, mixed and all-invalid batches; position and
-reference order with duplicate advisories; each fatal bound at its exact limit and
-one over; wrong wire shapes; profile rejection; both formats; root help; and privacy
+reference order with duplicate advisories; each reachable fatal bound at its exact
+limit and one over, plus the nested OSV budget as fatal (the pair bound is only
+tested at its 4,096 maximum, since it cannot be exceeded); wrong wire shapes; profile rejection; both formats; root help; and privacy
 of raw lockfile/advisory strings. A differential check compares the existing
 commands' outputs on the base commit and on the change. Full root tests and `go vet`
 must pass.

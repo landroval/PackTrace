@@ -158,6 +158,10 @@ func TestBunBatchBudgets(t *testing.T) {
 		expectLimit(t, bunBatchPacket(t, makeLock(64, 0), makeAd(32), makeAd(33)))
 		expectLimit(t, bunBatchPacket(t, bunLockText, makeAd(64), `{"affected":[null]}`))
 	})
+	t.Run("nested-osv", func(t *testing.T) {
+		excessive := `{"id":"OWNED","modified":"2026-01-01T00:00:00Z","affected":[{"versions":[` + strings.Repeat(`"",`, 20000) + `""]}]}`
+		expectLimit(t, bunBatchPacket(t, bunLockText, literalAd, excessive))
+	})
 	t.Run("root-not-counted", func(t *testing.T) {
 		text := strings.Replace(makeLock(63, 0), `"packages":{`, `"packages":{"":["@root:",{}],`, 1)
 		if r, e := ReadBunBatch(strings.NewReader(bunBatchPacket(t, text, literalAd))); e != nil || r.LockedEntries != 63 {
