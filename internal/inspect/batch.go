@@ -83,6 +83,50 @@ func ReadBatchProfile(in io.Reader, profile string) (BatchResult, error) {
 			count++
 		}
 	}
+	usable, ok := preflightAdvisories(ads, count)
+	if !ok {
+		return BatchResult{}, errors.New("inspect-batch: limit-exceeded")
+	}
+	result := newBatchResult("packtrace.inspect.batch.v1", count)
+	if profile == "npm-lock-v2-v3" {
+		result.IdentityProfile = profile
+	}
+	for i, raw := range ads {
+		appendBatchAdvisory(&result, usable[i], func() (Result, error) {
+			// ponytail: at most 16 bounded re-parses; share an evaluation context only
+			// if measured batch cost justifies changing the existing single-record API.
+			packet := append([]byte(`{"lockfile":`), lock...)
+			packet = append(packet, []byte(`,"advisory":`)...)
+			packet = append(packet, raw...)
+			packet = append(packet, '}')
+			return ReadProfile(bytes.NewReader(packet), profile)
+		})
+	}
+	return result, nil
+}
+
+// appendBatchAdvisory keeps one positional entry; evaluate runs only for usable
+// records, and any unusable entry leaves advisory-record coverage incomplete.
+func appendBatchAdvisory(result *BatchResult, usable bool, evaluate func() (Result, error)) {
+	entry := BatchAdvisory{Reference: fmt.Sprintf("advisory-%d", len(result.Advisories)), State: "invalid-advisory"}
+	if usable {
+		if report, e := evaluate(); e == nil {
+			report.AdvisoryReference = entry.Reference
+			entry.State = "usable"
+			entry.Report = &report
+			result.CandidateCount += len(report.Candidates)
+		}
+	}
+	if entry.Report == nil {
+		result.Coverage[0].Outcome = "incomplete"
+		result.Coverage[0].Reason = "one-or-more-records-unusable"
+	}
+	result.Advisories = append(result.Advisories, entry)
+}
+
+// preflightAdvisories applies the aggregate affected-slot, nested OSV and pair
+// budgets to every record before evaluation; false means limit-exceeded.
+func preflightAdvisories(ads []json.RawMessage, lockedEntries int) ([]bool, bool) {
 	usable := make([]bool, len(ads))
 	remaining := 64
 	for i, raw := range ads {
@@ -92,7 +136,7 @@ func ReadBatchProfile(in io.Reader, profile string) (BatchResult, error) {
 			var units []json.RawMessage
 			if json.Unmarshal(record["affected"], &units) == nil {
 				if len(units) > remaining {
-					return BatchResult{}, errors.New("inspect-batch: limit-exceeded")
+					return nil, false
 				}
 				remaining -= len(units)
 			}
@@ -106,48 +150,22 @@ func ReadBatchProfile(in io.Reader, profile string) (BatchResult, error) {
 		if _, e = intel.ProjectOSVAffected(doc); e != nil {
 			var parse *intel.ParseError
 			if errors.As(e, &parse) && parse.Code == "limit-exceeded" {
-				return BatchResult{}, errors.New("inspect-batch: limit-exceeded")
+				return nil, false
 			}
 			continue
 		}
 		usable[i] = true
 	}
-	if count*(64-remaining) > 4096 {
-		return BatchResult{}, errors.New("inspect-batch: limit-exceeded")
-	}
-	result := BatchResult{Schema: "packtrace.inspect.batch.v1", Experimental: true, Scope: "supplied-metadata", Privacy: "portable", LockedEntries: count, Advisories: []BatchAdvisory{}, Findings: []string{}, ExitCode: 3, Coverage: []demo.Coverage{
+	return usable, lockedEntries*(64-remaining) <= 4096
+}
+
+func newBatchResult(schema string, lockedEntries int) BatchResult {
+	return BatchResult{Schema: schema, Experimental: true, Scope: "supplied-metadata", Privacy: "portable", LockedEntries: lockedEntries, Advisories: []BatchAdvisory{}, Findings: []string{}, ExitCode: 3, Coverage: []demo.Coverage{
 		{Check: "advisory-records", Outcome: "completed", Reason: "supplied-records-only"},
 		{Check: "advisory-applicability", Outcome: "incomplete", Reason: "origin-freshness-category-unqualified"},
 		{Check: "installed-inventory", Outcome: "not-run", Reason: "no-target-access"},
 		{Check: "integrity", Outcome: "not-run", Reason: "no-target-access"},
 	}}
-	if profile == "npm-lock-v2-v3" {
-		result.IdentityProfile = profile
-	}
-	for i, raw := range ads {
-		entry := BatchAdvisory{Reference: fmt.Sprintf("advisory-%d", i), State: "invalid-advisory"}
-		if usable[i] {
-			// ponytail: at most 16 bounded re-parses; share an evaluation context only
-			// if measured batch cost justifies changing the existing single-record API.
-			packet := append([]byte(`{"lockfile":`), lock...)
-			packet = append(packet, []byte(`,"advisory":`)...)
-			packet = append(packet, raw...)
-			packet = append(packet, '}')
-			report, e := ReadProfile(bytes.NewReader(packet), profile)
-			if e == nil {
-				report.AdvisoryReference = entry.Reference
-				entry.State = "usable"
-				entry.Report = &report
-				result.CandidateCount += len(report.Candidates)
-			}
-		}
-		if entry.Report == nil {
-			result.Coverage[0].Outcome = "incomplete"
-			result.Coverage[0].Reason = "one-or-more-records-unusable"
-		}
-		result.Advisories = append(result.Advisories, entry)
-	}
-	return result, nil
 }
 
 func RenderBatch(r BatchResult, format string) ([]byte, error) {

@@ -289,6 +289,59 @@ func TestBunArgumentsBeforeStdin(t *testing.T) {
 	}
 }
 
+// bunBatchCommandPacket reuses the single Bun packet with a one-record advisory array.
+var bunBatchCommandPacket = strings.TrimSuffix(strings.Replace(bunCommandPacket, `"advisory":`, `"advisories":[`, 1), "}") + "]}"
+
+func TestRunBunBatch(t *testing.T) {
+	for _, args := range [][]string{{"inspect-bun-batch"}, {"inspect-bun-batch", "--format=terminal"}, {"inspect-bun-batch", "--format", "json"}} {
+		var out, diag bytes.Buffer
+		if exit := runInput(args, strings.NewReader(bunBatchCommandPacket), &out, &diag); exit != 3 || diag.Len() != 0 || !strings.Contains(out.String(), "advisory-0") || !strings.Contains(out.String(), "bun-tuple-name-version-only") {
+			t.Fatal("Bun batch command missing", exit, diag.String(), out.String())
+		}
+		if args[len(args)-1] == "json" && !strings.Contains(out.String(), "packtrace.inspect.bun-batch.v1") {
+			t.Fatal("Bun batch schema missing")
+		}
+		for _, s := range []string{"PRIVATE", "private-marker-package", "1.2.3"} {
+			if strings.Contains(out.String()+diag.String(), s) {
+				t.Fatal("Bun batch command leak", s)
+			}
+		}
+		for _, short := range []bool{false, true} {
+			diag.Reset()
+			if runInput(args, strings.NewReader(bunBatchCommandPacket), failedWriter{short}, &diag) != 2 || strings.Contains(diag.String(), "PRIVATE") {
+				t.Fatal("Bun batch output failure hidden/leaked")
+			}
+		}
+	}
+	var out, diag bytes.Buffer
+	if runInput([]string{"inspect-bun-batch"}, strings.NewReader("PRIVATE-MALFORMED"), &out, &diag) != 2 || out.Len() != 0 || diag.String() != "inspect-bun-batch: invalid-input\n" {
+		t.Fatal("Bun batch fatal/private", diag.String())
+	}
+}
+
+func TestBunBatchArgumentsBeforeStdin(t *testing.T) {
+	for _, tail := range [][]string{{"--PRIVATE"}, {"PRIVATE"}, {"--format"}, {"--format="}, {"--format=PRIVATE"}, {"--format=json", "--format=terminal"}, {"--identity-profile=explicit-only"}, {"--identity-profile", "npm-lock-v2-v3"}, {"--help", "--format=json"}} {
+		args := append([]string{"inspect-bun-batch"}, tail...)
+		var out, diag bytes.Buffer
+		if runInput(args, forbiddenReader{}, &out, &diag) != 2 || out.Len() != 0 || diag.String() != "inspect-bun-batch: invalid-arguments\n" {
+			t.Fatal("Bun batch arguments/private/no-read", tail, diag.String())
+		}
+	}
+	var out, diag bytes.Buffer
+	if runInput([]string{"inspect-bun-batch", "--help"}, forbiddenReader{}, &out, &diag) != 0 || diag.Len() != 0 || !strings.Contains(out.String(), "lockfile_text") || !strings.Contains(out.String(), "16") {
+		t.Fatal("Bun batch help/no-read")
+	}
+	for _, short := range []bool{false, true} {
+		if runInput([]string{"inspect-bun-batch", "--help"}, forbiddenReader{}, failedWriter{short}, &diag) != 2 {
+			t.Fatal("Bun batch help output error")
+		}
+	}
+	out.Reset()
+	if run([]string{"--help"}, &out, &diag) != 0 || !strings.Contains(out.String(), "packtrace inspect-bun-batch [--format terminal|json]") {
+		t.Fatal("root help omits Bun batch command")
+	}
+}
+
 func TestRunOutputFailure(t *testing.T) {
 	for _, args := range [][]string{{"--help"}, {"demo"}, {"demo", "--format=json"}} {
 		for _, short := range []bool{false, true} {
