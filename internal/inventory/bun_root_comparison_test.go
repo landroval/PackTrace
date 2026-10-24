@@ -15,7 +15,7 @@ func TestCompareBunRootOutcomes(t *testing.T) {
 		outcome                RequirementOutcome
 	}{
 		{"equal", `"^1"`, `"^1"`, FieldValue, FieldValue, "^1", "^1", RequirementEqual},
-		{"decoded-equal", `"^1"`, `"^1"`, FieldValue, FieldValue, "^1", "^1", RequirementEqual},
+		{"decoded-equal", `"\u005e1"`, `"^1"`, FieldValue, FieldValue, "^1", "^1", RequirementEqual},
 		{"text-not-range", `"1.x"`, `">=1 <2"`, FieldValue, FieldValue, "1.x", ">=1 <2", RequirementTextChanged},
 		{"workspace-protocol", `"workspace:*"`, `"workspace:^"`, FieldValue, FieldValue, "workspace:*", "workspace:^", RequirementTextChanged},
 		{"manifest-only", `""`, "", FieldValue, FieldAbsent, "", "", RequirementManifestOnly},
