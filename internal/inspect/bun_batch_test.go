@@ -87,8 +87,12 @@ func TestBunBatchStrictWireAndPrivateFailures(t *testing.T) {
 	}
 	for name, bad := range cases {
 		t.Run(name, func(t *testing.T) {
+			want := "inspect-bun-batch: invalid-input"
+			if name == "invalid-bun-lock" {
+				want = "inspect-bun-batch: invalid-lockfile"
+			}
 			r, e := ReadBunBatch(strings.NewReader(bad))
-			if e == nil || !reflect.DeepEqual(r, BatchResult{}) || !strings.HasPrefix(e.Error(), "inspect-bun-batch:") || strings.Contains(e.Error(), "PRIVATE") {
+			if e == nil || e.Error() != want || !reflect.DeepEqual(r, BatchResult{}) {
 				t.Fatal("fatal/private input", e)
 			}
 		})
