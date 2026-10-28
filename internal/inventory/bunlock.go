@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/json"
+	"unicode/utf8"
 )
 
 // BunLockDocument contains locked, uninterpreted Bun evidence, not an installed
@@ -21,6 +22,10 @@ type BunLockDocument struct {
 func ParseBunLock(data []byte) (BunLockDocument, error) {
 	if len(data) > maxLockfileBytes {
 		return BunLockDocument{}, &ParseError{Code: "limit-exceeded"}
+	}
+	// Check original bytes before normalization can erase malformed comments.
+	if !utf8.Valid(data) {
+		return BunLockDocument{}, &ParseError{Code: "invalid-json"}
 	}
 	normalized, ok := normalizeJSONC(data)
 	if !ok {
