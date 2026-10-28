@@ -22,6 +22,9 @@ func runInput(args []string, in io.Reader, out, diagnostic io.Writer) int {
 	if len(args) > 0 && args[0] == "inspect-batch" {
 		return runBatch(args[1:], in, out, diagnostic)
 	}
+	if len(args) > 0 && args[0] == "inspect-bun-batch" {
+		return runBunBatch(args[1:], in, out, diagnostic)
+	}
 	if len(args) == 0 || args[0] != "inspect" {
 		return run(args, out, diagnostic)
 	}
@@ -105,6 +108,37 @@ func runBatch(args []string, in io.Reader, out, diagnostic io.Writer) int {
 	return result.ExitCode
 }
 
+func runBunBatch(args []string, in io.Reader, out, diagnostic io.Writer) int {
+	if len(args) == 1 && args[0] == "--help" {
+		if !writeOutput(out, []byte("packtrace inspect-bun-batch [--format terminal|json]\nRead one stdin JSON envelope with lockfile_text (original text bun.lock) and advisories (1–16 supplied records).\nLimits: 1 MiB wire, 64 package tuples, 64 workspaces, 64 total affected slots, 4096 pairs.\nPortable tuple claims only; invalid advisory metadata leaves a gap. No target access.\n")) {
+			return failure(diagnostic, "cli: output-failed")
+		}
+		return 0
+	}
+	for _, arg := range args {
+		name, _, _ := strings.Cut(arg, "=")
+		if name == "--identity-profile" {
+			return failure(diagnostic, "inspect-bun-batch: invalid-arguments")
+		}
+	}
+	format, _, ok := inspectArgs(args)
+	if !ok {
+		return failure(diagnostic, "inspect-bun-batch: invalid-arguments")
+	}
+	result, e := inspect.ReadBunBatch(in)
+	if e != nil {
+		return failure(diagnostic, e.Error())
+	}
+	data, e := inspect.RenderBatch(result, format)
+	if e != nil {
+		return failure(diagnostic, "inspect-bun-batch: report-failed")
+	}
+	if !writeOutput(out, data) {
+		return failure(diagnostic, "cli: output-failed")
+	}
+	return result.ExitCode
+}
+
 func inspectArgs(args []string) (string, string, bool) {
 	format, profile := "terminal", "explicit-only"
 	seen := map[string]bool{}
@@ -156,7 +190,7 @@ func run(args []string, out, diagnostic io.Writer) int {
 	var text string
 	switch invocation.Action {
 	case cli.ArgumentActionHelp:
-		text = "PackTrace development — experimental metadata tools only\nUsage: packtrace inspect [--format terminal|json] (stdin JSON; portable only)\n       packtrace inspect-batch [--format terminal|json] (bounded stdin advisory array)\n       packtrace inspect-bun [--format terminal|json] (supplied text bun.lock and advisory)\n       packtrace demo [--scenario NAME] [--format terminal|json]\nScenarios: candidate, no-version-match, unsupported, withdrawn, different-identity, malformed\nControls: --help, --version, scan --help\nActual scan execution is unavailable; demo never opens target projects.\n"
+		text = "PackTrace development — experimental metadata tools only\nUsage: packtrace inspect [--format terminal|json] (stdin JSON; portable only)\n       packtrace inspect-batch [--format terminal|json] (bounded stdin advisory array)\n       packtrace inspect-bun [--format terminal|json] (supplied text bun.lock and advisory)\n       packtrace inspect-bun-batch [--format terminal|json] (supplied text bun.lock and advisory array)\n       packtrace demo [--scenario NAME] [--format terminal|json]\nScenarios: candidate, no-version-match, unsupported, withdrawn, different-identity, malformed\nControls: --help, --version, scan --help\nActual scan execution is unavailable; demo never opens target projects.\n"
 	case cli.ArgumentActionVersion:
 		text = "packtrace development (experimental demo; not a qualified release)\n"
 	case cli.ArgumentActionScanHelp:
