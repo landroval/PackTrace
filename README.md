@@ -96,6 +96,28 @@ commands do **not** run or qualify the separate modules under `probes/`.
 There is intentionally no `packtrace scan` quick-start yet. Do not treat a successful
 `go test` or library build as a working scanner.
 
+## Experimental Bun root comparison
+
+With a locally built binary, `packtrace compare-bun-root --format json` compares
+supplied root declarations without opening a project (terminal output is the
+default). Send exactly a
+manifest object and the original text `bun.lock` string on stdin, for example:
+
+```json
+{"manifest":{"dependencies":{"example":"^1"}},"lockfile_text":"{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"dependencies\":{\"example\":\"1.x\"}}},\"packages\":{}}"}
+```
+
+The portable report contains fixed group/state labels and counts of equal,
+manifest-only, lock-only, text-changed and indeterminate requirements. This example
+has one textual change; it does not evaluate whether the two ranges are equivalent.
+Names, requirement strings, paths and hashes are not exported. A missing root or
+uninspectable group remains incomplete; zero counts do not establish safety.
+
+Input is bounded to 1 MiB, with the existing manifest/workspace projection limits.
+`--help` does not read stdin. Usable metadata summaries exit `3`, even when their
+textual comparison is complete; argument, read, parse, limit and output failures
+exit `2`. This is not a scanner or a producer/native compatibility qualification.
+
 ## Repository map
 
 ```text
