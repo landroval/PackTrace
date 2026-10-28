@@ -48,13 +48,17 @@ func CompareRootRequirements(manifest ManifestProjection, lock NPMLockProjection
 	if len(lock.Records) == 0 || lock.Records[0].Location != "" {
 		return result, nil
 	}
-	locked := lock.Records[0].Requirements
+	return compareRootGroups(manifest.Groups, lock.Records[0].Requirements, result)
+}
+
+// compareRootGroups compares a present root after the caller's own layout guards.
+func compareRootGroups(declared, locked []DependencyGroup, result RootComparison) (RootComparison, error) {
 	if err := checkComparisonGroups(locked, maxLockedRequirements); err != nil {
 		return RootComparison{}, err
 	}
 	result.RootPresent, result.Complete = true, true
-	result.Groups = make([]RootGroupComparison, len(manifest.Groups))
-	for index, left := range manifest.Groups {
+	result.Groups = make([]RootGroupComparison, len(declared))
+	for index, left := range declared {
 		right := locked[index]
 		group := &result.Groups[index]
 		*group = RootGroupComparison{Name: left.Name, ManifestState: left.State, LockState: right.State}
