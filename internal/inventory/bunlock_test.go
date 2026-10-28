@@ -11,7 +11,8 @@ import (
 
 func TestParseBunLockPreservesFields(t *testing.T) {
 	const fixture = `{
-// header comment
+// header comment — café 🔒
+/* résumé 📦 */
 "lockfileVersion":1,
 "configVersion":1,
 "workspaces":{
@@ -150,6 +151,9 @@ func TestParseBunLockRejectsInvalidDocuments(t *testing.T) {
 		{"low-surrogate", `{"lockfileVersion":1,"workspaces":{},"packages":{},"secret":"\uDFFF"}`, "invalid-json"},
 		{"bad-surrogate-pair", `{"lockfileVersion":1,"workspaces":{},"packages":{},"secret":"\uD800A"}`, "invalid-json"},
 		{"invalid-utf8", "{\"lockfileVersion\":1,\"workspaces\":{},\"packages\":{},\"secret\":\"\xff\"}", "invalid-json"},
+		{"invalid-utf8-line-comment", "{\"lockfileVersion\":1,// \xff\n\"workspaces\":{},\"packages\":{}}", "invalid-json"},
+		{"invalid-utf8-block-comment", "{\"lockfileVersion\":1,/* \xff */\"workspaces\":{},\"packages\":{}}", "invalid-json"},
+		{"invalid-utf8-trailing-comment", "{\"lockfileVersion\":1,\"workspaces\":{},\"packages\":{}}// \xff", "invalid-json"},
 	}
 	for _, version := range []string{"0", "1", "2", "3"} {
 		for _, tc := range cases {
