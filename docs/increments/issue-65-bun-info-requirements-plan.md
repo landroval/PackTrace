@@ -1,7 +1,11 @@
 # Bun package INFO requirements implementation plan
 
-Status: proposed for review, not approved. Execution requires the owner's explicit
-approval of the [specification](issue-65-bun-info-requirements.md) and this plan.
+Status: the original implementation is integrated through
+[PR #66](https://github.com/landroval/PackTrace/pull/66), following the owner's
+current acceptance. The original plan and author execution evidence below are
+historical; the final section records the separately accepted CLI compatibility
+clarification and its regression tests. See the
+[current contract](issue-65-bun-info-requirements.md).
 
 **Goal:** type the dependency groups recorded in each Bun tuple's INFO object.
 **Architecture:** after `projectBunTuple` copies a recognized INFO object, decode its
@@ -14,7 +18,9 @@ whole-projection allowance, exactly as `ProjectNPMLock` does per record.
 - Four groups in fixed order when INFO is present; `nil` when the record has no INFO.
 - One 20,000-membership allowance for the whole projection; overflow returns
   `limit-exceeded` with a zero projection.
-- Existing `BunLockedRecord` fields, kinds, raw `Info`, ordering and errors unchanged.
+- For admitted inputs, existing `BunLockedRecord` fields, kinds, raw `Info` and
+  ordering stay unchanged. INFO overflow is a newly rejected input, including
+  through existing CLI consumers; their output is not claimed unchanged there.
 - No changes to `projectDependencyGroups`, the reader, the workspace projection,
   the npm projection or the demo.
 - No range semantics, I/O, dependencies, native probes, CLI or public schema.
@@ -61,7 +67,7 @@ specification/plan, implementation with tests, and evidence; draft PR with `Refs
 until acceptance, then second-person review before integration. After approval and
 execution, record RED/GREEN, toolchain and counts here and in the pre-1.0 checklist.
 
-## Execution evidence (draft, pending review)
+## Execution evidence (historical author record, pending review at the time)
 
 Executed locally at the issue author's request before owner approval; these results
 do not replace the pending specification/plan approval or second-person review.
@@ -70,3 +76,23 @@ do not replace the pending specification/plan approval or second-person review.
 - GREEN: Bun inventory, demo and inspect tests pass; 9 new tests/subtests.
 - Mutation: resetting the allowance per record failed `TestProjectBunLockRequirementBound`; restored.
 - `go test -count=1 ./...` (3,680 tests/subtests) and `go vet ./...` pass offline with go1.27.1 darwin/arm64.
+
+## Accepted compatibility clarification and CLI regression
+
+During review the owner explicitly accepted keeping the new 20,000-membership
+allowance, including its stricter CLI admission. A 64-package cap does not prevent
+one tuple from carrying 20,001 INFO requirements; such a wire input can remain
+below 1 MiB. No allowance or production validation was weakened.
+
+The follow-up `cmd/packtrace/bun_info_limit_test.go` exercises both `inspect-bun`
+and `inspect-bun-batch`, in terminal and JSON, at 20,000 and 20,001 memberships in
+one tuple. The exact cap retains a portable partial report and exit 3. Overflow
+returns exit 2, no stdout and the existing fixed private diagnostic. The test also
+checks that the fixture stays below the wire cap and that admitted output does not
+expose its synthetic metadata.
+
+The test was first run through an external overlay against pre-increment
+`development`: its four overflow subtests failed for the intended reason (exit 3
+instead of 2), while the exact-cap controls passed. All eight subtests passed with
+the proposed INFO implementation. This is current regression verification, not a
+claim that the reviewer observed the author's historical TDD sequence.

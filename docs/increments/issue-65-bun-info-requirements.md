@@ -1,10 +1,13 @@
 # Issue 65: Bun package INFO requirements
 
-Status: specification and [implementation plan](issue-65-bun-info-requirements-plan.md)
-proposed for [issue #65](https://github.com/landroval/PackTrace/issues/65), child of
-#5, in Preparation. Proposed primary owner: jsustt, pending agreement. Neither
-document is approved and no execution authority is recorded. This is not scanner,
-producer or platform qualification. Authority: [design decisions](../design-decisions.md).
+Status: @jsustt's INFO projection is integrated through
+[PR #66](https://github.com/landroval/PackTrace/pull/66). The owner accepted its
+stricter CLI admission during review; this follow-up records that clarification
+and adds CLI boundary regressions before closing
+[issue #65](https://github.com/landroval/PackTrace/issues/65), child of #5.
+The [plan](issue-65-bun-info-requirements-plan.md) retains the historical author
+execution record. This is not scanner, producer or platform qualification.
+Authority: [design decisions](../design-decisions.md).
 
 ## Deliverable
 
@@ -14,8 +17,9 @@ requirements recorded in each tuple's INFO object, reusing the
 parser, dependency, I/O, resolver or installed graph.
 
 Add `Requirements []DependencyGroup` to `BunLockedRecord`. `ProjectBunLock` remains
-the entry point. Existing fields, including the raw `Info` copy, kinds, record order,
-digest and current errors, stay unchanged.
+the entry point. For admitted inputs, existing fields, including the raw `Info`
+copy, kinds, record order and digest, stay unchanged. The new allowance adds the
+fatal rejection described below.
 
 ## Contract
 
@@ -46,8 +50,18 @@ projection's own allowance; no counter resets another.
 
 Exceeding it returns `limit-exceeded` and a zero `BunLockProjection`, including when
 a later record exceeds the remaining allowance. No truncation or usable prefix. This
-is a new fatal case for `ProjectBunLock`; its only current consumer,
-`internal/demo/bun.go`, rejects inputs above 64 packages before projecting.
+is a new fatal case for `ProjectBunLock`. The owner explicitly accepted its CLI
+compatibility effect during review: the 64-package cap does not bound the number
+of INFO requirements, and one tuple can exceed this allowance while its wire
+input remains below 1 MiB.
+
+`inspect-bun` and `inspect-bun-batch` admit exactly 20,000 INFO memberships but
+reject 20,001 before returning a report, even for one package. Their existing
+private diagnostics are `inspect-bun: invalid-metadata` and
+`inspect-bun-batch: invalid-lockfile`, respectively; both return exit 2 and empty
+stdout on overflow. Before this increment the same supplied metadata returned a
+partial report with exit 3. This stricter admission is intentional, not a claim
+that all previous CLI outputs remain unchanged; the INFO allowance is not relaxed.
 
 ## Acceptance and exclusions
 
