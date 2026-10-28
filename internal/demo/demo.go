@@ -245,8 +245,10 @@ func evaluateObservations(source [32]byte, observations []Observation, advisoryB
 			for _, support := range condition.Support {
 				e.Support = append(e.Support, Support{support.VersionIndex, support.RangeIndex})
 			}
-			for _, problem := range condition.Problems {
-				e.Problems = append(e.Problems, Problem{string(problem.Kind), problem.VersionIndex, problem.RangeIndex, problem.EventIndex})
+			for _, problems := range [][]intel.OSVVersionProblem{conditions.Problems, condition.Problems} {
+				for _, problem := range problems {
+					e.Problems = append(e.Problems, Problem{string(problem.Kind), problem.VersionIndex, problem.RangeIndex, problem.EventIndex})
+				}
 			}
 			result.Evaluations = append(result.Evaluations, e)
 			versionComplete = versionComplete && condition.FullyEvaluated
