@@ -44,33 +44,54 @@ func CheckReferenceDigest(ctx context.Context, expectedSRI string, in io.Reader,
 	if ctx == nil || in == nil || maxBytes < 0 || maxBytes > 512*1024*1024 {
 		return unknown, errDigestArgument
 	}
+	algorithm, expected, h, ok := parseDigestToken(expectedSRI)
+	if !ok {
+		return unknown, nil
+	}
+	observed, count, err := streamDigest(ctx, in, maxBytes, h)
+	if err != nil {
+		return unknown, err
+	}
+	state := DigestMismatch
+	if subtle.ConstantTimeCompare(expected, observed) == 1 {
+		state = DigestMatch
+	}
+	return ReferenceDigestCheck{State: state, Algorithm: algorithm, ExpectedDigest: expected, ObservedDigest: observed, BytesRead: count}, nil
+}
+
+func parseDigestToken(token string) (string, []byte, hash.Hash, bool) {
 	var algorithm string
 	var size int
 	var h hash.Hash
 	switch {
-	case len(expectedSRI) == 7+44 && expectedSRI[:7] == "sha256-":
+	case len(token) == 7+44 && token[:7] == "sha256-":
 		algorithm, size, h = "sha256", sha256.Size, sha256.New()
-	case len(expectedSRI) == 7+64 && expectedSRI[:7] == "sha384-":
+	case len(token) == 7+64 && token[:7] == "sha384-":
 		algorithm, size, h = "sha384", sha512.Size384, sha512.New384()
-	case len(expectedSRI) == 7+88 && expectedSRI[:7] == "sha512-":
+	case len(token) == 7+88 && token[:7] == "sha512-":
 		algorithm, size, h = "sha512", sha512.Size, sha512.New()
 	default:
-		return unknown, nil
+		return "", nil, nil, false
 	}
-	encoded := expectedSRI[7:]
+	encoded := token[7:]
 	expected, err := base64.StdEncoding.DecodeString(encoded)
 	if err != nil || len(expected) != size || base64.StdEncoding.EncodeToString(expected) != encoded {
-		return unknown, nil
+		return "", nil, nil, false
 	}
-	if err = ctx.Err(); err != nil {
-		return unknown, err
+	return algorithm, expected, h, true
+}
+
+// streamDigest requires EOF and returns no partial evidence on any error.
+func streamDigest(ctx context.Context, in io.Reader, maxBytes int64, h hash.Hash) ([]byte, int64, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, 0, err
 	}
 	var scratch [32 * 1024]byte
 	var count int64
 	stalls := 0
 	for {
-		if err = ctx.Err(); err != nil {
-			return unknown, err
+		if err := ctx.Err(); err != nil {
+			return nil, 0, err
 		}
 		remaining := maxBytes - count
 		request := len(scratch)
@@ -78,15 +99,15 @@ func CheckReferenceDigest(ctx context.Context, expectedSRI string, in io.Reader,
 			request = int(remaining) + 1
 		}
 		n, readErr := in.Read(scratch[:request])
-		if err = ctx.Err(); err != nil {
-			return unknown, err
+		if err := ctx.Err(); err != nil {
+			return nil, 0, err
 		}
 		if n < 0 || n > request {
-			return unknown, errDigestRead
+			return nil, 0, errDigestRead
 		}
 		count += int64(n)
 		if count > maxBytes {
-			return unknown, errDigestLimit
+			return nil, 0, errDigestLimit
 		}
 		if n > 0 {
 			_, _ = h.Write(scratch[:n])
@@ -95,22 +116,17 @@ func CheckReferenceDigest(ctx context.Context, expectedSRI string, in io.Reader,
 			stalls++
 		}
 		if readErr != nil && readErr != io.EOF {
-			return unknown, errDigestRead
+			return nil, 0, errDigestRead
 		}
 		if readErr == io.EOF {
 			break
 		}
 		if stalls >= 100 {
-			return unknown, errDigestRead
+			return nil, 0, errDigestRead
 		}
 	}
-	if err = ctx.Err(); err != nil {
-		return unknown, err
+	if err := ctx.Err(); err != nil {
+		return nil, 0, err
 	}
-	observed := h.Sum(nil)
-	state := DigestMismatch
-	if subtle.ConstantTimeCompare(expected, observed) == 1 {
-		state = DigestMatch
-	}
-	return ReferenceDigestCheck{State: state, Algorithm: algorithm, ExpectedDigest: expected, ObservedDigest: observed, BytesRead: count}, nil
+	return h.Sum(nil), count, nil
 }
