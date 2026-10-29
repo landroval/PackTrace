@@ -2,10 +2,12 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 
 	"packtrace/internal/cli"
@@ -16,6 +18,9 @@ import (
 func main() { os.Exit(runInput(os.Args[1:], os.Stdin, os.Stdout, os.Stderr)) }
 
 func runInput(args []string, in io.Reader, out, diagnostic io.Writer) int {
+	if len(args) > 0 && args[0] == "check-reference-digest" {
+		return runReferenceDigest(args[1:], in, out, diagnostic)
+	}
 	if len(args) > 0 && args[0] == "inspect-bun" {
 		return runBun(args[1:], in, out, diagnostic)
 	}
@@ -207,6 +212,66 @@ func runNPMRoot(args []string, in io.Reader, out, diagnostic io.Writer) int {
 	return result.ExitCode
 }
 
+func runReferenceDigest(args []string, in io.Reader, out, diagnostic io.Writer) int {
+	if len(args) == 1 && args[0] == "--help" {
+		if !writeOutput(out, []byte("packtrace check-reference-digest --integrity SRI [--max-bytes N] [--format terminal|json]\nRead raw supplied stdin bytes only; default limit 512 MiB. Single canonical SHA-256/384/512 SRI token only.\nDigest equality only; not reference assurance, archive validity, coverage or security. Usable reports exit 3.\n")) {
+			return failure(diagnostic, "cli: output-failed")
+		}
+		return 0
+	}
+	integrityArg, format, maxBytes := "", "terminal", int64(512*1024*1024)
+	seen := map[string]bool{}
+	for i := 0; i < len(args); i++ {
+		name, value, attached := strings.Cut(args[i], "=")
+		if (name != "--integrity" && name != "--max-bytes" && name != "--format") || seen[name] {
+			return failure(diagnostic, "check-reference-digest: invalid-arguments")
+		}
+		seen[name] = true
+		if !attached {
+			i++
+			if i == len(args) || strings.HasPrefix(args[i], "--") {
+				return failure(diagnostic, "check-reference-digest: invalid-arguments")
+			}
+			value = args[i]
+		}
+		if value == "" {
+			return failure(diagnostic, "check-reference-digest: invalid-arguments")
+		}
+		switch name {
+		case "--integrity":
+			integrityArg = value
+		case "--format":
+			format = value
+		case "--max-bytes":
+			for _, digit := range value {
+				if digit < '0' || digit > '9' {
+					return failure(diagnostic, "check-reference-digest: invalid-arguments")
+				}
+			}
+			parsed, err := strconv.ParseInt(value, 10, 64)
+			if err != nil || parsed > 512*1024*1024 {
+				return failure(diagnostic, "check-reference-digest: invalid-arguments")
+			}
+			maxBytes = parsed
+		}
+	}
+	if integrityArg == "" || (format != "terminal" && format != "json") {
+		return failure(diagnostic, "check-reference-digest: invalid-arguments")
+	}
+	result, err := inspect.ReadReferenceDigest(context.Background(), integrityArg, in, maxBytes)
+	if err != nil {
+		return failure(diagnostic, "check-reference-digest: check-failed")
+	}
+	data, err := inspect.RenderReferenceDigest(result, format)
+	if err != nil {
+		return failure(diagnostic, "check-reference-digest: report-failed")
+	}
+	if !writeOutput(out, data) {
+		return failure(diagnostic, "cli: output-failed")
+	}
+	return result.ExitCode
+}
+
 func inspectArgs(args []string) (string, string, bool) {
 	format, profile := "terminal", "explicit-only"
 	seen := map[string]bool{}
@@ -258,7 +323,7 @@ func run(args []string, out, diagnostic io.Writer) int {
 	var text string
 	switch invocation.Action {
 	case cli.ArgumentActionHelp:
-		text = "PackTrace development — experimental metadata tools only\nUsage: packtrace inspect [--format terminal|json] (stdin JSON; portable only)\n       packtrace inspect-batch [--format terminal|json] (bounded stdin advisory array)\n       packtrace inspect-bun [--format terminal|json] (supplied text bun.lock and advisory)\n       packtrace inspect-bun-batch [--format terminal|json] (supplied text bun.lock and advisory array)\n       packtrace compare-bun-root [--format terminal|json] (supplied root manifest and text bun.lock)\n       packtrace compare-npm-root [--format terminal|json] (supplied root manifest and npm lockfile)\n       packtrace demo [--scenario NAME] [--format terminal|json]\nScenarios: candidate, no-version-match, unsupported, withdrawn, different-identity, malformed\nControls: --help, --version, scan --help\nActual scan execution is unavailable; demo never opens target projects.\n"
+		text = "PackTrace development — experimental metadata tools only\nUsage: packtrace inspect [--format terminal|json] (stdin JSON; portable only)\n       packtrace inspect-batch [--format terminal|json] (bounded stdin advisory array)\n       packtrace inspect-bun [--format terminal|json] (supplied text bun.lock and advisory)\n       packtrace inspect-bun-batch [--format terminal|json] (supplied text bun.lock and advisory array)\n       packtrace compare-bun-root [--format terminal|json] (supplied root manifest and text bun.lock)\n       packtrace compare-npm-root [--format terminal|json] (supplied root manifest and npm lockfile)\n       packtrace check-reference-digest --integrity SRI [--max-bytes N] [--format terminal|json] (raw stdin bytes)\n       packtrace demo [--scenario NAME] [--format terminal|json]\nScenarios: candidate, no-version-match, unsupported, withdrawn, different-identity, malformed\nControls: --help, --version, scan --help\nActual scan execution is unavailable; demo never opens target projects.\n"
 	case cli.ArgumentActionVersion:
 		text = "packtrace development (experimental demo; not a qualified release)\n"
 	case cli.ArgumentActionScanHelp:
