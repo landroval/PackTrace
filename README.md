@@ -96,6 +96,20 @@ commands do **not** run or qualify the separate modules under `probes/`.
 There is intentionally no `packtrace scan` quick-start yet. Do not treat a successful
 `go test` or library build as a working scanner.
 
+## Experimental npm root comparison
+
+Pipe supplied JSON metadata to `packtrace compare-npm-root --format json` (or omit
+`--format` for terminal output):
+
+```nu
+'{"manifest":{"dependencies":{"example":"^1"}},"lockfile":{"lockfileVersion":3,"packages":{"":{"dependencies":{"example":"1.x"}}}}}' | packtrace compare-npm-root --format json
+```
+
+The report counts textual declaration differences, not semantic equivalence,
+installed state, security or a target scan. It never opens a project. npm lock
+versions 2 and 3 are supported; a missing root remains incomplete. Usable
+metadata exits `3`; invalid input, arguments or output failures exit `2`.
+
 ## Experimental Bun root comparison
 
 With a locally built binary, `packtrace compare-bun-root --format json` compares

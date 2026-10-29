@@ -28,6 +28,9 @@ func runInput(args []string, in io.Reader, out, diagnostic io.Writer) int {
 	if len(args) > 0 && args[0] == "compare-bun-root" {
 		return runBunRoot(args[1:], in, out, diagnostic)
 	}
+	if len(args) > 0 && args[0] == "compare-npm-root" {
+		return runNPMRoot(args[1:], in, out, diagnostic)
+	}
 	if len(args) == 0 || args[0] != "inspect" {
 		return run(args, out, diagnostic)
 	}
@@ -173,6 +176,37 @@ func runBunRoot(args []string, in io.Reader, out, diagnostic io.Writer) int {
 	return result.ExitCode
 }
 
+func runNPMRoot(args []string, in io.Reader, out, diagnostic io.Writer) int {
+	if len(args) == 1 && args[0] == "--help" {
+		if !writeOutput(out, []byte("packtrace compare-npm-root [--format terminal|json]\nRead one stdin JSON envelope with manifest (package.json object) and lockfile (npm lockfile v2/v3 object).\nLimit: 1 MiB wire; existing declaration and lock projection bounds also apply.\nPortable textual counts only; not semantic equivalence, installed state or a target scan. Usable metadata exits 3.\n")) {
+			return failure(diagnostic, "cli: output-failed")
+		}
+		return 0
+	}
+	for _, arg := range args {
+		name, _, _ := strings.Cut(arg, "=")
+		if name == "--identity-profile" {
+			return failure(diagnostic, "compare-npm-root: invalid-arguments")
+		}
+	}
+	format, _, ok := inspectArgs(args)
+	if !ok {
+		return failure(diagnostic, "compare-npm-root: invalid-arguments")
+	}
+	result, err := inspect.ReadNPMRoot(in)
+	if err != nil {
+		return failure(diagnostic, err.Error())
+	}
+	data, err := inspect.RenderNPMRoot(result, format)
+	if err != nil {
+		return failure(diagnostic, "compare-npm-root: report-failed")
+	}
+	if !writeOutput(out, data) {
+		return failure(diagnostic, "cli: output-failed")
+	}
+	return result.ExitCode
+}
+
 func inspectArgs(args []string) (string, string, bool) {
 	format, profile := "terminal", "explicit-only"
 	seen := map[string]bool{}
@@ -224,7 +258,7 @@ func run(args []string, out, diagnostic io.Writer) int {
 	var text string
 	switch invocation.Action {
 	case cli.ArgumentActionHelp:
-		text = "PackTrace development — experimental metadata tools only\nUsage: packtrace inspect [--format terminal|json] (stdin JSON; portable only)\n       packtrace inspect-batch [--format terminal|json] (bounded stdin advisory array)\n       packtrace inspect-bun [--format terminal|json] (supplied text bun.lock and advisory)\n       packtrace inspect-bun-batch [--format terminal|json] (supplied text bun.lock and advisory array)\n       packtrace compare-bun-root [--format terminal|json] (supplied root manifest and text bun.lock)\n       packtrace demo [--scenario NAME] [--format terminal|json]\nScenarios: candidate, no-version-match, unsupported, withdrawn, different-identity, malformed\nControls: --help, --version, scan --help\nActual scan execution is unavailable; demo never opens target projects.\n"
+		text = "PackTrace development — experimental metadata tools only\nUsage: packtrace inspect [--format terminal|json] (stdin JSON; portable only)\n       packtrace inspect-batch [--format terminal|json] (bounded stdin advisory array)\n       packtrace inspect-bun [--format terminal|json] (supplied text bun.lock and advisory)\n       packtrace inspect-bun-batch [--format terminal|json] (supplied text bun.lock and advisory array)\n       packtrace compare-bun-root [--format terminal|json] (supplied root manifest and text bun.lock)\n       packtrace compare-npm-root [--format terminal|json] (supplied root manifest and npm lockfile)\n       packtrace demo [--scenario NAME] [--format terminal|json]\nScenarios: candidate, no-version-match, unsupported, withdrawn, different-identity, malformed\nControls: --help, --version, scan --help\nActual scan execution is unavailable; demo never opens target projects.\n"
 	case cli.ArgumentActionVersion:
 		text = "packtrace development (experimental demo; not a qualified release)\n"
 	case cli.ArgumentActionScanHelp:
