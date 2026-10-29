@@ -96,6 +96,21 @@ commands do **not** run or qualify the separate modules under `probes/`.
 There is intentionally no `packtrace scan` quick-start yet. Do not treat a successful
 `go test` or library build as a working scanner.
 
+## Experimental supplied reference digest
+
+Pipe exact raw bytes to `packtrace check-reference-digest --integrity SRI` (terminal
+by default; `--format json` for portable JSON). For example, in Nushell:
+
+```nu
+^printf '%s' abc | packtrace check-reference-digest --integrity 'sha256-ungWv48Bz+pBQUDeXa4iI7ADYaOWF3qctBD/YfIAFa0=' --format json
+```
+
+The command reads stdin only, never a path. `--max-bytes N` accepts decimal
+0–536870912, default 536870912 (512 MiB). Canonical single-token SHA-256/384/512
+claims can match or mismatch; unsupported or multiple tokens report unknown without
+reading. All usable reports exit `3`; invalid arguments, check and output failures
+exit `2`. Equality is not publisher assurance, archive validity, coverage or security.
+
 ## Experimental npm root comparison
 
 Pipe supplied JSON metadata to `packtrace compare-npm-root --format json` (or omit
