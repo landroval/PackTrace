@@ -30,8 +30,8 @@ func retainScanReceipt(t *testing.T, cmd *exec.Cmd) func() string {
 // A failed inherited public sink must not erase the caller-owned operational
 // receipt. This is a controlled failure, not a reproduction of the hosted bug.
 func TestScanReceiptSurvivesFailedPublicOutput(t *testing.T) {
-	if runtime.GOOS != "linux" {
-		t.Skip("owned Linux scan process")
+	if runtime.GOOS != "linux" && runtime.GOOS != "windows" {
+		t.Skip("owned Linux/Windows scan process")
 	}
 	root, policy := scanFixture(t)
 	receiptPath := t.TempDir() + "/receipt.json"

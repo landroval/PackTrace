@@ -7,32 +7,12 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
 	"testing"
 	"time"
 )
-
-func TestOwnedResidentChildEntry(t *testing.T) {
-	if os.Getenv("PACKTRACE_TEST_RSS_CHILD") != "1" {
-		return
-	}
-	var command [1]byte
-	_, _ = os.Stdout.Write([]byte("R"))
-	if _, e := io.ReadFull(os.Stdin, command[:]); e != nil {
-		os.Exit(3)
-	}
-	pages := make([]byte, 32<<20)
-	for i := 0; i < len(pages); i += os.Getpagesize() {
-		pages[i] = 1
-	}
-	_, _ = os.Stdout.Write([]byte("A"))
-	_, _ = io.ReadFull(os.Stdin, command[:])
-	runtime.KeepAlive(pages)
-	os.Exit(0)
-}
 
 func TestRetainedChildActualRSSIdentityExitAndQueryFailure(t *testing.T) {
 	input, feed, e := os.Pipe()

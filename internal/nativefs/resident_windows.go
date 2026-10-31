@@ -21,11 +21,19 @@ type processMemoryCounters struct {
 var ownMemoryInfo = syscall.NewLazyDLL("kernel32.dll").NewProc("K32GetProcessMemoryInfo")
 
 func OwnResidentBytes() (uint64, error) {
-	if ownMemoryInfo.Find() != nil {
-		return 0, ErrUnavailable
-	}
 	process, err := syscall.GetCurrentProcess()
 	if err != nil {
+		return 0, ErrUnavailable
+	}
+	return ResidentBytesForProcess(process)
+}
+
+// ResidentBytesForProcess queries a caller-owned process handle, never a PID.
+// The retained-child owner establishes identity/liveness and owns the close.
+func ResidentBytesForProcess(process syscall.Handle) (uint64, error) {
+	// GetCurrentProcess returns the valid pseudo-handle -1. It must not be
+	// rejected as though it were a failed file-opening result.
+	if process == 0 || ownMemoryInfo.Find() != nil {
 		return 0, ErrUnavailable
 	}
 	var c processMemoryCounters
