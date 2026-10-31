@@ -23,6 +23,10 @@ PACKAGES = ['./internal/nativefs', './internal/nativeresource', './internal/inte
 ORIGINAL_PACKAGES = ['./internal/integrityscan', './internal/nativefs', './cmd/packtrace']
 
 
+class ValidationRejected(ValueError):
+    """Only fixed caller-controlled rejection codes are retained publicly."""
+
+
 def admit(env, system, machine, uid):
     sha = env.get('SOURCE_SHA', '')
     if not (env.get('GITHUB_EVENT_NAME') == 'workflow_dispatch'
@@ -35,7 +39,7 @@ def admit(env, system, machine, uid):
             and env.get('ImageOS') == 'ubuntu24' and env.get('ImageVersion')
             and env.get('RUNNER_ARCH') == 'X64'
             and system == 'Linux' and machine == 'x86_64' and uid > 0):
-        raise ValueError('validation-profile-rejected')
+        raise ValidationRejected('validation-profile-rejected')
 
 
 def phase_ok(result):
@@ -46,16 +50,16 @@ def phase_ok(result):
 
 def test_counts(raw):
     if not raw or not raw.endswith(b'\n'):
-        raise ValueError('incomplete-test-stream')
+        raise ValidationRejected('incomplete-test-stream')
     events = [json.loads(line) for line in raw.splitlines()]
     if not all(isinstance(e, dict) for e in events):
-        raise ValueError('invalid-test-stream')
+        raise ValidationRejected('invalid-test-stream')
     counts = {'passed': sum(e.get('Action') == 'pass' and bool(e.get('Test')) for e in events),
               'failed': sum(e.get('Action') == 'fail' and bool(e.get('Test')) for e in events),
               'skipped': sum(e.get('Action') == 'skip' and bool(e.get('Test')) for e in events),
               'failedEvents': sum(e.get('Action') in ('fail', 'build-fail') for e in events)}
     if counts['passed'] == 0 or counts['failedEvents']:
-        raise ValueError('test-events-failed')
+        raise ValidationRejected('test-events-failed')
     return counts
 
 
@@ -69,12 +73,18 @@ def diagnostic(raw):
 
 def fixture_bytes(root):
     total = 0
-    for directory, dirs, files in os.walk(root, followlinks=False):
+    def walk_error(error):
+        if not isinstance(error, FileNotFoundError):
+            raise error
+    for directory, dirs, files in os.walk(root, followlinks=False, onerror=walk_error):
         for name in dirs + files:
-            info = (Path(directory)/name).lstat()
+            try:
+                info = (Path(directory)/name).lstat()
+            except FileNotFoundError:
+                continue  # ordinary concurrent test scratch cleanup
             if not any(check(info.st_mode) for check in (stat.S_ISREG, stat.S_ISDIR, stat.S_ISLNK,
                                                          stat.S_ISFIFO, stat.S_ISSOCK)):
-                raise ValueError('unexpected-fixture-type')
+                raise ValidationRejected('unexpected-fixture-type')
             total += info.st_size
     return total
 
@@ -106,14 +116,16 @@ def main():
     budget = None
     success = False
     try:
+        receipt['activePhase'] = 'profile-admission'
         admit(os.environ, platform.system(), platform.machine(), os.geteuid())
         sys.dont_write_bytecode = True
         source = Path(os.environ['GITHUB_WORKSPACE'])
         root = Path(os.environ['RUNNER_TEMP'])/'packtrace-root-ci'
         # The unchanged preceding root step checked out exactly this SHA and
         # acquired/extracted this pinned archive. Recheck its identity here.
+        receipt['activePhase'] = 'archive-identity'
         if hash_file(root/'go.tar.gz') != (GO_SIZE, GO_SHA256):
-            raise ValueError('pinned-archive-mismatch')
+            raise ValidationRejected('pinned-archive-mismatch')
         h = helpers(source)
         budget = h.Budget(cap=8 << 20)  # existing root capture is separately <=16 MiB
         work = root/'linux-validation'
@@ -128,16 +140,17 @@ def main():
         # No target/native case starts before this independent environment proof.
         prep_end = time.monotonic()+60
         def command(label, argv, settings, seconds, storage=lambda: True):
+            receipt['activePhase'] = label
             result = budget.command(label, argv, source, settings, seconds,
                                     stdout_cap=4 << 20, stderr_cap=64 << 10, storage=storage)
             if not phase_ok(result):
                 publish_failure(label, result)
-                raise ValueError('phase-not-successful')
+                raise ValidationRejected('phase-not-successful')
             return result['stdout']
         def publish_failure(label, result):
             receipt['failedPhase'] = label
             receipt['diagnostics'] = {key: diagnostic(result[key]) for key in ('stdout', 'stderr')}
-            receipt['captureComplete'] = result['phase'] != 'output-limit'
+            receipt['captureComplete'] = result.get('captureComplete', False)
             # All captured FAIL evidence is retained in Actions logs, not only
             # head/tail hashes. These are bounded owned test fixtures, not targets.
             for stream in ('stdout', 'stderr'):
@@ -149,16 +162,16 @@ def main():
                       'rev-parse', 'HEAD', 'HEAD^{tree}'], env, max(.001, prep_end-time.monotonic()))
         ids = sha.decode('ascii').splitlines()
         if len(ids) != 2 or ids[0] != receipt['sourceSHA'] or not all(re.fullmatch('[0-9a-f]{40}', x) for x in ids):
-            raise ValueError('source-identity-mismatch')
+            raise ValidationRejected('source-identity-mismatch')
         receipt['tree'] = ids[1]
         version = command('go-version', [go, 'version'], env, 5)
         if version != b'go version go1.27.1 linux/amd64\n':
-            raise ValueError('compiler-mismatch')
+            raise ValidationRejected('compiler-mismatch')
         compiler = command('cc-version', ['/usr/bin/gcc', '-dumpfullversion'], env, 5)
         filesystem = command('filesystem', ['/usr/bin/stat', '-f', '-c', '%T', str(work/'tmp')], env, 5)
         os_release = Path('/etc/os-release').read_bytes()
         if len(os_release) > 4096 or b'ID=ubuntu\n' not in os_release or b'VERSION_ID="24.04"' not in os_release:
-            raise ValueError('os-release-mismatch')
+            raise ValidationRejected('os-release-mismatch')
         receipt['environment'] = {'os': platform.system(), 'arch': platform.machine(),
             'kernel': platform.release(), 'uid': os.geteuid(), 'imageOS': os.environ['ImageOS'],
             'imageVersion': os.environ['ImageVersion'], 'goVersion': version.decode().strip(),
@@ -170,8 +183,15 @@ def main():
         # This budget is independent of every Go supervisor under test.
         end = time.monotonic()+900
         def storage():
-            return (h.disk_bytes(root/'gocache')+h.disk_bytes(work/'build') <= 2 << 30
-                    and fixture_bytes(work/'tmp') <= 32 << 20)
+            try:
+                return (h.disk_bytes(root/'gocache')+h.disk_bytes(work/'build') <= 2 << 30
+                        and fixture_bytes(work/'tmp') <= 32 << 20)
+            except ValidationRejected as error:
+                receipt['storageFailure'] = str(error)  # fixed codes, never raw OS text
+                raise
+            except (OSError, h.Rejected):
+                receipt['storageFailure'] = 'storage-observation-unavailable'
+                raise
         phases = [
             ('native-corpus', False, 270, PACKAGES),
             ('race-corpus', True, 360, PACKAGES),
@@ -195,12 +215,17 @@ def main():
         clean = command('source-after', ['/usr/bin/git', 'status', '--porcelain', '--untracked-files=all'],
                         env, min(5, end-time.monotonic()-3))
         if clean:
-            raise ValueError('source-was-modified')
+            raise ValidationRejected('source-was-modified')
         if time.monotonic() > end:
-            raise ValueError('native-deadline')
+            raise ValidationRejected('native-deadline')
         receipt['native'] = 'passed'
         success = True
-    except Exception:
+    except Exception as error:
+        receipt.setdefault('failedPhase', receipt.get('activePhase', 'uninitialized'))
+        if isinstance(error, ValidationRejected):
+            receipt.setdefault('failure', receipt.get('storageFailure', str(error)))
+        else:
+            receipt.setdefault('failure', 'setup-or-validation-error')
         if receipt['setup'] != 'passed':
             receipt['setup'] = 'failed'
         elif receipt['native'] == 'running':
