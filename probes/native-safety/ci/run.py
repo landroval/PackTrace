@@ -433,6 +433,26 @@ def setup_storage(root):
     return disk_bytes(root/'gocache') <= 2*1024**3 and disk_bytes(root) <= 4*1024**3
 
 
+def require_setup_command(result, label, budget):
+    ok = (result['phase'] == 'exited' and result['exit'] == 0 and result['reaped']
+          and result['groupClean'])
+    if not ok and label in ('portable-tests', 'python-tests'):
+        # Only controlled prepared-source test output, never native/acquisition
+        # streams. Two 8 KiB excerpts cost <23 KiB base64 inside the 64 KiB
+        # receipt reserve. Counts/hashes in this phase still cover captured bytes;
+        # captureComplete is false if supervision stopped capture before EOF.
+        diagnostic = {'encoding': 'base64', 'captureComplete': result['phase'] == 'exited'}
+        for stream in ('stdout', 'stderr'):
+            data = result[stream]
+            head, tail = (data, b'') if len(data) <= 8192 else (data[:4096], data[-4096:])
+            diagnostic[stream] = {'head': base64.b64encode(head).decode('ascii'),
+                                  'tail': base64.b64encode(tail).decode('ascii'),
+                                  'retainedBytes': len(head)+len(tail),
+                                  'truncated': len(data) > 8192}
+        budget.phases[-1]['diagnostics'] = diagnostic
+    require(ok, 'setup-command-'+label)
+
+
 def compile_probe(go, module, root, env, budget, deadline):
     commands = [
         ('go-version', ['version'], b'go version go1.27.1 darwin/arm64\n'),
@@ -445,14 +465,12 @@ def compile_probe(go, module, root, env, budget, deadline):
     for label, args, expected in commands:
         result = budget.command(label, [str(go)] + args, module, env,
                                 min(180, deadline-time.monotonic()), storage=lambda: setup_storage(root))
-        require(result['phase'] == 'exited' and result['exit'] == 0 and result['reaped']
-                and result['groupClean'], 'setup-command-'+label)
+        require_setup_command(result, label, budget)
         require(expected is None or result['stdout'] == expected, 'setup-profile-'+label)
     result = budget.command('python-tests', [sys.executable, '-B', '-m', 'unittest', '-v', 'test_ci'],
                             module/'ci', env, min(180, deadline-time.monotonic()),
                             storage=lambda: setup_storage(root))
-    require(result['phase'] == 'exited' and result['exit'] == 0 and result['reaped']
-            and result['groupClean'], 'setup-command-python-tests')
+    require_setup_command(result, 'python-tests', budget)
     return True
 
 
