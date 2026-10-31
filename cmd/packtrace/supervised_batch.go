@@ -16,8 +16,16 @@ import (
 // Only the real inspect-batch invocation changes interrupt handling. Other
 // commands retain their existing behavior, including direct test callers.
 func runMain(args []string, in io.Reader, out, diagnostic io.Writer) int {
+	return runMainObserved(args, in, out, diagnostic, nil)
+}
+func runMainObserved(args []string, in io.Reader, out, diagnostic io.Writer, observed scanObserver) int {
 	if len(args) > 0 {
 		switch args[0] {
+		case execution.ScanWorkerArgument:
+			if len(args) != 1 {
+				return failure(diagnostic, "scan: invalid-worker-arguments")
+			}
+			return execution.ScanWorkerMain(in, out, diagnostic)
 		case execution.WorkerArgument:
 			if len(args) != 1 {
 				return failure(diagnostic, "inspect-batch: invalid-worker-arguments")
@@ -41,7 +49,7 @@ func runMain(args []string, in io.Reader, out, diagnostic io.Writer) int {
 		defer stop()
 		return runBatchContext(ctx, args[1:], in, out, diagnostic)
 	}
-	return runInput(args, in, out, diagnostic)
+	return runInputObserved(args, in, out, diagnostic, observed)
 }
 
 func runBatchContext(ctx context.Context, args []string, in io.Reader, out, diagnostic io.Writer) int {

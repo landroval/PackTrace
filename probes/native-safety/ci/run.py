@@ -188,13 +188,19 @@ def validate_receipt(raw, code):
 
 def disk_bytes(root, allow_links=False):
     total = 0
-    for directory, dirs, files in os.walk(root, followlinks=False):
+    def walk_error(error):
+        if not isinstance(error, FileNotFoundError):
+            raise error
+    for directory, dirs, files in os.walk(root, followlinks=False, onerror=walk_error):
         for name in dirs + files:
-            entry = Path(directory)/name
-            mode = entry.lstat().st_mode
+            try:
+                info = (Path(directory)/name).lstat()
+            except FileNotFoundError:
+                continue  # concurrent cleanup released this storage
+            mode = info.st_mode
             require(stat.S_ISREG(mode) or stat.S_ISDIR(mode) or
                     (allow_links and stat.S_ISLNK(mode)), 'storage-type')
-            total += entry.lstat().st_size
+            total += info.st_size
     return total
 
 
@@ -211,6 +217,7 @@ class Budget:
         phase, code, reaped, group_clean = 'exited', None, False, False
         process = None
         group_denied = False
+        capture_complete = False
 
         def group_signal(sig):
             nonlocal group_denied
@@ -256,7 +263,9 @@ class Budget:
                     phase = 'descendant-leak'
         except Rejected:
             phase = 'deadline'
-        except (OSError, subprocess.TimeoutExpired):
+        except Exception:
+            # Trusted storage callbacks can fail too. Keep a fixed failure
+            # classification and finalize the same cleanup/phase receipt.
             phase = 'process-error'
         finally:
             if process is not None:
@@ -265,6 +274,32 @@ class Budget:
                     code = process.wait(timeout=2); reaped = True
                 except subprocess.TimeoutExpired:
                     phase = 'unreaped'
+                # A deadline/storage stop can leave already-written failure
+                # bytes pending in the pipes. Drain only owned nonblocking
+                # streams, under the original caps and a fixed cleanup bound.
+                try:
+                    with selectors.DefaultSelector() as drain:
+                        for stream, target, cap in [(process.stdout, out, stdout_cap), (process.stderr, err, stderr_cap)]:
+                            os.set_blocking(stream.fileno(), False)
+                            drain.register(stream, selectors.EVENT_READ, (target, cap))
+                        drain_end = time.monotonic()+.2
+                        overflow = phase == 'output-limit'
+                        while drain.get_map() and time.monotonic() < drain_end:
+                            for key, _ in drain.select(max(0, min(.02, drain_end-time.monotonic()))):
+                                try:
+                                    data = os.read(key.fd, 65536)
+                                except BlockingIOError:
+                                    continue
+                                if not data:
+                                    drain.unregister(key.fileobj)
+                                    continue
+                                target, cap = key.data
+                                keep = max(0, min(len(data), cap-len(target), self.cap-self.used))
+                                target.extend(data[:keep]); self.used += keep
+                                overflow = overflow or keep != len(data)
+                        capture_complete = not drain.get_map() and not overflow
+                except OSError:
+                    capture_complete = False
                 for stream in (process.stdout, process.stderr): stream.close()
                 finish = time.monotonic()+.3
                 while True:
@@ -276,7 +311,8 @@ class Budget:
         if group_denied and phase == 'exited':
             phase = 'permission-denied'
         result = {'phase': phase, 'exit': code, 'reaped': reaped, 'groupClean': group_clean,
-                  'groupPermissionDenied': group_denied, 'stdout': bytes(out), 'stderr': bytes(err)}
+                  'groupPermissionDenied': group_denied, 'captureComplete': capture_complete,
+                  'stdout': bytes(out), 'stderr': bytes(err)}
         self.phases.append({'name': label, 'phase': phase, 'exit': code, 'reaped': reaped,
                             'groupClean': group_clean, 'groupPermissionDenied': group_denied,
                             'durationSeconds': time.monotonic()-started,

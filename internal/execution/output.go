@@ -70,7 +70,11 @@ func (r *BatchRun) WriteOutput(ctx context.Context, out io.Writer, data []byte) 
 	}
 	defer dataIn.Close()
 	defer dataOut.Close()
-	cap, release, e := configureLaunch(cmd, "writer", file, dataIn)
+	role := "writer"
+	if s.scan != nil {
+		role = "scan-writer"
+	}
+	cap, release, e := configureLaunch(cmd, role, file, dataIn)
 	if e != nil {
 		return e
 	}
@@ -156,7 +160,11 @@ func writerTrafficFits(b *traffic, identity string, cfg writerConfig) error {
 // WriterMain never parses target data or selects rendering/privacy/public exit.
 // Validate the COMPLETE bounded transfer/hash/EOF before touching public output.
 func WriterMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
-	cap, ids, e := launchCapability("writer")
+	role := "writer"
+	if os.Getenv(launchRole) == "scan-writer" {
+		role = "scan-writer"
+	}
+	cap, ids, e := launchCapability(role)
 	if e != nil {
 		return 2
 	}

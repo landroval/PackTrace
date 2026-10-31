@@ -5,12 +5,29 @@ on:
   push:
     branches: [development]
   workflow_dispatch:
+    inputs:
+      validation_profile:
+        type: choice
+        default: root
+        options: [root, linux-scan-amd64-v1]
+      expected_sha:
+        type: string
+        default: ''
+      owned_confirmation:
+        type: string
+        default: ''
 permissions: {}
 jobs:
   root:
+    if: >-
+      ${{ github.event_name != 'workflow_dispatch' || inputs.validation_profile == '' ||
+          inputs.validation_profile == 'root' ||
+          (github.repository == 'landroval/PackTrace' && github.event.repository.private == false &&
+           inputs.validation_profile == 'linux-scan-amd64-v1' && inputs.expected_sha == github.sha &&
+           inputs.owned_confirmation == 'owned-linux-fixtures-only') }}
     name: Root tests and vet
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: ${{ github.event_name == 'workflow_dispatch' && inputs.validation_profile == 'linux-scan-amd64-v1' && 35 || 15 }}
     steps:
       - name: Start owned budget
         id: init
@@ -393,4 +410,28 @@ jobs:
                   output.write('Root bounded checks: ' + ('passed' if checks else 'not successful') + '\n\n')
                   output.write('Environment qualification: pending external platform metadata.\n')
           sys.exit(0 if checks else 1)
+          PY
+      - name: Linux validation harness self-checks
+        if: ${{ success() && github.event_name == 'workflow_dispatch' && inputs.validation_profile == 'linux-scan-amd64-v1' }}
+        shell: bash
+        run: python3 -B -m unittest discover -s probes/offline-integrity/ci -p 'test_linux_validation.py'
+      - name: One bounded Linux scan validation
+        id: linux_validation
+        if: ${{ success() && github.event_name == 'workflow_dispatch' && inputs.validation_profile == 'linux-scan-amd64-v1' }}
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+          VALIDATION_PROFILE: ${{ inputs.validation_profile }}
+          OWNED_CONFIRMATION: ${{ inputs.owned_confirmation }}
+          REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python3 -B probes/offline-integrity/ci/linux_validation.py
+      - name: Retain not-run validation after preparation failure
+        if: ${{ always() && github.event_name == 'workflow_dispatch' && inputs.validation_profile == 'linux-scan-amd64-v1' && steps.linux_validation.outcome == 'skipped' }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          print('LINUX_VALIDATION_RECEIPT ' + json.dumps({'schema':'packtrace.linux-validation.v1', 'setup':'not-successful', 'native':'not-run', 'validationPassed':False, 'qualification':'not-qualified', 'failure':'preparation-or-harness-checks-failed; attempt-consumed; no automatic retry'}))
           PY

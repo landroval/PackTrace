@@ -34,6 +34,7 @@ type runState struct {
 	deadline time.Time
 	caller   context.Context
 	broken   bool
+	scan     *scanLifecycle // opt-in only from RunScan; nil for all legacy batch roles
 }
 
 func newRunState(ctx context.Context) *runState {
@@ -46,7 +47,11 @@ func newRunState(ctx context.Context) *runState {
 func (s *runState) work(ctx context.Context) (context.Context, context.CancelFunc) {
 	work, cancel := context.WithDeadline(s.caller, s.deadline)
 	stop := context.AfterFunc(ctx, cancel)
-	return work, func() { stop(); cancel() }
+	stopScan := func() bool { return true }
+	if s.scan != nil {
+		stopScan = context.AfterFunc(s.scan.ctx, cancel)
+	}
+	return work, func() { stop(); stopScan(); cancel() }
 }
 func explicitCancel(ctx context.Context) bool { return errors.Is(ctx.Err(), context.Canceled) }
 func (s *runState) contextError(ctx context.Context) error {
@@ -55,6 +60,9 @@ func (s *runState) contextError(ctx context.Context) error {
 	}
 	if ctx.Err() != nil || s.caller.Err() != nil || !time.Now().Before(s.deadline) {
 		return errors.New("inspect-batch: worker-deadline")
+	}
+	if s.scan != nil {
+		return s.scan.check()
 	}
 	return nil
 }
@@ -95,8 +103,10 @@ func configureLaunch(cmd *exec.Cmd, role string, files ...*os.File) (string, fun
 // JSONL. This capability is consistency/private-entry gating, not a sandbox.
 func launchCapability(role string) (string, []uintptr, error) {
 	arg := WorkerArgument
-	if role == "writer" {
+	if role == "writer" || role == "scan-writer" {
 		arg = WriterArgument
+	} else if role == "scan" {
+		arg = ScanWorkerArgument
 	}
 	if len(os.Args) != 2 || os.Args[1] != arg || os.Getenv(launchRole) != role {
 		return "", nil, errProtocol
@@ -107,7 +117,7 @@ func launchCapability(role string) (string, []uintptr, error) {
 		return "", nil, errProtocol
 	}
 	names := []string{launchHandle}
-	if role == "writer" {
+	if role == "writer" || role == "scan-writer" {
 		names = append(names, launchData)
 	} else if os.Getenv(launchData) != "" {
 		return "", nil, errProtocol
@@ -276,15 +286,55 @@ func (s *runState) runChild(ctx context.Context, cmd *exec.Cmd, release func(), 
 	if e != nil {
 		return errors.New("inspect-batch: worker-unavailable")
 	}
+	// Diagnostic facts are caller-owned and SCAN-only. They do not decide
+	// cancellation, admission, output or completion.
+	exchangeJoined, exchangeSucceeded, stderrJoined := false, false, false
+	waitReturned := false
+	notice := func(stage string, err error) {
+		if s.scan != nil {
+			s.scan.noteFault(stage, err)
+		}
+	}
+	// Pin the actual unreaped direct child before starting ANY Wait. This opt-in
+	// covers startup, exchange, EOF, runtime teardown, kill, and confirmed reap.
+	if s.scan != nil {
+		role := "scan"
+		for _, v := range cmd.Env {
+			if strings.HasPrefix(v, launchRole+"=") {
+				role = strings.TrimPrefix(v, launchRole+"=")
+			}
+		}
+		if e := s.scan.attach(cmd.Process.Pid, role); e != nil {
+			failure = e
+			cancel()
+		}
+		defer func() {
+			notice("child-result", failure)
+			s.scan.mu.Lock()
+			if s.scan.active >= 0 {
+				r := &s.scan.roles[s.scan.active]
+				r.ExchangeJoined, r.ExchangeSucceeded = exchangeJoined, exchangeSucceeded
+				r.WaitReturned, r.StderrJoined = waitReturned, stderrJoined
+				r.ExitCode = -1
+				if waitReturned && cmd.ProcessState != nil {
+					r.ExitCode = cmd.ProcessState.ExitCode()
+				}
+				r.CallerContext, r.WorkContext, r.LifecycleContext = scanContextStatus(ctx), scanContextStatus(work), scanContextStatus(s.scan.ctx)
+			}
+			s.scan.mu.Unlock()
+			s.scan.reaped(!s.broken && cmd.ProcessState != nil)
+		}()
+	}
 	// Check again after Start: os/exec may expose only the CHILD endpoints via Fd.
 	if parentIn.SetWriteDeadline(time.Time{}) != nil || parentOut.SetReadDeadline(time.Time{}) != nil || parentErr.SetReadDeadline(time.Time{}) != nil {
 		failure = errProtocol
+		notice("control-deadline", failure)
 		cancel()
 	}
 	childCtx, stopChild := context.WithCancel(work)
 	defer stopChild()
 	waited := make(chan error, 1)
-	go func() { e := cmd.Wait(); stopChild(); waited <- e }()
+	go func() { e := cmd.Wait(); notice("wait-exit", e); stopChild(); waited <- e }()
 	stderr := make(chan error, 1)
 	go func() {
 		var buf [4096]byte
@@ -292,6 +342,7 @@ func (s *runState) runChild(ctx context.Context, cmd *exec.Cmd, release func(), 
 			n, e := parentErr.Read(buf[:])
 			if n > 0 {
 				if s.budget.addStderr(n) != nil {
+					notice("stderr-limit", errLimit)
 					stderr <- errLimit
 					cancel()
 					return
@@ -302,18 +353,29 @@ func (s *runState) runChild(ctx context.Context, cmd *exec.Cmd, release func(), 
 				return
 			}
 			if e != nil {
+				notice("stderr-read", errProtocol)
 				stderr <- errProtocol
 				return
 			}
 		}
 	}()
 	finished := make(chan error, 1)
-	go func() { finished <- exchange(childCtx, newChannel(parentOut, parentIn, &s.budget), parentIn) }()
-	haveExchange := false
+	haveExchange := failure != nil
+	// A failed SCAN attribution must not race a config/input grant. In
+	// particular, unsupported retained-query backends refuse before target I/O.
+	if failure == nil {
+		go func() {
+			e := exchange(childCtx, newChannel(parentOut, parentIn, &s.budget), parentIn)
+			notice("exchange", e)
+			finished <- e
+		}()
+	}
 	if failure == nil {
 		select {
 		case failure = <-finished:
 			haveExchange = true
+			exchangeJoined, exchangeSucceeded = true, failure == nil
+			notice("exchange", failure)
 		case <-work.Done():
 			failure = s.contextError(ctx)
 			if failure == nil {
@@ -322,17 +384,18 @@ func (s *runState) runChild(ctx context.Context, cmd *exec.Cmd, release func(), 
 		}
 	}
 	if failure != nil {
+		notice("exchange-context", failure)
 		cancel()
 		_ = cmd.Process.Kill()
 		_ = parentIn.Close()
 		_ = parentOut.Close()
 	}
 	var waitErr error
-	waitReturned := false
 	select {
 	case waitErr = <-waited:
 		waitReturned = true
 	case <-work.Done():
+		notice("wait-context", work.Err())
 		_ = cmd.Process.Kill()
 		select {
 		case waitErr = <-waited:
@@ -342,6 +405,7 @@ func (s *runState) runChild(ctx context.Context, cmd *exec.Cmd, release func(), 
 			failure = errReap
 		}
 	case <-time.After(2 * time.Second):
+		notice("wait-timeout", errReap)
 		_ = cmd.Process.Kill()
 		select {
 		case waitErr = <-waited:
@@ -351,6 +415,7 @@ func (s *runState) runChild(ctx context.Context, cmd *exec.Cmd, release func(), 
 			failure = errReap
 		}
 	}
+	notice("wait-exit", waitErr)
 	if !waitReturned || cmd.ProcessState == nil {
 		s.broken = true
 		failure = errReap
@@ -360,6 +425,8 @@ func (s *runState) runChild(ctx context.Context, cmd *exec.Cmd, release func(), 
 		_ = parentOut.Close()
 		select {
 		case e = <-finished:
+			exchangeJoined, exchangeSucceeded = true, e == nil
+			notice("exchange-join", e)
 			if failure == nil {
 				failure = e
 			}
@@ -371,16 +438,19 @@ func (s *runState) runChild(ctx context.Context, cmd *exec.Cmd, release func(), 
 	var stderrErr error
 	select {
 	case stderrErr = <-stderr:
+		stderrJoined = true
 	case <-time.After(2 * time.Second):
 		_ = parentErr.Close()
 		select {
 		case <-stderr:
+			stderrJoined = true
 			stderrErr = errProtocol
 		case <-time.After(2 * time.Second):
 			s.broken = true
 			failure = errJoin
 		}
 	}
+	notice("stderr-join", stderrErr)
 	if failure == nil && waitErr != nil {
 		failure = errors.New("inspect-batch: worker-exit")
 	}
