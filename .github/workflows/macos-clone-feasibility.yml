@@ -1,0 +1,199 @@
+name: macOS owned-clone feasibility (unqualified)
+'on':
+  workflow_dispatch:
+    inputs:
+      expected_source_sha:
+        description: Exact reviewed integrated source SHA (40 lowercase hex; must equal github.sha)
+        required: true
+        type: string
+      confirmation:
+        description: Only fresh controller-owned fixtures; not native qualification
+        required: true
+        type: choice
+        options: [owned-fixtures-only]
+permissions: {}
+jobs:
+  probe:
+    # Webhook repository.visibility is public/private/internal; missing data must not allocate a runner.
+    if: ${{ github.event.repository.visibility == 'public' }}
+    runs-on: macos-15
+    timeout-minutes: 30
+    permissions: {}
+    steps:
+      - name: Verify anonymous source, prepare pinned compiler, run once
+        shell: bash
+        env:
+          EXPECTED_SOURCE_SHA: ${{ inputs.expected_source_sha }}
+          FIXTURE_CONFIRMATION: ${{ inputs.confirmation }}
+        run: |
+          python3 -B - <<'PY'
+          import hashlib, json, os, platform, re, selectors, signal, stat
+          import subprocess, sys, tempfile, time
+          from pathlib import Path, PurePosixPath
+
+          GIT = '/usr/bin/git'
+          USED = 0
+          PHASES = []
+          class Rejected(Exception): pass
+          def require(ok, reason):
+              if not ok: raise Rejected(reason)
+
+          def validate_request(env):
+              sha = env.get('EXPECTED_SOURCE_SHA', '')
+              require(env.get('GITHUB_EVENT_NAME') == 'workflow_dispatch' and
+                      env.get('GITHUB_REPOSITORY') == 'landroval/PackTrace' and
+                      env.get('FIXTURE_CONFIRMATION') == 'owned-fixtures-only', 'dispatch-guard')
+              require(re.fullmatch('[0-9a-f]{40}', sha) and sha == env.get('GITHUB_SHA'), 'source-sha-guard')
+              return sha
+
+          def clean_env(root):
+              return {'PATH': '/usr/bin:/bin:/usr/sbin:/sbin', 'HOME': str(root/'home'),
+                      'TMPDIR': str(root/'tmp'), 'LANG': 'C', 'LC_ALL': 'C',
+                      'GIT_CONFIG_NOSYSTEM': '1', 'GIT_CONFIG_GLOBAL': str(root/'home/empty-config'),
+                      'GIT_CONFIG_SYSTEM': str(root/'home/empty-config'), 'GIT_TERMINAL_PROMPT': '0',
+                      'GIT_ALLOW_PROTOCOL': 'https', 'GIT_LFS_SKIP_SMUDGE': '1'}
+
+          def storage(root):
+              size = 0
+              for directory, dirs, files in os.walk(root, followlinks=False):
+                  for name in dirs+files:
+                      item = (Path(directory)/name).lstat()
+                      require(stat.S_ISDIR(item.st_mode) or stat.S_ISREG(item.st_mode), 'source-storage-type')
+                      size += item.st_size
+                      require(size <= 256*1024*1024, 'source-storage-limit')
+
+          def command(argv, root, cwd, env, deadline):
+              global USED
+              require(time.monotonic() < deadline, 'source-timeout')
+              started = time.monotonic()
+              output, error = bytearray(), bytearray()
+              process = subprocess.Popen(argv, cwd=cwd, env=env, stdin=subprocess.PIPE,
+                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True)
+              process.stdin.close()
+              phase = 'exited'
+              try:
+                  with selectors.DefaultSelector() as selector:
+                      for stream, target in ((process.stdout, output), (process.stderr, error)):
+                          os.set_blocking(stream.fileno(), False)
+                          selector.register(stream, selectors.EVENT_READ, target)
+                      while selector.get_map() or process.poll() is None:
+                          require(time.monotonic() < deadline, 'source-timeout')
+                          storage(root)
+                          for key, _ in selector.select(.05):
+                              data = os.read(key.fd, 65536)
+                              if not data: selector.unregister(key.fileobj); continue
+                              USED += len(data)
+                              require(USED <= 2*1024*1024, 'source-output-limit')
+                              key.data.extend(data)
+                  require(process.wait(timeout=1) == 0, 'source-command-exit')
+                  try:
+                      os.killpg(process.pid, 0)
+                      raise Rejected('source-descendant-leak')
+                  except ProcessLookupError: pass
+              except BaseException:
+                  phase = 'rejected'
+                  raise
+              finally:
+                  try: os.killpg(process.pid, signal.SIGKILL)
+                  except ProcessLookupError: pass
+                  try: process.wait(timeout=2)
+                  except subprocess.TimeoutExpired: phase = 'unreaped'
+                  process.stdout.close(); process.stderr.close()
+                  PHASES.append({'phase': phase, 'exit': process.returncode,
+                                 'durationSeconds': time.monotonic()-started,
+                                 'stdoutBytes': len(output), 'stderrBytes': len(error)})
+              require(phase == 'exited', 'source-process-cleanup')
+              return bytes(output)
+
+          def validate_tree(raw):
+              require(raw.endswith(b'\0'), 'source-tree-format')
+              entries, total, folded = {}, 0, set()
+              for row in raw[:-1].split(b'\0'):
+                  try:
+                      header, name = row.split(b'\t')
+                      mode, kind, blob, size = header.split()
+                      name = name.decode('utf-8'); size = int(size)
+                  except (ValueError, UnicodeError): raise Rejected('source-tree-format') from None
+                  path = PurePosixPath(name)
+                  require(mode in (b'100644', b'100755') and kind == b'blob' and
+                          re.fullmatch(b'[0-9a-f]{40}', blob), 'source-tree-type')
+                  require(name and not name.startswith('/') and '\\' not in name and
+                          path.as_posix() == name and len(path.parts) <= 32 and len(name) <= 512 and
+                          all(p not in ('.', '..') and p.casefold() not in ('.git', '.gitmodules') for p in path.parts)
+                          and not any(ord(c) < 32 for c in name), 'source-tree-path')
+                  require(name.casefold() not in folded and 0 <= size <= 4*1024*1024, 'source-tree-bound')
+                  folded.add(name.casefold()); total += size
+                  entries[name] = (mode, blob, size)
+                  require(len(entries) <= 4096 and total <= 32*1024*1024, 'source-tree-bound')
+              require('probes/native-safety/ci/run.py' in entries, 'source-helper-missing')
+              return entries
+
+          def checkout(root, env, sha, deadline):
+              env = clean_env(root)  # Never pass the Actions environment to Git.
+              (root/'home/empty-config').write_bytes(b'')
+              source = root/'source'; source.mkdir(mode=0o700)
+              git = [GIT, '-c', 'init.templateDir='+str(root/'templates'),
+                     '-c', 'core.hooksPath='+str(root/'hooks'), '-c', 'credential.helper=',
+                     '-c', 'http.followRedirects=false', '-c', 'protocol.allow=never',
+                     '-c', 'protocol.https.allow=always', '-c', 'submodule.recurse=false',
+                     '-c', 'fetch.fsckObjects=true', '-c', 'transfer.fsckObjects=true']
+              def run(args): return command(git+args, root, source, env, deadline)
+              run(['init'])
+              run(['fetch', '--depth=1', '--no-tags', '--recurse-submodules=no',
+                   'https://github.com/landroval/PackTrace.git', sha])
+              ids = run(['rev-parse', 'FETCH_HEAD', 'FETCH_HEAD^{tree}']).decode('ascii').splitlines()
+              require(len(ids) == 2 and ids[0] == sha and re.fullmatch('[0-9a-f]{40}', ids[1]), 'source-identity')
+              entries = validate_tree(run(['ls-tree', '-r', '-l', '-z', '--full-tree', 'FETCH_HEAD']))
+              # No repo-provided code (including this helper) is executed before these guards.
+              run(['checkout', '--detach', 'FETCH_HEAD'])
+              keys = run(['config', '--local', '--no-includes', '--name-only', '--list']).decode('ascii').splitlines()
+              require(set(keys) <= {'core.repositoryformatversion', 'core.filemode', 'core.bare',
+                       'core.logallrefupdates', 'core.ignorecase', 'core.precomposeunicode'}, 'source-config')
+              require(run(['status', '--porcelain=v1', '--untracked-files=all']) == b'', 'source-dirty')
+              for name, (mode, blob, size) in entries.items():
+                  path = source/name
+                  for parent in path.parents:
+                      if parent == source: break
+                      require(stat.S_ISDIR(parent.lstat().st_mode), 'source-parent-type')
+                  info = path.lstat()
+                  require(stat.S_ISREG(info.st_mode) and info.st_size == size and
+                          bool(info.st_mode & 0o111) == (mode == b'100755'), 'source-checkout-type')
+                  data = path.read_bytes()
+                  require(hashlib.sha1(b'blob '+str(size).encode()+b'\0'+data).hexdigest().encode() == blob,
+                          'source-checkout-hash')
+              storage(root)
+              return {'sha': sha, 'tree': ids[1], 'helperSHA256': hashlib.sha256(
+                      (source/'probes/native-safety/ci/run.py').read_bytes()).hexdigest()}
+
+          def main():
+              started = time.monotonic()
+              source = {}
+              try:
+                  sha = validate_request(os.environ)
+                  require(platform.system() == 'Darwin' and platform.machine() == 'arm64' and
+                          platform.mac_ver()[0].split('.')[0] == '15' and os.geteuid() != 0, 'unsupported-profile')
+                  temp = Path(os.environ['RUNNER_TEMP'])
+                  require(temp.is_absolute() and temp.resolve() == temp and temp.is_dir(), 'runner-temp')
+                  root = Path(tempfile.mkdtemp(prefix='packtrace-native-', dir=temp)); root.chmod(0o700)
+                  for name in ('home', 'tmp', 'hooks', 'templates'):
+                      (root/name).mkdir(mode=0o700)
+                  source = checkout(root, {}, sha, started+120)
+                  env = clean_env(root)
+                  env.update({'OWNROOT': str(root), 'SOURCE_SHA': sha, 'SOURCE_TREE': source['tree'],
+                              'SOURCE_HELPER_SHA256': source['helperSHA256'],
+                              'SETUP_DEADLINE': str(started+720), 'BOOTSTRAP_OUTPUT_BYTES': str(USED),
+                              'BOOTSTRAP_PHASES': json.dumps(PHASES, separators=(',', ':'))})
+                  for key in ('RUNNER_NAME', 'RUNNER_OS', 'RUNNER_ARCH', 'RUNNER_ENVIRONMENT', 'ImageOS', 'ImageVersion'):
+                      if key in os.environ: env[key] = os.environ[key]
+                  # Exec only the source-bound helper; it independently supervises the native process group.
+                  os.execve(sys.executable, [sys.executable, '-B', str(root/'source/probes/native-safety/ci/run.py')], env)
+              except (Rejected, OSError, ValueError, KeyError, UnicodeError) as error:
+                  reason = str(error) if isinstance(error, Rejected) else 'bootstrap-error'
+                  print('NATIVE_PROBE_RECEIPT='+json.dumps({'purpose': 'controlled-fixture-feasibility',
+                        'qualification': 'not-qualified', 'sourceObjectBinding': 'not-established',
+                        'status': 'BLOCKED', 'phase': 'bootstrap', 'reason': reason, 'source': source,
+                        'actualExit': 3, 'phases': PHASES}, separators=(',', ':')))
+                  return 3
+          if __name__ == '__main__':
+              raise SystemExit(main())
+          PY
