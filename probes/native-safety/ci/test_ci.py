@@ -722,6 +722,192 @@ else: sys.exit(9)
             self.assertEqual(obj['status'], status)
 
 
+class PreparationDiagnostics(unittest.TestCase):
+    """Real main/prepare/compile/watchdog; acquisition and host are inert boundaries.
+
+    Catches discarded failures, unbounded excerpts, unsafe decoding, broadened
+    stream retention, changed exits, and retries/native entry after setup failure.
+    """
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.outputs = []
+
+    def outer(self, label='python-tests', stdout=b'', stderr=b'', bootstrap=False, cap=32*1024*1024):
+        import contextlib
+        from unittest.mock import patch
+        root = self.root/str(len(self.outputs)); root.mkdir(mode=0o700)
+        helper = root/'source/probes/native-safety/ci/run.py'
+        helper.parent.mkdir(parents=True); helper.write_bytes(Path(ci.__file__).read_bytes())
+        module = helper.parent.parent
+        (module/'go.mod').write_text('module packtrace-native-safety-probe\n\ngo 1.27.1\n\nrequire golang.org/x/sys v0.44.0\n')
+        (module/'go.sum').write_text(f'golang.org/x/sys v0.44.0 {ci.MODULE_H1}\ngolang.org/x/sys v0.44.0/go.mod {ci.MOD_H1}\n')
+        # This real failing unittest emits its own traceback to actual stderr.
+        (helper.parent/'test_ci.py').write_text('''import os,sys,unittest
+from pathlib import Path
+class Controlled(unittest.TestCase):
+ def test_diagnostic(self):
+  for key in ('GITHUB_TOKEN','HTTPS_PROXY','AWS_SECRET_ACCESS_KEY'):
+   self.assertNotIn(key, os.environ)
+  p=Path('python-calls'); p.write_text(p.read_text()+'x' if p.exists() else 'x')
+  sys.stdout.buffer.write(Path('stdout').read_bytes()); sys.stdout.buffer.flush()
+  sys.stderr.buffer.write(Path('stderr').read_bytes()); sys.stderr.buffer.flush()
+  self.assertFalse(Path('fail').exists(), 'controlled-preparation-failure')
+''')
+        for stream, data in [('stdout', stdout), ('stderr', stderr)]:
+            (module/stream).write_bytes(data); (helper.parent/stream).write_bytes(data)
+        if label == 'python-tests': (helper.parent/'fail').touch()
+        tool = root/'toolchain/go/bin/go'; tool.parent.mkdir(parents=True)
+        tool.write_text(f'#!{sys.executable}\n'+'''import os,sys
+from pathlib import Path
+for key in ('GITHUB_TOKEN','HTTPS_PROXY','AWS_SECRET_ACCESS_KEY'):
+ assert key not in os.environ
+assert os.environ['GOPROXY']=='off' and os.environ['GOSUMDB']=='off'
+a=sys.argv[1:]
+label=('go-version' if a==['version'] else 'go-profile' if a[0]=='env' else
+       'module-verify' if a[0]=='mod' else 'portable-tests' if a[0]=='test' else a[0])
+with Path('calls').open('a') as f: f.write(label+'\\n')
+if label=='''+repr(label)+''':
+ sys.stdout.buffer.write(Path('stdout').read_bytes())
+ sys.stderr.buffer.write(Path('stderr').read_bytes())
+ sys.exit(7)
+if label=='go-version': print('go version go1.27.1 darwin/arm64')
+elif label=='go-profile': print('go1.27.1\\ndarwin\\narm64\\n0')
+elif label=='module-verify': print('all modules verified')
+# Deliberately no binary: successful tests still cannot enter native execution.
+''')
+        tool.chmod(0o700)
+        env = dict(OWNROOT=str(root), SOURCE_SHA='a'*40, SOURCE_TREE='b'*40,
+                   SOURCE_HELPER_SHA256=hashlib.sha256(helper.read_bytes()).hexdigest(),
+                   SETUP_DEADLINE=str(time.monotonic()+20), BOOTSTRAP_OUTPUT_BYTES='0',
+                   BOOTSTRAP_PHASES=json.dumps([{'fixture': 'b'*8100}]) if bootstrap else '[]')
+        out = io.StringIO()
+        def forbidden(*args, **kwargs):
+            raise AssertionError('native entry forbidden in preparation diagnostic tests')
+        # No transport, archive acquisition or native code is executed. Keep the
+        # actual prepare failure propagation and final main/emit path intact.
+        with patch.object(ci, 'CAP', cap), \
+             patch.object(ci, 'preflight', return_value={'fixture': 'not-a-native-host'}), \
+             patch.object(ci, 'download', return_value={'fixture': 'no-acquisition'}), \
+             patch.object(ci, 'extract_go', return_value={}), \
+             patch.object(ci, 'seed_module', return_value={}), \
+             patch.object(ci, 'native_once', side_effect=forbidden), \
+             patch.dict(os.environ, {'GITHUB_TOKEN': 'ambient-token-never-retain',
+                        'HTTPS_PROXY': 'https://signed.invalid/?credential=never-retain',
+                        'AWS_SECRET_ACCESS_KEY': 'ambient-key-never-retain'}), \
+             contextlib.redirect_stdout(out):
+            code = ci.main(env, helper)
+        text = out.getvalue(); self.outputs.append(text)
+        self.assertTrue(text.startswith('NATIVE_PROBE_RECEIPT='))
+        self.assertEqual(text.count('\n'), 1)
+        record = json.loads(text.split('=', 1)[1])
+        self.assertEqual(code, record['actualExit'])
+        self.assertEqual(record['phase'], 'setup')
+        self.assertIsNone(record['nativeExit']); self.assertIsNone(record['probe'])
+        self.assertEqual(record['qualification'], 'not-qualified')
+        self.assertEqual(record['sourceObjectBinding'], 'not-established')
+        self.assertEqual(record['source']['helperSHA256'], env['SOURCE_HELPER_SHA256'])
+        self.assertFalse((root/'evidence').exists())
+        names = [p['name'] for p in record['phases']]
+        calls = (module/'calls').read_text().splitlines()
+        self.assertEqual(len(names), len(set(names)))
+        self.assertEqual(names[:len(calls)], calls)
+        self.assertNotIn('native', names)
+        self.assertEqual(record['capturedOutputBytes'], sum(p['stdoutBytes']+p['stderrBytes'] for p in record['phases']))
+        self.assertLessEqual(record['capturedOutputBytes']+len(text.encode()), 32*1024*1024)
+        self.assertLessEqual(len(text.encode()), 64*1024)
+        for secret in ('ambient-token-never-retain', 'ambient-key-never-retain', 'signed.invalid'):
+            self.assertNotIn(secret, text)
+        if label in ('python-tests', 'portable-tests', 'vet', 'go-version'):
+            self.assertEqual((code, record['status'], record['reason']),
+                             (1, 'FAIL', 'setup-command-'+label))
+            self.assertEqual(names[-1], label)
+        return record, module
+
+    def stream(self, phase, name, expected=None):
+        diagnostic = phase.get('diagnostics')
+        self.assertIsNotNone(diagnostic, 'failed preparation test output lost from actual outer receipt')
+        self.assertEqual(diagnostic['encoding'], 'base64')
+        excerpt = diagnostic[name]
+        head = base64.b64decode(excerpt['head'], validate=True)
+        tail = base64.b64decode(excerpt['tail'], validate=True)
+        self.assertEqual(excerpt['retainedBytes'], len(head)+len(tail))
+        self.assertLessEqual(len(head)+len(tail), 8192)
+        if expected is not None:
+            self.assertEqual(phase[name+'Bytes'], len(expected))
+            self.assertEqual(phase[name+'SHA256'], hashlib.sha256(expected).hexdigest())
+            self.assertEqual(head+tail, expected if len(expected)<=8192 else expected[:4096]+expected[-4096:])
+            self.assertEqual(excerpt['truncated'], len(expected)>8192)
+        return head+tail
+
+    def test_actual_failing_unittest_stderr_survives_outer_receipt(self):
+        record, module = self.outer(stdout=b'controlled stdout\n', stderr=b'controlled stderr\n')
+        phase = record['phases'][-1]
+        self.assertEqual((phase['phase'], phase['exit'], phase['reaped'], phase['groupClean']), ('exited', 1, True, True))
+        self.assertTrue(phase.get('diagnostics', {}).get('captureComplete'))
+        self.stream(phase, 'stdout', b'controlled stdout\n')
+        stderr = self.stream(phase, 'stderr')
+        self.assertIn(b'FAIL: test_diagnostic', stderr)
+        self.assertIn(b'AssertionError', stderr)
+        self.assertIn(b'controlled-preparation-failure', stderr)
+        self.assertEqual(phase['stderrBytes'], len(stderr))
+        self.assertEqual(phase['stderrSHA256'], hashlib.sha256(stderr).hexdigest())
+        self.assertFalse(phase['diagnostics']['stderr']['truncated'])
+        self.assertEqual((module/'ci/python-calls').read_text(), 'x')
+        self.assertTrue(all('diagnostics' not in p for p in record['phases'][:-1]))
+
+    def test_head_tail_encoding_caps_empty_and_invalid_bytes_in_outer_receipt(self):
+        for data in (b'', b'\x00\xff\xfe\x1b\n', b'x'*8192,
+                     b'head'+bytes(range(256))*1024+b'tail'):
+            with self.subTest(size=len(data)):
+                record, _ = self.outer('portable-tests', data, data[::-1], bootstrap=True)
+                phase = record['phases'][-1]
+                self.assertEqual((phase['exit'], phase['phase'], phase['reaped'], phase['groupClean']), (7, 'exited', True, True))
+                self.assertTrue(phase.get('diagnostics', {}).get('captureComplete'))
+                self.stream(phase, 'stdout', data); self.stream(phase, 'stderr', data[::-1])
+
+    def test_output_limit_is_not_claimed_as_complete_capture(self):
+        data = b'prefix'+b'x'*262144+b'uncaptured-tail'
+        record, _ = self.outer('portable-tests', data, cap=128*1024)
+        phase = record['phases'][-1]
+        self.assertEqual(phase['phase'], 'output-limit')
+        self.assertTrue(phase['reaped'] and phase['groupClean'])
+        diagnostic = phase.get('diagnostics')
+        self.assertIsNotNone(diagnostic)
+        self.assertFalse(diagnostic['captureComplete'])
+        self.assertLessEqual(record['capturedOutputBytes'], 64*1024)
+        captured = data[:phase['stdoutBytes']]
+        self.stream(phase, 'stdout', captured)
+        self.stream(phase, 'stderr', b'')
+        self.assertNotIn(b'uncaptured-tail', self.stream(phase, 'stdout'))
+        self.assertEqual(record['actualExit'], 1)
+
+    def test_watchdog_does_not_retain_arbitrary_or_native_labeled_output(self):
+        for label in ('native', 'acquisition', 'python-tests'):
+            budget = ci.Budget()
+            result = budget.command(label, [sys.executable, '-B', '-c',
+                'import sys; print("private-arbitrary-output"); sys.stderr.write("private-stderr"); sys.exit(4)'],
+                self.root, ci.clean_env(self.root), 2)
+            self.assertEqual(result['exit'], 4)
+            self.assertNotIn('diagnostics', budget.phases[-1])
+            self.assertNotIn('private-arbitrary-output', json.dumps(budget.phases))
+            self.assertNotIn('private-stderr', json.dumps(budget.phases))
+
+    def test_success_and_non_test_failures_do_not_retain_streams(self):
+        for label in ('success', 'vet', 'go-version'):
+            with self.subTest(label=label):
+                record, module = self.outer(label, b'not-test-payload', b'not-test-stderr')
+                self.assertTrue(all('diagnostics' not in p for p in record['phases']))
+                self.assertNotIn('not-test-payload', json.dumps(record))
+                self.assertNotIn('not-test-stderr', json.dumps(record))
+                if label == 'success':
+                    self.assertEqual(record['reason'], 'controller-error')  # absent inert binary
+                    self.assertEqual(record['actualExit'], 3)
+                    self.assertEqual(record['phases'][-1]['exit'], 0)
+                    self.assertEqual((module/'ci/python-calls').read_text(), 'x')
+
+
 class Bootstrap(unittest.TestCase):
     def setUp(self):
         try:
