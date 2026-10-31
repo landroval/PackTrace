@@ -18,6 +18,9 @@ import (
 func main() { os.Exit(runMain(os.Args[1:], os.Stdin, os.Stdout, os.Stderr)) }
 
 func runInput(args []string, in io.Reader, out, diagnostic io.Writer) int {
+	return runInputObserved(args, in, out, diagnostic, nil)
+}
+func runInputObserved(args []string, in io.Reader, out, diagnostic io.Writer, observed scanObserver) int {
 	if len(args) > 0 && args[0] == "check-reference-digest" {
 		return runReferenceDigest(args[1:], in, out, diagnostic)
 	}
@@ -37,7 +40,7 @@ func runInput(args []string, in io.Reader, out, diagnostic io.Writer) int {
 		return runNPMRoot(args[1:], in, out, diagnostic)
 	}
 	if len(args) == 0 || args[0] != "inspect" {
-		return run(args, out, diagnostic)
+		return runObserved(args, out, diagnostic, observed)
 	}
 	if len(args) == 2 && args[1] == "--help" {
 		if !writeOutput(out, []byte("packtrace inspect [--format terminal|json] [--identity-profile explicit-only|npm-lock-v2-v3]\nDefault explicit-only; opt-in installation-name claims are hypotheses, not canonical proof.\nRead one bounded stdin JSON envelope containing lockfile and advisory objects.\nPortable-only experimental metadata inspection; no project access or complete applicability.\n")) {
@@ -277,6 +280,9 @@ func inspectArgs(args []string) (string, string, bool) {
 }
 
 func run(args []string, out, diagnostic io.Writer) int {
+	return runObserved(args, out, diagnostic, nil)
+}
+func runObserved(args []string, out, diagnostic io.Writer, observed scanObserver) int {
 	if len(args) > 0 && args[0] == "demo" {
 		scenario, format, ok := demoArgs(args[1:])
 		if !ok {
@@ -308,7 +314,7 @@ func run(args []string, out, diagnostic io.Writer) int {
 	case cli.ArgumentActionScanHelp:
 		text = "packtrace scan [options] ROOT\nOffline integrity candidate: --policy EXTERNAL_POLICY [--checks integrity] [--format terminal|json|sarif]\nExplicit version-1 policy maps locked identities/SRI to local prepared archives; no network or target code execution.\nNative and physical authority qualification remain gated; required gaps exit 3. No shipping/platform qualification claim.\nOnly portable privacy and stdout output are currently supported; explicit output/state paths are refused.\n"
 	case cli.ArgumentActionScan:
-		return runScan(invocation.Scan, out, diagnostic)
+		return runScanObserved(invocation.Scan, out, diagnostic, observed)
 	default:
 		return failure(diagnostic, "cli: invalid-invocation")
 	}

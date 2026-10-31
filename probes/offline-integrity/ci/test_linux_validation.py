@@ -13,7 +13,8 @@ class Validation(unittest.TestCase):
         good = b'{"Action":"pass","Test":"owned"}\n'
         self.assertEqual(validation.test_counts(good)['passed'], 1)
         for raw in (b'', good[:-1], b'{}\n', good + b'{"Action":"fail","Package":"owned"}\n',
-                    b'{"Action":"build-fail","Package":"owned"}\n'):
+                    b'{"Action":"build-fail","Package":"owned"}\n',
+                    good + b'{"Action":"build-fail","Package":"owned"}\n'):
             with self.subTest(raw=raw), self.assertRaises(ValueError):
                 validation.test_counts(raw)
 
@@ -59,6 +60,83 @@ class Validation(unittest.TestCase):
             with socket.socket(socket.AF_UNIX) as server:
                 server.bind(str(root/'socket'))
                 self.assertEqual(validation.fixture_bytes(root), 3 + len(str(outside)))
+
+    def test_mutable_fixture_and_build_entries_can_disappear(self):
+        import tempfile
+        from unittest.mock import patch
+        helpers = validation.helpers(Path(__file__).resolve().parents[3])
+        with tempfile.TemporaryDirectory(prefix='pt-gone-') as directory:
+            with patch.object(validation.os, 'walk', return_value=[(directory, [], ['gone'])]):
+                self.assertEqual(validation.fixture_bytes(Path(directory)), 0)
+                self.assertEqual(helpers.disk_bytes(Path(directory)), 0)
+            with patch.object(Path, 'lstat', side_effect=PermissionError('owned-test')):
+                with patch.object(validation.os, 'walk', return_value=[(directory, [], ['denied'])]):
+                    with self.assertRaises(PermissionError):
+                        validation.fixture_bytes(Path(directory))
+                    with self.assertRaises(PermissionError):
+                        helpers.disk_bytes(Path(directory))
+
+    def test_actual_storage_callback_accepts_owned_build_ipc_without_following_links(self):
+        import ast
+        import inspect
+        import os
+        import socket
+        import tempfile
+        # Execute the production callback with real owned trees, without faking
+        # Ubuntu/Go provenance or running any hosted/native row.
+        tree = ast.parse(inspect.getsource(validation.main))
+        callback = next(node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name == 'storage')
+        helpers = validation.helpers(Path(__file__).resolve().parents[3])
+        for area in ('gocache', 'build'):
+            with self.subTest(area=area), tempfile.TemporaryDirectory(prefix='pt-build-') as directory:
+                root = Path(directory)
+                work = root/'work'
+                for path in (root/'gocache', work/'build', work/'tmp'):
+                    path.mkdir(parents=True)
+                selected = root/'gocache' if area == 'gocache' else work/'build'
+                (selected/'regular').write_bytes(b'owned')
+                (selected/'alias').symlink_to(selected/'regular')
+                os.mkfifo(selected/'fifo')
+                with socket.socket(socket.AF_UNIX) as server:
+                    server.bind(str(selected/'socket'))
+                    namespace = dict(h=helpers, root=root, work=work, receipt={},
+                                     fixture_bytes=validation.fixture_bytes, ValidationRejected=validation.ValidationRejected)
+                    exec(compile(ast.Module(body=[callback], type_ignores=[]), '<actual-storage-callback>', 'exec'), namespace)
+                    try:
+                        admitted = namespace['storage']()
+                    except Exception as error:
+                        self.fail('owned build IPC rejected: '+str(error))
+                    self.assertTrue(admitted)
+
+    def test_pending_failure_capture_and_callback_exception_keep_receipts(self):
+        import os
+        import sys
+        import tempfile
+        import time
+        helpers = validation.helpers(Path(__file__).resolve().parents[3])
+        for mode in ('storage-stop', 'storage-exception', 'capture-limit'):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory(prefix='pt-drain-') as directory:
+                ready = Path(directory)/'ready'
+                marker = b'OWNED PENDING FAILURE DIAGNOSTIC\\n'
+                child = ('import os,time; from pathlib import Path; os.write(2,'+repr(marker)+
+                         '); Path('+repr(str(ready))+').write_text("ready"); time.sleep(5)')
+                def storage():
+                    end = time.monotonic()+2
+                    while not ready.exists() and time.monotonic() < end:
+                        time.sleep(.001)
+                    self.assertTrue(ready.exists())
+                    if mode == 'storage-exception':
+                        raise validation.ValidationRejected('unexpected-fixture-type')
+                    return False
+                budget = helpers.Budget()
+                result = budget.command('owned-pending', [sys.executable, '-c', child],
+                                        Path(directory), dict(os.environ), 3,
+                                        stderr_cap=4 if mode == 'capture-limit' else 1024, storage=storage)
+                self.assertTrue(result['reaped'] and result['groupClean'])
+                self.assertEqual(len(budget.phases), 1)
+                self.assertEqual(result['phase'], 'process-error' if mode == 'storage-exception' else 'storage-limit')
+                self.assertEqual(result['stderr'], marker[:4] if mode == 'capture-limit' else marker)
+                self.assertEqual(result['captureComplete'], mode != 'capture-limit')
 
     def test_diagnostics_are_bounded_and_not_reported_complete_when_truncated(self):
         raw = b'a' * 10000

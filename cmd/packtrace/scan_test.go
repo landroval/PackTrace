@@ -64,13 +64,14 @@ func TestScanActualSupervisedNativeFlow(t *testing.T) {
 	for _, format := range []string{"terminal", "json", "sarif"} {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		cmd := exec.CommandContext(ctx, os.Args[0], "-test.run=^TestSupervisedCLIProcess$", "--", "scan", "--policy", policy, "--checks", "integrity", "--fail-on", "integrity", "--format", format, root)
+		receipt := retainScanReceipt(t, cmd)
 		var out, diag bytes.Buffer
 		cmd.Stdout = &out
 		cmd.Stderr = &diag
 		e := cmd.Run()
 		cancel()
 		if e == nil || cmd.ProcessState == nil || cmd.ProcessState.ExitCode() != 3 || out.Len() == 0 || diag.Len() != 0 {
-			t.Fatalf("actual scan %s: exit=%v %v stdout=%s stderr=%s", format, cmd.ProcessState, e, out.String(), diag.String())
+			t.Fatalf("actual scan %s: exit=%v %v stdout=%s stderr=%s receipt=%s", format, cmd.ProcessState, e, out.String(), diag.String(), receipt())
 		}
 		if strings.Contains(out.String()+diag.String(), "PRIVATE") || strings.Contains(out.String(), sensitiveDigestPrefix) {
 			t.Fatal("portable report leaked policy, identity, path or SRI", out.String())

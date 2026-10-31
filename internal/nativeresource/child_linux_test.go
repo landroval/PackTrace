@@ -3,12 +3,14 @@
 package nativeresource
 
 import (
+	"errors"
 	"io"
 	"os"
 	"os/exec"
 	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -99,6 +101,11 @@ func TestRetainedChildActualRSSIdentityExitAndQueryFailure(t *testing.T) {
 	}
 	if n, live, e := c.Sample(); e == nil || n != 0 || !live {
 		t.Fatal("live query failure became zero success", n, live, e)
+	} else {
+		var failure *QueryFailure
+		if !errors.Is(e, ErrUnavailable) || !errors.As(e, &failure) || failure.Stage != "stat-open" || failure.Errno != int(syscall.EBADF) || e.Error() != ErrUnavailable.Error() {
+			t.Fatalf("closed owned descriptor lost bounded kernel diagnosis: %#v %v", failure, e)
+		}
 	}
 	// Release only the original child and confirm its exit/reap. A retained
 	// pidfd is still attributable even when its proc descriptor cannot be read.

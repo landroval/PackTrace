@@ -40,6 +40,7 @@ func (r *ScanRun) WriteOutput(ctx context.Context, out io.Writer, data []byte) e
 		}
 	}
 	e := r.output.WriteOutput(ctx, out, data)
+	r.NoteFailure("output", e)
 	if r.output.state != nil && r.output.state.scan != nil {
 		if observed := r.Checkpoint(); observed != nil {
 			return observed

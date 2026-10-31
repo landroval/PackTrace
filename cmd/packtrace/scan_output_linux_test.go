@@ -27,6 +27,7 @@ func TestScanInterruptBlockedSequentialWriter(t *testing.T) {
 	}
 	defer reader.Close()
 	cmd := exec.Command(os.Args[0], "-test.run=^TestSupervisedCLIProcess$", "--", "scan", "--policy", policy, "--checks", "integrity", "--format", "json", root)
+	receipt := retainScanReceipt(t, cmd)
 	cmd.Stdout = writer
 	var diagnostic bytes.Buffer
 	cmd.Stderr = &diagnostic
@@ -56,7 +57,7 @@ func TestScanInterruptBlockedSequentialWriter(t *testing.T) {
 			<-done
 		}
 		reaped = true
-		t.Fatalf("no actual report prefix: read=%v exit=%d joined-stderr=%q", e, cmd.ProcessState.ExitCode(), diagnostic.String())
+		t.Fatalf("no actual report prefix: read=%v exit=%d joined-stderr=%q receipt=%s", e, cmd.ProcessState.ExitCode(), diagnostic.String(), receipt())
 	}
 	// Receiving report bytes proves acquisition has ended. The large report
 	// cannot fit in the undrained pipe; only the sequential writer may be live.
@@ -67,7 +68,7 @@ func TestScanInterruptBlockedSequentialWriter(t *testing.T) {
 	case <-done:
 		reaped = true
 		if cmd.ProcessState.ExitCode() != 130 || strings.Contains(diagnostic.String(), "PRIVATE") {
-			t.Fatalf("blocked scan output exit=%d diag=%s", cmd.ProcessState.ExitCode(), diagnostic.String())
+			t.Fatalf("blocked scan output exit=%d diag=%s receipt=%s", cmd.ProcessState.ExitCode(), diagnostic.String(), receipt())
 		}
 	case <-time.After(3 * time.Second):
 		t.Fatal("blocked scan writer not joined/reaped")

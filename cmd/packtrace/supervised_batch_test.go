@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -30,6 +31,22 @@ func TestSupervisedCLIProcess(t *testing.T) {
 	for i, arg := range os.Args {
 		if arg == "--" {
 			os.Args = append([]string{os.Args[0]}, os.Args[i+1:]...)
+			// Test-only owned regular file: never a public stream or production
+			// environment hook. Worker environments do not inherit this setting.
+			if path := os.Getenv("PACKTRACE_TEST_SCAN_RECEIPT"); path != "" {
+				f, e := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
+				if e != nil {
+					t.Fatal(e)
+				}
+				code := runMainObserved(os.Args[1:], os.Stdin, os.Stdout, os.Stderr, func(r execution.ScanReceipt) {
+					data, e := json.Marshal(r)
+					if e == nil && len(data) <= 16384 {
+						_, _ = f.Write(data)
+					}
+				})
+				_ = f.Close()
+				os.Exit(code)
+			}
 			main()
 		}
 	}
