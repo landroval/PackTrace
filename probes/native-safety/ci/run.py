@@ -210,6 +210,21 @@ class Budget:
         out, err = bytearray(), bytearray()
         phase, code, reaped, group_clean = 'exited', None, False, False
         process = None
+        group_denied = False
+
+        def group_signal(sig):
+            nonlocal group_denied
+            try:
+                os.killpg(process.pid, sig)
+                return True
+            except ProcessLookupError:
+                return False
+            except PermissionError:
+                # Denial is unknown, not ESRCH; keep it sticky even if a later
+                # operation succeeds or the leader is reaped.
+                group_denied = True
+                return None
+
         try:
             require(seconds > 0, 'phase-deadline')
             process = subprocess.Popen(argv, cwd=cwd, env=env, stdout=subprocess.PIPE,
@@ -237,19 +252,15 @@ class Budget:
             # Even a normally exited leader must not leave detached work in its group.
             if phase == 'exited':
                 process.wait(timeout=1)
-                try:
-                    os.killpg(process.pid, 0)
+                if group_signal(0):
                     phase = 'descendant-leak'
-                except ProcessLookupError:
-                    pass
         except Rejected:
             phase = 'deadline'
         except (OSError, subprocess.TimeoutExpired):
             phase = 'process-error'
         finally:
             if process is not None:
-                try: os.killpg(process.pid, signal.SIGKILL)
-                except ProcessLookupError: pass
+                group_signal(signal.SIGKILL)
                 try:
                     code = process.wait(timeout=2); reaped = True
                 except subprocess.TimeoutExpired:
@@ -257,15 +268,18 @@ class Budget:
                 for stream in (process.stdout, process.stderr): stream.close()
                 finish = time.monotonic()+.3
                 while True:
-                    try: os.killpg(process.pid, 0)
-                    except ProcessLookupError:
-                        group_clean = True; break
-                    if time.monotonic() >= finish: break
+                    present = group_signal(0)
+                    if present is False:
+                        group_clean = not group_denied; break
+                    if present is None or time.monotonic() >= finish: break
                     time.sleep(.01)
+        if group_denied and phase == 'exited':
+            phase = 'permission-denied'
         result = {'phase': phase, 'exit': code, 'reaped': reaped, 'groupClean': group_clean,
-                  'stdout': bytes(out), 'stderr': bytes(err)}
+                  'groupPermissionDenied': group_denied, 'stdout': bytes(out), 'stderr': bytes(err)}
         self.phases.append({'name': label, 'phase': phase, 'exit': code, 'reaped': reaped,
-                            'groupClean': group_clean, 'durationSeconds': time.monotonic()-started,
+                            'groupClean': group_clean, 'groupPermissionDenied': group_denied,
+                            'durationSeconds': time.monotonic()-started,
                             'stdoutBytes': len(out), 'stderrBytes': len(err),
                             'stdoutSHA256': hashlib.sha256(out).hexdigest(),
                             'stderrSHA256': hashlib.sha256(err).hexdigest()})
