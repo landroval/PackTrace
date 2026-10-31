@@ -15,7 +15,7 @@ import (
 	"packtrace/internal/inspect"
 )
 
-func main() { os.Exit(runInput(os.Args[1:], os.Stdin, os.Stdout, os.Stderr)) }
+func main() { os.Exit(runMain(os.Args[1:], os.Stdin, os.Stdout, os.Stderr)) }
 
 func runInput(args []string, in io.Reader, out, diagnostic io.Writer) int {
 	if len(args) > 0 && args[0] == "check-reference-digest" {
@@ -95,28 +95,7 @@ func runBun(args []string, in io.Reader, out, diagnostic io.Writer) int {
 }
 
 func runBatch(args []string, in io.Reader, out, diagnostic io.Writer) int {
-	if len(args) == 1 && args[0] == "--help" {
-		if !writeOutput(out, []byte("packtrace inspect-batch [--format terminal|json] [--identity-profile explicit-only|npm-lock-v2-v3]\nRead one stdin JSON envelope with lockfile and advisories (1–16 supplied records).\nLimits: 1 MiB wire, 64 lock records, 64 total affected slots, 4096 pairs.\nPortable-only experimental hypotheses; invalid advisory metadata leaves a gap. No target access.\n")) {
-			return failure(diagnostic, "cli: output-failed")
-		}
-		return 0
-	}
-	format, profile, ok := inspectArgs(args)
-	if !ok {
-		return failure(diagnostic, "inspect-batch: invalid-arguments")
-	}
-	result, e := inspect.ReadBatchProfile(in, profile)
-	if e != nil {
-		return failure(diagnostic, e.Error())
-	}
-	data, e := inspect.RenderBatch(result, format)
-	if e != nil {
-		return failure(diagnostic, "inspect-batch: report-failed")
-	}
-	if !writeOutput(out, data) {
-		return failure(diagnostic, "cli: output-failed")
-	}
-	return result.ExitCode
+	return runBatchContext(context.Background(), args, in, out, diagnostic)
 }
 
 func runBunBatch(args []string, in io.Reader, out, diagnostic io.Writer) int {
