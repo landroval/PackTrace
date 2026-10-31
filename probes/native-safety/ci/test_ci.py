@@ -2,6 +2,8 @@
 import ast
 import base64
 import copy
+from contextlib import contextmanager
+import errno
 import hashlib
 import http.server
 import importlib.util
@@ -722,6 +724,140 @@ else: sys.exit(9)
             self.assertEqual(obj['status'], status)
 
 
+@contextmanager
+def permission_boundary(mode, selected=lambda argv: True):
+    """Inject only killpg EPERM for owned real children, never a fake Mac run."""
+    from unittest.mock import patch
+    popen, killpg = subprocess.Popen, os.killpg
+    children, targets, denied = [], set(), []
+    killed = set()
+
+    def launch(argv, *args, **kwargs):
+        child = popen(argv, *args, **kwargs)
+        children.append(child)
+        if selected(argv): targets.add(child.pid)
+        return child
+
+    def boundary(pid, sig):
+        if pid not in targets: return killpg(pid, sig)
+        if pid == os.getpgrp(): raise AssertionError('fixture must own a separate group')
+        deny = (mode == 'all' or (mode == 'kill' and sig == signal.SIGKILL) or
+                (mode == 'leader-probe' and sig == 0 and not denied) or
+                (mode == 'final-probe' and sig == 0 and pid in killed))
+        if sig == signal.SIGKILL: killed.add(pid)
+        if deny:
+            denied.append((pid, sig))
+            raise PermissionError(errno.EPERM, 'controlled-boundary-denial')
+        return killpg(pid, sig)
+
+    try:
+        with patch.object(ci.subprocess, 'Popen', side_effect=launch), \
+             patch.object(ci.os, 'killpg', side_effect=boundary):
+            yield children
+    finally:
+        # Fixtures self-expire even when SIGKILL is denied. No fallback kill.
+        for child in children:
+            child.wait(timeout=2)
+            for stream in (child.stdout, child.stderr):
+                if stream is not None: stream.close()
+
+
+class ProcessGroupPermissions(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+
+    def command(self, mode, source='print("controlled")', seconds=2):
+        budget = ci.Budget(4096)
+        started = time.monotonic()
+        with permission_boundary(mode) as children:
+            try:
+                result = budget.command('python-tests', [sys.executable, '-B', '-c', source],
+                                        self.root, ci.clean_env(self.root), seconds)
+            except PermissionError:
+                self.fail('EPERM escaped instead of returning fail-closed supervision metadata')
+        self.assertLess(time.monotonic()-started, 3)
+        self.assertEqual(len(children), 1)
+        self.assertIsNotNone(children[0].returncode)
+        with self.assertRaises(ChildProcessError): os.waitpid(children[0].pid, os.WNOHANG)
+        self.assertTrue(result['reaped'])
+        self.assertFalse(result['groupClean'], 'denial is unknown, never confirmed cleanup')
+        self.assertTrue(result['groupPermissionDenied'])
+        self.assertFalse(budget.phases[-1]['groupClean'])
+        self.assertTrue(budget.phases[-1]['groupPermissionDenied'])
+        with self.assertRaisesRegex(ci.Rejected, 'setup-command-python-tests'):
+            ci.require_setup_command(result, 'python-tests', budget)
+        return result, budget
+
+    def test_leader_probe_denial_stays_unknown_after_real_esrch(self):
+        result, _ = self.command('leader-probe')
+        self.assertEqual((result['phase'], result['exit']), ('permission-denied', 0))
+        self.assertEqual(result['stdout'], b'controlled\n')
+
+    def test_final_probe_denial_returns_metadata_not_exception(self):
+        result, _ = self.command('final-probe')
+        self.assertEqual((result['phase'], result['exit']), ('permission-denied', 0))
+
+    def test_sigkill_denial_does_not_skip_wait_or_promote_later_esrch(self):
+        result, _ = self.command('kill', 'import time; time.sleep(.15)', .03)
+        self.assertEqual((result['phase'], result['exit']), ('timeout', 0))
+
+    def test_all_denied_operations_remain_bounded_and_unknown(self):
+        result, _ = self.command('all', 'import time; time.sleep(.15)', .03)
+        self.assertEqual((result['phase'], result['exit']), ('timeout', 0))
+
+    def test_real_lingering_descendant_final_probe_denial_is_not_success(self):
+        source = ('import os,time; p=os.fork(); '
+                  'os.close(1) if p==0 else None; os.close(2) if p==0 else None; '
+                  'time.sleep(.3) if p==0 else None')
+        result, _ = self.command('final-probe', source)
+        self.assertEqual(result['phase'], 'descendant-leak')
+
+    def test_real_esrch_control_confirms_cleanup_and_allows_success(self):
+        budget = ci.Budget(4096)
+        result = budget.command('python-tests', [sys.executable, '-B', '-c', 'print("control")'],
+                                self.root, ci.clean_env(self.root), 2)
+        self.assertEqual((result['phase'], result['exit']), ('exited', 0))
+        self.assertTrue(result['reaped'] and result['groupClean'])
+        self.assertFalse(result.get('groupPermissionDenied', False))
+        ci.require_setup_command(result, 'python-tests', budget)
+        evidence = self.root/'evidence'; evidence.mkdir()
+        self.assertEqual(ci.finish_native({**result, 'stdout': json.dumps(receipt()).encode()+b'\n'},
+                                         evidence)['status'], 'PASS')
+
+    def test_outer_receipt_retains_controlled_pass_but_denied_cleanup_fails(self):
+        import contextlib
+        from unittest.mock import patch
+        helper = self.root/'source/probes/native-safety/ci/run.py'
+        helper.parent.mkdir(parents=True); helper.write_bytes(Path(ci.__file__).read_bytes())
+        env = dict(OWNROOT=str(self.root), SOURCE_SHA='a'*40, SOURCE_TREE='b'*40,
+                   SOURCE_HELPER_SHA256=hashlib.sha256(helper.read_bytes()).hexdigest(),
+                   SETUP_DEADLINE=str(time.monotonic()+10), BOOTSTRAP_OUTPUT_BYTES='0', BOOTSTRAP_PHASES='[]')
+        # Python protocol emitter only; no native probe/adapter is executed.
+        binary = self.root/'maccloneprobe'
+        binary.write_text(f'#!{sys.executable}\nprint({json.dumps(receipt())!r})\n')
+        binary.chmod(0o700)
+        output = io.StringIO()
+        with patch.object(ci, 'preflight', return_value={'fixture': 'controller-only'}), \
+             patch.object(ci, 'prepare', return_value={}), permission_boundary('final-probe'), \
+             contextlib.redirect_stdout(output):
+            code = ci.main(env, helper)
+        record = json.loads(output.getvalue().split('=', 1)[1])
+        self.assertEqual((code, record['status'], record['nativeExit']), (2, 'FAIL', 0))
+        self.assertEqual(record['reason'], 'native-supervision')
+        self.assertEqual(record['probe']['status'], 'PASS', 'valid protocol receipt discarded')
+        self.assertEqual(record['qualification'], 'not-qualified')
+        self.assertEqual(record['sourceObjectBinding'], 'not-established')
+        self.assertEqual(len(record['phases']), 1)
+        phase = record['phases'][0]
+        self.assertTrue(phase['reaped'] and phase['groupPermissionDenied'])
+        self.assertFalse(phase['groupClean'])
+        self.assertNotIn('diagnostics', phase)
+        self.assertNotIn('controlled-boundary-denial', output.getvalue())
+        self.assertLessEqual(len(output.getvalue().encode()), ci.RECEIPT_CAP)
+
+
 class PreparationDiagnostics(unittest.TestCase):
     """Real main/prepare/compile/watchdog; acquisition and host are inert boundaries.
 
@@ -734,7 +870,8 @@ class PreparationDiagnostics(unittest.TestCase):
         self.root = Path(self.tmp.name)
         self.outputs = []
 
-    def outer(self, label='python-tests', stdout=b'', stderr=b'', bootstrap=False, cap=32*1024*1024):
+    def outer(self, label='python-tests', stdout=b'', stderr=b'', bootstrap=False, cap=32*1024*1024,
+              permission=None):
         import contextlib
         from unittest.mock import patch
         root = self.root/str(len(self.outputs)); root.mkdir(mode=0o700)
@@ -796,6 +933,7 @@ elif label=='module-verify': print('all modules verified')
              patch.dict(os.environ, {'GITHUB_TOKEN': 'ambient-token-never-retain',
                         'HTTPS_PROXY': 'https://signed.invalid/?credential=never-retain',
                         'AWS_SECRET_ACCESS_KEY': 'ambient-key-never-retain'}), \
+             permission_boundary(permission, selected=lambda argv: '-m' in argv and 'unittest' in argv), \
              contextlib.redirect_stdout(out):
             code = ci.main(env, helper)
         text = out.getvalue(); self.outputs.append(text)
@@ -856,6 +994,23 @@ elif label=='module-verify': print('all modules verified')
         self.assertFalse(phase['diagnostics']['stderr']['truncated'])
         self.assertEqual((module/'ci/python-calls').read_text(), 'x')
         self.assertTrue(all('diagnostics' not in p for p in record['phases'][:-1]))
+
+    def test_cleanup_denial_retains_real_setup_receipt_and_bounded_diagnostics(self):
+        for label, exitcode in [('python-tests', 1), ('success', 0)]:
+            with self.subTest(child_exit=exitcode):
+                record, module = self.outer(label, stdout=b'controlled setup stdout\n', permission='final-probe')
+                phase = record['phases'][-1]
+                self.assertEqual((record['actualExit'], record['status'], record['reason']),
+                                 (1, 'FAIL', 'setup-command-python-tests'))
+                self.assertEqual((phase['phase'], phase['exit']), ('permission-denied', exitcode))
+                self.assertTrue(phase['reaped'] and phase['groupPermissionDenied'])
+                self.assertFalse(phase['groupClean'])
+                self.assertFalse(phase['diagnostics']['captureComplete'])
+                self.stream(phase, 'stdout', b'controlled setup stdout\n')
+                stderr = self.stream(phase, 'stderr')
+                if exitcode: self.assertIn(b'controlled-preparation-failure', stderr)
+                self.assertEqual((module/'ci/python-calls').read_text(), 'x')
+                self.assertNotIn('controlled-boundary-denial', json.dumps(record))
 
     def test_head_tail_encoding_caps_empty_and_invalid_bytes_in_outer_receipt(self):
         for data in (b'', b'\x00\xff\xfe\x1b\n', b'x'*8192,
