@@ -306,9 +306,9 @@ func run(args []string, out, diagnostic io.Writer) int {
 	case cli.ArgumentActionVersion:
 		text = "packtrace development (experimental demo; not a qualified release)\n"
 	case cli.ArgumentActionScanHelp:
-		text = "packtrace scan: execution unavailable in this increment\nThe existing scan argument grammar is retained, but no target is opened.\nUse packtrace demo for the owned synthetic pipeline.\n"
+		text = "packtrace scan [options] ROOT\nOffline integrity candidate: --policy EXTERNAL_POLICY [--checks integrity] [--format terminal|json|sarif]\nExplicit version-1 policy maps locked identities/SRI to local prepared archives; no network or target code execution.\nNative and physical authority qualification remain gated; required gaps exit 3. No shipping/platform qualification claim.\nOnly portable privacy and stdout output are currently supported; explicit output/state paths are refused.\n"
 	case cli.ArgumentActionScan:
-		return failure(diagnostic, "cli: scan-unavailable")
+		return runScan(invocation.Scan, out, diagnostic)
 	default:
 		return failure(diagnostic, "cli: invalid-invocation")
 	}

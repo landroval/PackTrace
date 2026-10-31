@@ -18,6 +18,11 @@ import (
 func runMain(args []string, in io.Reader, out, diagnostic io.Writer) int {
 	if len(args) > 0 {
 		switch args[0] {
+		case execution.ScanWorkerArgument:
+			if len(args) != 1 {
+				return failure(diagnostic, "scan: invalid-worker-arguments")
+			}
+			return execution.ScanWorkerMain(in, out, diagnostic)
 		case execution.WorkerArgument:
 			if len(args) != 1 {
 				return failure(diagnostic, "inspect-batch: invalid-worker-arguments")
