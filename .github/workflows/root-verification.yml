@@ -9,7 +9,7 @@ on:
       validation_profile:
         type: choice
         default: root
-        options: [root, linux-scan-amd64-v1]
+        options: [root, linux-scan-amd64-v1, windows-scan-amd64-v1]
       expected_sha:
         type: string
         default: ''
@@ -435,3 +435,60 @@ jobs:
           import json
           print('LINUX_VALIDATION_RECEIPT ' + json.dumps({'schema':'packtrace.linux-validation.v1', 'setup':'not-successful', 'native':'not-run', 'validationPassed':False, 'qualification':'not-qualified', 'failure':'preparation-or-harness-checks-failed; attempt-consumed; no automatic retry'}))
           PY
+  windows_native:
+    if: >-
+      ${{ github.event_name == 'workflow_dispatch' && github.repository == 'landroval/PackTrace' &&
+          github.event.repository.private == false && inputs.validation_profile == 'windows-scan-amd64-v1' &&
+          inputs.expected_sha == github.sha && inputs.owned_confirmation == 'owned-native-fixtures-only' }}
+    name: Bounded owned Windows native validation
+    runs-on: windows-2022
+    timeout-minutes: 35
+    env:
+      SOURCE_SHA: ${{ github.sha }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+    steps:
+      - name: Prepare exact source and pinned Windows SDK
+        id: prepare
+        timeout-minutes: 12
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = Join-Path $env:RUNNER_TEMP ("packtrace-native7-" + $env:GITHUB_RUN_ID + "-" + $env:GITHUB_RUN_ATTEMPT)
+          if (Test-Path $root) { throw 'owned-root-already-exists' }
+          New-Item -ItemType Directory $root | Out-Null
+          "WINDOWS_NATIVE_ROOT=$root" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          foreach ($name in @('source','cache','build')) { New-Item -ItemType Directory (Join-Path $root $name) | Out-Null }
+          $env:GIT_CONFIG_NOSYSTEM = '1'
+          $env:GIT_CONFIG_GLOBAL = Join-Path $root 'empty-git-config'
+          New-Item -ItemType File $env:GIT_CONFIG_GLOBAL | Out-Null
+          $env:GIT_TERMINAL_PROMPT = '0'
+          Remove-Item Env:GIT_CONFIG_COUNT -ErrorAction SilentlyContinue
+          $source = Join-Path $root 'source'
+          function Git-Checked { & git @args; if ($LASTEXITCODE -ne 0) { throw 'source-command-failed' } }
+          Git-Checked -C $source init
+          Git-Checked -C $source remote add origin https://github.com/landroval/PackTrace.git
+          Git-Checked -C $source fetch --depth=1 --no-tags origin $env:SOURCE_SHA
+          Git-Checked -C $source checkout --detach FETCH_HEAD
+          $actual = (& git -C $source rev-parse HEAD).Trim()
+          if ($actual -ne $env:SOURCE_SHA -or $actual -ne $env:EXPECTED_SHA) { throw 'source-identity' }
+          & python -B (Join-Path $source 'probes/offline-integrity/ci/windows_setup.py') $root
+          if ($LASTEXITCODE -ne 0) { throw 'preparation-failed' }
+      - name: One bounded owned Windows execution
+        id: native
+        if: ${{ success() }}
+        timeout-minutes: 16
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $p = Get-Content -Raw (Join-Path $env:WINDOWS_NATIVE_ROOT 'prepared.json') | ConvertFrom-Json
+          $env:CC = $p.cc
+          & $p.runner $p.source $p.go $p.root
+          exit $LASTEXITCODE
+      - name: Preserve missing native receipt
+        if: ${{ always() }}
+        shell: pwsh
+        run: |
+          $path = Join-Path $env:RUNNER_TEMP ("packtrace-native7-" + $env:GITHUB_RUN_ID + "-" + $env:GITHUB_RUN_ATTEMPT + "/receipt.json")
+          if (-not (Test-Path $path)) {
+            Write-Output 'WINDOWS_NATIVE_RECEIPT {"Schema":"packtrace.windows-native.v1","Setup":"not-successful","Native":"not-run","ValidationPassed":false,"Qualification":"not-qualified","Failure":"preparation-or-controller-failed; attempt-consumed; no automatic retry"}'
+          }
