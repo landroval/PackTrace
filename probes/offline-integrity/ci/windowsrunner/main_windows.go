@@ -375,6 +375,11 @@ func mainCode() (code int) {
 			diagnostics(test.name, "stdout", out)
 			return
 		}
+		if test.name == "root-corpus" {
+			// Publish the already bounded owned-test stream even on success,
+			// so relocation-blocked versus actually-moved evidence is auditable.
+			diagnostics(test.name, "stdout", out)
+		}
 	}
 	if _, ok = command("vet", goexe, []string{"vet", "./..."}, 25, "0"); !ok {
 		return

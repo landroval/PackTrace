@@ -4,9 +4,11 @@ package nativefs
 
 import (
 	"context"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
+	"syscall"
 	"testing"
 	"unsafe"
 )
@@ -250,6 +252,19 @@ func TestWindowsExternalAncestorRelocation(t *testing.T) {
 	if e := os.WriteFile(filepath.Join(controller, "policy"), []byte("trusted"), 0600); e != nil {
 		t.Fatal(e)
 	}
+	moved := filepath.Join(base, "moved")
+	// Prove the owned directory is movable before retaining any authority.
+	// ERROR_ACCESS_DENIED alone is never accepted as a passing safety result.
+	if e := os.Rename(controller, moved); e != nil {
+		t.Fatal("unretained relocation preflight", e)
+	}
+	if e := os.Rename(moved, controller); e != nil {
+		t.Fatal("unretained return preflight", e)
+	}
+	initial, e := os.Stat(controller)
+	if e != nil {
+		t.Fatal(e)
+	}
 	ext, e := r.OpenExternalRoot(ctx, controller)
 	if e != nil {
 		t.Fatal(e)
@@ -260,21 +275,67 @@ func TestWindowsExternalAncestorRelocation(t *testing.T) {
 		t.Fatal(e)
 	}
 	defer f.Close()
-	moved := filepath.Join(base, "moved")
-	if e = os.Rename(controller, moved); e != nil {
-		t.Fatal(e)
+	deniedWithoutMove := func(e error) {
+		t.Helper()
+		if !errors.Is(e, syscall.ERROR_ACCESS_DENIED) && !errors.Is(e, syscall.Errno(32)) /* SDK ERROR_SHARING_VIOLATION; not exported by syscall */ {
+			t.Fatal("unexpected relocation failure", e)
+		}
+		now, e := os.Stat(controller)
+		if e != nil || !os.SameFile(initial, now) {
+			t.Fatal("refused relocation changed original identity", e)
+		}
+		if _, e := os.Stat(moved); !os.IsNotExist(e) {
+			t.Fatal("refused relocation created a destination", e)
+		}
 	}
-	var b [1]byte
-	if n, e := f.Read(b[:]); n != 0 || e == nil {
-		t.Fatal("moved authority admitted content", n, e)
+	if e = os.Rename(controller, moved); e == nil {
+		var b [1]byte
+		if n, e := f.Read(b[:]); n != 0 || e == nil {
+			t.Fatal("moved authority admitted content", n, e)
+		}
+		t.Log("relocation-with-reader: allowed and detected before content")
+	} else {
+		deniedWithoutMove(e)
+		// Windows can block a directory move while a descendant reader is
+		// open. Close only that reader, not the retained directory authority,
+		// and exercise a move with the authority still live if permitted.
+		if e = f.Close(); e != nil {
+			t.Fatal("close owned reader", e)
+		}
+		if e = os.Rename(controller, moved); e != nil {
+			deniedWithoutMove(e)
+			if e = ext.Close(); e != nil {
+				t.Fatal("close owned authority", e)
+			}
+			// Release control must actually move and return. No skip/mask or
+			// canned denial can promote an unexercised mutable fixture.
+			if e = os.Rename(controller, moved); e != nil {
+				t.Fatal("released relocation control", e)
+			}
+			if e = os.Rename(moved, controller); e != nil {
+				t.Fatal("released return control", e)
+			}
+			if leaked, e := ext.OpenInput(ctx, "policy", 100); e == nil {
+				leaked.Close()
+				t.Fatal("closed authority survived release")
+			}
+			t.Log("relocation-with-authority: blocked; unchanged identity and before/after release controls verified; no successful live move claimed")
+			return
+		}
+		if leaked, e := ext.OpenInput(ctx, "policy", 100); e == nil {
+			leaked.Close()
+			t.Fatal("moved directory authority admitted new input")
+		}
+		t.Log("relocation-after-reader-close: allowed and detected with directory authority retained")
 	}
 	if e = os.Rename(moved, controller); e != nil {
 		t.Fatal(e)
 	}
-	if f, e := ext.OpenInput(ctx, "policy", 100); e == nil {
-		f.Close()
+	if leaked, e := ext.OpenInput(ctx, "policy", 100); e == nil {
+		leaked.Close()
 		t.Fatal("observable move-return admitted authority")
 	}
+	t.Log("observable live move-return: rejected by retained authority")
 }
 
 func TestWindowsRejectNamespaceBeforeLookup(t *testing.T) {
