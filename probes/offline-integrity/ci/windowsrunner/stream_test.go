@@ -5,6 +5,22 @@ import (
 	"testing"
 )
 
+func TestWindowsProfilesSeparateDiagnosticsFromValidation(t *testing.T) {
+	for _, tc := range []struct {
+		profile           string
+		diagnostic, valid bool
+	}{
+		{"windows-scan-amd64-v1", false, true},
+		{"windows-volume-diagnostic-amd64-v1", true, true},
+		{"", false, false}, {"windows-other", false, false},
+	} {
+		diagnostic, e := volumeDiagnostic(tc.profile)
+		if (e == nil) != tc.valid || diagnostic != tc.diagnostic {
+			t.Fatalf("profile=%q diagnostic=%t error=%v", tc.profile, diagnostic, e)
+		}
+	}
+}
+
 func TestCaptureLimitRetainsExactPrefixAndStops(t *testing.T) {
 	stopped := 0
 	c := capture{cap: 4, complete: true, stop: func() { stopped++ }}

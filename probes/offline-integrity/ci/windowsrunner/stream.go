@@ -11,6 +11,17 @@ import (
 
 var errCapture = errors.New("capture-limit")
 
+func volumeDiagnostic(profile string) (bool, error) {
+	switch profile {
+	case "windows-scan-amd64-v1":
+		return false, nil
+	case "windows-volume-diagnostic-amd64-v1":
+		return true, nil
+	default:
+		return false, errors.New("unsupported-native-profile")
+	}
+}
+
 type capture struct {
 	mu       sync.Mutex
 	data     []byte

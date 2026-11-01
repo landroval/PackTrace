@@ -9,7 +9,7 @@ on:
       validation_profile:
         type: choice
         default: root
-        options: [root, linux-scan-amd64-v1, windows-scan-amd64-v1]
+        options: [root, linux-scan-amd64-v1, windows-scan-amd64-v1, windows-volume-diagnostic-amd64-v1]
       expected_sha:
         type: string
         default: ''
@@ -438,7 +438,8 @@ jobs:
   windows_native:
     if: >-
       ${{ github.event_name == 'workflow_dispatch' && github.repository == 'landroval/PackTrace' &&
-          github.event.repository.private == false && inputs.validation_profile == 'windows-scan-amd64-v1' &&
+          github.event.repository.private == false &&
+          (inputs.validation_profile == 'windows-scan-amd64-v1' || inputs.validation_profile == 'windows-volume-diagnostic-amd64-v1') &&
           inputs.expected_sha == github.sha && inputs.owned_confirmation == 'owned-native-fixtures-only' }}
     name: Bounded owned Windows native validation
     runs-on: windows-2022
@@ -446,6 +447,7 @@ jobs:
     env:
       SOURCE_SHA: ${{ github.sha }}
       EXPECTED_SHA: ${{ inputs.expected_sha }}
+      VALIDATION_PROFILE: ${{ inputs.validation_profile }}
     steps:
       - name: Prepare exact source and pinned Windows SDK
         id: prepare

@@ -66,6 +66,7 @@ type receipt struct {
 	StartedUTC                                                  string
 	Phases                                                      []phase
 	ValidationPassed                                            bool
+	DiagnosticCompleted                                         bool   `json:",omitempty"`
 	Failure                                                     string `json:",omitempty"`
 	BoundSeconds                                                int
 	CommitLimitBytes                                            uint64
@@ -274,6 +275,11 @@ func mainCode() (code int) {
 		r.Failure = "runner-arguments"
 		return
 	}
+	diagnosticOnly, profileErr := volumeDiagnostic(os.Getenv("VALIDATION_PROFILE"))
+	if profileErr != nil {
+		r.Failure = "runner-profile"
+		return
+	}
 	repo, goexe, work := os.Args[1], os.Args[2], os.Args[3]
 	ctx, cancel := context.WithTimeout(context.Background(), 890*time.Second)
 	defer cancel()
@@ -319,6 +325,30 @@ func mainCode() (code int) {
 	r.Compiler = strings.TrimSpace(string(cc))
 	r.Setup = "passed"
 	r.Native = "failed"
+	if diagnosticOnly {
+		out, ok := command("volume-options-diagnostic", goexe, []string{"test", "-count=1", "-json", "-timeout=70s", "-run=^TestWindowsVolumeBootstrapPairedOptions$", "./internal/nativefs"}, 75, "0")
+		if !ok {
+			return
+		}
+		c, e := testCounts(out)
+		r.Phases[len(r.Phases)-1].Counts = &c
+		diagnostics("volume-options-diagnostic", "stdout", out)
+		if e != nil || c.Failed != 0 || c.BuildFailed != 0 {
+			r.Failure = "diagnostic-stream"
+			return
+		}
+		changed, ok := command("source-clean", "git", []string{"status", "--porcelain", "--untracked-files=all"}, 10, "0")
+		if !ok || len(changed) != 0 {
+			r.Failure = "source-mutated-or-unconfirmed"
+			return
+		}
+		r.Native = "diagnostic-completed-not-product-validation"
+		r.DiagnosticCompleted = true
+		// Deliberately leave ValidationPassed false: these paired opens are
+		// facts about a trusted volume, never product admission/qualification.
+		code = 0
+		return
+	}
 	packages := []string{"./internal/nativefs", "./internal/nativeresource", "./internal/integrityscan", "./internal/execution", "./cmd/packtrace"}
 	for _, test := range []struct {
 		name, cgo string
