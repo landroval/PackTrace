@@ -547,6 +547,29 @@ The more restrictive alternative, independently anchored by default, would impro
 resistance to joint lockfile/content manipulation but require baseline preparation
 before complete required coverage. It was not selected as the built-in default.
 
+### Explicit operator-pinned policy (approved 2026-11-01)
+
+`scan --trusted-policy-digest SRI` explicitly designates trust in the exact policy
+bytes, using one canonical padded SHA-256, SHA-384 or SHA-512 SRI token. It is a
+separate operator argument, never a field accepted from the policy or target.
+The native policy phase verifies that pin over the actual stable external lease;
+the acquisition phase repeats the check before target content. The existing
+SHA-256 source hash remains a continuity identifier and cannot replace this pin.
+
+The pinned policy binds each expected artifact digest to identity, version,
+origin, selection reason and provenance. Its controller binding must agree with
+the lockfile; missing pins, changed policy bytes, unsupported pins, reference
+failures or baseline/lockfile conflicts cannot gain independent assurance or
+silently fall back. A trusted location alone is still insufficient.
+
+The parent re-derives per-reference assurance and the scoped
+`reference-authority` completion from its own request/plan and validated records.
+No worker completion flag grants authority. An explicit operator pin authenticates
+only the designated baseline bytes: it is not a publisher signature, proof of
+registry provenance, benignness, native/producer qualification or permission to
+fetch. Existing default unpinned behavior, public schema and exit-selection rules
+remain unchanged; remaining candidate coverage gaps stay visible.
+
 ### Comparison scope
 
 Compare published files for modification, absence, addition, and relevant type or

@@ -34,14 +34,15 @@ const (
 	ArgumentOptionPolicy
 	ArgumentOptionStateDir
 	ArgumentOptionOutput
+	ArgumentOptionTrustedPolicyDigest
 )
 
 // ScanArgumentRequest is unvalidated policy/path/output request data.
 // Empty StateDir defers default resolution; no field establishes native safety.
 type ScanArgumentRequest struct {
-	Path, Manager, Format, Privacy, PolicyPath, StateDir, Output string
-	Checks, FailOn                                               ArgumentChecks
-	Provided                                                     ArgumentOptions
+	Path, Manager, Format, Privacy, PolicyPath, StateDir, Output, TrustedPolicyDigest string
+	Checks, FailOn                                                                    ArgumentChecks
+	Provided                                                                          ArgumentOptions
 }
 
 // Invocation never authorizes executing or displaying the requested action.
@@ -205,6 +206,8 @@ func argumentOption(name string) ArgumentOptions {
 		return ArgumentOptionStateDir
 	case "--output":
 		return ArgumentOptionOutput
+	case "--trusted-policy-digest":
+		return ArgumentOptionTrustedPolicyDigest
 	default:
 		return 0
 	}
@@ -254,6 +257,11 @@ func applyArgumentOption(request *ScanArgumentRequest, option ArgumentOptions, v
 		request.StateDir = value
 	case ArgumentOptionOutput:
 		request.Output = value
+	case ArgumentOptionTrustedPolicyDigest:
+		if len(value) > 2048 {
+			return false
+		}
+		request.TrustedPolicyDigest = value
 	default:
 		return false
 	}
