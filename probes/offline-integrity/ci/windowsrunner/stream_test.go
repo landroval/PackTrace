@@ -1,9 +1,27 @@
 package main
 
 import (
+	"os"
 	"strings"
+	"syscall"
 	"testing"
 )
+
+func TestStorageFactsKeepLimitsAndHidePaths(t *testing.T) {
+	for _, tc := range []struct {
+		err   error
+		stage string
+		code  uint32
+	}{
+		{nil, "", 0}, {errStorageType, "owned-storage-type", 0}, {errStorageLimit, "owned-storage-limit", 0},
+		{&os.PathError{Op: "lstat", Path: "PRIVATE", Err: syscall.Errno(5)}, "owned-storage-observation", 5},
+	} {
+		stage, code := storageFailureFacts(tc.err)
+		if stage != tc.stage || code != tc.code || strings.Contains(stage, "PRIVATE") {
+			t.Fatal("fixed storage metadata mismatch", stage, code)
+		}
+	}
+}
 
 func TestWindowsProfilesSeparateDiagnosticsFromValidation(t *testing.T) {
 	for _, tc := range []struct {

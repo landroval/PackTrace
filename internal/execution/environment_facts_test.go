@@ -50,6 +50,36 @@ func classifyOwnedEnvironment(env []string) ownedEnvironmentFacts {
 	}
 	return f
 }
+func ownedWorkerEnvironmentAllowed(entry, goos, goarch string) bool {
+	// Windows x64-on-Arm inserts this exact public architecture metadata even
+	// into the reduced child environment. It is not inherited secret data or
+	// architecture authority. Production's reducedEnvironment stays unchanged.
+	return strings.HasPrefix(entry, "SystemRoot=") || strings.HasPrefix(entry, "PACKTRACE_INTERNAL_") ||
+		(goos == "windows" && goarch == "amd64" && entry == "PROCESSOR_ARCHITECTURE=AMD64")
+}
+
+func TestOwnedWorkerEnvironmentOnlyAllowsExactWindowsArchitectureMetadata(t *testing.T) {
+	for _, tc := range []struct {
+		entry, goos, arch string
+		want              bool
+	}{
+		{"PROCESSOR_ARCHITECTURE=AMD64", "windows", "amd64", true},
+		{"PROCESSOR_ARCHITECTURE=ARM64", "windows", "amd64", false},
+		{"PROCESSOR_ARCHITECTURE=AMD64PRIVATE", "windows", "amd64", false},
+		{"PROCESSOR_ARCHITECTURE=AMD64", "linux", "amd64", false},
+		{"PROCESSOR_ARCHITECTURE=AMD64", "windows", "arm64", false},
+		{"HTTP_PROXY=PRIVATE", "windows", "amd64", false},
+		{"PACKTRACE_OWNED_TEST_SECRET=PRIVATE", "windows", "amd64", false},
+		{"UNKNOWN=PRIVATE", "windows", "amd64", false},
+		{"SystemRoot=PRIVATE", "windows", "amd64", true},
+		{"PACKTRACE_INTERNAL_ROLE=parser", "windows", "amd64", true},
+	} {
+		if got := ownedWorkerEnvironmentAllowed(tc.entry, tc.goos, tc.arch); got != tc.want {
+			t.Fatalf("allowlist mismatch for fixture case: os=%s arch=%s want=%t got=%t", tc.goos, tc.arch, tc.want, got)
+		}
+	}
+}
+
 func writeOwnedEnvironmentFacts() int {
 	if json.NewEncoder(os.Stdout).Encode(classifyOwnedEnvironment(os.Environ())) != nil {
 		return 2

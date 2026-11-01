@@ -7,9 +7,27 @@ import (
 	"errors"
 	"io"
 	"sync"
+	"syscall"
 )
 
 var errCapture = errors.New("capture-limit")
+var errStorageType = errors.New("owned-storage-type")
+var errStorageLimit = errors.New("owned-storage-limit")
+
+func storageFailureFacts(e error) (string, uint32) {
+	if e == nil {
+		return "", 0
+	}
+	if errors.Is(e, errStorageType) {
+		return "owned-storage-type", 0
+	}
+	if errors.Is(e, errStorageLimit) {
+		return "owned-storage-limit", 0
+	}
+	var code syscall.Errno
+	_ = errors.As(e, &code)
+	return "owned-storage-observation", uint32(code)
+}
 
 // Windows x64-on-Arm has no WOW64 layer: its WOW64 machine value may be
 // UNKNOWN. Use the running Go program's compiled ISA and the successfully

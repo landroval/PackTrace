@@ -105,21 +105,36 @@ selected approach avoids reconciling two parsers' outputs, at the cost of owning
 format handling. This is not approval for a parser framework or a general
 package-manager resolver.
 
-## 2. Native pilot qualification targets
+## 2. Native targets and initial delivery acceptance
 
-| Operating system | Architecture | Status |
+**Owner-approved scope amendment, 2026-11-01:** the initial issue #7 delivery
+covers Linux amd64/arm64 and Windows 11 x64. macOS is explicitly deferred, not
+completed. This supersedes earlier five-row requirements for this bounded #7
+delivery; historical preparation/probe records retain their original scope.
+
+| Product target | Architecture | Required executed evidence for this delivery |
 | --- | --- | --- |
-| Ubuntu 24.04 | amd64 | Planned |
-| Ubuntu 24.04 | arm64 | Planned |
-| macOS 15 | arm64 | Planned |
-| macOS 15 | amd64 | Planned |
-| Windows Server 2022 | amd64 | Planned |
+| Ubuntu 24.04 | amd64 | Native owned safety/resource/lifecycle corpus, race, vet and confirmed cleanup |
+| Ubuntu 24.04 | arm64 | Same on native arm64 |
+| Windows 11 desktop | x64 | Combined Server 2022 native x64 CI/race and Windows 11 ARM-host x64-emulated desktop corpus/vet/cleanup |
+| macOS 15 | arm64 | Deferred; no completion or qualification claim |
+| macOS 15 | amd64 | Deferred; no completion or qualification claim |
 
-These are target test environments, not asserted minimum OS requirements or
-validated support claims. The earlier synthetic Linux probe does not qualify
-these rows. Record actual runner image, filesystem, architecture, and toolchain
-when separately authorized native qualification runs occur. Cross-compilation
-alone is insufficient.
+Windows Server is a CI baseline, not the desktop product target. The owner
+explicitly accepted the combined Windows evidence above; it does **not** establish
+execution on native Windows 11 x64 hardware. Emulated desktop failures still block
+this delivery. Cross-compilation alone is insufficient. Record source/tree,
+runner image, filesystem, actual host and compiled process architecture, toolchain,
+first faults and cleanup; never relabel emulation as native x64 execution.
+
+Read-only containment, safe pre-content selection, identity/change checks,
+reparse/special-file refusal, private errors, bounded IPC/resources, cancellation,
+original-process observation and confirmed reaping remain mandatory. No safety
+fallback, environment inheritance expansion, resource-cap increase or protection
+bypass is approved by this scope amendment. Completion requires passing required
+corpora and reviewed/protected integration. Whole-product release qualification,
+producer qualification, fuzzing/performance targets, #10 trust/ownership acceptance
+and the deferred macOS work are not completed by this bounded delivery.
 
 ## 3. Evidence and coverage model
 
@@ -794,8 +809,10 @@ section 26 counts protocol traffic across both pipe directions.
 - Require exact expected outcomes for inventory, matching, integrity, policy, and
   privacy fixtures.
 - Exercise adversarial paths, file types, parsers, IPC, and cancellation.
-- Execute on all five approved OS/architecture pairs. Cross-compilation cannot
-  substitute for native execution.
+- Execute the current delivery targets and evidence methods in section 2.
+  Cross-compilation cannot substitute for execution. The historical five-row
+  native release matrix is not completed by the explicitly narrower #7 delivery;
+  preserve deferred macOS and untested native Windows 11 x64 hardware status.
 
 ### Performance qualification target
 

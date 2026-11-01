@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -53,7 +54,7 @@ func TestMain(m *testing.M) {
 	if len(os.Args) == 2 && os.Args[1] == WorkerArgument {
 		// Test-only assertion at the actual child boundary, not a production hook.
 		for _, v := range os.Environ() {
-			if !strings.HasPrefix(v, "SystemRoot=") && !strings.HasPrefix(v, "PACKTRACE_INTERNAL_") {
+			if !ownedWorkerEnvironmentAllowed(v, runtime.GOOS, runtime.GOARCH) {
 				os.Exit(96)
 			}
 		}

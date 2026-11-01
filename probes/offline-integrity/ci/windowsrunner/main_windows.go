@@ -59,6 +59,9 @@ type phase struct {
 	StdoutBytes, StderrBytes            int
 	StdoutSHA256, StderrSHA256          string
 	Counts                              *counts `json:",omitempty"`
+	StorageScope, StorageFailureStage   string  `json:",omitempty"`
+	StorageFailureErrno                 uint32  `json:",omitempty"`
+	ObservedStorageBytes                int64   `json:",omitempty"`
 }
 type receipt struct {
 	Schema, SourceSHA, Tree, GoVersion, Compiler, Qualification string
@@ -124,11 +127,11 @@ func treeBytes(root string) (int64, error) {
 		}
 		m := info.Mode()
 		if !m.IsRegular() && !m.IsDir() && m&os.ModeSymlink == 0 {
-			return errors.New("owned-storage-type")
+			return errStorageType
 		}
 		total += info.Size()
 		if total > 2<<30 {
-			return errors.New("owned-storage-limit")
+			return errStorageLimit
 		}
 		return nil
 	})
@@ -210,13 +213,24 @@ func run(ctx context.Context, name, exe, dir, work string, args, env []string, l
 		case waitErr = <-done:
 			waiting = false
 		case <-ticker.C:
+			scope := "cache"
 			a, e := treeBytes(filepath.Join(work, "cache"))
 			if e == nil {
+				scope = "build"
 				var b int64
 				b, e = treeBytes(filepath.Join(work, "build"))
 				a += b
 			}
-			if e != nil || a > 2<<30 {
+			if e == nil && a > 2<<30 {
+				e = errStorageLimit
+				scope = "sum"
+			}
+			if e != nil {
+				if p.State != "storage-failed" {
+					p.StorageScope = scope
+					p.StorageFailureStage, p.StorageFailureErrno = storageFailureFacts(e)
+					p.ObservedStorageBytes = a
+				}
 				p.State = "storage-failed"
 				cancel()
 			}
