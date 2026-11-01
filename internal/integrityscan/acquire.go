@@ -3,6 +3,7 @@ package integrityscan
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -97,11 +98,12 @@ func readLease(ctx context.Context, root *nativefs.Root, name string, limit int6
 
 type lockedInputs struct {
 	claims   map[string]integrity.BindingClaim
+	bundled  map[string]bool
 	complete bool
 }
 
 func readLocked(ctx context.Context, root *nativefs.Root, snap nativefs.Snapshot, manager string) lockedInputs {
-	out := lockedInputs{claims: map[string]integrity.BindingClaim{}}
+	out := lockedInputs{claims: map[string]integrity.BindingClaim{}, bundled: map[string]bool{}}
 	present := map[string]nativefs.Entry{}
 	for _, entry := range snap.Entries {
 		present[entry.Name] = entry
@@ -133,6 +135,12 @@ func readLocked(ctx context.Context, root *nativefs.Root, snap nativefs.Snapshot
 		for i, r := range projection.Records {
 			if r.Location == "" {
 				continue
+			}
+			var bundled bool
+			if relative(r.Location) && packageLocation(r.Location) &&
+				(r.Link.State == inventory.FieldAbsent || r.Link.State == inventory.FieldValue && !r.Link.Value) &&
+				json.Unmarshal(doc.Packages[r.Location]["inBundle"], &bundled) == nil && bundled {
+				out.bundled[r.Location] = true
 			}
 			if !relative(r.Location) || r.Version.State != inventory.FieldValue || r.Resolved.State != inventory.FieldValue || r.Integrity.State != inventory.FieldValue || (r.Link.State != inventory.FieldAbsent && (r.Link.State != inventory.FieldValue || r.Link.Value)) {
 				continue
@@ -292,13 +300,14 @@ func Acquire(ctx context.Context, target, prepared, policyHash string, plan Plan
 					record = badRecord(i, claim, integrity.GapReference)
 					if archiveErr == nil && stableErr == nil && closeErr == nil && referenceRemaining >= 0 && expandedRemaining >= 0 {
 						installed := integrity.InstalledSnapshot{}
+						bundled := publishedBundles(plan, i, locked, catalog)
 						count := 0
 						packageRoot, openErr := root.OpenSubroot(ctx, r.Location)
 						if openErr == nil && snapshotRemaining > 0 && entriesRemaining > 1 {
 							snap, snapErr := packageRoot.SnapshotPruned(ctx, nativefs.Limits{FileBytes: 256 << 20, TotalBytes: snapshotRemaining, Entries: entriesRemaining - 1, Depth: 64}, func(entry nativefs.Entry) bool {
 								// Only a captured directory can be a nested physical owner;
 								// regular files at package-shaped paths remain content.
-								return entry.Kind == nativefs.KindDirectory && packageLocation(r.Location+"/"+entry.Name)
+								return entry.Kind == nativefs.KindDirectory && packageLocation(r.Location+"/"+entry.Name) && !bundled[r.Location+"/"+entry.Name]
 							})
 							snapshotRemaining -= snap.ReadBytes
 							if snapErr != nil {
@@ -315,7 +324,7 @@ func Acquire(ctx context.Context, target, prepared, policyHash string, plan Plan
 							entriesRemaining -= len(snap.Entries)
 							summary.ObservedEntries += len(snap.Entries)
 							summary.SnapshotComplete = summary.SnapshotComplete && snap.Complete
-							installed, count = installedSnapshot(ctx, packageRoot, snap, plan, i, &reread)
+							installed, count = installedSnapshot(ctx, packageRoot, snap, plan, i, bundled, &reread)
 						} else {
 							summary.SnapshotComplete = false
 						}
@@ -350,7 +359,7 @@ func Acquire(ctx context.Context, target, prepared, policyHash string, plan Plan
 	return summary, nil
 }
 
-func installedSnapshot(ctx context.Context, root *nativefs.Root, snap nativefs.Snapshot, plan Plan, index int, remaining *int64) (integrity.InstalledSnapshot, int) {
+func installedSnapshot(ctx context.Context, root *nativefs.Root, snap nativefs.Snapshot, plan Plan, index int, bundled map[string]bool, remaining *int64) (integrity.InstalledSnapshot, int) {
 	ref := plan.Policy.References[index]
 	id := instanceID(index)
 	scope := integrity.InstalledScope{InstanceID: id, OwnerInstanceID: id, EvidenceID: id + ":scope", Enumerated: snap.Enumerated, OwnershipKnown: true, Status: integrity.ObservationComplete}
@@ -424,7 +433,7 @@ func installedSnapshot(ctx context.Context, root *nativefs.Root, snap nativefs.S
 		}
 	}
 	for _, entry := range snap.Entries {
-		if entry.Kind == nativefs.KindDirectory && strings.HasPrefix(entry.Name, prefix) && packageLocation(entry.Name) && !mappedLocation(plan, entry.Name) {
+		if entry.Kind == nativefs.KindDirectory && strings.HasPrefix(entry.Name, prefix) && packageLocation(entry.Name) && !mappedLocation(plan, entry.Name) && !bundled[entry.Name] {
 			result.Scopes = append(result.Scopes, integrity.InstalledScope{InstanceID: id, Prefix: strings.TrimPrefix(entry.Name, prefix), EvidenceID: id + ":unmapped", Status: integrity.ObservationUnknown})
 		}
 	}

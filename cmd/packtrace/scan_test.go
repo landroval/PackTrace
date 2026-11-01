@@ -23,6 +23,11 @@ import (
 
 func scanFixture(t *testing.T) (string, string) {
 	t.Helper()
+	return scanFixtureForBundle(t, false)
+}
+
+func scanFixtureForBundle(t *testing.T, bundled bool) (string, string) {
+	t.Helper()
 	base := t.TempDir()
 	root := filepath.Join(base, "PRIVATE-target")
 	external := filepath.Join(base, "PRIVATE-reference")
@@ -36,10 +41,18 @@ func scanFixture(t *testing.T) (string, string) {
 	gz := gzip.NewWriter(&data)
 	tw := tar.NewWriter(gz)
 	body := []byte("expected")
-	if e := tw.WriteHeader(&tar.Header{Name: "package/index.js", Size: int64(len(body)), Mode: 0600, Typeflag: tar.TypeReg, Format: tar.FormatUSTAR}); e != nil {
-		t.Fatal(e)
+	names := []string{"index.js"}
+	if bundled {
+		names = append(names, "node_modules/PRIVATE-bundled/index.js")
 	}
-	_, _ = tw.Write(body)
+	for _, name := range names {
+		if e := tw.WriteHeader(&tar.Header{Name: "package/" + name, Size: int64(len(body)), Mode: 0600, Typeflag: tar.TypeReg, Format: tar.FormatUSTAR}); e != nil {
+			t.Fatal(e)
+		}
+		if _, e := tw.Write(body); e != nil {
+			t.Fatal(e)
+		}
+	}
 	_ = tw.Close()
 	_ = gz.Close()
 	hash := sha256.Sum256(data.Bytes())
@@ -48,6 +61,13 @@ func scanFixture(t *testing.T) (string, string) {
 	policy, _ := json.Marshal(p)
 	policyPath := filepath.Join(external, "policy.json")
 	lock := `{"lockfileVersion":3,"packages":{"":{},"node_modules/PRIVATE-pkg":{"name":"PRIVATE-pkg","version":"1.0.0","resolved":"fixture:PRIVATE","integrity":"` + sri + `"}}}`
+	if bundled {
+		lock = strings.TrimSuffix(lock, "}}") + `,"node_modules/PRIVATE-pkg/node_modules/PRIVATE-bundled":{"inBundle":true,"version":"1.0.0"}}}`
+		bundle := filepath.Join(root, "node_modules/PRIVATE-pkg/node_modules/PRIVATE-bundled")
+		if os.MkdirAll(bundle, 0700) != nil || os.WriteFile(filepath.Join(bundle, "index.js"), []byte("bundle modification"), 0600) != nil {
+			t.Fatal("owned bundle")
+		}
+	}
 	for name, content := range map[string][]byte{policyPath: policy, filepath.Join(external, "reference.tgz"): data.Bytes(), filepath.Join(root, "package-lock.json"): []byte(lock), filepath.Join(root, "node_modules/PRIVATE-pkg/index.js"): []byte("actual modification")} {
 		if e := os.WriteFile(name, content, 0600); e != nil {
 			t.Fatal(e)

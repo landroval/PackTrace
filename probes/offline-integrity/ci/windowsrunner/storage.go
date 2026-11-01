@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -32,18 +33,69 @@ func storageEntryBytes(path string, d fs.DirEntry, walkErr error) (int64, error)
 	return info.Size(), nil
 }
 
+type storageObservation struct {
+	stage string
+	err   error
+}
+
+func (e *storageObservation) Error() string { return "owned-storage-observation" }
+func (e *storageObservation) Unwrap() error { return e.err }
+
 func treeBytes(root string) (int64, error) {
 	var total int64
-	e := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
-		n, e := storageEntryBytes(path, d, err)
+	var walk func(string, bool) error
+	walk = func(name string, first bool) (err error) {
+		dir, e := openStorageDirectory(name)
+		if errors.Is(e, fs.ErrNotExist) {
+			return nil
+		}
 		if e != nil {
-			return e
+			return &storageObservation{"directory-open", e}
 		}
-		total += n
-		if total > 2<<30 {
-			return errStorageLimit
+		defer func() {
+			if e := dir.Close(); e != nil {
+				err = errors.Join(err, &storageObservation{"directory-close", e})
+			}
+		}()
+		info, e := dir.Stat()
+		if e != nil {
+			return &storageObservation{"directory-stat", e}
 		}
-		return nil
-	})
+		if !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
+			return errStorageType
+		}
+		if first {
+			total += info.Size()
+			if total > 2<<30 {
+				return errStorageLimit
+			}
+		}
+		for {
+			entries, readErr := dir.ReadDir(64)
+			for _, entry := range entries {
+				child := filepath.Join(name, entry.Name())
+				n, e := storageEntryBytes(child, entry, nil)
+				if e != nil {
+					return &storageObservation{"entry-info", e}
+				}
+				total += n
+				if total > 2<<30 {
+					return errStorageLimit
+				}
+				if entry.IsDir() && entry.Type()&os.ModeSymlink == 0 {
+					if e := walk(child, false); e != nil {
+						return e
+					}
+				}
+			}
+			if errors.Is(readErr, io.EOF) {
+				return nil
+			}
+			if readErr != nil {
+				return &storageObservation{"directory-read", readErr}
+			}
+		}
+	}
+	e := walk(root, true)
 	return total, e
 }

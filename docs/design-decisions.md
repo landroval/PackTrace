@@ -576,8 +576,26 @@ Compare published files for modification, absence, addition, and relevant type o
 link changes. Delimit nested packages, bundled content, and generated metadata
 using specific qualified rules, not blanket exclusions.
 
+For the bounded npm layout, bundled ownership requires both literal typed
+`inBundle: true` in the selected lockfile record (without a conflicting link
+claim) and the nested directory's presence, explicit or implied, in the fully
+validated containing reference archive. Neither condition alone authorizes a
+content read. A separately mapped physical instance takes precedence and is
+compared through its own reference; the parent does not read it first and filter
+it later. Unknown nested directories, absent/invalid bundle markers, unpublished
+subtrees and unsupported manager layouts remain explicit gaps, without content
+reads. In particular no equivalent Bun bundle marker is inferred.
+
+USTAR directory headers may be omitted. Directories implied by validated published
+paths are not added-content findings; unrelated added files/directories remain
+visible. Catalog path inspection returns a copy, not mutable validated evidence.
+These rules qualify only the explicit containing-reference comparison scope,
+not the bundled dependency's independent registry identity or general producer
+compatibility.
+
 Patches and build outputs provide context but are not executed or reconstructed.
-Differences remain integrity drift, not automatic evidence of malware. An integrity
+Their annotations never suppress modified/missing/added/type drift, including in
+bundled content. Differences remain integrity drift, not automatic evidence of malware. An integrity
 match likewise does not establish benignness.
 
 A comparison can be complete only for its explicit scope. Unreadable/changing

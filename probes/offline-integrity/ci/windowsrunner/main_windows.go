@@ -372,6 +372,17 @@ func mainCode() (code int) {
 		code = 0
 		return
 	}
+	selfcheck, ok := command("harness-self-check", goexe, []string{"-C", filepath.Join(repo, "probes/offline-integrity/ci/windowsrunner"), "test", "-count=1", "-json", "-timeout=80s", "./..."}, 90, "0")
+	if !ok {
+		return
+	}
+	selfCounts, selfErr := testCounts(selfcheck)
+	r.Phases[len(r.Phases)-1].Counts = &selfCounts
+	diagnostics("harness-self-check", "stdout", selfcheck)
+	if selfErr != nil || selfCounts.Failed != 0 || selfCounts.BuildFailed != 0 {
+		r.Failure = "harness-self-check-stream"
+		return
+	}
 	packages := []string{"./internal/nativefs", "./internal/nativeresource", "./internal/integrityscan", "./internal/execution", "./cmd/packtrace"}
 	tests := []struct {
 		name, cgo string
