@@ -101,27 +101,37 @@ func (c *Child) stat() ([]string, error) {
 func (c *Child) exited() (bool, error) { return c.exitWithin(0) }
 
 func (c *Child) exitWithin(bound time.Duration) (bool, error) {
-	deadline := time.Now().Add(bound)
-	for {
-		// Linux UAPI pollfd. Only this retained pidfd can establish exit;
-		// a zombie leader, ESRCH or a missing proc file cannot establish it.
+	return pidfdExitWithin(bound, func(remaining time.Duration) (int16, syscall.Errno) {
+		// Only this retained pidfd can establish exit; never reopen a PID.
 		p := struct {
 			FD              int32
 			Events, Revents int16
 		}{FD: int32(c.pidfd.Fd()), Events: 1}
+		timeout := syscall.NsecToTimespec(int64(remaining))
+		_, _, errno := syscall.Syscall6(syscall.SYS_PPOLL, uintptr(unsafe.Pointer(&p)), 1, uintptr(unsafe.Pointer(&timeout)), 0, 0, 0)
+		return p.Revents, errno
+	})
+}
+
+// poll is the native boundary, separated so interrupted/error results can be
+// tested deterministically without a global hook or signals to unrelated work.
+func pidfdExitWithin(bound time.Duration, poll func(time.Duration) (int16, syscall.Errno)) (bool, error) {
+	deadline := time.Now().Add(bound)
+	// Retry only interruption, at most eight times, without extending a timed
+	// wait. A successful subsequent poll is still required; never assume exit.
+	for interruptions := 0; ; interruptions++ {
 		remaining := time.Duration(0)
 		if bound > 0 {
 			remaining = max(time.Until(deadline), 0)
 		}
-		timeout := syscall.NsecToTimespec(int64(remaining))
-		_, _, errno := syscall.Syscall6(syscall.SYS_PPOLL, uintptr(unsafe.Pointer(&p)), 1, uintptr(unsafe.Pointer(&timeout)), 0, 0, 0)
-		if errno == syscall.EINTR && bound > 0 && time.Now().Before(deadline) {
+		revents, errno := poll(remaining)
+		if errno == syscall.EINTR && interruptions < 8 && (bound <= 0 || time.Now().Before(deadline)) {
 			continue
 		}
-		if errno != 0 || p.Revents & ^int16(1|16) != 0 {
-			return false, queryFailure("pidfd-poll", errno, p.Revents)
+		if errno != 0 || revents & ^int16(1|16) != 0 {
+			return false, queryFailure("pidfd-poll", errno, revents)
 		}
-		return p.Revents&(1|16) != 0, nil
+		return revents&(1|16) != 0, nil
 	}
 }
 

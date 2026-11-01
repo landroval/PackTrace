@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"syscall"
 	"testing"
 )
@@ -58,6 +59,37 @@ func TestStorageCountsEnumeratedMetadataWithoutReopening(t *testing.T) {
 	link := storageModeInfo{FileInfo: info, mode: os.ModeSymlink}
 	if n, e := storageEntryBytes(name, storageInfoEntry{DirEntry: entry, info: link}, nil); e != nil || n != 8 {
 		t.Fatal("link metadata not accounted without following")
+	}
+}
+
+func TestStorageObservationFactsRemainFixedAndErrorsStayFatal(t *testing.T) {
+	for _, stage := range []string{"directory-open", "directory-read", "directory-stat", "directory-close", "entry-info"} {
+		e := &storageObservation{stage, &os.PathError{Op: "PRIVATE-operation", Path: "PRIVATE-path", Err: syscall.Errno(32)}}
+		got, code := storageFailureFacts(e)
+		if got != "owned-"+stage || code != 32 || e.Error() != "owned-storage-observation" {
+			t.Fatal("storage failure hidden or private diagnosis exposed", got, code)
+		}
+	}
+}
+
+func TestStorageTraversalNeverFollowsOwnedSymlink(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Unix owned symlink creation; Windows uses pinned reparse-open flags")
+	}
+	root, outside := t.TempDir(), t.TempDir()
+	if os.WriteFile(filepath.Join(outside, "canary"), make([]byte, 1<<20), 0600) != nil {
+		t.Fatal("owned canary")
+	}
+	link := filepath.Join(root, "link")
+	if os.Symlink(outside, link) != nil {
+		t.Fatal("owned link")
+	}
+	n, e := treeBytes(root)
+	if e != nil || n >= 1<<20 {
+		t.Fatal("storage observer followed link", n, e)
+	}
+	if _, e = treeBytes(link); e == nil {
+		t.Fatal("storage observer followed symlink root")
 	}
 }
 

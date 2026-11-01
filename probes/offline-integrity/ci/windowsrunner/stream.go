@@ -26,6 +26,13 @@ func storageFailureFacts(e error) (string, uint32) {
 	}
 	var code syscall.Errno
 	_ = errors.As(e, &code)
+	var observation *storageObservation
+	if errors.As(e, &observation) {
+		switch observation.stage {
+		case "directory-open", "directory-read", "directory-stat", "directory-close", "entry-info":
+			return "owned-" + observation.stage, uint32(code)
+		}
+	}
 	return "owned-storage-observation", uint32(code)
 }
 
