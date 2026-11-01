@@ -45,6 +45,45 @@ class Validation(unittest.TestCase):
         with self.assertRaises(ValueError):
             validation.admit(env, 'Linux', 'x86_64', 0)
 
+    def test_arm64_profile_binds_runner_machine_and_pinned_sdk(self):
+        env = dict(GITHUB_EVENT_NAME='workflow_dispatch', GITHUB_REPOSITORY='landroval/PackTrace',
+                   REPOSITORY_PRIVATE='false', SOURCE_SHA='a' * 40, EXPECTED_SHA='a' * 40,
+                   VALIDATION_PROFILE='linux-scan-arm64-v1', OWNED_CONFIRMATION='owned-linux-fixtures-only',
+                   ImageOS='ubuntu24-arm64', ImageVersion='owned-image', RUNNER_ARCH='ARM64')
+        self.assertEqual(validation.admit(env, 'Linux', 'aarch64', 1001),
+                         ('arm64', 67009954, '3450b45a3f9ee8568792736a5c5e70a1f2e9b36c35a8f74958c03e51d7d92bec'))
+        for runner, machine in [('X64', 'aarch64'), ('ARM64', 'x86_64'), ('X64', 'x86_64')]:
+            with self.subTest(runner=runner, machine=machine), self.assertRaises(ValueError):
+                validation.admit(dict(env, RUNNER_ARCH=runner), 'Linux', machine, 1001)
+        with self.assertRaises(ValueError):
+            validation.admit(dict(env, VALIDATION_PROFILE='linux-scan-amd64-v1'), 'Linux', 'aarch64', 1001)
+
+    def test_workflow_sdk_selection_matches_manual_profile_and_keeps_pr_amd64(self):
+        import ast
+        import textwrap
+        from types import SimpleNamespace
+        workflow = (Path(__file__).resolve().parents[3]/'.github/workflows/root-verification.yml').read_text()
+        script = textwrap.dedent(workflow.split("          python3 - <<'PY'\n")[2].split('\n          PY', 1)[0])
+        assignments = [n for n in ast.parse(script).body if isinstance(n, ast.Assign)
+                       and isinstance(n.targets[0], ast.Name)
+                       and n.targets[0].id in ('ARM', 'ARCH', 'SIZE', 'SHA', 'SOURCE', 'FINAL')]
+        self.assertEqual(len(assignments), 6)
+        code = compile(ast.Module(body=assignments, type_ignores=[]), '<workflow-sdk-selection>', 'exec')
+        for event, profile, want in [('workflow_dispatch', 'linux-scan-arm64-v1', 'arm64'),
+                                     ('workflow_dispatch', 'linux-scan-amd64-v1', 'amd64'),
+                                     ('pull_request', 'linux-scan-arm64-v1', 'amd64'),
+                                     ('push', '', 'amd64')]:
+            with self.subTest(event=event, profile=profile):
+                env = dict(GITHUB_EVENT_NAME=event, VALIDATION_PROFILE=profile)
+                ns = {'os': SimpleNamespace(environ=env)}
+                exec(code, ns)
+                self.assertEqual(ns['ARCH'], want)
+                self.assertEqual(ns['SOURCE'], 'https://go.dev/dl/go1.27.1.linux-'+want+'.tar.gz')
+                self.assertEqual(ns['FINAL'], 'https://dl.google.com/go/go1.27.1.linux-'+want+'.tar.gz')
+                self.assertEqual((ns['SIZE'], ns['SHA']),
+                                 (67009954, '3450b45a3f9ee8568792736a5c5e70a1f2e9b36c35a8f74958c03e51d7d92bec')
+                                 if want == 'arm64' else (validation.GO_SIZE, validation.GO_SHA256))
+
     def test_fixture_budget_accepts_owned_fifo_socket_and_does_not_follow_links(self):
         import os
         import socket

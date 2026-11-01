@@ -9,7 +9,7 @@ on:
       validation_profile:
         type: choice
         default: root
-        options: [root, linux-scan-amd64-v1, windows-scan-amd64-v1, windows-volume-diagnostic-amd64-v1]
+        options: [root, linux-scan-amd64-v1, linux-scan-arm64-v1, windows-scan-amd64-v1, windows-volume-diagnostic-amd64-v1]
       expected_sha:
         type: string
         default: ''
@@ -23,11 +23,11 @@ jobs:
       ${{ github.event_name != 'workflow_dispatch' || inputs.validation_profile == '' ||
           inputs.validation_profile == 'root' ||
           (github.repository == 'landroval/PackTrace' && github.event.repository.private == false &&
-           inputs.validation_profile == 'linux-scan-amd64-v1' && inputs.expected_sha == github.sha &&
+           (inputs.validation_profile == 'linux-scan-amd64-v1' || inputs.validation_profile == 'linux-scan-arm64-v1') && inputs.expected_sha == github.sha &&
            inputs.owned_confirmation == 'owned-linux-fixtures-only') }}
     name: Root tests and vet
-    runs-on: ubuntu-24.04
-    timeout-minutes: ${{ github.event_name == 'workflow_dispatch' && inputs.validation_profile == 'linux-scan-amd64-v1' && 35 || 15 }}
+    runs-on: ${{ github.event_name == 'workflow_dispatch' && inputs.validation_profile == 'linux-scan-arm64-v1' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    timeout-minutes: ${{ github.event_name == 'workflow_dispatch' && (inputs.validation_profile == 'linux-scan-amd64-v1' || inputs.validation_profile == 'linux-scan-arm64-v1') && 35 || 15 }}
     steps:
       - name: Start owned budget
         id: init
@@ -45,6 +45,7 @@ jobs:
         shell: bash
         env:
           INIT_OUTCOME: ${{ steps.init.outcome }}
+          VALIDATION_PROFILE: ${{ inputs.validation_profile }}
           SOURCE_SHA: ${{ github.sha }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_HEAD: ${{ github.event.pull_request.head.sha }}
@@ -57,10 +58,12 @@ jobs:
 
           CAP = 16 * 1024 * 1024
           RECEIPT_CAP = 64 * 1024
-          SIZE = 70553950
-          SHA = '63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445'
-          SOURCE = 'https://go.dev/dl/go1.27.1.linux-amd64.tar.gz'
-          FINAL = 'https://dl.google.com/go/go1.27.1.linux-amd64.tar.gz'
+          ARM = os.environ.get('GITHUB_EVENT_NAME') == 'workflow_dispatch' and os.environ.get('VALIDATION_PROFILE') == 'linux-scan-arm64-v1'
+          ARCH = 'arm64' if ARM else 'amd64'
+          SIZE = 67009954 if ARM else 70553950
+          SHA = '3450b45a3f9ee8568792736a5c5e70a1f2e9b36c35a8f74958c03e51d7d92bec' if ARM else '63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445'
+          SOURCE = 'https://go.dev/dl/go1.27.1.linux-'+ARCH+'.tar.gz'
+          FINAL = 'https://dl.google.com/go/go1.27.1.linux-'+ARCH+'.tar.gz'
           ROOT = Path(os.environ['RUNNER_TEMP']) / 'packtrace-root-ci'
           WORK = Path(os.environ['GITHUB_WORKSPACE'])
           used = 0
@@ -344,8 +347,8 @@ jobs:
                   raise Blocked('initialization-failed')
               deadline = json.loads((ROOT / 'start.json').read_text())['start'] + 900
               if (os.geteuid() == 0 or sys.version_info < (3, 12) or platform.system() != 'Linux'
-                  or platform.machine() != 'x86_64' or os.environ.get('RUNNER_ARCH') != 'X64'
-                  or os.environ.get('ImageOS') != 'ubuntu24'
+                  or platform.machine() != ('aarch64' if ARM else 'x86_64') or os.environ.get('RUNNER_ARCH') != ('ARM64' if ARM else 'X64')
+                  or os.environ.get('ImageOS') != ('ubuntu24-arm64' if ARM else 'ubuntu24')
                   or not os.environ.get('ImageVersion')):
                   raise Blocked('runner-profile-unqualified')
               result['environment'] = {'imageOS': os.environ['ImageOS'],
@@ -364,7 +367,7 @@ jobs:
               env['PATH'] = str(ROOT / 'toolchain/go/bin') + ':/usr/bin:/bin'
               state, version = command('go-version', [go, 'version'], 5, env, cap=RECEIPT_CAP)
               state2, profile = command('go-profile', [go, 'env', 'GOVERSION', 'GOOS', 'GOARCH'], 5, env, cap=RECEIPT_CAP)
-              if state != 'passed' or version != b'go version go1.27.1 linux/amd64\n' or state2 != 'passed' or profile != b'go1.27.1\nlinux\namd64\n':
+              if state != 'passed' or version != ('go version go1.27.1 linux/'+ARCH+'\n').encode() or state2 != 'passed' or profile != ('go1.27.1\nlinux\n'+ARCH+'\n').encode():
                   raise Blocked('toolchain-profile-mismatch')
               result['compiler'] = {'version': version.decode().strip(),
                                     'profile': profile.decode().splitlines()}
@@ -412,12 +415,12 @@ jobs:
           sys.exit(0 if checks else 1)
           PY
       - name: Linux validation harness self-checks
-        if: ${{ success() && github.event_name == 'workflow_dispatch' && inputs.validation_profile == 'linux-scan-amd64-v1' }}
+        if: ${{ success() && github.event_name == 'workflow_dispatch' && (inputs.validation_profile == 'linux-scan-amd64-v1' || inputs.validation_profile == 'linux-scan-arm64-v1') }}
         shell: bash
         run: python3 -B -m unittest discover -s probes/offline-integrity/ci -p 'test_linux_validation.py'
       - name: One bounded Linux scan validation
         id: linux_validation
-        if: ${{ success() && github.event_name == 'workflow_dispatch' && inputs.validation_profile == 'linux-scan-amd64-v1' }}
+        if: ${{ success() && github.event_name == 'workflow_dispatch' && (inputs.validation_profile == 'linux-scan-amd64-v1' || inputs.validation_profile == 'linux-scan-arm64-v1') }}
         shell: bash
         env:
           SOURCE_SHA: ${{ github.sha }}
@@ -428,7 +431,7 @@ jobs:
           PYTHONDONTWRITEBYTECODE: '1'
         run: python3 -B probes/offline-integrity/ci/linux_validation.py
       - name: Retain not-run validation after preparation failure
-        if: ${{ always() && github.event_name == 'workflow_dispatch' && inputs.validation_profile == 'linux-scan-amd64-v1' && steps.linux_validation.outcome == 'skipped' }}
+        if: ${{ always() && github.event_name == 'workflow_dispatch' && (inputs.validation_profile == 'linux-scan-amd64-v1' || inputs.validation_profile == 'linux-scan-arm64-v1') && steps.linux_validation.outcome == 'skipped' }}
         shell: bash
         run: |
           python3 - <<'PY'
