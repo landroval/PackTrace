@@ -24,10 +24,11 @@ func TestWindowsProfilesSeparateDiagnosticsFromValidation(t *testing.T) {
 
 func TestDesktopMachinesRequireX64EmulationOnARM64(t *testing.T) {
 	for _, tc := range []struct {
-		process, host uint16
-		want          bool
-	}{{0x8664, 0xaa64, true}, {0, 0xaa64, false}, {0x8664, 0x8664, false}, {0xaa64, 0xaa64, false}, {0x8664, 0, false}} {
-		if got := desktopEmulation(tc.process, tc.host); got != tc.want {
+		compiledArch string
+		host         uint16
+		want         bool
+	}{{"amd64", 0xaa64, true}, {"", 0xaa64, false}, {"amd64", 0x8664, false}, {"arm64", 0xaa64, false}, {"amd64", 0, false}, {"386", 0xaa64, false}} {
+		if got := desktopEmulation(tc.compiledArch, tc.host); got != tc.want {
 			t.Fatal(tc, got)
 		}
 	}

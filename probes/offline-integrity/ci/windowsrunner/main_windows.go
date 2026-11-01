@@ -69,7 +69,10 @@ type receipt struct {
 	DiagnosticCompleted                                         bool   `json:",omitempty"`
 	CompatibilityPassed                                         bool   `json:",omitempty"`
 	CompatibilityScope                                          string `json:",omitempty"`
-	ProcessMachine, HostMachine                                 uint16 `json:",omitempty"`
+	Wow64Machine, HostMachine                                   uint16 `json:",omitempty"`
+	ProcessArchitecture                                         string `json:",omitempty"`
+	HostArchitectureQuerySucceeded                              bool   `json:",omitempty"`
+	HostArchitectureQueryError                                  uint32 `json:",omitempty"`
 	Failure                                                     string `json:",omitempty"`
 	BoundSeconds                                                int
 	CommitLimitBytes                                            uint64
@@ -293,10 +296,19 @@ func mainCode() (code int) {
 			r.Failure = "emulation-query-unavailable"
 			return
 		}
-		ok, _, _ := proc.Call(uintptr(owner), uintptr(unsafe.Pointer(&r.ProcessMachine)), uintptr(unsafe.Pointer(&r.HostMachine)))
-		runtime.KeepAlive(r.ProcessMachine)
+		r.ProcessArchitecture = runtime.GOARCH
+		ok, _, queryErr := proc.Call(uintptr(owner), uintptr(unsafe.Pointer(&r.Wow64Machine)), uintptr(unsafe.Pointer(&r.HostMachine)))
+		runtime.KeepAlive(r.Wow64Machine)
 		runtime.KeepAlive(r.HostMachine)
-		if ok == 0 || !desktopEmulation(r.ProcessMachine, r.HostMachine) {
+		r.HostArchitectureQuerySucceeded = ok != 0
+		if ok == 0 {
+			if code, ok := queryErr.(syscall.Errno); ok {
+				r.HostArchitectureQueryError = uint32(code)
+			}
+			r.Failure = "host-architecture-query-failed"
+			return
+		}
+		if !desktopEmulation(r.ProcessArchitecture, r.HostMachine) {
 			r.Failure = "not-x64-emulated-on-arm64"
 			return
 		}

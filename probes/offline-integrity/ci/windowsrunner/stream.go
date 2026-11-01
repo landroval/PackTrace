@@ -11,7 +11,13 @@ import (
 
 var errCapture = errors.New("capture-limit")
 
-func desktopEmulation(process, host uint16) bool { return process == 0x8664 && host == 0xaa64 }
+// Windows x64-on-Arm has no WOW64 layer: its WOW64 machine value may be
+// UNKNOWN. Use the running Go program's compiled ISA and the successfully
+// queried native host, never promote UNKNOWN into an ISA measurement.
+// https://learn.microsoft.com/en-us/windows/arm/apps-on-arm-x86-emulation
+func desktopEmulation(compiledArch string, host uint16) bool {
+	return compiledArch == "amd64" && host == 0xaa64
+}
 
 func volumeDiagnostic(profile string) (bool, error) {
 	switch profile {
