@@ -50,12 +50,13 @@ func (r *ScanRun) WriteOutput(ctx context.Context, out io.Writer, data []byte) e
 }
 
 type scanConfig struct {
-	Nonce      string              `json:"nonce"`
-	Stage      string              `json:"stage"`
-	Target     string              `json:"target"`
-	PolicyPath string              `json:"policyPath"`
-	PolicyHash string              `json:"policyHash"`
-	Plan       *integrityscan.Plan `json:"plan"`
+	Nonce               string              `json:"nonce"`
+	Stage               string              `json:"stage"`
+	Target              string              `json:"target"`
+	PolicyPath          string              `json:"policyPath"`
+	PolicyHash          string              `json:"policyHash"`
+	TrustedPolicyDigest string              `json:"trustedPolicyDigest,omitempty"`
+	Plan                *integrityscan.Plan `json:"plan"`
 }
 type scanStart struct {
 	Stage string `json:"stage"`
@@ -98,7 +99,7 @@ func RunScan(ctx context.Context, request cli.ScanArgumentRequest) (ScanRun, err
 	if e != nil {
 		return run, integrityscan.ErrOptions
 	}
-	observation, e := run.scanPhase(ctx, scanConfig{Stage: "policy", Target: target, PolicyPath: policyPath})
+	observation, e := run.scanPhase(ctx, scanConfig{Stage: "policy", Target: target, PolicyPath: policyPath, TrustedPolicyDigest: request.TrustedPolicyDigest})
 	if e != nil {
 		run.Interrupted = explicitCancel(ctx)
 		return run, e
@@ -109,7 +110,7 @@ func RunScan(ctx context.Context, request cli.ScanArgumentRequest) (ScanRun, err
 	}
 	run.Plan = plan
 	run.Usable = true
-	_, e = run.scanPhase(ctx, scanConfig{Stage: "acquire", Target: target, PolicyPath: policyPath, PolicyHash: observation.SourceHash, Plan: &plan})
+	_, e = run.scanPhase(ctx, scanConfig{Stage: "acquire", Target: target, PolicyPath: policyPath, PolicyHash: observation.SourceHash, TrustedPolicyDigest: request.TrustedPolicyDigest, Plan: &plan})
 	run.Interrupted = explicitCancel(ctx)
 	return run, e
 }
@@ -215,7 +216,7 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 					return e
 				}
 			case "policy":
-				if !started || cfg.Stage != "policy" || acceptedPolicy || fatal != "" || decode(m.Data, &data.policy) != nil || integrityscan.ValidatePolicy(data.policy.Policy) != nil || !scanSourceHash(data.policy.SourceHash) {
+				if !started || cfg.Stage != "policy" || acceptedPolicy || fatal != "" || decode(m.Data, &data.policy) != nil || integrityscan.ValidatePolicy(data.policy.Policy) != nil || !scanSourceHash(data.policy.SourceHash) || data.policy.MatchedOperatorDigest != cfg.TrustedPolicyDigest {
 					return errScanProtocol
 				}
 				acceptedPolicy = true
@@ -241,11 +242,11 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 				fatal = v.Code
 			case "done":
 				var v scanDone
-				if !started || pending != nil || decode(m.Data, &v) != nil || v.Records != expected || v.Summary.Records != expected || v.Summary.ObservedEntries < 0 || v.Summary.ObservedEntries > 100000 || v.Summary.AuthorityComplete || v.Summary.Qualified {
+				if !started || pending != nil || decode(m.Data, &v) != nil || v.Records != expected || v.Summary.Records != expected || v.Summary.ObservedEntries < 0 || v.Summary.ObservedEntries > 100000 || v.Summary.Qualified {
 					return errScanProtocol
 				}
 				if cfg.Stage == "policy" {
-					if expected != 0 || (fatal == "" && !acceptedPolicy) {
+					if expected != 0 || v.Summary.AuthorityComplete || (fatal == "" && !acceptedPolicy) {
 						return errScanProtocol
 					}
 				} else if fatal == "" && cfg.Plan != nil {
@@ -254,6 +255,9 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 						want = 0
 					}
 					if expected != want {
+						return errScanProtocol
+					}
+					if v.Summary.AuthorityComplete != integrityscan.OperatorReferenceAuthorityComplete(*cfg.Plan, data.records) {
 						return errScanProtocol
 					}
 					data.summary = v.Summary
@@ -394,7 +398,7 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 	if cfg.Stage == "policy" && (cfg.Plan != nil || cfg.PolicyHash != "") {
 		return 2
 	}
-	if cfg.Stage == "acquire" && (cfg.Plan == nil || integrityscan.ValidatePolicy(cfg.Plan.Policy) != nil || !scanSourceHash(cfg.PolicyHash)) {
+	if cfg.Stage == "acquire" && (cfg.Plan == nil || integrityscan.ValidatePolicy(cfg.Plan.Policy) != nil || !scanSourceHash(cfg.PolicyHash) || cfg.TrustedPolicyDigest != cfg.Plan.TrustedPolicyDigest) {
 		return 2
 	}
 	if _, e = c.receive(); e != io.EOF {
@@ -436,7 +440,7 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 	var summary integrityscan.Summary
 	if cfg.Stage == "policy" {
 		var observed integrityscan.PolicyObservation
-		observed, e = integrityscan.AcquirePolicy(ctx, cfg.PolicyPath, cfg.Target)
+		observed, e = integrityscan.AcquirePolicyPinned(ctx, cfg.PolicyPath, cfg.Target, cfg.TrustedPolicyDigest)
 		if e == nil {
 			e = sender.send("policy", observed)
 		}

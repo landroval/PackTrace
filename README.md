@@ -58,6 +58,20 @@ in [design decisions, section 2](docs/design-decisions.md#2-native-targets-and-i
 that is not whole-product release or native Windows 11 x64-hardware qualification.
 macOS is deferred, not completed. No safety gate is waived by choosing a target.
 
+## Operator-pinned prepared policies
+
+The experimental scan accepts `--trusted-policy-digest SRI` as a separate explicit
+operator trust designation for exact external policy bytes. A single canonical
+SHA-256, SHA-384 or SHA-512 SRI is supported. This pin is required when the policy
+requests `independently-anchored`; merely naming an external policy or supplying a
+new continuity hash is insufficient. Both native policy reads check the pin before
+target content, and baseline/lockfile conflicts remain gaps.
+
+This can complete only the explicit reference-authority scope. It does not
+authenticate a publisher, establish benignness, authorize network access or waive
+remaining native/producer/ownership/reporting gates. Unpinned behavior and exit
+selection are preserved; the candidate can still return incomplete coverage.
+
 ## Safety and interpretation
 
 - Scanning is designed to be offline. Intelligence synchronization and public-artifact

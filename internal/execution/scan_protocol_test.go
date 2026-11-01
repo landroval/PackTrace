@@ -48,6 +48,12 @@ func scanFaultDriver(mode string) int {
 		}
 		_ = c.send("resident", residentSample{ElapsedMS: 0, Bytes: rss, Valid: true})
 	}
+	if mode == "policy-pin-forgery" {
+		p := integrityscan.Policy{Version: 1, Designation: "user-designated", Reason: "owned", Provenance: "owned", Manager: "npm@10.9.4", RequiredChecks: []string{"integrity"}, FailOn: []string{}, MinimumAssurance: "lockfile-consistent", References: []integrityscan.Reference{}}
+		_ = c.send("policy", integrityscan.PolicyObservation{Policy: p, SourceHash: "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=", MatchedOperatorDigest: "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="})
+		_ = c.send("done", scanDone{})
+		return 0
+	}
 	if mode == "oversize" {
 		_, _ = io.WriteString(os.Stdout, strings.Repeat("X", maxMessage+1))
 		return 0
@@ -71,6 +77,9 @@ func scanFaultDriver(mode string) int {
 	summary := integrityscan.Summary{Records: 1}
 	if mode == "native-authority-forgery" {
 		summary.Qualified = true
+		summary.AuthorityComplete = true
+	}
+	if mode == "reference-authority-forgery" {
 		summary.AuthorityComplete = true
 	}
 	_ = c.send("done", scanDone{Records: 1, Summary: summary})
@@ -118,6 +127,29 @@ func TestScanCompletedWorkerRuntimeTeardownIsObserved(t *testing.T) {
 	t.Logf("actual post-done/runtime-teardown receipt: %+v roles=%+v", receipt, receipt.Roles)
 }
 
+func TestPolicyPinAttestationCannotGrantOrChangeParentTrust(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("owned local process negative")
+	}
+	for _, pin := range []string{"", "sha384-" + strings.Repeat("A", 64)} {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		s := newRunState(ctx)
+		run := ScanRun{output: BatchRun{state: s}}
+		cmd := exec.Command(os.Args[0], "--scan-fault-driver", "policy-pin-forgery")
+		identity, e := buildIdentity()
+		if e != nil {
+			cancel()
+			t.Fatal("identity")
+		}
+		cfg := scanConfig{Stage: "policy", Target: t.TempDir(), PolicyPath: t.TempDir() + "/policy.json", TrustedPolicyDigest: pin}
+		_, e = run.superviseScanPhase(ctx, cfg, cmd, identity)
+		cancel()
+		if e == nil || cmd.ProcessState == nil || run.Summary.AuthorityComplete || run.Summary.Qualified {
+			t.Fatal("worker granted or replaced parent policy trust")
+		}
+	}
+}
+
 func TestScanFaultChildrenCannotAuthorizeCompletion(t *testing.T) {
 	if runtime.GOOS != "linux" {
 		t.Skip("owned local Linux process checks only")
@@ -127,7 +159,7 @@ func TestScanFaultChildrenCannotAuthorizeCompletion(t *testing.T) {
 	for _, tc := range []struct {
 		mode     string
 		retained int
-	}{{"wrong-build", 0}, {"empty-exit", 0}, {"oversize", 0}, {"forged-completion", 0}, {"wrong-closure", 0}, {"crash-before-closure", 0}, {"done-crash", 1}, {"duplicate-closure", 1}, {"extra", 1}, {"native-authority-forgery", 1}, {"missing-resident", 1}, {"done-stall", 1}} {
+	}{{"wrong-build", 0}, {"empty-exit", 0}, {"oversize", 0}, {"forged-completion", 0}, {"wrong-closure", 0}, {"crash-before-closure", 0}, {"done-crash", 1}, {"duplicate-closure", 1}, {"extra", 1}, {"native-authority-forgery", 1}, {"reference-authority-forgery", 1}, {"missing-resident", 1}, {"done-stall", 1}} {
 		t.Run(tc.mode, func(t *testing.T) {
 			timeout := 3 * time.Second
 			if tc.mode == "done-stall" {

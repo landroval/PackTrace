@@ -385,7 +385,7 @@ func TestParseArgsSeparation(t *testing.T) {
 	for _, tc := range []struct {
 		typ   reflect.Type
 		names []string
-	}{{reflect.TypeOf(ArgumentError{}), []string{"Code", "ArgIndex", "Option"}}, {reflect.TypeOf(Invocation{}), []string{"Action", "Scan"}}, {reflect.TypeOf(ScanArgumentRequest{}), []string{"Path", "Manager", "Format", "Privacy", "PolicyPath", "StateDir", "Output", "Checks", "FailOn", "Provided"}}} {
+	}{{reflect.TypeOf(ArgumentError{}), []string{"Code", "ArgIndex", "Option"}}, {reflect.TypeOf(Invocation{}), []string{"Action", "Scan"}}, {reflect.TypeOf(ScanArgumentRequest{}), []string{"Path", "Manager", "Format", "Privacy", "PolicyPath", "StateDir", "Output", "TrustedPolicyDigest", "Checks", "FailOn", "Provided"}}} {
 		if tc.typ.NumField() != len(tc.names) {
 			t.Fatal("unapproved/raw result or error extension")
 		}

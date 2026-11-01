@@ -21,8 +21,9 @@ import (
 var ErrAcquisition = errors.New("scan: acquisition-unavailable")
 
 type PolicyObservation struct {
-	Policy     Policy `json:"policy"`
-	SourceHash string `json:"sourceHash"`
+	Policy                Policy `json:"policy"`
+	SourceHash            string `json:"sourceHash"`
+	MatchedOperatorDigest string `json:"matchedOperatorDigest,omitempty"`
 }
 type Record struct {
 	Index           int                          `json:"index"`
@@ -46,6 +47,13 @@ func containedName(root, name string) bool {
 	return e != nil || rel == "." || rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }
 func AcquirePolicy(ctx context.Context, name, target string) (PolicyObservation, error) {
+	return AcquirePolicyPinned(ctx, name, target, "")
+}
+
+func AcquirePolicyPinned(ctx context.Context, name, target, pin string) (PolicyObservation, error) {
+	if pin != "" && !supportedPolicyPin(pin) {
+		return PolicyObservation{}, ErrPolicy
+	}
 	if ctx.Err() != nil || !filepath.IsAbs(name) || !filepath.IsAbs(target) || containedName(target, name) {
 		return PolicyObservation{}, ErrPolicy
 	}
@@ -63,12 +71,16 @@ func AcquirePolicy(ctx context.Context, name, target string) (PolicyObservation,
 	if e != nil {
 		return PolicyObservation{}, ErrPolicy
 	}
+	if pin != "" && !policyPinMatches(ctx, pin, data) {
+		return PolicyObservation{}, ErrPolicy
+	}
 	p, e := ParsePolicy(data)
 	if e != nil {
 		return PolicyObservation{}, e
 	}
-	return PolicyObservation{p, sourceSRI(data)}, nil
+	return PolicyObservation{Policy: p, SourceHash: sourceSRI(data), MatchedOperatorDigest: pin}, nil
 }
+
 func readLease(ctx context.Context, root *nativefs.Root, name string, limit int64) ([]byte, error) {
 	file, e := root.OpenInput(ctx, name, limit)
 	if e != nil {
@@ -163,7 +175,17 @@ func readLocked(ctx context.Context, root *nativefs.Root, snap nativefs.Snapshot
 }
 
 func Binding(plan Plan, index int, claim integrity.BindingClaim, policyHash string) integrity.BindingInput {
-	return integrity.BindingInput{InstanceID: instanceID(index), Lockfile: claim, SelectedBaseline: integrity.BaselineLockfile, SelectionReason: plan.Policy.Reason, RequiredAssurance: integrity.AssuranceLockfile, Qualification: integrity.QualificationEvidence{ControllerEvidenceID: policyHash, Basis: "native-live-lease; independence-unqualified"}}
+	in := integrity.BindingInput{InstanceID: instanceID(index), Lockfile: claim, SelectedBaseline: integrity.BaselineLockfile, SelectionReason: plan.Policy.Reason, RequiredAssurance: integrity.AssuranceLockfile, Qualification: integrity.QualificationEvidence{ControllerEvidenceID: policyHash, Basis: "native-live-lease; independence-unqualified"}}
+	if plan.TrustedPolicyDigest != "" && supportedPolicyPin(plan.TrustedPolicyDigest) {
+		r := plan.Policy.References[index]
+		in.Controller = integrity.BindingClaim{PackageID: r.Name, Version: r.Version, Origin: r.Origin, ExpectedSRI: r.ExpectedSRI, SourceLocator: "operator-pinned-policy:" + plan.PolicyFile, SourceHash: policyHash, EvidenceID: "operator-pin:" + plan.TrustedPolicyDigest}
+		in.SelectedBaseline = integrity.BaselineController
+		in.Qualification.Basis = "operator-designated-pinned-policy; actual native lease; not publisher authentication"
+	}
+	if plan.Policy.MinimumAssurance == "independently-anchored" {
+		in.RequiredAssurance = integrity.AssuranceIndependent
+	}
+	return in
 }
 func instanceID(index int) string { return fmt.Sprintf("instance-%d", index+1) }
 func badRecord(index int, claim integrity.BindingClaim, code integrity.GapCode) Record {
@@ -205,7 +227,7 @@ func Acquire(ctx context.Context, target, prepared, policyHash string, plan Plan
 		return summary, ErrPolicy
 	}
 	policyData, e := readLease(ctx, refs, plan.PolicyFile, MaxPolicyBytes)
-	if e != nil || sourceSRI(policyData) != policyHash {
+	if e != nil || sourceSRI(policyData) != policyHash || (plan.TrustedPolicyDigest != "" && !policyPinMatches(ctx, plan.TrustedPolicyDigest, policyData)) {
 		return summary, ErrPolicy
 	}
 	policy, e := ParsePolicy(policyData)
@@ -223,14 +245,15 @@ func Acquire(ctx context.Context, target, prepared, policyHash string, plan Plan
 	locked := readLocked(ctx, root, metadata, plan.Manager)
 	summary.SnapshotComplete = metadata.Complete
 	summary.InventoryComplete = locked.complete && metadata.Complete
-	// Native campaign qualification and independent archive assurance remain
-	// unproved. Descriptor separation is necessary, not sufficient for either.
+	// Global native qualification is not granted by an operator pin. Reference
+	// authority is separately completed only after every pinned binding succeeds.
 	summary.AuthorityComplete = false
 	summary.Qualified = false
 	var reread int64 = 7 << 30
 	var snapshotRemaining int64 = 8 << 30
 	entriesRemaining := 100000
 	referenceRemaining, expandedRemaining := int64(16<<30), int64(8<<30)
+	authorityComplete := plan.TrustedPolicyDigest != "" && supportedPolicyPin(plan.TrustedPolicyDigest) && len(plan.Policy.References) > 0
 	mapped := map[string]bool{}
 	for _, r := range plan.Policy.References {
 		mapped[r.Location] = true
@@ -254,7 +277,7 @@ func Acquire(ctx context.Context, target, prepared, policyHash string, plan Plan
 		}
 		claim := locked.claims[r.LockKey]
 		record := badRecord(i, claim, integrity.GapBinding)
-		if plan.Policy.MinimumAssurance == "independently-anchored" {
+		if plan.Policy.MinimumAssurance == "independently-anchored" && plan.TrustedPolicyDigest == "" {
 			record = badRecord(i, claim, integrity.GapBinding)
 		} else if claimMatches(r, claim) {
 			binding, gaps := integrity.ResolveReferenceBinding(Binding(plan, i, claim, policyHash))
@@ -317,11 +340,13 @@ func Acquire(ctx context.Context, target, prepared, policyHash string, plan Plan
 				}
 			}
 		}
+		authorityComplete = authorityComplete && record.Assessment.Assurance == integrity.AssuranceIndependent
 		if emit(record) != nil {
 			return summary, ErrAcquisition
 		}
 		summary.Records++
 	}
+	summary.AuthorityComplete = authorityComplete
 	return summary, nil
 }
 

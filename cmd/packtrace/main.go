@@ -312,7 +312,7 @@ func runObserved(args []string, out, diagnostic io.Writer, observed scanObserver
 	case cli.ArgumentActionVersion:
 		text = "packtrace development (experimental demo; not a qualified release)\n"
 	case cli.ArgumentActionScanHelp:
-		text = "packtrace scan [options] ROOT\nOffline integrity candidate: --policy EXTERNAL_POLICY [--checks integrity] [--format terminal|json|sarif]\nExplicit version-1 policy maps locked identities/SRI to local prepared archives; no network or target code execution.\nNative and physical authority qualification remain gated; required gaps exit 3. No shipping/platform qualification claim.\nOnly portable privacy and stdout output are currently supported; explicit output/state paths are refused.\n"
+		text = "packtrace scan [options] ROOT\nOffline integrity candidate: --policy EXTERNAL_POLICY [--trusted-policy-digest SRI] [--checks integrity] [--format terminal|json|sarif]\nAn explicit operator policy pin (single canonical SHA-256/384/512 SRI) is required for independently-anchored references; it is not publisher authentication.\nExplicit version-1 policy maps locked identities/SRI to local prepared archives; no network or target code execution.\nNative and physical authority qualification remain gated; required gaps exit 3. No shipping/platform qualification claim.\nOnly portable privacy and stdout output are currently supported; explicit output/state paths are refused.\n"
 	case cli.ArgumentActionScan:
 		return runScanObserved(invocation.Scan, out, diagnostic, observed)
 	default:

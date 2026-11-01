@@ -20,15 +20,12 @@ func ValidateRecord(plan Plan, r Record, policyHash string) error {
 	}
 	id := instanceID(r.Index)
 	a := r.Assessment
-	if a.InstanceID != id || (a.Assurance != integrity.AssuranceUnknown && a.Assurance != integrity.AssuranceLockfile) || len(a.Gaps) > 256 || len(a.Differences) > 200000 || len(a.Contexts) > 1 {
+	if a.InstanceID != id || (a.Assurance != integrity.AssuranceUnknown && a.Assurance != integrity.AssuranceLockfile && a.Assurance != integrity.AssuranceIndependent) || len(a.Gaps) > 256 || len(a.Differences) > 200000 || len(a.Contexts) > 1 {
 		return bad
 	}
 	binding, gaps := integrity.ResolveReferenceBinding(Binding(plan, r.Index, r.Lock, policyHash))
-	bound := len(gaps) == 0 && claimMatches(plan.Policy.References[r.Index], r.Lock) && plan.Policy.MinimumAssurance == "lockfile-consistent"
-	if (len(a.Differences) > 0 || a.Assurance != integrity.AssuranceUnknown) && !bound {
-		return bad
-	}
-	if bound && len(a.Differences) > 0 && a.Assurance != binding.Assurance() {
+	bound := len(gaps) == 0 && claimMatches(plan.Policy.References[r.Index], r.Lock) && (plan.Policy.MinimumAssurance == "lockfile-consistent" || (plan.TrustedPolicyDigest != "" && supportedPolicyPin(plan.TrustedPolicyDigest)))
+	if (len(a.Differences) > 0 || a.Assurance != integrity.AssuranceUnknown) && (!bound || a.Assurance != binding.Assurance()) {
 		return bad
 	}
 	validEntry := func(s string) bool {
@@ -86,7 +83,7 @@ func ValidateRecord(plan Plan, r Record, policyHash string) error {
 			return bad
 		}
 	}
-	if a.SuppliedComparisonComplete != (len(a.Gaps) == 0 && bound && a.Assurance == integrity.AssuranceLockfile) {
+	if a.SuppliedComparisonComplete != (len(a.Gaps) == 0 && bound && a.Assurance == binding.Assurance()) {
 		return bad
 	}
 	return nil
@@ -152,7 +149,16 @@ func BuildReport(plan Plan, records []Record, summary Summary, resources Resourc
 	coverage("integrity", integrityRequired, false, "native-and-authority-qualification-pending")
 	coverage("malicious", plan.Checks&cli.ArgumentCheckMalicious != 0, false, "local-advisory-matching-not-implemented")
 	coverage("vulnerability", plan.Checks&cli.ArgumentCheckVulnerability != 0, false, "local-advisory-matching-not-implemented")
-	coverage("reference-authority", integrityRequired, false, "physical-policy-reference-separation-unqualified")
+	independent := summary.AuthorityComplete && OperatorReferenceAuthorityComplete(plan, records) && !abnormal
+	authorityReason := "physical-policy-reference-separation-unqualified"
+	if plan.TrustedPolicyDigest != "" {
+		r.PolicyOrigin = "explicit-operator-digest-pin; not-publisher-authentication-or-benignness"
+		authorityReason = "operator-pinned-policy; per-reference-binding-incomplete"
+		if independent {
+			authorityReason = "operator-pinned-policy; independent-reference-bindings; not-publisher-authentication"
+		}
+	}
+	coverage("reference-authority", integrityRequired, independent, authorityReason)
 	coverage("native-qualification", true, false, "five-target-campaign-not-run")
 	coverage("resident-observation", true, false, "100ms-scan-phase-own-resident-samples; writer-unsampled; sampled-sum-not-hard-ceiling")
 	executionReason := "validated-closures-eof-and-reap"
