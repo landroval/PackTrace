@@ -126,6 +126,16 @@ func TestSupervisedOutputPreservesCallerFileAndFlags(t *testing.T) {
 			if blocking {
 				_ = w.Fd() // Explicitly model an inherited blocking NewFile.
 			}
+			// XNU F_GETFL exposes FWASWRITTEN after a positive write. Prime
+			// that kernel history bit; still compare every flag, without a
+			// mask or restoring flags that the supervisor should preserve.
+			if _, err = w.Write([]byte("p")); err != nil {
+				t.Fatal(err)
+			}
+			var prime [1]byte
+			if _, err = io.ReadFull(r, prime[:]); err != nil || prime[0] != 'p' {
+				t.Fatal("owned priming write", err)
+			}
 			before := batchFileFlags(t, w)
 			ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 			defer cancel()

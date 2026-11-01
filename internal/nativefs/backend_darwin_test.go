@@ -143,15 +143,15 @@ func darwinRead(t *testing.T, r *Root, name, want string) {
 	t.Helper()
 	f, e := r.OpenRegular(t.Context(), name, 1024)
 	if e != nil {
-		t.Fatal(e)
+		t.Fatalf("owned selected read: %#v", e)
 	}
 	defer f.Close()
 	b, e := io.ReadAll(f)
 	if e != nil || string(b) != want {
-		t.Fatal(string(b), e)
+		t.Fatalf("owned selected bytes=%q failure=%#v", b, e)
 	}
 	if e := f.Stable(); e != nil {
-		t.Fatal(e)
+		t.Fatalf("owned selected stability: %#v", e)
 	}
 }
 func TestDarwinSelectedAcquisitionAndNestedRegularFile(t *testing.T) {

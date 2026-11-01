@@ -245,7 +245,8 @@ func macChild(parent *os.File, name string, dev uint64) (*os.File, stamp, error)
 	}
 	s, e := statNative(f)
 	p := C.CString(name)
-	exact := C.pt_exact_name(C.int(f.Fd()), p) != 0
+	exactResult, nameErr := C.pt_exact_name(C.int(f.Fd()), p)
+	exact := exactResult != 0
 	C.free(unsafe.Pointer(p))
 	if e != nil {
 		f.Close()
@@ -253,7 +254,7 @@ func macChild(parent *os.File, name string, dev uint64) (*os.File, stamp, error)
 	}
 	if !exact || dev != 0 && s.dev != dev {
 		f.Close()
-		return nil, stamp{}, macFailure("component-name-or-device", nil, ErrPath)
+		return nil, stamp{}, macFailure("component-name-or-device", nameErr, ErrPath)
 	}
 	return f, s, nil
 }
@@ -447,9 +448,9 @@ func macLink(parent *os.File, name string, original *os.File, s stamp) (string, 
 	p := C.CString(name)
 	defer C.free(unsafe.Pointer(p))
 	b := make([]byte, 4097)
-	n := C.pt_link(C.int(parent.Fd()), p, (*C.char)(unsafe.Pointer(&b[0])), C.size_t(len(b)))
+	n, callErr := C.pt_link(C.int(parent.Fd()), p, (*C.char)(unsafe.Pointer(&b[0])), C.size_t(len(b)))
 	if n <= 0 || int(n) > 4096 {
-		return "", ErrPath
+		return "", macFailure("symlink-read-or-size", callErr, ErrPath)
 	}
 	now, e := statNative(original)
 	if e != nil || now != s {
