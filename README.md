@@ -4,9 +4,9 @@ A Go project building a **read-only, offline-first CLI for investigating JavaScr
 project dependencies**: known malicious-package advisories, vulnerabilities, and
 installed-file integrity drift.
 
-> **Development status:** PackTrace currently contains internal readers and evidence
-> projections, not a runnable scanner. There is no scan command, matching engine,
-> installable release, or production-qualified platform support yet.
+> **Development status:** PackTrace contains experimental CLI commands, internal
+> readers and evidence projections, including a native integrity-scan candidate.
+> There is no installable release or production-qualified platform support yet.
 
 ## What exists today
 
@@ -42,6 +42,20 @@ and native Linux, macOS and Windows qualification. Those are targets, not curren
 compatibility claims. Bun reading and package-tuple projection now exist, while
 workspace semantics, installed observations, matching, intelligence synchronization,
 integrity investigation and reporting remain future work.
+
+## Windows desktop target
+
+The intended desktop target is **Windows 11 x64**, not Windows Server-only.
+Server 2022 is a CI regression baseline; passing there does not establish Windows
+11 desktop qualification. The Windows candidate uses the same x64 implementation
+with local NTFS and conservative supported-path boundaries.
+
+Windows 11 on ARM can run this x64 code under emulation, but that is not native
+x64-hardware validation. The current emulated desktop corpus is **not passing**:
+individual scan/filesystem/resource contracts passed, while batch-supervision
+contracts failed. See [PR #96](https://github.com/landroval/PackTrace/pull/96) for
+source-bound results and limitations. Windows 11 support remains unqualified;
+macOS is deferred, not completed. No safety gate is waived by choosing a target.
 
 ## Safety and interpretation
 

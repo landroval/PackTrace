@@ -14,7 +14,8 @@ import (
 
 // ABI/constants: Go SDK internal/syscall/windows/{types,at}_windows.go;
 // ntifs.h NtCreateFile, FILE_*_INFORMATION and winioctl.h. This candidate is
-// Windows Server 2022 amd64 / local NTFS only, NOT native qualification.
+// Windows amd64 / local NTFS only, with Windows 11 as the desktop target.
+// Server 2022 is a native CI baseline, NOT Windows 11 desktop qualification.
 // All blocking native I/O belongs in the existing terminable worker.
 var (
 	winNT          = syscall.NewLazyDLL("ntdll.dll")
