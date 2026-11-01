@@ -5,6 +5,58 @@ import (
 	"strings"
 )
 
+// SDK-derived NT flags, shared with the portable option-boundary regression.
+const (
+	winSync         = 0x00100000
+	winReadAttrs    = 0x80
+	winDirectory    = 0x1
+	winNonDirectory = 0x40
+	winSynchronous  = 0x20
+	winOpenReparse  = 0x00200000
+	winNoRecall     = 0x00400000
+	winDontReparse  = 0x1000
+	winPending      = 0x103
+)
+
+func winKernelVolumeName(name string) bool {
+	const prefix = `\Device\HarddiskVolume`
+	if !strings.HasPrefix(name, prefix) || len(name) == len(prefix) || len(name) > len(prefix)+10 {
+		return false
+	}
+	for _, c := range name[len(prefix):] {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+func winOpenOptions(parent bool, name string, wanted uint32) (uint32, error) {
+	if wanted != 0 && wanted != winDirectory && wanted != winNonDirectory {
+		return 0, ErrPath
+	}
+	base := uint32(winSynchronous | winOpenReparse)
+	if !parent {
+		// Only the synthesized trusted OS volume DIRECTORY may omit NO_RECALL.
+		// No target component is permitted here. NT rejects DIRECTORY_FILE
+		// combined with OPEN_NO_RECALL before any filesystem acquisition.
+		if wanted != winDirectory || !strings.HasSuffix(name, `\`) || !winKernelVolumeName(strings.TrimSuffix(name, `\`)) {
+			return 0, ErrPath
+		}
+		return base | winDirectory, nil
+	}
+	if wanted == winDirectory {
+		// The caller already retained/typed this directory. An empty-name
+		// NtOpenFile selects that SAME object; retain NO_RECALL by omitting
+		// its incompatible, redundant DIRECTORY_FILE selector, not the guard.
+		if name != "" {
+			return 0, ErrPath
+		}
+		wanted = 0
+	}
+	return base | winNoRecall | wanted, nil
+}
+
 // The Windows candidate deliberately qualifies only exact printable-ASCII long
 // names. Unicode/case-fold equivalence and DOS short-name aliases are not proof.
 // These rules are also executed by the portable boundary tests, not NT models.

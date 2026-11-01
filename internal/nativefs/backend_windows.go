@@ -25,18 +25,6 @@ var (
 	winDosDevice   = syscall.NewLazyDLL("kernel32.dll").NewProc("QueryDosDeviceW")
 )
 
-const (
-	winSync         = 0x00100000
-	winReadAttrs    = 0x80
-	winDirectory    = 0x1
-	winNonDirectory = 0x40
-	winSynchronous  = 0x20
-	winOpenReparse  = 0x00200000
-	winNoRecall     = 0x00400000
-	winDontReparse  = 0x1000
-	winPending      = 0x103
-)
-
 type winUnicode struct {
 	length, maximum uint16
 	buffer          *uint16
@@ -87,6 +75,13 @@ func winFinish(status uintptr, h syscall.Handle, io *winIOStatus) bool {
 	return uint32(status) == 0
 }
 func winOpen(parent *os.File, name string, access, options uint32, noReparse bool) (*os.File, error) {
+	if parent == nil && (access != 0 || !noReparse) {
+		return nil, ErrPath
+	}
+	openOptions, e := winOpenOptions(parent != nil, name, options)
+	if e != nil {
+		return nil, e
+	}
 	var units []uint16
 	if name != "" {
 		var e error
@@ -120,9 +115,9 @@ func winOpen(parent *os.File, name string, access, options uint32, noReparse boo
 		}
 		// Match the SDK's same-object empty-name NtOpenFile route exactly;
 		// do not rely on create-disposition behavior for a non-directory root.
-		status, _, _ = winReopen.Call(uintptr(unsafe.Pointer(&h)), uintptr(access|winReadAttrs|winSync), uintptr(unsafe.Pointer(&a)), uintptr(unsafe.Pointer(io)), 7, uintptr(options|winSynchronous|winOpenReparse|winNoRecall))
+		status, _, _ = winReopen.Call(uintptr(unsafe.Pointer(&h)), uintptr(access|winReadAttrs|winSync), uintptr(unsafe.Pointer(&a)), uintptr(unsafe.Pointer(io)), 7, uintptr(openOptions))
 	} else {
-		status, _, _ = winCreate.Call(uintptr(unsafe.Pointer(&h)), uintptr(access|winReadAttrs|winSync), uintptr(unsafe.Pointer(&a)), uintptr(unsafe.Pointer(io)), 0, 0, 7, 1, uintptr(options|winSynchronous|winOpenReparse|winNoRecall), 0, 0)
+		status, _, _ = winCreate.Call(uintptr(unsafe.Pointer(&h)), uintptr(access|winReadAttrs|winSync), uintptr(unsafe.Pointer(&a)), uintptr(unsafe.Pointer(io)), 0, 0, 7, 1, uintptr(openOptions), 0, 0)
 	}
 	ok := winFinish(status, h, io)
 	runtime.KeepAlive(units)
@@ -204,14 +199,8 @@ func winVolumeName(drive string) (string, error) {
 	// QueryDosDevice can return old mappings as additional strings; only the
 	// first (current) mapping is captured. Never reopen the DOS drive alias.
 	name := syscall.UTF16ToString(b[:n])
-	const prefix = `\Device\HarddiskVolume`
-	if !strings.HasPrefix(name, prefix) || len(name) == len(prefix) || len(name) > len(prefix)+10 {
+	if !winKernelVolumeName(name) {
 		return "", ErrUnavailable
-	}
-	for _, c := range name[len(prefix):] {
-		if c < '0' || c > '9' {
-			return "", ErrUnavailable
-		}
 	}
 	return name, nil
 }

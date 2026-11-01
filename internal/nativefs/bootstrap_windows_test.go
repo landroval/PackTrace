@@ -37,9 +37,13 @@ func TestWindowsVolumeBootstrapFacts(t *testing.T) {
 	a.length = uint32(unsafe.Sizeof(a))
 	var h syscall.Handle
 	io := new(winIOStatus)
+	options, e := winOpenOptions(false, volume+`\`, winDirectory)
+	if e != nil {
+		t.Fatal("trusted-volume-options", e)
+	}
 	status, _, _ := winCreate.Call(uintptr(unsafe.Pointer(&h)), winReadAttrs|winSync,
 		uintptr(unsafe.Pointer(&a)), uintptr(unsafe.Pointer(io)), 0, 0, 7, 1,
-		winDirectory|winSynchronous|winOpenReparse|winNoRecall, 0, 0)
+		uintptr(options), 0, 0)
 	ok := winFinish(status, h, io)
 	runtime.KeepAlive(units)
 	runtime.KeepAlive(u)

@@ -7,6 +7,35 @@ import (
 
 // These run the production Windows input boundary on Linux, not the NT kernel.
 // Removing the namespace or reparse bounds checks must fail these controls.
+func TestWindowsOpenOptionsKeepRecallGuardOutsideTrustedAnchor(t *testing.T) {
+	const root = `\Device\HarddiskVolume3\`
+	base := uint32(winSynchronous | winOpenReparse | winNoRecall)
+	for _, tc := range []struct {
+		parent       bool
+		name         string
+		wanted, want uint32
+		valid        bool
+	}{
+		{false, root, winDirectory, winDirectory | winSynchronous | winOpenReparse, true},
+		{true, "", winDirectory, base, true},
+		{true, "package.json", 0, base, true},
+		{true, "", winNonDirectory, base | winNonDirectory, true},
+		{true, "pkg", winDirectory, 0, false},
+		{false, `C:\owned\`, winDirectory, 0, false},
+		{false, root + `..`, winDirectory, 0, false},
+		{false, root + `\`, winDirectory, 0, false},
+		{false, `\Device\HarddiskVolume\`, winDirectory, 0, false},
+		{false, root, 0, 0, false},
+		{true, "", winDirectory | winNonDirectory, 0, false},
+		{true, "", 0xffffffff, 0, false},
+	} {
+		got, e := winOpenOptions(tc.parent, tc.name, tc.wanted)
+		if (e == nil) != tc.valid || tc.valid && got != tc.want {
+			t.Fatalf("parent=%t name=%q wanted=%08x got=%08x error=%v", tc.parent, tc.name, tc.wanted, got, e)
+		}
+	}
+}
+
 func TestWindowsComponentBoundary(t *testing.T) {
 	for _, n := range []string{"package.json", "node_modules", "@scope", "a-b_1", "A.txt"} {
 		if winComponent(n) != nil {
