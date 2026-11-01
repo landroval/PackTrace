@@ -49,6 +49,24 @@ func archiveBinding(t *testing.T, b []byte) ReferenceBinding {
 	}
 	return binding
 }
+func TestCatalogEntriesCannotMutateValidatedEvidence(t *testing.T) {
+	b := archiveFixture(t, &tar.Header{Name: "package/lib/a", Typeflag: tar.TypeReg, Size: 1})
+	c, e := InspectReferenceArchive(context.Background(), archiveBinding(t, b), bytes.NewReader(b), Limits{})
+	if e != nil {
+		t.Fatal(e)
+	}
+	entries := c.Entries()
+	entries[0].Name = "foreign"
+	entries[0].Type = EntryLink
+	entries[0].SHA256 = [32]byte{}
+	if c.Entries()[0].Name != "lib/a" || c.Entries()[0].Type != EntryFile || c.Entries()[0].SHA256 == [32]byte{} {
+		t.Fatal("mutable published evidence escaped")
+	}
+	if len((ReferenceCatalog{}).Entries()) != 0 {
+		t.Fatal("zero catalog supplied published paths")
+	}
+}
+
 func TestInspectReferenceArchiveValid(t *testing.T) {
 	b := archiveFixture(t, &tar.Header{Name: "package/", Typeflag: tar.TypeDir}, &tar.Header{Name: "package/lib/", Typeflag: tar.TypeDir}, &tar.Header{Name: "package/lib/a.js", Size: 3, Typeflag: tar.TypeReg})
 	c, err := InspectReferenceArchive(context.Background(), archiveBinding(t, b), bytes.NewReader(b), Limits{})

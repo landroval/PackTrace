@@ -40,8 +40,10 @@ coverage, with terminal, JSON and SARIF output.
 The pilot targets npm and modern text `bun.lock`, single projects and workspaces,
 and native Linux, macOS and Windows qualification. Those are targets, not current
 compatibility claims. Bun reading and package-tuple projection now exist, while
-workspace semantics, installed observations, matching, intelligence synchronization,
-integrity investigation and reporting remain future work.
+workspace semantics, complete installed inventory, matching and intelligence
+synchronization remain future work. The native integrity candidate now compares
+explicitly mapped installed scopes against validated prepared archives and emits
+portable terminal/JSON/SARIF results; this is not complete product coverage.
 
 ## Windows desktop target
 
@@ -71,6 +73,16 @@ This can complete only the explicit reference-authority scope. It does not
 authenticate a publisher, establish benignness, authorize network access or waive
 remaining native/producer/ownership/reporting gates. Unpinned behavior and exit
 selection are preserved; the candidate can still return incomplete coverage.
+
+## Scoped installed ownership
+
+For npm, the containing archive's bundled subtree is compared only when a literal
+`inBundle: true` lock record and validated published paths agree. A separately
+mapped nested instance keeps its own reference; ambiguous/unpublished nested
+subtrees are not content-read and remain gaps. No Bun bundle marker is inferred.
+Implicit published directories are not falsely counted as additions. Patch and
+generated-content context never erases drift or executes a transformation.
+These are bounded comparison rules, not whole-producer or release qualification.
 
 ## Safety and interpretation
 

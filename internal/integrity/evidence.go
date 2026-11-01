@@ -3,6 +3,7 @@ package integrity
 import (
 	"errors"
 	"io"
+	"slices"
 )
 
 type Limits struct {
@@ -82,6 +83,10 @@ type ReferenceCatalog struct {
 }
 
 func (c ReferenceCatalog) InstanceID() string { return c.instanceID }
+
+// Entries returns an owned copy of the fully validated published paths. It does
+// not expose mutable catalog evidence or establish installed ownership by itself.
+func (c ReferenceCatalog) Entries() []ReferenceEntry { return slices.Clone(c.entries) }
 
 type ObservationStatus uint8
 

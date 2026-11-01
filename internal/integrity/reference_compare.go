@@ -27,6 +27,7 @@ func CompareReferenceCatalog(b ReferenceBinding, c ReferenceCatalog, s Installed
 	id := b.instanceID
 	a := InstanceAssessment{InstanceID: id, Assurance: b.assurance}
 	reference := make(map[string]ReferenceEntry, len(c.entries))
+	publishedParents := make(map[string]bool)
 	for _, r := range c.entries {
 		if r.Name == "" && r.Type == EntryDirectory {
 			continue // package/ is the envelope, not an installed entry.
@@ -40,6 +41,11 @@ func CompareReferenceCatalog(b ReferenceBinding, c ReferenceCatalog, s Installed
 			continue
 		}
 		reference[r.Name] = r
+		// USTAR permits omitted directory headers. Published descendants still
+		// justify those directories; their presence is not an added-content drift.
+		for p := parentName(r.Name); p != ""; p = parentName(p) {
+			publishedParents[p] = true
+		}
 	}
 	if len(a.Gaps) > 0 {
 		return a, nil // No malformed/partial catalog authorizes comparison.
@@ -172,7 +178,7 @@ func CompareReferenceCatalog(b ReferenceBinding, c ReferenceCatalog, s Installed
 		if o.InstanceID != id || !qualifiedInstalledName(o.Name) || isBlocked(o.Name) || o.Type == EntryLink {
 			continue
 		}
-		if _, ok := reference[o.Name]; ok {
+		if _, ok := reference[o.Name]; ok || o.Type == EntryDirectory && publishedParents[o.Name] {
 			continue
 		}
 		if coveredBy(o.Name) == "" {
