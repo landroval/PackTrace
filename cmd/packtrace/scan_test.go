@@ -57,8 +57,8 @@ func scanFixture(t *testing.T) (string, string) {
 }
 
 func TestScanActualSupervisedNativeFlow(t *testing.T) {
-	if runtime.GOOS != "linux" {
-		t.Skip("local owned Linux process cases only")
+	if runtime.GOOS != "linux" && !nativeDarwinScanTests {
+		t.Skip("owned supported native process cases only")
 	}
 	root, policy := scanFixture(t)
 	for _, format := range []string{"terminal", "json", "sarif"} {
@@ -92,8 +92,8 @@ func TestScanActualSupervisedNativeFlow(t *testing.T) {
 const sensitiveDigestPrefix = "sha256-"
 
 func TestScanPreflightRejectsUnsafeModesAndPolicyWeakening(t *testing.T) {
-	if runtime.GOOS != "linux" {
-		t.Skip("local owned Linux process cases only")
+	if runtime.GOOS != "linux" && !nativeDarwinScanTests {
+		t.Skip("owned supported native process cases only")
 	}
 	root, policy := scanFixture(t)
 	for _, extra := range [][]string{{"--privacy", "local"}, {"--output", filepath.Join(root, "report.json")}, {"--state-dir", root}, {"--checks", "malicious"}} {

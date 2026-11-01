@@ -9,7 +9,7 @@ on:
       validation_profile:
         type: choice
         default: root
-        options: [root, linux-scan-amd64-v1, linux-scan-arm64-v1]
+        options: [root, linux-scan-amd64-v1, linux-scan-arm64-v1, macos-scan-amd64-v1, macos-scan-arm64-v1]
       expected_sha:
         type: string
         default: ''
@@ -437,4 +437,71 @@ jobs:
           python3 - <<'PY'
           import json
           print('LINUX_VALIDATION_RECEIPT ' + json.dumps({'schema':'packtrace.linux-validation.v1', 'setup':'not-successful', 'native':'not-run', 'validationPassed':False, 'qualification':'not-qualified', 'failure':'preparation-or-harness-checks-failed; attempt-consumed; no automatic retry'}))
+          PY
+  macos_native:
+    if: >-
+      ${{ github.event_name == 'workflow_dispatch' && github.repository == 'landroval/PackTrace' &&
+          github.event.repository.private == false &&
+          (inputs.validation_profile == 'macos-scan-amd64-v1' || inputs.validation_profile == 'macos-scan-arm64-v1') &&
+          inputs.expected_sha == github.sha && inputs.owned_confirmation == 'owned-native-fixtures-only' }}
+    name: Bounded owned macOS native validation
+    runs-on: ${{ inputs.validation_profile == 'macos-scan-amd64-v1' && 'macos-15-intel' || 'macos-15' }}
+    timeout-minutes: 20
+    env:
+      SOURCE_SHA: ${{ github.sha }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+      VALIDATION_PROFILE: ${{ inputs.validation_profile }}
+      OWNED_CONFIRMATION: ${{ inputs.owned_confirmation }}
+      REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Prepare exact source in owned scratch
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          root="$RUNNER_TEMP/packtrace-native7-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          test ! -e "$root"
+          mkdir -m 700 "$root"
+          export MAC_NATIVE_ROOT="$root" MAC_NATIVE_SOURCE="$root/source"
+          printf 'MAC_NATIVE_ROOT=%s\nMAC_NATIVE_SOURCE=%s\n' "$MAC_NATIVE_ROOT" "$MAC_NATIVE_SOURCE" >> "$GITHUB_ENV"
+          python3 -B - <<'PY'
+          import json, os, time
+          from pathlib import Path
+          (Path(os.environ['MAC_NATIVE_ROOT'])/'start.json').write_text(json.dumps({'start':time.monotonic()}))
+          PY
+          mkdir "$root/source" "$root/hooks" "$root/templates"
+          : > "$root/empty-git-config"
+          export GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL="$root/empty-git-config" GIT_CONFIG_COUNT=0
+          export GIT_TERMINAL_PROMPT=0 GIT_ALLOW_PROTOCOL=https GIT_LFS_SKIP_SMUDGE=1
+          cd "$root/source"
+          git=(/usr/bin/git -c "init.templateDir=$root/templates" -c "core.hooksPath=$root/hooks" -c credential.helper= -c http.followRedirects=false -c submodule.recurse=false)
+          "${git[@]}" init
+          "${git[@]}" remote add origin https://github.com/landroval/PackTrace.git
+          "${git[@]}" fetch --depth=1 --no-tags --recurse-submodules=no origin "$SOURCE_SHA"
+          "${git[@]}" checkout --detach FETCH_HEAD
+          test "$(/usr/bin/git rev-parse HEAD)" = "$SOURCE_SHA"
+          test "$SOURCE_SHA" = "$EXPECTED_SHA"
+      - name: macOS controller self-checks
+        shell: bash
+        run: python3 -B -m unittest discover -s "$MAC_NATIVE_SOURCE/probes/offline-integrity/ci" -p test_macos_validation.py
+      - name: One bounded owned macOS execution
+        id: macos_validation
+        timeout-minutes: 16
+        shell: bash
+        run: python3 -B "$MAC_NATIVE_SOURCE/probes/offline-integrity/ci/macos_validation.py"
+      - name: Preserve missing controller receipt
+        if: ${{ always() }}
+        shell: bash
+        env:
+          NATIVE_STEP_OUTCOME: ${{ steps.macos_validation.outcome }}
+        run: |
+          python3 -B - <<'PY'
+          import json, os
+          from pathlib import Path
+          root = Path(os.environ['RUNNER_TEMP'])/('packtrace-native7-'+os.environ['GITHUB_RUN_ID']+'-'+os.environ['GITHUB_RUN_ATTEMPT'])
+          if not (root/'receipt.json').is_file():
+              native = 'not-run' if os.environ['NATIVE_STEP_OUTCOME'] == 'skipped' else 'unknown'
+              print('MACOS_NATIVE_RECEIPT '+json.dumps({'schema':'packtrace.macos-native.v1','setup':'not-successful','native':native,'qualification':'not-qualified','validationPassed':False,'failure':'preparation-or-controller-failed; attempt-consumed; no automatic retry'}))
           PY
