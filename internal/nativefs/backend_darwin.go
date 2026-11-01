@@ -47,7 +47,10 @@ static int pt_prepare(char *detail, size_t cap) {
     return 0;
 }
 static int pt_metadata(int parent, const char *name) {
-    return openat(parent, name, O_EVTONLY|O_NOFOLLOW|O_SYMLINK|O_CLOEXEC|O_NONBLOCK);
+    // O_SYMLINK clears namei FOLLOW and pins the link itself. Adding
+    // O_NOFOLLOW instead makes vn_authorize_open_existing reject VLNK
+    // with ELOOP, even alongside O_SYMLINK. Readable opens keep O_NOFOLLOW.
+    return openat(parent, name, O_EVTONLY|O_SYMLINK|O_CLOEXEC|O_NONBLOCK);
 }
 static int pt_readable(int parent, const char *name, int directory) {
     int flags = O_RDONLY|O_NOFOLLOW|O_CLOEXEC|O_NONBLOCK;
