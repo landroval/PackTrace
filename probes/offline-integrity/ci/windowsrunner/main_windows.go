@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -108,34 +107,6 @@ func active(h syscall.Handle) (uint32, error) {
 		return 0, errors.New("job-query-failed")
 	}
 	return a.Active, nil
-}
-func treeBytes(root string) (int64, error) {
-	var total int64
-	e := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
-		if errors.Is(err, fs.ErrNotExist) {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-		info, e := os.Lstat(path)
-		if errors.Is(e, fs.ErrNotExist) {
-			return nil
-		}
-		if e != nil {
-			return e
-		}
-		m := info.Mode()
-		if !m.IsRegular() && !m.IsDir() && m&os.ModeSymlink == 0 {
-			return errStorageType
-		}
-		total += info.Size()
-		if total > 2<<30 {
-			return errStorageLimit
-		}
-		return nil
-	})
-	return total, e
 }
 func run(ctx context.Context, name, exe, dir, work string, args, env []string, limit time.Duration) (phase, []byte, []byte) {
 	started := time.Now()

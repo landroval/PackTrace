@@ -51,10 +51,11 @@ Server 2022 is a CI regression baseline; passing there does not establish Window
 with local NTFS and conservative supported-path boundaries.
 
 Windows 11 on ARM can run this x64 code under emulation, but that is not native
-x64-hardware validation. The current emulated desktop corpus is **not passing**:
-individual scan/filesystem/resource contracts passed, while batch-supervision
-contracts failed. See [PR #96](https://github.com/landroval/PackTrace/pull/96) for
-source-bound results and limitations. Windows 11 support remains unqualified;
+x64-hardware validation. See [PR #96](https://github.com/landroval/PackTrace/pull/96)
+for source-bound corpus results, failed attempts, observer/cleanup checks and
+limitations. The initial #7 delivery uses the explicitly accepted combined evidence
+in [design decisions, section 2](docs/design-decisions.md#2-native-targets-and-initial-delivery-acceptance);
+that is not whole-product release or native Windows 11 x64-hardware qualification.
 macOS is deferred, not completed. No safety gate is waived by choosing a target.
 
 ## Safety and interpretation
