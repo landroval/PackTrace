@@ -1,4 +1,4 @@
-//go:build !linux || (!amd64 && !arm64)
+//go:build (!linux || (!amd64 && !arm64)) && (!windows || !amd64)
 
 package nativeresource
 
@@ -6,7 +6,7 @@ import "errors"
 
 var ErrUnavailable = errors.New("scan: retained-resident-query-unavailable")
 
-// Other platforms have no retained-child RSS binding here. Do not mistake
+// Unsupported platforms have no retained-child RSS binding here. Do not mistake
 // compilation of this refusal backend for native support or qualification.
 type Child struct{}
 

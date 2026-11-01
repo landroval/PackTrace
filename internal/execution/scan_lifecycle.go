@@ -3,6 +3,7 @@ package execution
 import (
 	"context"
 	"errors"
+	"os"
 	"sync"
 	"time"
 
@@ -131,14 +132,14 @@ func (m *scanLifecycle) tickLocked() {
 		m.cancel()
 	}
 }
-func (m *scanLifecycle) attach(pid int, role string) error {
+func (m *scanLifecycle) attach(process *os.Process, role string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if m.child != nil || m.finished || !m.cleanup {
+	if process == nil || process.Pid <= 0 || m.child != nil || m.finished || !m.cleanup {
 		return errReap
 	}
-	child, e := nativeresource.PinChild(pid) // BEFORE cmd.Wait: direct, unreaped child
-	m.roles = append(m.roles, ScanRoleReceipt{Role: role, PID: pid})
+	child, e := nativeresource.PinProcess(process) // BEFORE cmd.Wait: actual unreaped child
+	m.roles = append(m.roles, ScanRoleReceipt{Role: role, PID: process.Pid})
 	m.active = len(m.roles) - 1
 	m.cleanup = false
 	if e != nil {

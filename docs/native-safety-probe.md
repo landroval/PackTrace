@@ -2,6 +2,15 @@
 
 ## Status and authorization
 
+**Historical probe contract:** this file preserves the original preparation
+scope and its then-unexecuted evidence. The owner's 2026-11-01 initial #7 delivery
+amendment is authoritative in [design decisions, section 2](design-decisions.md#2-native-targets-and-initial-delivery-acceptance):
+Linux amd64/arm64 plus Windows 11 x64 with explicitly combined native-server and
+emulated-desktop evidence; macOS is deferred, not completed. This does not waive
+mandatory safeguards, retroactively authorize execution, or establish global
+release/native Windows 11 x64-hardware qualification. Later runs require their
+separate bounded authorizations and source-bound receipts.
+
 **Written probe scope, limits, and stop conditions approved. No prototype creation
 or execution is authorized.** The user requested this plan after source inspection
 exposed unresolved native safety assumptions. This is neither the complete

@@ -304,7 +304,7 @@ func (s *runState) runChild(ctx context.Context, cmd *exec.Cmd, release func(), 
 				role = strings.TrimPrefix(v, launchRole+"=")
 			}
 		}
-		if e := s.scan.attach(cmd.Process.Pid, role); e != nil {
+		if e := s.scan.attach(cmd.Process, role); e != nil {
 			failure = e
 			cancel()
 		}

@@ -435,9 +435,13 @@ The capabilities above remain the shipping target. The
 [design-decision record](design-decisions.md) now settles substantial directions,
 without establishing implemented or validated product support:
 
-- npm/Bun anchors, baseline workspace/layout scope, and five native OS/architecture
-  targets are recorded. Actual producer-generated and native qualification remain
-  pending.
+- npm/Bun anchors and baseline workspace/layout scope are recorded. The owner's
+  current initial #7 delivery scope is Linux amd64/arm64 plus Windows 11 x64,
+  using the explicitly combined native-server/emulated-desktop evidence in
+  [design decisions, section 2](design-decisions.md#2-native-targets-and-initial-delivery-acceptance).
+  macOS remains deferred, not completed. The historical five-row release matrix,
+  native Windows 11 x64-hardware testing and producer qualification are not
+  completed by this narrower delivery.
 - OSV npm aggregation, update/reconciliation direction, 24-hour freshness, and
   seven-day full reconciliation are selected. Exact data handling and licensing
   review remain incomplete.
