@@ -17,6 +17,40 @@ URL = 'https://go.dev/dl/go1.27.1.windows-amd64.zip'
 FINAL = 'https://dl.google.com/go/go1.27.1.windows-amd64.zip'
 
 
+def compatibility_profile(env,machine,facts):
+    if (env.get('GITHUB_EVENT_NAME')!='workflow_dispatch' or env.get('GITHUB_REPOSITORY')!='landroval/PackTrace'
+            or env.get('REPOSITORY_PRIVATE')!='false' or env.get('OWNED_CONFIRMATION')!='owned-native-fixtures-only'
+            or not re.fullmatch('[0-9a-f]{40}',env.get('SOURCE_SHA','')) or env['SOURCE_SHA']!=env.get('EXPECTED_SHA')):
+        raise ValueError('environment-outside-profile')
+    profile=env.get('VALIDATION_PROFILE')
+    if profile=='windows11-x64-compat-arm64-v1':
+        if facts['major']!=10 or facts['build']<22000 or facts['product_type']!=1 or facts['native_machine']!=0xaa64:
+            raise ValueError('not-client-windows11-arm64')
+        return True
+    if (profile in ('windows-scan-amd64-v1','windows-volume-diagnostic-amd64-v1')
+            and machine.lower() in ('amd64','x86_64') and env.get('ImageOS')=='win22' and facts['native_machine']==0x8664):
+        return False
+    raise ValueError('environment-outside-profile')
+
+
+def windows_facts():
+    # Public SDK WORD/HANDLE declarations through Python's native Win32 API.
+    import ctypes
+    from ctypes import wintypes
+    kernel=ctypes.WinDLL('kernel32',use_last_error=True)
+    current=kernel.GetCurrentProcess
+    current.argtypes=[];current.restype=wintypes.HANDLE
+    query=kernel.IsWow64Process2
+    query.argtypes=[wintypes.HANDLE,ctypes.POINTER(wintypes.WORD),ctypes.POINTER(wintypes.WORD)]
+    query.restype=wintypes.BOOL
+    process=wintypes.WORD();native=wintypes.WORD()
+    if not query(current(),ctypes.byref(process),ctypes.byref(native)):
+        raise ValueError('machine-architecture-query-failed')
+    v=sys.getwindowsversion()
+    return dict(major=v.major,minor=v.minor,build=v.build,product_type=v.product_type,
+                native_machine=native.value,python_process_machine=process.value)
+
+
 def archive_name(name):
     p = PurePosixPath(name)
     if (not name or '\\' in name or '\x00' in name or ':' in name or
@@ -78,13 +112,10 @@ class Redirect(urllib.request.HTTPRedirectHandler):
 
 
 def main():
-    if (len(sys.argv) != 2 or sys.platform != 'win32' or platform.machine().lower() not in ('amd64', 'x86_64') or
-            os.environ.get('GITHUB_EVENT_NAME') != 'workflow_dispatch' or
-            os.environ.get('GITHUB_REPOSITORY') != 'landroval/PackTrace' or
-            os.environ.get('ImageOS') != 'win22' or
-            not re.fullmatch('[0-9a-f]{40}', os.environ.get('SOURCE_SHA', '')) or
-            os.environ['SOURCE_SHA'] != os.environ.get('EXPECTED_SHA')):
+    if len(sys.argv)!=2 or sys.platform!='win32':
         raise ValueError('environment-outside-profile')
+    facts=windows_facts()
+    compatibility=compatibility_profile(os.environ,platform.machine(),facts)
     root = Path(sys.argv[1])
     archive = root/'go.zip'
     digest = hashlib.sha256()
@@ -110,15 +141,16 @@ def main():
     go = toolchain/'go/bin/go.exe'
     env = dict(os.environ, GOTOOLCHAIN='local', GOPROXY='off', GOSUMDB='off', GOWORK='off', GOENV='off',
                GOMAXPROCS='2', GOMEMLIMIT='512MiB', CGO_ENABLED='0', GOCACHE=str(root/'cache'), GOTMPDIR=str(root/'build'))
-    cc = shutil.which('gcc')
-    if not cc:
+    cc = '' if compatibility else shutil.which('gcc')
+    if not compatibility and not cc:
         cc = next((p for p in (r'C:\msys64\mingw64\bin\gcc.exe', r'C:\mingw64\bin\gcc.exe',
                               r'C:\msys64\ucrt64\bin\gcc.exe') if Path(p).is_file()), None)
-    if not cc:
+    if not compatibility and not cc:
         raise ValueError('preinstalled-c-compiler-unavailable')
     env.update(GOROOT=str(toolchain/'go'), GOOS='windows', GOARCH='amd64', GOFLAGS='', GOEXPERIMENT='', GODEBUG='', GORACE='')
-    env['PATH'] = str(Path(cc).parent) + os.pathsep + env['PATH']
-    env['CC'] = str(cc)
+    if not compatibility:
+        env['PATH'] = str(Path(cc).parent) + os.pathsep + env['PATH']
+        env['CC'] = str(cc)
     version = subprocess.run([str(go), 'version'], env=env, capture_output=True, check=True, timeout=15).stdout.decode().strip()
     if version != 'go version go1.27.1 windows/amd64':
         raise ValueError('sdk-version')
@@ -128,11 +160,13 @@ def main():
     (root/'prepared.json').write_text(json.dumps({'go': str(go), 'runner': str(runner), 'source': str(root/'source'),
                                                 'root': str(root), 'cc': str(cc), 'sdkSHA256': SHA,
                                                 'sdkBytes': SIZE, 'expandedBytes': expanded, 'version': version}))
-    with open(os.environ['GITHUB_PATH'], 'a', encoding='utf-8') as f:
-        f.write(str(Path(cc).parent)+'\n')
+    if not compatibility:
+        with open(os.environ['GITHUB_PATH'], 'a', encoding='utf-8') as f:
+            f.write(str(Path(cc).parent)+'\n')
     print('WINDOWS_NATIVE_SETUP '+json.dumps({'sourceSHA': os.environ['SOURCE_SHA'], 'sdkSHA256': SHA,
                                             'sdkBytes': SIZE, 'expandedBytes': expanded, 'goVersion': version,
-                                            'compiler': str(cc), 'os': platform.platform(),
+                                            'compiler': str(cc), 'os': platform.platform(), 'windowsFacts':facts,
+                                            'compatibilityOnly':compatibility,
                                             'imageOS': os.environ.get('ImageOS'), 'imageVersion': os.environ.get('ImageVersion')}))
 
 

@@ -67,6 +67,9 @@ type receipt struct {
 	Phases                                                      []phase
 	ValidationPassed                                            bool
 	DiagnosticCompleted                                         bool   `json:",omitempty"`
+	CompatibilityPassed                                         bool   `json:",omitempty"`
+	CompatibilityScope                                          string `json:",omitempty"`
+	ProcessMachine, HostMachine                                 uint16 `json:",omitempty"`
 	Failure                                                     string `json:",omitempty"`
 	BoundSeconds                                                int
 	CommitLimitBytes                                            uint64
@@ -280,10 +283,29 @@ func mainCode() (code int) {
 		r.Failure = "runner-profile"
 		return
 	}
+	compatibility := os.Getenv("VALIDATION_PROFILE") == "windows11-x64-compat-arm64-v1"
+	if compatibility {
+		r.CompatibilityScope = "Windows11-client-ARM64-host-x64-emulation; CGO0; race-not-run; not-native-x64-qualification"
+		r.Qualification = "not-qualified-native-windows11-x64"
+		proc := kernel.NewProc("IsWow64Process2")
+		owner, e := syscall.GetCurrentProcess()
+		if e != nil || proc.Find() != nil {
+			r.Failure = "emulation-query-unavailable"
+			return
+		}
+		ok, _, _ := proc.Call(uintptr(owner), uintptr(unsafe.Pointer(&r.ProcessMachine)), uintptr(unsafe.Pointer(&r.HostMachine)))
+		runtime.KeepAlive(r.ProcessMachine)
+		runtime.KeepAlive(r.HostMachine)
+		if ok == 0 || !desktopEmulation(r.ProcessMachine, r.HostMachine) {
+			r.Failure = "not-x64-emulated-on-arm64"
+			return
+		}
+	}
 	repo, goexe, work := os.Args[1], os.Args[2], os.Args[3]
 	ctx, cancel := context.WithTimeout(context.Background(), 890*time.Second)
 	defer cancel()
 	env := append(os.Environ(), "GOROOT="+filepath.Dir(filepath.Dir(goexe)), "GOOS=windows", "GOARCH=amd64", "GOFLAGS=", "GOEXPERIMENT=", "GODEBUG=", "GORACE=", "GIT_CONFIG_NOSYSTEM=1", "GIT_CONFIG_COUNT=0", "GIT_CONFIG_GLOBAL="+filepath.Join(work, "empty-git-config"), "GIT_TERMINAL_PROMPT=0", "GOTOOLCHAIN=local", "GOPROXY=off", "GOSUMDB=off", "GOWORK=off", "GOENV=off", "GOMAXPROCS=2", "GOMEMLIMIT=512MiB", "GOCACHE="+filepath.Join(work, "cache"), "GOTMPDIR="+filepath.Join(work, "build"), "TMP="+filepath.Join(work, "build"), "TEMP="+filepath.Join(work, "build"))
+	env = append(env, "PATH="+filepath.Dir(goexe)+string(os.PathListSeparator)+os.Getenv("PATH"))
 	command := func(name, exe string, args []string, seconds int, cgo string) ([]byte, bool) {
 		p, out, errout := run(ctx, name, exe, repo, work, args, append(env, "CGO_ENABLED="+cgo), time.Duration(seconds)*time.Second)
 		r.Phases = append(r.Phases, p)
@@ -314,15 +336,19 @@ func mainCode() (code int) {
 		r.Failure = "go-version-profile"
 		return
 	}
-	compiler := os.Getenv("CC")
-	if compiler == "" {
-		compiler = "gcc"
+	if compatibility {
+		r.Compiler = "not-required; CGO0 compatibility probe"
+	} else {
+		compiler := os.Getenv("CC")
+		if compiler == "" {
+			compiler = "gcc"
+		}
+		cc, ok := command("gcc-version", compiler, []string{"-dumpfullversion"}, 10, "0")
+		if !ok {
+			return
+		}
+		r.Compiler = strings.TrimSpace(string(cc))
 	}
-	cc, ok := command("gcc-version", compiler, []string{"-dumpfullversion"}, 10, "0")
-	if !ok {
-		return
-	}
-	r.Compiler = strings.TrimSpace(string(cc))
 	r.Setup = "passed"
 	r.Native = "failed"
 	if diagnosticOnly {
@@ -350,7 +376,7 @@ func mainCode() (code int) {
 		return
 	}
 	packages := []string{"./internal/nativefs", "./internal/nativeresource", "./internal/integrityscan", "./internal/execution", "./cmd/packtrace"}
-	for _, test := range []struct {
+	tests := []struct {
 		name, cgo string
 		seconds   int
 		args      []string
@@ -358,7 +384,11 @@ func mainCode() (code int) {
 		{"root-corpus", "0", 270, []string{"./..."}},
 		{"race-corpus", "1", 350, packages},
 		{"race-original-wider-reproducer", "1", 230, []string{"./internal/integrityscan", "./internal/nativefs", "./cmd/packtrace"}},
-	} {
+	}
+	if compatibility {
+		tests = tests[:1]
+	}
+	for _, test := range tests {
 		args := []string{"test", "-count=1", "-json", fmt.Sprintf("-timeout=%ds", test.seconds-5)}
 		if test.cgo == "1" {
 			args = append(args, "-race")
@@ -392,8 +422,15 @@ func mainCode() (code int) {
 		r.Failure = "source-mutated"
 		return
 	}
-	r.Native = "passed"
-	r.ValidationPassed = true
+	if compatibility {
+		r.Native = "emulated-compatibility-passed-not-native-x64"
+		r.CompatibilityPassed = true
+		// Deliberately keep ValidationPassed false; server native/race evidence
+		// and desktop emulated compatibility remain separately attributable.
+	} else {
+		r.Native = "passed"
+		r.ValidationPassed = true
+	}
 	code = 0
 	return
 }

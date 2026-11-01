@@ -12,11 +12,23 @@ func TestWindowsProfilesSeparateDiagnosticsFromValidation(t *testing.T) {
 	}{
 		{"windows-scan-amd64-v1", false, true},
 		{"windows-volume-diagnostic-amd64-v1", true, true},
+		{"windows11-x64-compat-arm64-v1", false, true},
 		{"", false, false}, {"windows-other", false, false},
 	} {
 		diagnostic, e := volumeDiagnostic(tc.profile)
 		if (e == nil) != tc.valid || diagnostic != tc.diagnostic {
 			t.Fatalf("profile=%q diagnostic=%t error=%v", tc.profile, diagnostic, e)
+		}
+	}
+}
+
+func TestDesktopMachinesRequireX64EmulationOnARM64(t *testing.T) {
+	for _, tc := range []struct {
+		process, host uint16
+		want          bool
+	}{{0x8664, 0xaa64, true}, {0, 0xaa64, false}, {0x8664, 0x8664, false}, {0xaa64, 0xaa64, false}, {0x8664, 0, false}} {
+		if got := desktopEmulation(tc.process, tc.host); got != tc.want {
+			t.Fatal(tc, got)
 		}
 	}
 }

@@ -9,7 +9,7 @@ on:
       validation_profile:
         type: choice
         default: root
-        options: [root, linux-scan-amd64-v1, linux-scan-arm64-v1, windows-scan-amd64-v1, windows-volume-diagnostic-amd64-v1]
+        options: [root, linux-scan-amd64-v1, linux-scan-arm64-v1, windows-scan-amd64-v1, windows-volume-diagnostic-amd64-v1, windows11-x64-compat-arm64-v1]
       expected_sha:
         type: string
         default: ''
@@ -442,15 +442,17 @@ jobs:
     if: >-
       ${{ github.event_name == 'workflow_dispatch' && github.repository == 'landroval/PackTrace' &&
           github.event.repository.private == false &&
-          (inputs.validation_profile == 'windows-scan-amd64-v1' || inputs.validation_profile == 'windows-volume-diagnostic-amd64-v1') &&
+          (inputs.validation_profile == 'windows-scan-amd64-v1' || inputs.validation_profile == 'windows-volume-diagnostic-amd64-v1' || inputs.validation_profile == 'windows11-x64-compat-arm64-v1') &&
           inputs.expected_sha == github.sha && inputs.owned_confirmation == 'owned-native-fixtures-only' }}
-    name: Bounded owned Windows native validation
-    runs-on: windows-2022
+    name: ${{ inputs.validation_profile == 'windows11-x64-compat-arm64-v1' && 'Windows 11 x64 emulated compatibility' || 'Bounded owned Windows native validation' }}
+    runs-on: ${{ inputs.validation_profile == 'windows11-x64-compat-arm64-v1' && 'windows-11-arm' || 'windows-2022' }}
     timeout-minutes: 35
     env:
       SOURCE_SHA: ${{ github.sha }}
       EXPECTED_SHA: ${{ inputs.expected_sha }}
       VALIDATION_PROFILE: ${{ inputs.validation_profile }}
+      REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+      OWNED_CONFIRMATION: ${{ inputs.owned_confirmation }}
     steps:
       - name: Prepare exact source and pinned Windows SDK
         id: prepare

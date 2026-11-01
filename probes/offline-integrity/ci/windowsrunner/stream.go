@@ -11,9 +11,11 @@ import (
 
 var errCapture = errors.New("capture-limit")
 
+func desktopEmulation(process, host uint16) bool { return process == 0x8664 && host == 0xaa64 }
+
 func volumeDiagnostic(profile string) (bool, error) {
 	switch profile {
-	case "windows-scan-amd64-v1":
+	case "windows-scan-amd64-v1", "windows11-x64-compat-arm64-v1":
 		return false, nil
 	case "windows-volume-diagnostic-amd64-v1":
 		return true, nil
