@@ -29,17 +29,23 @@ class ValidationRejected(ValueError):
 
 def admit(env, system, machine, uid):
     sha = env.get('SOURCE_SHA', '')
-    if not (env.get('GITHUB_EVENT_NAME') == 'workflow_dispatch'
+    profiles = {
+        PROFILE: ('X64', 'x86_64', 'amd64', GO_SIZE, GO_SHA256),
+        'linux-scan-arm64-v1': ('ARM64', 'aarch64', 'arm64', 67009954,
+                              '3450b45a3f9ee8568792736a5c5e70a1f2e9b36c35a8f74958c03e51d7d92bec'),
+    }
+    selected = profiles.get(env.get('VALIDATION_PROFILE'))
+    if not (selected and env.get('GITHUB_EVENT_NAME') == 'workflow_dispatch'
             and env.get('GITHUB_REPOSITORY') == 'landroval/PackTrace'
             and env.get('REPOSITORY_PRIVATE') == 'false'
             and re.fullmatch('[0-9a-f]{40}', sha)
             and env.get('EXPECTED_SHA') == sha
-            and env.get('VALIDATION_PROFILE') == PROFILE
             and env.get('OWNED_CONFIRMATION') == 'owned-linux-fixtures-only'
-            and env.get('ImageOS') == 'ubuntu24' and env.get('ImageVersion')
-            and env.get('RUNNER_ARCH') == 'X64'
-            and system == 'Linux' and machine == 'x86_64' and uid > 0):
+            and env.get('ImageOS') == ('ubuntu24-arm64' if selected[2] == 'arm64' else 'ubuntu24') and env.get('ImageVersion')
+            and env.get('RUNNER_ARCH') == selected[0]
+            and system == 'Linux' and machine == selected[1] and uid > 0):
         raise ValidationRejected('validation-profile-rejected')
+    return selected[2:]
 
 
 def phase_ok(result):
@@ -114,7 +120,7 @@ def hash_file(path):
 
 
 def main():
-    receipt = {'schema': 'packtrace.linux-validation.v1', 'profile': PROFILE,
+    receipt = {'schema': 'packtrace.linux-validation.v1', 'profile': os.environ.get('VALIDATION_PROFILE', ''),
                'setup': 'not-run', 'native': 'not-run', 'qualification': 'not-qualified',
                'unresolvedLocalFailure': 'retained; this run cannot erase it',
                'sourceSHA': os.environ.get('SOURCE_SHA', ''), 'cases': [],
@@ -123,14 +129,14 @@ def main():
     success = False
     try:
         receipt['activePhase'] = 'profile-admission'
-        admit(os.environ, platform.system(), platform.machine(), os.geteuid())
+        goarch, archive_size, archive_sha = admit(os.environ, platform.system(), platform.machine(), os.geteuid())
         sys.dont_write_bytecode = True
         source = Path(os.environ['GITHUB_WORKSPACE'])
         root = Path(os.environ['RUNNER_TEMP'])/'packtrace-root-ci'
         # The unchanged preceding root step checked out exactly this SHA and
         # acquired/extracted this pinned archive. Recheck its identity here.
         receipt['activePhase'] = 'archive-identity'
-        if hash_file(root/'go.tar.gz') != (GO_SIZE, GO_SHA256):
+        if hash_file(root/'go.tar.gz') != (archive_size, archive_sha):
             raise ValidationRejected('pinned-archive-mismatch')
         h = helpers(source)
         budget = h.Budget(cap=8 << 20)  # existing root capture is separately <=16 MiB
@@ -171,7 +177,7 @@ def main():
             raise ValidationRejected('source-identity-mismatch')
         receipt['tree'] = ids[1]
         version = command('go-version', [go, 'version'], env, 5)
-        if version != b'go version go1.27.1 linux/amd64\n':
+        if version != ('go version go1.27.1 linux/'+goarch+'\n').encode():
             raise ValidationRejected('compiler-mismatch')
         compiler = command('cc-version', ['/usr/bin/gcc', '-dumpfullversion'], env, 5)
         filesystem = command('filesystem', ['/usr/bin/stat', '-f', '-c', '%T', str(work/'tmp')], env, 5)
@@ -184,10 +190,14 @@ def main():
             'goBinarySHA256': hash_file(Path(go))[1], 'gccVersion': compiler.decode().strip(),
             'filesystem': filesystem.decode().strip(), 'reportedCPU': os.cpu_count(),
             'GOMAXPROCS': env['GOMAXPROCS'], 'aggregatePeakRSS': 'not independently measured by this Python wrapper'}
-        receipt['archive'] = {'bytes': GO_SIZE, 'sha256': GO_SHA256}
+        receipt['archive'] = {'bytes': archive_size, 'sha256': archive_sha}
         receipt['setup'] = 'passed'
         # This budget is independent of every Go supervisor under test.
         end = time.monotonic()+900
+        if goarch == 'arm64':
+            # New campaign row: include preceding setup/root checks in its
+            # total wall bound, not another 15 minutes after those checks.
+            end = min(end, json.loads((root/'start.json').read_text())['start']+900)
         def storage():
             sizes = {}
             for name, path in (('cache', root/'gocache'), ('build', work/'build'), ('fixtures', work/'tmp')):
