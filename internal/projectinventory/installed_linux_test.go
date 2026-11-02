@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"packtrace/internal/nativefs"
 )
 
 func TestActiveBunLinkDoesNotActivateOrReadOrphanStore(t *testing.T) {
@@ -34,6 +36,39 @@ func TestActiveBunLinkDoesNotActivateOrReadOrphanStore(t *testing.T) {
 		t.Fatal("purpose blocker: orphan manifest or dependency source read")
 	}
 }
+func TestActiveStoreVisitRetainsOriginalLinkWitness(t *testing.T) {
+	r, root := ownedProject(t, map[string]string{"node_modules/.bun/pkg@1/node_modules/pkg/package.json": `{"name":"pkg","version":"1.0.0"}`, "node_modules/.bun/other@1/node_modules/pkg/package.json": `{"name":"other","version":"1.0.0"}`})
+	link := filepath.Join(root, "node_modules/pkg")
+	if os.Symlink(".bun/pkg@1/node_modules/pkg", link) != nil {
+		t.Fatal("owned active link")
+	}
+	snap, e := r.Metadata(context.Background(), nativefs.Limits{})
+	if e != nil {
+		t.Fatal(e)
+	}
+	entries := map[string]nativefs.Entry{}
+	for _, entry := range snap.Entries {
+		entries[entry.Name] = entry
+	}
+	c := collector{ctx: context.Background(), root: r, entries: entries, blocked: map[string]bool{}, manifestRemaining: maxManifestTotal, requirementsRemaining: maxRecords, classCounts: map[string]int{}}
+	visited := false
+	c.observeSlotVisiting(1, "node_modules/pkg", func(physical string, linked bool, stable func() bool) {
+		visited = true
+		if physical != "node_modules/.bun/pkg@1/node_modules/pkg" || !linked || !stable() {
+			t.Fatal("active witness absent")
+		}
+		if os.Remove(link) != nil || os.Symlink(".bun/other@1/node_modules/pkg", link) != nil {
+			t.Fatal("owned retarget")
+		}
+		if stable() {
+			t.Fatal("closed/reopened link authorized former store content")
+		}
+	})
+	if !visited || c.result.Model.Observations[0].Status != "unstable" {
+		t.Fatal("retargeted active observation qualified")
+	}
+}
+
 func TestWorkspaceLinkIsDistinctFromWorkspaceDeclaration(t *testing.T) {
 	r, root := ownedProject(t, map[string]string{"package.json": `{"workspaces":["packages/*"]}`, "packages/member/package.json": `{"name":"member","version":"1.0.0"}`, "package-lock.json": emptyNPMLock})
 	if os.Mkdir(filepath.Join(root, "node_modules"), 0700) != nil || os.Symlink("../packages/member", filepath.Join(root, "node_modules/member")) != nil {

@@ -11,41 +11,6 @@ import (
 	"packtrace/internal/nativefs"
 )
 
-// activeSlot recognizes only installation slots below a selected project/member,
-// not every node_modules anywhere in the metadata tree or a Bun store directory.
-func activeSlot(base, name string) bool {
-	prefix := ""
-	if base != "" {
-		prefix = base + "/"
-	}
-	if !strings.HasPrefix(name, prefix) {
-		return false
-	}
-	parts := strings.Split(strings.TrimPrefix(name, prefix), "/")
-	for i := 0; i < len(parts); {
-		if parts[i] != "node_modules" || i+1 >= len(parts) {
-			return false
-		}
-		i++
-		if parts[i] == "" || strings.HasPrefix(parts[i], ".") {
-			return false
-		}
-		if strings.HasPrefix(parts[i], "@") {
-			if len(parts[i]) == 1 || i+1 >= len(parts) {
-				return false
-			}
-			i++
-			if parts[i] == "" || strings.HasPrefix(parts[i], ".") {
-				return false
-			}
-		}
-		i++
-		if i == len(parts) {
-			return true
-		}
-	}
-	return false
-}
 func installationName(name string) string {
 	parts := strings.Split(name, "/")
 	if len(parts) > 1 && strings.HasPrefix(parts[len(parts)-2], "@") {
@@ -61,43 +26,83 @@ func containedLink(name, target string) (string, bool) {
 	resolved := path.Clean(path.Join(path.Dir(name), target))
 	return resolved, cleanRelative(resolved)
 }
+func slotContainer(name string) string {
+	if strings.HasPrefix(path.Base(name), ".") || strings.HasPrefix(path.Base(name), "@") {
+		return ""
+	}
+	parent := path.Dir(name)
+	if strings.HasPrefix(path.Base(parent), "@") {
+		if len(path.Base(parent)) == 1 {
+			return ""
+		}
+		parent = path.Dir(parent)
+	}
+	if path.Base(parent) != "node_modules" {
+		return ""
+	}
+	return parent
+}
+
 func (c *collector) collectInstalled() {
-	locations := map[string]uint32{}
-	// Check bounded path ancestors, not every workspace against every entry.
+	byContainer := map[string][]string{}
 	for name := range c.entries {
-		if c.ctx.Err() != nil {
-			return
-		}
-		owner := uint32(0)
-		if activeSlot("", name) {
-			owner = 1
-		}
-		prefix := name
-		for {
-			i := strings.LastIndex(prefix, "/")
-			if i < 0 {
-				break
-			}
-			prefix = prefix[:i]
-			if s, ok := c.workspaceScopes[prefix]; ok && s.Status == "complete" && activeSlot(prefix, name) {
-				owner = s.ID
-				break
-			}
-		}
-		if owner != 0 {
-			locations[name] = owner
+		if container := slotContainer(name); container != "" {
+			byContainer[container] = append(byContainer[container], name)
 		}
 	}
-	names := make([]string, 0, len(locations))
-	for name := range locations {
-		names = append(names, name)
+	for _, names := range byContainer {
+		sort.Strings(names)
 	}
-	sort.Strings(names)
-	for _, name := range names {
-		if c.ctx.Err() != nil {
+	type activeContainer struct {
+		name  string
+		scope uint32
+		skip  string
+	}
+	seenContainers, seenSlots := map[string]bool{}, map[string]bool{}
+	var walk func(activeContainer, int, func() bool)
+	walk = func(current activeContainer, depth int, guard func() bool) {
+		if c.ctx.Err() != nil || seenContainers[current.name] {
 			return
 		}
-		c.observeSlot(locations[name], name)
+		if depth > maxDepth {
+			c.gap(current.scope, 0, "link-depth-limit")
+			return
+		}
+		seenContainers[current.name] = true
+		for _, name := range byContainer[current.name] {
+			if name == current.skip || seenSlots[name] {
+				continue
+			}
+			if !guard() {
+				c.gap(current.scope, 0, "installed-binding-unstable")
+				return
+			}
+			seenSlots[name] = true
+			if c.classCounts["installed"] >= maxRecords {
+				c.gap(current.scope, 0, "record-limit")
+				return
+			}
+			c.observeSlotVisiting(current.scope, name, func(physical string, linked bool, stable func() bool) {
+				owner := current.scope
+				if s, ok := c.workspaceScopes[physical]; ok && s.Status == "complete" {
+					owner = s.ID
+				}
+				retained := func() bool { return guard() && stable() }
+				walk(activeContainer{physical + "/node_modules", owner, ""}, depth+1, retained)
+				container := slotContainer(physical)
+				if linked && c.result.Selection.Family == "bun" && c.result.Selection.State == "usable" && strings.Contains(container, "node_modules/.bun/") && path.Base(path.Dir(path.Dir(container))) == ".bun" {
+					walk(activeContainer{container, owner, physical}, depth+1, retained)
+				}
+			})
+		}
+	}
+	// The original qualifying metadata leases stay alive throughout each child
+	// visit; a changed link cannot activate a former/orphaned store container.
+	walk(activeContainer{"node_modules", 1, ""}, 0, func() bool { return true })
+	for _, s := range c.result.Model.Scopes {
+		if s.Kind == "workspace" && s.Status == "complete" {
+			walk(activeContainer{s.Location + "/node_modules", s.ID, ""}, 0, func() bool { return true })
+		}
 	}
 	// Store presence is metadata evidence, never an additional installed package.
 	for _, s := range c.result.Model.Scopes {
@@ -111,7 +116,11 @@ func (c *collector) collectInstalled() {
 		}
 	}
 }
-func (c *collector) observeSlot(scope uint32, name string) {
+func (c *collector) observeSlot(scope uint32, name string) (string, bool) {
+	return c.observeSlotVisiting(scope, name, nil)
+}
+
+func (c *collector) observeSlotVisiting(scope uint32, name string, visit func(string, bool, func() bool)) (physicalRoot string, linked bool) {
 	mid := c.evidence(scope, name, "native-metadata-lease")
 	o := Observation{Workspace: scope, Source: mid, Class: "installed", Kind: "directory", Status: "complete", Location: name, Fields: map[string]string{"installation-name": installationName(name), "metadata-evidence": strconv.Itoa(int(mid))}}
 	original, e := c.root.OpenMetadata(c.ctx, name)
@@ -131,6 +140,7 @@ func (c *collector) observeSlot(scope uint32, name string) {
 			}
 		}
 		if !stable {
+			physicalRoot, linked = "", false
 			o.Status = "unstable"
 			c.gap(scope, mid, "installed-binding-unstable")
 		} else {
@@ -206,6 +216,21 @@ func (c *collector) observeSlot(scope uint32, name string) {
 		o.Status = "unsupported"
 		c.gap(scope, source, "installed-identity-invalid")
 	}
+	if o.Status == "complete" {
+		physicalRoot, linked = physical, o.Kind == "link"
+		stable := func() bool {
+			for _, lease := range leases {
+				if lease.Stable() != nil {
+					return false
+				}
+			}
+			return true
+		}
+		if visit != nil && stable() {
+			visit(physicalRoot, linked, stable)
+		}
+	}
+	return
 }
 func claimString(fields map[string]json.RawMessage, name string) (string, string) {
 	raw, ok := fields[name]

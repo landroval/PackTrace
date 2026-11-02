@@ -8,7 +8,7 @@ import (
 	"packtrace/internal/inventory"
 )
 
-func (c *collector) keepVariants(scope, source uint32, raw map[string]json.RawMessage, out map[string]string) {
+func (c *collector) keepVariants(scope, source uint32, raw map[string]json.RawMessage, out map[string]string, bun bool) {
 	for _, name := range []string{"link", "optional", "dev", "devOptional", "inBundle", "hasInstallScript"} {
 		if value, ok := raw[name]; ok {
 			out[name] = string(value)
@@ -22,7 +22,12 @@ func (c *collector) keepVariants(scope, source uint32, raw map[string]json.RawMe
 		if value, ok := raw[name]; ok {
 			out[name] = string(value)
 			var v []string
-			if json.Unmarshal(value, &v) != nil || v == nil {
+			valid := json.Unmarshal(value, &v) == nil && v != nil
+			if bun {
+				var singleton string
+				valid = valid || !bytes.Equal(bytes.TrimSpace(value), []byte("null")) && json.Unmarshal(value, &singleton) == nil
+			}
+			if !valid {
 				c.gap(scope, source, "variant-invalid")
 			}
 		}
@@ -45,7 +50,7 @@ func (c *collector) projectNPM(doc inventory.Document, source uint32) error {
 		}
 		n := names.Entries[i]
 		fields := map[string]string{"name-state": fieldState(r.Name.State), "version-state": fieldState(r.Version.State), "origin-state": fieldState(r.Resolved.State), "integrity-state": fieldState(r.Integrity.State), "integrity": r.Integrity.Value, "installation-name": n.InstallationName, "name-qualification": n.Qualification, "name-source": n.Source}
-		c.keepVariants(scope, source, doc.Packages[r.Location], fields)
+		c.keepVariants(scope, source, doc.Packages[r.Location], fields, false)
 		kind := "package"
 		switch {
 		case r.Location == "":
@@ -95,7 +100,7 @@ func (c *collector) projectBun(doc inventory.BunLockDocument, source uint32) err
 		if r.Info != nil {
 			var info map[string]json.RawMessage
 			if json.Unmarshal(r.Info, &info) == nil {
-				c.keepVariants(1, source, info, fields)
+				c.keepVariants(1, source, info, fields, true)
 				if raw, ok := info["bin"]; ok {
 					fields["bin"] = string(raw)
 				}
