@@ -42,7 +42,11 @@ func TestQuotaAccountsRetainedAndNestedStagingMetadata(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer lease.Close()
-	want := uint64(len(marker) + 7)
+	keyMetadata, err := os.Stat(filepath.Join(path, "acquisition.key"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := uint64(len(marker)+7) + uint64(keyMetadata.Size())
 	got, err := s.observeQuota(ctx, lease, want)
 	if err != nil || !got.complete || got.used != want || got.held != 0 {
 		t.Fatal("retained/staging accounting", got, err)

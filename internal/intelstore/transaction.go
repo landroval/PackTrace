@@ -47,6 +47,7 @@ type Transaction struct {
 	closed   bool
 	sealed   map[ID]sealedGeneration
 	prep     *preparationState
+	kind     operation
 }
 type reservationJournal struct {
 	Version        int    `json:"version"`
@@ -132,7 +133,7 @@ func (s *Store) begin(ctx context.Context, kind operation, b *Budget) (*Transact
 	}
 	budget.Deadline = deadline
 	work, cancel := context.WithDeadline(ctx, deadline)
-	t := &Transaction{store: s, writer: writer, work: work, cancel: cancel, budget: budget, held: budget.StagingBytes}
+	t := &Transaction{store: s, writer: writer, work: work, cancel: cancel, budget: budget, held: budget.StagingBytes, kind: kind}
 	if _, e := rand.Read(t.id[:]); e != nil {
 		cancel()
 		return fail(ErrUnavailable)

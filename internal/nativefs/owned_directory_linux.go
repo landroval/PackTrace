@@ -85,16 +85,16 @@ func ownedIdentity(n *nativeRoot) ([32]byte, error) {
 	if raw.Uid != uint32(os.Geteuid()) || raw.Mode&07777 != 0700 || raw.Mode&syscall.S_IFMT != syscall.S_IFDIR {
 		return [32]byte{}, ErrPath
 	}
-	mount, err := n.mountID()
-	if err != nil {
+	// The lifetime guard above still checks the original mount. Its kernel ID
+	// is not durable across reboot/remount and must not enter a stored marker.
+	if _, err := n.mountID(); err != nil {
 		return [32]byte{}, err
 	}
-	var data [32]byte
+	var data [24]byte
 	binary.LittleEndian.PutUint64(data[0:8], uint64(raw.Dev))
 	binary.LittleEndian.PutUint64(data[8:16], raw.Ino)
-	binary.LittleEndian.PutUint64(data[16:24], mount)
-	binary.LittleEndian.PutUint64(data[24:32], uint64(raw.Uid))
-	return sha256.Sum256(data[:]), nil
+	binary.LittleEndian.PutUint64(data[16:24], uint64(raw.Uid))
+	return sha256.Sum256(append([]byte("PackTrace:owned-root:linux:v2\x00"), data[:]...)), nil
 }
 
 // Caller holds the root and original parent mutexes. The full retained chain

@@ -101,6 +101,15 @@ func Open(ctx context.Context, path string, mode Mode) (*Store, error) {
 				return fail(ErrOwnership)
 			}
 		}
+		if fresh {
+			var key [32]byte
+			if _, err := rand.Read(key[:]); err != nil {
+				return fail(ErrUnavailable)
+			}
+			if err := owned.WriteControl(ctx, "acquisition.key", key[:]); err != nil {
+				return fail(ErrUnavailable)
+			}
+		}
 	}
 	return s, nil
 }
