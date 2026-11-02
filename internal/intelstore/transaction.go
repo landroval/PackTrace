@@ -44,6 +44,7 @@ type Transaction struct {
 	budget   Budget
 	failed   error
 	closed   bool
+	sealed   map[ID]sealedGeneration
 }
 type reservationJournal struct {
 	Version        int    `json:"version"`
@@ -169,6 +170,10 @@ func (t *Transaction) put(ctx context.Context, input io.Reader, max uint64) (Obj
 	}
 	t.mu.Lock()
 	defer t.mu.Unlock()
+	return t.putLocked(ctx, input, max)
+}
+
+func (t *Transaction) putLocked(ctx context.Context, input io.Reader, max uint64) (ObjectRef, error) {
 	if t.closed || t.failed != nil || ctx == nil || input == nil {
 		return ObjectRef{}, ErrUnavailable
 	}
