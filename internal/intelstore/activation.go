@@ -169,6 +169,9 @@ func (t *Transaction) activate(ctx context.Context, id ID) error {
 	if !ok {
 		return ErrCorrupt
 	}
+	if e := t.fence(ctx); e != nil {
+		return e
+	}
 	if t.writer.Matches(ctx, t.store.root, "writer.lock", true) != nil {
 		return ErrUnavailable
 	}

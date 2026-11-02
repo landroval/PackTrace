@@ -24,6 +24,9 @@ func ownedRelative(name string) bool {
 // Mkdir creates only one generated component below already captured parents.
 // An existing directory is admitted only after native type/protection checks.
 func (d *OwnedDirectory) Mkdir(ctx context.Context, name string) error {
+	return d.mkdir(ctx, name, nil)
+}
+func (d *OwnedDirectory) mkdir(ctx context.Context, name string, batch *DurabilityBatch) error {
 	if d == nil {
 		return ErrClosed
 	}
@@ -40,7 +43,12 @@ func (d *OwnedDirectory) Mkdir(ctx context.Context, name string) error {
 		return e
 	}
 	defer unlock()
-	f, e := ownedCreatePath(n, name, true)
+	if batch != nil {
+		if e := batch.before(n, name); e != nil {
+			return e
+		}
+	}
+	f, e := ownedCreatePathMode(n, name, true, batch == nil)
 	if e != nil {
 		return e
 	}
@@ -48,6 +56,11 @@ func (d *OwnedDirectory) Mkdir(ctx context.Context, name string) error {
 	refreshErr := d.native.refresh(n)
 	if closeErr != nil || refreshErr != nil {
 		return errors.Join(ErrWrite, refreshErr)
+	}
+	if batch != nil {
+		if e := batch.after(n, name); e != nil {
+			return e
+		}
 	}
 	return ctx.Err()
 }
@@ -66,6 +79,9 @@ type OwnedFile struct {
 // CopyExclusive retains actual failed bytes and their original file capability.
 // Readers can block: callers still need the terminable bounded worker boundary.
 func (d *OwnedDirectory) CopyExclusive(ctx context.Context, name string, input io.Reader, max uint64) (*OwnedFile, error) {
+	return d.copyExclusive(ctx, name, input, max, nil)
+}
+func (d *OwnedDirectory) copyExclusive(ctx context.Context, name string, input io.Reader, max uint64, batch *DurabilityBatch) (*OwnedFile, error) {
 	if d == nil {
 		return nil, ErrClosed
 	}
@@ -84,9 +100,18 @@ func (d *OwnedDirectory) CopyExclusive(ctx context.Context, name string, input i
 	if e != nil {
 		return nil, e
 	}
-	raw, e := ownedCreatePath(n, name, false)
+	if batch != nil {
+		if e := batch.before(n, name); e != nil {
+			unlock()
+			return nil, e
+		}
+	}
+	raw, e := ownedCreatePathMode(n, name, false, batch == nil)
 	if e == nil {
 		e = d.native.refresh(n)
+	}
+	if e == nil && batch != nil {
+		e = batch.after(n, name)
 	}
 	unlock()
 	if e != nil {
@@ -148,8 +173,10 @@ func (d *OwnedDirectory) CopyExclusive(ctx context.Context, name string, input i
 			break
 		}
 	}
-	if raw.Sync() != nil {
-		failure = errors.Join(failure, ErrWrite)
+	if batch == nil || failure != nil {
+		if raw.Sync() != nil {
+			failure = errors.Join(failure, ErrWrite)
+		}
 	}
 	current, statErr := statNative(raw)
 	if statErr != nil || current.size != f.size {

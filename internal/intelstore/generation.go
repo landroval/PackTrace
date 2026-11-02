@@ -89,6 +89,9 @@ func (r *refLines) Read(p []byte) (int, error) {
 	return n, nil
 }
 func (t *Transaction) writeImmutable(ctx context.Context, path string, data []byte) error {
+	if e := t.fence(ctx); e != nil {
+		return e
+	}
 	if uint64(len(data))+4096 > t.held {
 		return ErrLimit
 	}

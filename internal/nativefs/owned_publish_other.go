@@ -4,4 +4,7 @@ package nativefs
 
 import "os"
 
+func ownedMoveMode(*nativeRoot, *os.File, string, string, bool, bool, bool) error {
+	return ErrUnavailable
+}
 func ownedMove(*nativeRoot, *os.File, string, string, bool, bool) error { return ErrUnavailable }

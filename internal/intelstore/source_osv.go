@@ -120,6 +120,9 @@ func (t *Transaction) stageSourceObject(input io.Reader, max uint64, kind reques
 	if t.closed || t.failed != nil || max > limit || t.held < 4096 || max > t.held-4096 || t.writer.Matches(t.work, t.store.root, "writer.lock", true) != nil {
 		return nil, sha, md, ErrLimit
 	}
+	if e := t.fence(t.work); e != nil {
+		return nil, sha, md, e
+	}
 	h, m := sha256.New(), md5.New() // MD5 is only the selected GCS transport checksum.
 	f, e := t.store.owner.CopyExclusive(t.work, t.path+"/"+name, io.TeeReader(input, io.MultiWriter(h, m)), max)
 	if f != nil {

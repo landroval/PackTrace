@@ -26,9 +26,13 @@ func TestActivationProcessHelper(t *testing.T) {
 		t.Fatal(e)
 	}
 	defer tx.Close()
-	id, e := tx.seal(ctx, storageDraft(t, tx, "child-generation"))
-	if e != nil {
-		t.Fatal(e)
+	draft := storageDraft(t, tx, "child-generation")
+	var id ID
+	if os.Getenv("PACKTRACE_TEST_ACTIVATION_PHASE") != "pending" {
+		id, e = tx.seal(ctx, draft)
+		if e != nil {
+			t.Fatal(e)
+		}
 	}
 	if os.Getenv("PACKTRACE_TEST_ACTIVATION_PHASE") == "activated" {
 		if e := tx.activate(ctx, id); e != nil {
@@ -48,7 +52,7 @@ func TestActivationProcessHelper(t *testing.T) {
 	}
 }
 func TestActivationOriginalProcessCrashBeforeAndAfterPublication(t *testing.T) {
-	for _, phase := range []string{"sealed", "activated"} {
+	for _, phase := range []string{"pending", "sealed", "activated"} {
 		t.Run(phase, func(t *testing.T) {
 			ctx := context.Background()
 			s, path := transactionFixture(t)
@@ -113,7 +117,7 @@ func TestActivationOriginalProcessCrashBeforeAndAfterPublication(t *testing.T) {
 			if e != nil {
 				t.Fatal(e)
 			}
-			if phase == "sealed" && got != first || phase == "activated" && got != r.ID {
+			if (phase == "pending" || phase == "sealed") && got != first || phase == "activated" && got != r.ID {
 				t.Fatal("crash rebound incomplete/old generation")
 			}
 		})

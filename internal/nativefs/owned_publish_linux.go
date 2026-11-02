@@ -11,7 +11,10 @@ import (
 	"unsafe"
 )
 
-func ownedMove(n *nativeRoot, original *os.File, source, dest string, replace, flush bool) (failure error) {
+func ownedMove(n *nativeRoot, original *os.File, source, dest string, replace, flush bool) error {
+	return ownedMoveMode(n, original, source, dest, replace, flush, true)
+}
+func ownedMoveMode(n *nativeRoot, original *os.File, source, dest string, replace, flush, flushDirectories bool) (failure error) {
 	// Capture both directory I/O handles before rename changes their stamps.
 	dirs := make([]*os.File, 0, 2)
 	defer func() {
@@ -77,7 +80,7 @@ func ownedMove(n *nativeRoot, original *os.File, source, dest string, replace, f
 		return ErrWrite
 	}
 	for _, f := range dirs {
-		if f.Sync() != nil {
+		if flushDirectories && f.Sync() != nil {
 			return ErrWrite
 		}
 	}

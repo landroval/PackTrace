@@ -14,6 +14,9 @@ import (
 var ownedSetInfo = winNT.NewProc("NtSetInformationFile")
 
 func ownedMove(n *nativeRoot, f *os.File, source, dest string, replace, flush bool) error {
+	return ownedMoveMode(n, f, source, dest, replace, flush, true)
+}
+func ownedMoveMode(n *nativeRoot, f *os.File, source, dest string, replace, flush, flushDirectories bool) error {
 	if ownedSetInfo.Find() != nil {
 		return ErrUnavailable
 	}

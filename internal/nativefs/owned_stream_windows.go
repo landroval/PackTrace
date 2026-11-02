@@ -8,6 +8,9 @@ import (
 )
 
 func ownedCreatePath(n *nativeRoot, name string, directory bool) (*os.File, error) {
+	return ownedCreatePathMode(n, name, directory, true)
+}
+func ownedCreatePathMode(n *nativeRoot, name string, directory, durable bool) (*os.File, error) {
 	parentName, leaf := ".", name
 	if i := strings.LastIndexByte(name, '/'); i >= 0 {
 		parentName, leaf = name[:i], name[i+1:]

@@ -32,22 +32,23 @@ type ObjectRef struct {
 	Bytes  uint64
 }
 type Transaction struct {
-	mu       sync.Mutex
-	store    *Store
-	writer   *nativefs.OwnedLock
-	work     context.Context
-	cancel   context.CancelFunc
-	id       ID
-	path     string
-	held     uint64
-	written  uint64
-	sequence uint64
-	budget   Budget
-	failed   error
-	closed   bool
-	sealed   map[ID]sealedGeneration
-	prep     *preparationState
-	kind     operation
+	mu         sync.Mutex
+	store      *Store
+	writer     *nativefs.OwnedLock
+	durability *nativefs.DurabilityBatch
+	work       context.Context
+	cancel     context.CancelFunc
+	id         ID
+	path       string
+	held       uint64
+	written    uint64
+	sequence   uint64
+	budget     Budget
+	failed     error
+	closed     bool
+	sealed     map[ID]sealedGeneration
+	prep       *preparationState
+	kind       operation
 }
 type reservationJournal struct {
 	Version        int    `json:"version"`
@@ -133,9 +134,26 @@ func (s *Store) begin(ctx context.Context, kind operation, b *Budget) (*Transact
 		cancel()
 		return fail(ErrUnavailable)
 	}
+	if kind == operationSync || kind == operationImport {
+		t.durability, e = owner.BeginDurabilityBatch(work, writer)
+		if e != nil {
+			cancel()
+			return fail(ErrUnavailable)
+		}
+	}
 	return t, nil
 }
 
+func (t *Transaction) fence(ctx context.Context) error {
+	if t.durability == nil {
+		return nil
+	}
+	if e := t.durability.Fence(ctx); e != nil {
+		t.failed = e
+		return e
+	}
+	return nil
+}
 func (t *Transaction) put(ctx context.Context, input io.Reader, max uint64) (ObjectRef, error) {
 	if t == nil {
 		return ObjectRef{}, ErrUnavailable
@@ -168,7 +186,13 @@ func (t *Transaction) putLocked(ctx context.Context, input io.Reader, max uint64
 	work, cancel := context.WithCancel(t.work)
 	stop := context.AfterFunc(ctx, cancel)
 	defer func() { stop(); cancel() }()
-	f, e := t.store.owner.CopyExclusive(work, name, io.TeeReader(input, h), max)
+	var f *nativefs.OwnedFile
+	var e error
+	if t.durability != nil {
+		f, e = t.durability.CopyExclusive(work, name, io.TeeReader(input, h), max)
+	} else {
+		f, e = t.store.owner.CopyExclusive(work, name, io.TeeReader(input, h), max)
+	}
 	if f != nil {
 		n := uint64(f.Size())
 		t.written += n
@@ -194,10 +218,19 @@ func (t *Transaction) putLocked(ctx context.Context, input io.Reader, max uint64
 	key := hex.EncodeToString(sum[:])
 	parent := "objects/" + key[:2]
 	dest := parent + "/" + key
-	if e := t.store.owner.Mkdir(work, parent); e != nil {
+	if t.durability != nil {
+		e = t.durability.Mkdir(work, parent)
+	} else {
+		e = t.store.owner.Mkdir(work, parent)
+	}
+	if e != nil {
 		return fail(ErrUnavailable)
 	}
-	e = t.store.owner.Publish(work, f, dest, false)
+	if t.durability != nil {
+		e = t.durability.Publish(work, f, dest)
+	} else {
+		e = t.store.owner.Publish(work, f, dest, false)
+	}
 	if errors.Is(e, nativefs.ErrExists) {
 		old, e := t.store.root.OpenInput(work, dest, int64(ref.Bytes))
 		if e != nil {
@@ -230,6 +263,13 @@ func (t *Transaction) Close() error {
 		return ErrUnavailable
 	}
 	t.closed = true
+	var durabilityErr error
+	if t.durability != nil {
+		durabilityErr = t.durability.Close()
+		if durabilityErr != nil {
+			t.failed = errors.Join(t.failed, durabilityErr)
+		}
+	}
 	var receiptErr error
 	if t.work.Err() == nil && t.held >= 4096 {
 		data, _ := json.Marshal(struct {
@@ -248,5 +288,5 @@ func (t *Transaction) Close() error {
 	t.store.mu.Lock()
 	t.store.active = false
 	t.store.mu.Unlock()
-	return errors.Join(t.failed, receiptErr, leaseErr)
+	return errors.Join(t.failed, durabilityErr, receiptErr, leaseErr)
 }

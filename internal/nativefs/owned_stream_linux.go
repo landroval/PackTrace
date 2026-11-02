@@ -11,6 +11,9 @@ import (
 )
 
 func ownedCreatePath(n *nativeRoot, name string, directory bool) (*os.File, error) {
+	return ownedCreatePathMode(n, name, directory, true)
+}
+func ownedCreatePathMode(n *nativeRoot, name string, directory, durable bool) (*os.File, error) {
 	parentName, leaf := ".", name
 	if i := strings.LastIndexByte(name, '/'); i >= 0 {
 		parentName, leaf = name[:i], name[i+1:]
@@ -43,7 +46,7 @@ func ownedCreatePath(n *nativeRoot, name string, directory bool) (*os.File, erro
 			f.Close()
 			return nil, ErrPath
 		}
-		if dir.Sync() != nil {
+		if durable && dir.Sync() != nil {
 			f.Close()
 			return nil, ErrWrite
 		}
@@ -67,7 +70,7 @@ func ownedCreatePath(n *nativeRoot, name string, directory bool) (*os.File, erro
 		f.Close()
 		return nil, ErrUnstable
 	}
-	if dir.Sync() != nil {
+	if durable && dir.Sync() != nil {
 		f.Close()
 		return nil, ErrWrite
 	}
