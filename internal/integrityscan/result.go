@@ -9,6 +9,7 @@ import (
 
 	"packtrace/internal/cli"
 	"packtrace/internal/integrity"
+	"packtrace/internal/projectinventory"
 )
 
 // ValidateRecord checks native/engine receipts against parent-owned scope. No
@@ -119,6 +120,7 @@ type Report struct {
 	Coverage            []Coverage                        `json:"coverage"`
 	Resources           Resources                         `json:"resources"`
 	Comparison          integrity.PortableIntegrityResult `json:"comparison"`
+	Inventory           *projectinventory.PublicInventory `json:"inventory,omitempty"`
 }
 
 func BuildReport(plan Plan, records []Record, summary Summary, resources Resources, interrupted, abnormal bool) Report {
@@ -169,7 +171,49 @@ func BuildReport(plan Plan, records []Record, summary Summary, resources Resourc
 	r.ExitCode = cli.SelectScanExit(cli.ScanExitConditions{Interrupted: interrupted, RequiredCoverageIncomplete: true, EnforcedUnacceptedFindings: findings > 0 && plan.FailOn&cli.ArgumentCheckIntegrity != 0})
 	return r
 }
+
+// BuildReportWithInventory is scan's additive 1.1 projection. Historical stdin
+// reports and the supplied-evidence engine retain their separate contracts.
+func BuildReportWithInventory(plan Plan, records []Record, summary Summary, resources Resources, interrupted, abnormal bool, p *projectinventory.PublicInventory) Report {
+	r := BuildReport(plan, records, summary, resources, interrupted, abnormal)
+	r.SchemaVersion = "1.1"
+	if p == nil || projectinventory.ValidatePublic(*p) != nil {
+		return r
+	}
+	copy := *p
+	if abnormal || resources.QueryFailed || resources.Stale || resources.Stopped {
+		copy.Complete = false
+		copy.Gaps = append([]projectinventory.Gap(nil), p.Gaps...)
+		found := false
+		for _, g := range copy.Gaps {
+			found = found || g.Code == "execution-incomplete"
+		}
+		if !found {
+			g := projectinventory.Gap{Code: "execution-incomplete"}
+			if len(copy.Gaps) < 257 {
+				copy.Gaps = append(copy.Gaps, g)
+			} else {
+				copy.Gaps[len(copy.Gaps)-1] = g
+			}
+		}
+		copy.Counts.Gaps = len(copy.Gaps)
+	}
+	r.Inventory = &copy
+	for i := range r.Coverage {
+		if r.Coverage[i].Check == "inventory" {
+			r.Coverage[i].Reason = "native-live-declared-locked-installed-evidence; not-runtime-resolution-or-authentication"
+			if copy.Complete && summary.InventoryComplete && !abnormal {
+				r.Coverage[i].Outcome = "completed"
+			}
+		}
+	}
+	return r
+}
+
 func Render(r Report, format string) ([]byte, error) {
+	if r.Inventory != nil && projectinventory.ValidatePublic(*r.Inventory) != nil {
+		return nil, errors.New("scan: report-failed")
+	}
 	switch format {
 	case "json":
 		data, e := json.MarshalIndent(r, "", "  ")
@@ -178,6 +222,17 @@ func Render(r Report, format string) ([]byte, error) {
 		var out strings.Builder
 		fmt.Fprintln(&out, "PackTrace offline integrity — GATED CANDIDATE; not a qualified release")
 		fmt.Fprintf(&out, "Observed entries: %d; instances: %d; drift findings: %d\n", r.ObservedEntries, r.Instances, r.Findings)
+		if r.Inventory != nil {
+			p := r.Inventory
+			c := p.Counts
+			fmt.Fprintf(&out, "Inventory: declared=%d locked=%d installed=%d scopes=%d; complete=%t\n", c.Declared, c.Locked, c.Installed, c.Scopes, p.Complete)
+			for _, x := range p.Relations {
+				fmt.Fprintf(&out, "Inventory relation: %s %d -> %d (%s)\n", x.Kind, x.From, x.To, x.Status)
+			}
+			for _, g := range p.Gaps {
+				fmt.Fprintf(&out, "Inventory gap: %s scope=%d evidence=%d\n", g.Code, g.Scope, g.Evidence)
+			}
+		}
 		for _, c := range r.Coverage {
 			fmt.Fprintf(&out, "%s: %s (%s)\n", c.Check, c.Outcome, c.Reason)
 		}

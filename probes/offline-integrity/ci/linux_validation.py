@@ -19,7 +19,7 @@ PROFILE = 'linux-scan-amd64-v1'
 GO_SIZE = 70553950
 GO_SHA256 = '63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445'
 PACKAGES = ['./internal/nativefs', './internal/nativeresource', './internal/integrityscan',
-            './internal/execution', './cmd/packtrace']
+            './internal/projectinventory', './internal/execution', './cmd/packtrace']
 ORIGINAL_PACKAGES = ['./internal/integrityscan', './internal/nativefs', './cmd/packtrace']
 
 

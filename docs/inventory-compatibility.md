@@ -1,8 +1,50 @@
 # Inventory compatibility and SCALIBR evaluation
 
-**Status:** package-manager evaluation baseline and probe A approved, including
-pinned public Go dependency downloads and isolated local Linux execution.
-Production implementation and later qualification remain unapproved.
+**Current status:** issue #5's separately approved native inventory implementation
+and bounded producer preparation are now a candidate. Exact-source public native
+acceptance and protected integration are pending; no release is qualified.
+
+## Current owned-producer candidate evidence
+
+The production adapter is PackTrace-owned and stdlib-only; SCALIBR was not adopted.
+`internal/projectinventory` separates declarations, locked claims, installed slots,
+physical-link evidence, candidate correspondences and gaps. The existing supervised
+scan validates finite portable batches/closures in its parent before common
+terminal/JSON 1.1/SARIF projection. Complete scoped inventory is not authenticated
+origin, runtime resolution, complete matching/integrity coverage or release.
+
+Five exact official artifacts were digest/byte pinned, extracted under bounds and
+license/runtime recorded before execution. They ran only on owned inert projects
+inside a private rootless namespace: read-only root/tools, loopback-only networking,
+positive/negative file/network controls, scripts disabled, kernel-limited 512 MiB
+scratch, bounded output/deadlines and observed wait/reap/group cleanup. Existing
+Node v26.12.1 was used; no system installation or investigated project was used.
+
+| Actual producer | Genuine captured rows | Limits retained |
+| --- | --- | --- |
+| npm 8.19.4 | v2 single, shrinkwrap, workspaces, local-directory/tarball/Git/URL sources | Initial private-shell setup failure retained; corrected batch passed; 10 producer calls total |
+| npm 10.9.4 | v3 same four rows | Five producer calls; not npm12 or every npm10 release |
+| npm 11.6.2 | v3 same four rows | Five producer calls; not blanket npm11 compatibility |
+| Bun 1.3.2 | v1 hoisted single, isolated workspaces, non-Git local/tarball/URL sources, hardlink refusal | Two actual Git+file failures (HEAD and commit) remain **unqualified**; 11 calls total |
+| Bun 1.4.2 | v2 same four rows plus isolated nested/bundled/peer-context single project | Seven calls; external stores and unexecuted v3 override forms remain unqualified |
+
+The inert, digest-indexed corpus is in
+`internal/projectinventory/testdata/producer/`; producer tools/caches and operation
+receipts stay outside the checkout. Replay reconstructs original link targets and
+hardlink multiplicity, including owned aliases outside the selected fixture root.
+It never copies unsafe manifests into apparently qualified evidence. A skipped
+Windows link-creation row is explicitly not qualified; no privilege is enabled.
+Generation on Linux is not producer execution on Windows or arm64.
+
+Only supported literal workspace paths and one-level `packages/*`/`apps/*` expand.
+Unknown/overlapping ownership, unsafe inputs, unsupported manager/configuration,
+absent lockfiles and exhausted allowances remain gaps without discarding valid
+sibling claims. Generic source files, secrets and orphan store manifests are not
+content-read. Bundled integrity ownership remains governed by #10's separate rule.
+
+**Historical evaluation record below:** the original probe proposal/results are
+preserved, not current implementation authorization or a claim that SCALIBR,
+macOS, Windows native x64 hardware or untested producer variants were qualified.
 **Research date:** 2026-09-26 (UTC).
 **Extractor runtime evidence:** probe A now has a
 [results report](inventory-evaluation-results.md): 73 synthetic Linux cases

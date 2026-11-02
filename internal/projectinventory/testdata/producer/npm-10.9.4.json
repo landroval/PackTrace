@@ -1,0 +1,735 @@
+{
+  "captures": [
+    {
+      "backend": "copyfile",
+      "case": "single",
+      "contentBytes": 3333,
+      "entries": [
+        {
+          "kind": "directory",
+          "path": "node_modules"
+        },
+        {
+          "kind": "file",
+          "links": 1,
+          "object": 3,
+          "path": "node_modules/.package-lock.json",
+          "size": 1862
+        },
+        {
+          "kind": "directory",
+          "path": "node_modules/fixture-alias"
+        },
+        {
+          "kind": "file",
+          "links": 1,
+          "object": 14,
+          "path": "node_modules/fixture-alias/index.js",
+          "size": 50
+        },
+        {
+          "data": "{\"name\": \"fixture-common\", \"version\": \"1.0.0\"}\n",
+          "kind": "file",
+          "links": 1,
+          "object": 15,
+          "path": "node_modules/fixture-alias/package.json",
+          "sha256": "fa0fc24ce9789537489c3526d0cb8c29bc56028b30e4ca89ca8f4dc00f33c8f3",
+          "size": 47
+        },
+        {
+          "kind": "directory",
+          "path": "node_modules/fixture-common"
+        },
+        {
+          "kind": "file",
+          "links": 1,
+          "object": 12,
+          "path": "node_modules/fixture-common/index.js",
+          "size": 50
+        },
+        {
+          "data": "{\"name\": \"fixture-common\", \"version\": \"2.0.0\"}\n",
+          "kind": "file",
+          "links": 1,
+          "object": 13,
+          "path": "node_modules/fixture-common/package.json",
+          "sha256": "c800d847db65989ea653b239ebf69bdfb22f8efef02141325af8638aea717f32",
+          "size": 47
+        },
+        {
+          "kind": "directory",
+          "path": "node_modules/fixture-parent"
+        },
+        {
+          "kind": "file",
+          "links": 1,
+          "object": 6,
+          "path": "node_modules/fixture-parent/index.js",
+          "size": 50
+        },
+        {
+          "kind": "directory",
+          "path": "node_modules/fixture-parent/node_modules"
+        },
+        {
+          "kind": "directory",
+          "path": "node_modules/fixture-parent/node_modules/fixture-bundle"
+        },
+        {
+          "kind": "file",
+          "links": 1,
+          "object": 10,
+          "path": "node_modules/fixture-parent/node_modules/fixture-bundle/index.js",
+          "size": 31
+        },
+        {
+          "data": "{\"name\": \"fixture-bundle\", \"version\": \"1.0.0\"}",
+          "kind": "file",
+          "links": 1,
+          "object": 11,
+          "path": "node_modules/fixture-parent/node_modules/fixture-bundle/package.json",
+          "sha256": "286589ccabb88dd5e89cbdaffe86b85cff225ec98c0a76aa52bde953670cb317",
+          "size": 46
+        },
+        {
+          "kind": "directory",
+          "path": "node_modules/fixture-parent/node_modules/fixture-common"
+        },
+        {
+          "kind": "file",
+          "links": 1,
+          "object": 8,
+          "path": "node_modules/fixture-parent/node_modules/fixture-common/index.js",
+          "size": 50
+        },
+        {
+          "data": "{\"name\": \"fixture-common\", \"version\": \"1.0.0\"}\n",
+          "kind": "file",
+          "links": 1,
+          "object": 9,
+          "path": "node_modules/fixture-parent/node_modules/fixture-common/package.json",
+          "sha256": "fa0fc24ce9789537489c3526d0cb8c29bc56028b30e4ca89ca8f4dc00f33c8f3",
+          "size": 47
+        },
+        {
+          "data": "{\"bundleDependencies\": [\"fixture-bundle\"], \"dependencies\": {\"fixture-bundle\": \"1.0.0\", \"fixture-common\": \"1.0.0\"}, \"name\": \"fixture-parent\", \"peerDependencies\": {\"fixture-peer\": \"*\"}, \"scripts\": {\"postinstall\": \"echo unexpected > /work/LIFECYCLE_EXECUTED\"}, \"version\": \"1.0.0\"}\n",
+          "kind": "file",
+          "links": 1,
+          "object": 7,
+          "path": "node_modules/fixture-parent/package.json",
+          "sha256": "b95118f5106a3fb4207f7f6c17817a284988b1c798beabd74a7c17ad6668d29a",
+          "size": 278
+        },
+        {
+          "kind": "directory",
+          "path": "node_modules/fixture-peer"
+        },
+        {
+          "kind": "file",
+          "links": 1,
+          "object": 4,
+          "path": "node_modules/fixture-peer/index.js",
+          "size": 50
+        },
+        {
+          "data": "{\"name\": \"fixture-peer\", \"version\": \"1.0.0\"}\n",
+          "kind": "file",
+          "links": 1,
+          "object": 5,
+          "path": "node_modules/fixture-peer/package.json",
+          "sha256": "b303133757a018ffced74c59d2d78fc7cb4911f1ee5e70ae97225c6917d8b492",
+          "size": 45
+        },
+        {
+          "data": "{\n  \"name\": \"owned-root\",\n  \"version\": \"1.0.0\",\n  \"lockfileVersion\": 3,\n  \"requires\": true,\n  \"packages\": {\n    \"\": {\n      \"name\": \"owned-root\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"fixture-alias\": \"npm:fixture-common@1.0.0\",\n        \"fixture-common\": \"2.0.0\",\n        \"fixture-parent\": \"1.0.0\",\n        \"fixture-peer\": \"1.0.0\"\n      },\n      \"optionalDependencies\": {\n        \"fixture-platform\": \"1.0.0\"\n      }\n    },\n    \"node_modules/fixture-alias\": {\n      \"name\": \"fixture-common\",\n      \"version\": \"1.0.0\",\n      \"resolved\": \"http://127.0.0.1:41769/files/fixture-common-1.0.0.tgz\",\n      \"integrity\": \"sha512-UpV3jVZqSoBAf4fsTeGs3+K418HmJJrbQx8ofK+oUebXPWYWlBKbrlisMMa0EVKPDwFJgxksZTx+45csVyCROA==\"\n    },\n    \"node_modules/fixture-common\": {\n      \"version\": \"2.0.0\",\n      \"resolved\": \"http://127.0.0.1:41769/files/fixture-common-2.0.0.tgz\",\n      \"integrity\": \"sha512-OHJBVs6reDQxuaIBU2tDtoF8eJwq/QINBnOWmUCoxlktCFvUxLN8K9/Tl46+eRyXWe+qoVvsb2JLDc6Liliy2A==\"\n    },\n    \"node_modules/fixture-parent\": {\n      \"version\": \"1.0.0\",\n      \"resolved\": \"http://127.0.0.1:41769/files/fixture-parent-1.0.0.tgz\",\n      \"integrity\": \"sha512-1Q8n4RrCaLYvQCeRFAceihI6VD8kplR2nd2uKA1r4riipqKw9Kc7TnNigWVEP94L5nrjKDpq5wATgEIMjZDVmQ==\",\n      \"bundleDependencies\": [\n        \"fixture-bundle\"\n      ],\n      \"hasInstallScript\": true,\n      \"dependencies\": {\n        \"fixture-bundle\": \"1.0.0\",\n        \"fixture-common\": \"1.0.0\"\n      },\n      \"peerDependencies\": {\n        \"fixture-peer\": \"*\"\n      }\n    },\n    \"node_modules/fixture-parent/node_modules/fixture-bundle\": {\n      \"version\": \"1.0.0\",\n      \"inBundle\": true\n    },\n    \"node_modules/fixture-parent/node_modules/fixture-common\": {\n      \"version\": \"1.0.0\",\n      \"resolved\": \"http://127.0.0.1:41769/files/fixture-common-1.0.0.tgz\",\n      \"integrity\": \"sha512-UpV3jVZqSoBAf4fsTeGs3+K418HmJJrbQx8ofK+oUebXPWYWlBKbrlisMMa0EVKPDwFJgxksZTx+45csVyCROA==\"\n    },\n    \"node_modules/fixture-peer\": {\n      \"version\": \"1.0.0\",\n      \"resolved\": \"http://127.0.0.1:41769/files/fixture-peer-1.0.0.tgz\",\n      \"integrity\": \"sha512-H1gQy6WWS+GIvSJ8KUHrFDU6IVBrKj/8pPcmcTV47LoV3Bfp8ewHtL+kswG5EFeKsNEbn2doNd6X43Wbv8gbKA==\"\n    },\n    \"node_modules/fixture-platform\": {\n      \"version\": \"1.0.0\",\n      \"resolved\": \"http://127.0.0.1:41769/files/fixture-platform-1.0.0.tgz\",\n      \"integrity\": \"sha512-csZRvmMoQ81Yz5lCYSGqC1U4lD5bHws0HELftmv4/XTYMBYzrZF1LYnK5N/uwsagDoLJBG1j9zKd8aUbIMWV0w==\",\n      \"cpu\": [\n        \"arm64\"\n      ],\n      \"optional\": true,\n      \"os\": [\n        \"darwin\"\n      ]\n    }\n  }\n}\n",
+          "kind": "file",
+          "links": 1,
+          "object": 1,
+          "path": "package-lock.json",
+          "sha256": "7f78c1e7066bed6cedca482195cc537d6e382f0831a6c993473461784b79d37f",
+          "size": 2567
+        },
+        {
+          "data": "{\"dependencies\": {\"fixture-alias\": \"npm:fixture-common@1.0.0\", \"fixture-common\": \"2.0.0\", \"fixture-parent\": \"1.0.0\", \"fixture-peer\": \"1.0.0\"}, \"name\": \"owned-root\", \"optionalDependencies\": {\"fixture-platform\": \"1.0.0\"}, \"private\": true, \"version\": \"1.0.0\"}",
+          "kind": "file",
+          "links": 1,
+          "object": 2,
+          "path": "package.json",
+          "sha256": "cfe4abcba5157ca7315512e1c69afcc803c924788951a574cece6d43158466d4",
+          "size": 256
+        }
+      ],
+      "expected": {
+        "minimumCommonOneCopies": 2,
+        "optionalAbsent": [
+          "fixture-platform"
+        ],
+        "scopes": 1,
+        "versions": {
+          "fixture-bundle": [
+            "1.0.0"
+          ],
+          "fixture-common": [
+            "1.0.0",
+            "2.0.0"
+          ],
+          "fixture-parent": [
+            "1.0.0"
+          ],
+          "fixture-peer": [
+            "1.0.0"
+          ]
+        }
+      },
+      "layout": "hoisted",
+      "proof": {
+        "actualVersion": "10.9.4",
+        "argv": [
+          "/usr/bin/node",
+          "/tools/package/bin/npm-cli.js",
+          "install",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund",
+          "--install-links",
+          "--registry",
+          "http://127.0.0.1:41769",
+          "--userconfig",
+          "/work/config/user",
+          "--globalconfig",
+          "/work/config/global",
+          "--cache",
+          "/work/cache/npm"
+        ],
+        "captureSHA256": "0fadb5983ecc4ff1f22e58c6c5abb2be97aef8da8505951a0beeda27f6f1e1d6",
+        "exit": 0,
+        "generatorSHA256": "e18ac27f9205acb9691064c3669d785b2ac6b1a75d1c47168a588f5efe60def3",
+        "groupClean": true,
+        "producerInvocation": 2,
+        "reaped": true
+      }
+    },
+    {
+      "backend": "copyfile",
+      "case": "shrinkwrap",
+      "contentBytes": 3333,
+      "entries": [
+        {
+          "kind": "directory",
+          "path": "node_modules"
+        },
+        {
+          "kind": "file",
+          "links": 1,
+          "object": 3,
+          "path": "node_modules/.package-lock.json",
+          "size": 1862
+        },
+        {
+          "kind": "directory",
+          "path": "node_modules/fixture-alias"
+        },
+        {
+          "kind": "file",
+          "links": 1,
+          "object": 14,
+          "path": "node_modules/fixture-alias/index.js",
+          "size": 50
+        },
+        {
+          "data": "{\"name\": \"fixture-common\", \"version\": \"1.0.0\"}\n",
+          "kind": "file",
+          "links": 1,
+          "object": 15,
+          "path": "node_modules/fixture-alias/package.json",
+          "sha256": "fa0fc24ce9789537489c3526d0cb8c29bc56028b30e4ca89ca8f4dc00f33c8f3",
+          "size": 47
+        },
+        {
+          "kind": "directory",
+          "path": "node_modules/fixture-common"
+        },
+        {
+          "kind": "file",
+          "links": 1,
+          "object": 12,
+          "path": "node_modules/fixture-common/index.js",
+          "size": 50
+        },
+        {
+          "data": "{\"name\": \"fixture-common\", \"version\": \"2.0.0\"}\n",
+          "kind": "file",
+          "links": 1,
+          "object": 13,
+          "path": "node_modules/fixture-common/package.json",
+          "sha256": "c800d847db65989ea653b239ebf69bdfb22f8efef02141325af8638aea717f32",
+          "size": 47
+        },
+        {
+          "kind": "directory",
+          "path": "node_modules/fixture-parent"
+        },
+        {
+          "kind": "file",
+          "links": 1,
+          "object": 6,
+          "path": "node_modules/fixture-parent/index.js",
+          "size": 50
+        },
+        {
+          "kind": "directory",
+          "path": "node_modules/fixture-parent/node_modules"
+        },
+        {
+          "kind": "directory",
+          "path": "node_modules/fixture-parent/node_modules/fixture-bundle"
+        },
+        {
+          "kind": "file",
+          "links": 1,
+          "object": 10,
+          "path": "node_modules/fixture-parent/node_modules/fixture-bundle/index.js",
+          "size": 31
+        },
+        {
+          "data": "{\"name\": \"fixture-bundle\", \"version\": \"1.0.0\"}",
+          "kind": "file",
+          "links": 1,
+          "object": 11,
+          "path": "node_modules/fixture-parent/node_modules/fixture-bundle/package.json",
+          "sha256": "286589ccabb88dd5e89cbdaffe86b85cff225ec98c0a76aa52bde953670cb317",
+          "size": 46
+        },
+        {
+          "kind": "directory",
+          "path": "node_modules/fixture-parent/node_modules/fixture-common"
+        },
+        {
+          "kind": "file",
+          "links": 1,
+          "object": 8,
+          "path": "node_modules/fixture-parent/node_modules/fixture-common/index.js",
+          "size": 50
+        },
+        {
+          "data": "{\"name\": \"fixture-common\", \"version\": \"1.0.0\"}\n",
+          "kind": "file",
+          "links": 1,
+          "object": 9,
+          "path": "node_modules/fixture-parent/node_modules/fixture-common/package.json",
+          "sha256": "fa0fc24ce9789537489c3526d0cb8c29bc56028b30e4ca89ca8f4dc00f33c8f3",
+          "size": 47
+        },
+        {
+          "data": "{\"bundleDependencies\": [\"fixture-bundle\"], \"dependencies\": {\"fixture-bundle\": \"1.0.0\", \"fixture-common\": \"1.0.0\"}, \"name\": \"fixture-parent\", \"peerDependencies\": {\"fixture-peer\": \"*\"}, \"scripts\": {\"postinstall\": \"echo unexpected > /work/LIFECYCLE_EXECUTED\"}, \"version\": \"1.0.0\"}\n",
+          "kind": "file",
+          "links": 1,
+          "object": 7,
+          "path": "node_modules/fixture-parent/package.json",
+          "sha256": "b95118f5106a3fb4207f7f6c17817a284988b1c798beabd74a7c17ad6668d29a",
+          "size": 278
+        },
+        {
+          "kind": "directory",
+          "path": "node_modules/fixture-peer"
+        },
+        {
+          "kind": "file",
+          "links": 1,
+          "object": 4,
+          "path": "node_modules/fixture-peer/index.js",
+          "size": 50
+        },
+        {
+          "data": "{\"name\": \"fixture-peer\", \"version\": \"1.0.0\"}\n",
+          "kind": "file",
+          "links": 1,
+          "object": 5,
+          "path": "node_modules/fixture-peer/package.json",
+          "sha256": "b303133757a018ffced74c59d2d78fc7cb4911f1ee5e70ae97225c6917d8b492",
+          "size": 45
+        },
+        {
+          "data": "{\n  \"name\": \"owned-root\",\n  \"version\": \"1.0.0\",\n  \"lockfileVersion\": 3,\n  \"requires\": true,\n  \"packages\": {\n    \"\": {\n      \"name\": \"owned-root\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"fixture-alias\": \"npm:fixture-common@1.0.0\",\n        \"fixture-common\": \"2.0.0\",\n        \"fixture-parent\": \"1.0.0\",\n        \"fixture-peer\": \"1.0.0\"\n      },\n      \"optionalDependencies\": {\n        \"fixture-platform\": \"1.0.0\"\n      }\n    },\n    \"node_modules/fixture-alias\": {\n      \"name\": \"fixture-common\",\n      \"version\": \"1.0.0\",\n      \"resolved\": \"http://127.0.0.1:41769/files/fixture-common-1.0.0.tgz\",\n      \"integrity\": \"sha512-UpV3jVZqSoBAf4fsTeGs3+K418HmJJrbQx8ofK+oUebXPWYWlBKbrlisMMa0EVKPDwFJgxksZTx+45csVyCROA==\"\n    },\n    \"node_modules/fixture-common\": {\n      \"version\": \"2.0.0\",\n      \"resolved\": \"http://127.0.0.1:41769/files/fixture-common-2.0.0.tgz\",\n      \"integrity\": \"sha512-OHJBVs6reDQxuaIBU2tDtoF8eJwq/QINBnOWmUCoxlktCFvUxLN8K9/Tl46+eRyXWe+qoVvsb2JLDc6Liliy2A==\"\n    },\n    \"node_modules/fixture-parent\": {\n      \"version\": \"1.0.0\",\n      \"resolved\": \"http://127.0.0.1:41769/files/fixture-parent-1.0.0.tgz\",\n      \"integrity\": \"sha512-1Q8n4RrCaLYvQCeRFAceihI6VD8kplR2nd2uKA1r4riipqKw9Kc7TnNigWVEP94L5nrjKDpq5wATgEIMjZDVmQ==\",\n      \"bundleDependencies\": [\n        \"fixture-bundle\"\n      ],\n      \"hasInstallScript\": true,\n      \"dependencies\": {\n        \"fixture-bundle\": \"1.0.0\",\n        \"fixture-common\": \"1.0.0\"\n      },\n      \"peerDependencies\": {\n        \"fixture-peer\": \"*\"\n      }\n    },\n    \"node_modules/fixture-parent/node_modules/fixture-bundle\": {\n      \"version\": \"1.0.0\",\n      \"inBundle\": true\n    },\n    \"node_modules/fixture-parent/node_modules/fixture-common\": {\n      \"version\": \"1.0.0\",\n      \"resolved\": \"http://127.0.0.1:41769/files/fixture-common-1.0.0.tgz\",\n      \"integrity\": \"sha512-UpV3jVZqSoBAf4fsTeGs3+K418HmJJrbQx8ofK+oUebXPWYWlBKbrlisMMa0EVKPDwFJgxksZTx+45csVyCROA==\"\n    },\n    \"node_modules/fixture-peer\": {\n      \"version\": \"1.0.0\",\n      \"resolved\": \"http://127.0.0.1:41769/files/fixture-peer-1.0.0.tgz\",\n      \"integrity\": \"sha512-H1gQy6WWS+GIvSJ8KUHrFDU6IVBrKj/8pPcmcTV47LoV3Bfp8ewHtL+kswG5EFeKsNEbn2doNd6X43Wbv8gbKA==\"\n    },\n    \"node_modules/fixture-platform\": {\n      \"version\": \"1.0.0\",\n      \"resolved\": \"http://127.0.0.1:41769/files/fixture-platform-1.0.0.tgz\",\n      \"integrity\": \"sha512-csZRvmMoQ81Yz5lCYSGqC1U4lD5bHws0HELftmv4/XTYMBYzrZF1LYnK5N/uwsagDoLJBG1j9zKd8aUbIMWV0w==\",\n      \"cpu\": [\n        \"arm64\"\n      ],\n      \"optional\": true,\n      \"os\": [\n        \"darwin\"\n      ]\n    }\n  }\n}\n",
+          "kind": "file",
+          "links": 1,
+          "object": 1,
+          "path": "npm-shrinkwrap.json",
+          "sha256": "7f78c1e7066bed6cedca482195cc537d6e382f0831a6c993473461784b79d37f",
+          "size": 2567
+        },
+        {
+          "data": "{\"dependencies\": {\"fixture-alias\": \"npm:fixture-common@1.0.0\", \"fixture-common\": \"2.0.0\", \"fixture-parent\": \"1.0.0\", \"fixture-peer\": \"1.0.0\"}, \"name\": \"owned-root\", \"optionalDependencies\": {\"fixture-platform\": \"1.0.0\"}, \"private\": true, \"version\": \"1.0.0\"}",
+          "kind": "file",
+          "links": 1,
+          "object": 2,
+          "path": "package.json",
+          "sha256": "cfe4abcba5157ca7315512e1c69afcc803c924788951a574cece6d43158466d4",
+          "size": 256
+        }
+      ],
+      "expected": {
+        "minimumCommonOneCopies": 2,
+        "optionalAbsent": [
+          "fixture-platform"
+        ],
+        "scopes": 1,
+        "versions": {
+          "fixture-bundle": [
+            "1.0.0"
+          ],
+          "fixture-common": [
+            "1.0.0",
+            "2.0.0"
+          ],
+          "fixture-parent": [
+            "1.0.0"
+          ],
+          "fixture-peer": [
+            "1.0.0"
+          ]
+        }
+      },
+      "layout": "hoisted",
+      "proof": {
+        "actualVersion": "10.9.4",
+        "argv": [
+          "/usr/bin/node",
+          "/tools/package/bin/npm-cli.js",
+          "shrinkwrap",
+          "--ignore-scripts"
+        ],
+        "captureSHA256": "3b7911c4b591ce710bb297677d21bbafd3a1a04838c6bc05c2a8f135846fc110",
+        "exit": 0,
+        "generatorSHA256": "e18ac27f9205acb9691064c3669d785b2ac6b1a75d1c47168a588f5efe60def3",
+        "groupClean": true,
+        "producerInvocation": 3,
+        "reaped": true
+      }
+    },
+    {
+      "backend": "copyfile",
+      "case": "workspaces",
+      "contentBytes": 1417,
+      "entries": [
+        {
+          "kind": "directory",
+          "path": "node_modules"
+        },
+        {
+          "kind": "file",
+          "links": 1,
+          "object": 6,
+          "path": "node_modules/.package-lock.json",
+          "size": 909
+        },
+        {
+          "kind": "directory",
+          "path": "node_modules/fixture-common"
+        },
+        {
+          "kind": "file",
+          "links": 1,
+          "object": 7,
+          "path": "node_modules/fixture-common/index.js",
+          "size": 50
+        },
+        {
+          "data": "{\"name\": \"fixture-common\", \"version\": \"2.0.0\"}\n",
+          "kind": "file",
+          "links": 1,
+          "object": 8,
+          "path": "node_modules/fixture-common/package.json",
+          "sha256": "c800d847db65989ea653b239ebf69bdfb22f8efef02141325af8638aea717f32",
+          "size": 47
+        },
+        {
+          "kind": "link",
+          "path": "node_modules/fixture-member",
+          "target": "../packages/member"
+        },
+        {
+          "data": "{\n  \"name\": \"owned-root\",\n  \"version\": \"1.0.0\",\n  \"lockfileVersion\": 3,\n  \"requires\": true,\n  \"packages\": {\n    \"\": {\n      \"name\": \"owned-root\",\n      \"version\": \"1.0.0\",\n      \"workspaces\": [\n        \"packages/*\"\n      ],\n      \"dependencies\": {\n        \"fixture-common\": \"2.0.0\"\n      }\n    },\n    \"node_modules/fixture-common\": {\n      \"version\": \"2.0.0\",\n      \"resolved\": \"http://127.0.0.1:41769/files/fixture-common-2.0.0.tgz\",\n      \"integrity\": \"sha512-OHJBVs6reDQxuaIBU2tDtoF8eJwq/QINBnOWmUCoxlktCFvUxLN8K9/Tl46+eRyXWe+qoVvsb2JLDc6Liliy2A==\"\n    },\n    \"node_modules/fixture-member\": {\n      \"resolved\": \"packages/member\",\n      \"link\": true\n    },\n    \"packages/member\": {\n      \"name\": \"fixture-member\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"fixture-common\": \"1.0.0\"\n      }\n    },\n    \"packages/member/node_modules/fixture-common\": {\n      \"version\": \"1.0.0\",\n      \"resolved\": \"http://127.0.0.1:41769/files/fixture-common-1.0.0.tgz\",\n      \"integrity\": \"sha512-UpV3jVZqSoBAf4fsTeGs3+K418HmJJrbQx8ofK+oUebXPWYWlBKbrlisMMa0EVKPDwFJgxksZTx+45csVyCROA==\"\n    }\n  }\n}\n",
+          "kind": "file",
+          "links": 1,
+          "object": 1,
+          "path": "package-lock.json",
+          "sha256": "2eed8bff146d1ede54551ee498b65f361b27a57303ca7971ff164307add964ef",
+          "size": 1098
+        },
+        {
+          "data": "{\"dependencies\": {\"fixture-common\": \"2.0.0\"}, \"name\": \"owned-root\", \"private\": true, \"version\": \"1.0.0\", \"workspaces\": [\"packages/*\"]}",
+          "kind": "file",
+          "links": 1,
+          "object": 2,
+          "path": "package.json",
+          "sha256": "3e07ef43dbf9f03fcc5de602e7ccd47405a0d1410a5bcfe49a617f545123a388",
+          "size": 134
+        },
+        {
+          "kind": "directory",
+          "path": "packages"
+        },
+        {
+          "kind": "directory",
+          "path": "packages/member"
+        },
+        {
+          "kind": "directory",
+          "path": "packages/member/node_modules"
+        },
+        {
+          "kind": "directory",
+          "path": "packages/member/node_modules/fixture-common"
+        },
+        {
+          "kind": "file",
+          "links": 1,
+          "object": 4,
+          "path": "packages/member/node_modules/fixture-common/index.js",
+          "size": 50
+        },
+        {
+          "data": "{\"name\": \"fixture-common\", \"version\": \"1.0.0\"}\n",
+          "kind": "file",
+          "links": 1,
+          "object": 5,
+          "path": "packages/member/node_modules/fixture-common/package.json",
+          "sha256": "fa0fc24ce9789537489c3526d0cb8c29bc56028b30e4ca89ca8f4dc00f33c8f3",
+          "size": 47
+        },
+        {
+          "data": "{\"name\": \"fixture-member\", \"version\": \"1.0.0\", \"dependencies\": {\"fixture-common\": \"1.0.0\"}}",
+          "kind": "file",
+          "links": 1,
+          "object": 3,
+          "path": "packages/member/package.json",
+          "sha256": "bd191a7fbf8c84717ae6d6f88bf5c44152a1f5a01fc90e271a4a653201261d6a",
+          "size": 91
+        }
+      ],
+      "expected": {
+        "scopes": 2,
+        "versions": {
+          "fixture-common": [
+            "1.0.0",
+            "2.0.0"
+          ]
+        },
+        "workspaceManifest": "packages/member/package.json"
+      },
+      "layout": "hoisted",
+      "proof": {
+        "actualVersion": "10.9.4",
+        "argv": [
+          "/usr/bin/node",
+          "/tools/package/bin/npm-cli.js",
+          "install",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund",
+          "--install-links",
+          "--registry",
+          "http://127.0.0.1:41769",
+          "--userconfig",
+          "/work/config/user",
+          "--globalconfig",
+          "/work/config/global",
+          "--cache",
+          "/work/cache/npm"
+        ],
+        "captureSHA256": "4db59520f642c593faaaf9d0df1fea8d9b085c9eaaef1eb11405aabedac0ad61",
+        "exit": 0,
+        "generatorSHA256": "e18ac27f9205acb9691064c3669d785b2ac6b1a75d1c47168a588f5efe60def3",
+        "groupClean": true,
+        "producerInvocation": 4,
+        "reaped": true
+      }
+    },
+    {
+      "backend": "copyfile",
+      "case": "sources",
+      "contentBytes": 1704,
+      "entries": [
+        {
+          "kind": "directory",
+          "path": "node_modules"
+        },
+        {
+          "kind": "file",
+          "links": 1,
+          "object": 3,
+          "path": "node_modules/.package-lock.json",
+          "size": 882
+        },
+        {
+          "kind": "directory",
+          "path": "node_modules/fixture-file"
+        },
+        {
+          "data": "{\"name\": \"fixture-file\", \"version\": \"1.0.0\"}",
+          "kind": "file",
+          "links": 1,
+          "object": 10,
+          "path": "node_modules/fixture-file/package.json",
+          "sha256": "f425187618b8085e9ce63b74cee440992ce24f08e90d0bb2f16ccba494baf376",
+          "size": 44
+        },
+        {
+          "kind": "directory",
+          "path": "node_modules/fixture-git"
+        },
+        {
+          "kind": "file",
+          "links": 1,
+          "object": 8,
+          "path": "node_modules/fixture-git/index.js",
+          "size": 31
+        },
+        {
+          "data": "{\"name\": \"fixture-git\", \"version\": \"1.0.0\"}",
+          "kind": "file",
+          "links": 1,
+          "object": 9,
+          "path": "node_modules/fixture-git/package.json",
+          "sha256": "dbfe8eca1bf988ed26811e8bba8c0639d9cd2a197727690033f3b6c839436513",
+          "size": 43
+        },
+        {
+          "kind": "directory",
+          "path": "node_modules/fixture-tarball"
+        },
+        {
+          "kind": "file",
+          "links": 1,
+          "object": 6,
+          "path": "node_modules/fixture-tarball/index.js",
+          "size": 50
+        },
+        {
+          "data": "{\"name\": \"fixture-tarball\", \"version\": \"1.0.0\"}\n",
+          "kind": "file",
+          "links": 1,
+          "object": 7,
+          "path": "node_modules/fixture-tarball/package.json",
+          "sha256": "25abbb34b7ee453def46fa15c8967398d1c3f2339dcc81030ba321ad6784fe3b",
+          "size": 48
+        },
+        {
+          "kind": "directory",
+          "path": "node_modules/fixture-url"
+        },
+        {
+          "kind": "file",
+          "links": 1,
+          "object": 4,
+          "path": "node_modules/fixture-url/index.js",
+          "size": 50
+        },
+        {
+          "data": "{\"name\": \"fixture-url\", \"version\": \"1.0.0\"}\n",
+          "kind": "file",
+          "links": 1,
+          "object": 5,
+          "path": "node_modules/fixture-url/package.json",
+          "sha256": "bd8580f3960f9cc4384d12addfc9d9be09173468a66e644ae8107c8b15792f8f",
+          "size": 44
+        },
+        {
+          "data": "{\n  \"name\": \"owned-sources\",\n  \"version\": \"1.0.0\",\n  \"lockfileVersion\": 3,\n  \"requires\": true,\n  \"packages\": {\n    \"\": {\n      \"name\": \"owned-sources\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": {\n        \"fixture-file\": \"file:../../local-fixture\",\n        \"fixture-git\": \"git+file:///work/git-fixture\",\n        \"fixture-tarball\": \"file:../../fixture-tarball.tgz\",\n        \"fixture-url\": \"http://127.0.0.1:41769/files/fixture-url-1.0.0.tgz\"\n      }\n    },\n    \"node_modules/fixture-file\": {\n      \"version\": \"1.0.0\",\n      \"resolved\": \"file:../../local-fixture\"\n    },\n    \"node_modules/fixture-git\": {\n      \"version\": \"1.0.0\",\n      \"resolved\": \"git+file:///work/git-fixture#8e0cec7ded0d88b9217d6670ff3408c47fb42129\"\n    },\n    \"node_modules/fixture-tarball\": {\n      \"version\": \"1.0.0\",\n      \"resolved\": \"file:../../fixture-tarball.tgz\",\n      \"integrity\": \"sha512-zR1YIpAsjyadjdrJreXueHgxftyN/3ei6iD8UvIfgMHO8nvwHJwd/u5Txr3v9in1VjG3GDh1UlHaJKitBVaE7A==\"\n    },\n    \"node_modules/fixture-url\": {\n      \"version\": \"1.0.0\",\n      \"resolved\": \"http://127.0.0.1:41769/files/fixture-url-1.0.0.tgz\",\n      \"integrity\": \"sha512-MZhZKtSLO/psd4vYvvnwv96XmnmfR616JPJI+h4F8NelqZb9+bXQhgYb+vkCfw7ej7D3cLLRx9BP98EKPTEUXQ==\"\n    }\n  }\n}\n",
+          "kind": "file",
+          "links": 1,
+          "object": 1,
+          "path": "package-lock.json",
+          "sha256": "c3868d89f103139eb2b2486dceb1543ad4e7fcb741eb7a21c74f6bafdefc1073",
+          "size": 1232
+        },
+        {
+          "data": "{\"dependencies\": {\"fixture-file\": \"file:../../local-fixture\", \"fixture-git\": \"git+file:///work/git-fixture\", \"fixture-tarball\": \"file:../../fixture-tarball.tgz\", \"fixture-url\": \"http://127.0.0.1:41769/files/fixture-url-1.0.0.tgz\"}, \"name\": \"owned-sources\", \"private\": true, \"version\": \"1.0.0\"}",
+          "kind": "file",
+          "links": 1,
+          "object": 2,
+          "path": "package.json",
+          "sha256": "476e22f318a9a3673265a5106125a7003992a85ad42af6178dfde0f570108f31",
+          "size": 293
+        }
+      ],
+      "expected": {
+        "declaredKeys": [
+          "fixture-file",
+          "fixture-tarball",
+          "fixture-url",
+          "fixture-git"
+        ],
+        "scopes": 1,
+        "sourceClaimsRemainUnqualified": true
+      },
+      "layout": "hoisted",
+      "proof": {
+        "actualVersion": "10.9.4",
+        "argv": [
+          "/usr/bin/node",
+          "/tools/package/bin/npm-cli.js",
+          "install",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund",
+          "--install-links",
+          "--registry",
+          "http://127.0.0.1:41769",
+          "--userconfig",
+          "/work/config/user",
+          "--globalconfig",
+          "/work/config/global",
+          "--cache",
+          "/work/cache/npm"
+        ],
+        "captureSHA256": "863801f608daef916023b91fbfae9295b9291c271311ec192d30fe94785a07cf",
+        "exit": 0,
+        "generatorSHA256": "e18ac27f9205acb9691064c3669d785b2ac6b1a75d1c47168a588f5efe60def3",
+        "groupClean": true,
+        "producerInvocation": 5,
+        "reaped": true
+      }
+    }
+  ],
+  "format": 1,
+  "generationPlatform": "linux/amd64; official producer executed only here",
+  "profile": "npm@10.9.4",
+  "proofs": [
+    {
+      "actualCalls": 5,
+      "batchStatus": "passed",
+      "generatorSHA256": "e18ac27f9205acb9691064c3669d785b2ac6b1a75d1c47168a588f5efe60def3",
+      "outerReceiptSHA256": "7bf8ec53b51fdf401f5cdd537566100bad8befdbfb4a6921f9de0802f960b7b7",
+      "selectedCases": [
+        "single",
+        "shrinkwrap",
+        "workspaces",
+        "sources"
+      ],
+      "unqualifiedProducerCases": []
+    }
+  ],
+  "replayIsNotProducerExecution": true,
+  "source": {
+    "algorithm": "sha512",
+    "digest": "3a7506f37e85c1ba1021baad79f0cd9724748131f321fc117c4dc3ba235ec01be7327584a41d15117c01945560aa9373220628fcc1e1dddd877a5fe9b336a900",
+    "executableSHA256": "8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7",
+    "kind": "npm",
+    "license": {
+      "bytes": 9742,
+      "scope": "npm package",
+      "sha256": "7610d223851f421d315df5e77974f1c68a04b97e02060e5bbbcf13d95e3ca257",
+      "spdx": "Artistic-2.0"
+    },
+    "runtime": {
+      "sha256": "81b7dfad3d87bff06a9b5f3f05b5ddebe59be9070718cd8b996f3eac70cb4c92",
+      "size": 58847520,
+      "version": "v26.12.1"
+    },
+    "size": 2714849,
+    "url": "https://registry.npmjs.org/npm/-/npm-10.9.4.tgz",
+    "version": "10.9.4"
+  }
+}

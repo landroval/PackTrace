@@ -907,11 +907,31 @@ do not guess an effective dependency tree.
 - Reject relevant structural ambiguity, including duplicate JSON keys, rather
   than silently relying on last-key-wins decoding.
 
-**Required acceptance coverage, not yet executed:** conflicting inputs, unreadable
-and invalid shrinkwrap without fallback, ambiguous manager semantics, unsupported
-formats despite explicit selection, separate Bun version validation, workspace
-boundaries, absent lockfiles, extra/unreferenced/bundled content, and duplicate
-keys. Producer-generated qualification still requires separate authorization.
+**Issue #5 candidate execution:** the separately approved collector now exercises
+conflicting inputs, unreadable/invalid shrinkwrap without fallback, ambiguous
+manager semantics, unsupported formats despite explicit selection, separate Bun
+version validation, workspace boundaries, absent locks, extra/unreferenced/bundled
+content, quotas and duplicate-key rejection. Five pinned producer anchors generated
+owned fixtures under separate bounded authorization; exact rows and failures are
+in [current compatibility evidence](inventory-compatibility.md#current-owned-producer-candidate-evidence).
+Public native acceptance and protected integration remain pending for this source.
+
+The scan's additive JSON 1.1 inventory exports only closed labels, IDs, evidence
+references, counts, sanitized selection state, relations and gaps. Private raw
+fields stay inside the worker. Physical-link relation destinations are manifest
+**evidence** IDs; other relation destinations are observation IDs, except an
+explicit not-observed destination zero backed by complete metadata enumeration.
+The closed relation kind discriminates these namespaces. No isolated worker boolean
+grants completeness: the parent validates finite ordered batches, references,
+exact closure counts, completion conditions, EOF and actual process reap.
+
+Only active root/member containers are seeded. A stable contained Bun link may
+activate its own store container and nested package directories while original
+metadata leases remain alive and are revalidated before child visits. Orphan
+stores, external targets, unsafe or hardlinked necessary manifests remain gaps.
+These observations never assert actual runtime edges, publisher authenticity or
+whole-product qualification; matching, integrity authority and native release gates
+remain separate.
 
 ## 20. Intelligence synchronization budgets
 

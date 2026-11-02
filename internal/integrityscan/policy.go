@@ -54,6 +54,7 @@ type Plan struct {
 	PolicyFile          string             `json:"policyFile"`
 	TrustedPolicyDigest string             `json:"trustedPolicyDigest,omitempty"`
 	Manager             string             `json:"manager"`
+	ExplicitManager     bool               `json:"explicitManager"`
 	Checks              cli.ArgumentChecks `json:"checks"`
 	FailOn              cli.ArgumentChecks `json:"failOn"`
 	Policy              Policy             `json:"policy"`
@@ -106,7 +107,7 @@ func Configure(r cli.ScanArgumentRequest, p Policy) (Plan, error) {
 	if r.Manager != "auto" && r.Manager != family && r.Manager != p.Manager {
 		return Plan{}, ErrOptions
 	}
-	return Plan{PolicyFile: filepath.Base(r.PolicyPath), TrustedPolicyDigest: r.TrustedPolicyDigest, Manager: p.Manager, Checks: r.Checks, FailOn: r.FailOn | fail, Policy: p}, nil
+	return Plan{PolicyFile: filepath.Base(r.PolicyPath), TrustedPolicyDigest: r.TrustedPolicyDigest, Manager: p.Manager, ExplicitManager: r.Manager != "auto", Checks: r.Checks, FailOn: r.FailOn | fail, Policy: p}, nil
 }
 func categories(values []string) (cli.ArgumentChecks, bool) {
 	if values == nil {

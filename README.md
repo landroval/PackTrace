@@ -15,8 +15,8 @@ preserve evidence and uncertainty without executing the investigated project's c
 
 | Area | Implemented | Not established by this work |
 | --- | --- | --- |
-| npm lockfiles | Bounded v2/v3 JSON reading; positional locked records and dependency requirements | Full npm producer/layout compatibility or installed-package inventory |
-| Bun text lockfiles | Bounded JSONC reading and typed package-tuple evidence (increments 12–13) | Workspace semantics, installed-layout attribution or producer/native compatibility |
+| npm lockfiles | Bounded v2/v3 reading, native effective-input selection, declarations/locked/installed evidence and retained copies | Blanket major-version compatibility, runtime resolution or release qualification |
+| Bun text lockfiles | Bounded JSONC evidence, selected workspaces and active in-root hoisted/isolated inventory | External stores, unsafe/hardlinked inputs, unexecuted variants or blanket producer/native qualification |
 | Package manifests | Bounded JSON reading and separate dependency declaration groups | Dependency resolution or package-manager execution |
 | Root comparison | Exact textual comparison of explicitly paired manifest and lockfile root requirements | Semantic range equivalence, installation drift, or findings |
 | OSV records | Bounded JSON reading, temporal claims, affected identities, explicit versions, ranges and events | Full schema/identity qualification, interval evaluation, advisory applicability, or matching |
@@ -33,15 +33,18 @@ contracts, limits and tests.
 
 ## Intended investigation flow
 
-The planned product will keep three evidence classes separate: **declared**, **locked**,
-and **observed installed**. It will report findings separately from investigation
-coverage, with terminal, JSON and SARIF output.
+The experimental native scan keeps **declared**, **locked**, and **observed installed**
+evidence separate. Its common terminal, additive scan JSON **1.1**, and SARIF model
+exports privacy-safe IDs/classes/relations/counts/gaps, not private names, paths,
+requirements, origins or digests. Historical stdin command schemas remain unchanged.
 
 The pilot targets npm and modern text `bun.lock`, single projects and workspaces,
 and native Linux, macOS and Windows qualification. Those are targets, not current
-compatibility claims. Bun reading and package-tuple projection now exist, while
-workspace semantics, complete installed inventory, matching and intelligence
-synchronization remain future work. The native integrity candidate now compares
+compatibility claims. Native bounded inventory now observes root/member manifests,
+effective inputs, physical copies and active contained links, including extra
+packages absent from a lockfile. Five pinned producers generated owned inert
+fixtures on Linux; replay is not execution of those producers on other platforms.
+Matching and intelligence synchronization remain future work. The native integrity candidate now compares
 explicitly mapped installed scopes against validated prepared archives and emits
 portable terminal/JSON/SARIF results; this is not complete product coverage.
 
@@ -83,6 +86,26 @@ subtrees are not content-read and remain gaps. No Bun bundle marker is inferred.
 Implicit published directories are not falsely counted as additions. Patch and
 generated-content context never erases drift or executes a transformation.
 These are bounded comparison rules, not whole-producer or release qualification.
+
+## Inventory candidate boundaries
+
+The current inventory candidate targets npm **8.19.4 / 10.9.4 / 11.6.2** and Bun
+**1.3.2 / 1.4.2**, not every release in their major families. It preserves unknown
+identity, conflicting claims and unsupported ownership rather than inferring
+installation or resolution. Workspaces cover explicit relative paths and one-level
+`packages/*` / `apps/*`; ambiguous/escaping ownership remains incomplete.
+
+Only necessary manifests and selected inputs are content-read. A proven active
+Bun link can admit its own store container while the original leases remain alive;
+unreferenced store data is not activated. Outside-root targets and hardlinked or
+symlinked manifests remain gaps. Bun 1.3.2 local `git+file` generation failed twice
+and is explicitly unqualified, not substituted with a different release.
+
+The checked-in corpus contains only owned inert data/recipes, not producer binaries
+or caches. Its generation and native replay scopes are distinguished in
+[inventory compatibility](docs/inventory-compatibility.md). The new candidate still
+awaits its exact-source public native campaign and protected integration; local
+race/vet/crossbuild results do not establish those gates. macOS remains paused.
 
 ## Safety and interpretation
 
@@ -130,7 +153,8 @@ with-env { GOTOOLCHAIN: local, GOPROXY: off, GOWORK: off, CGO_ENABLED: "0" } {
 }
 ```
 
-These checks use synthetic inputs and the local toolchain. The root module has no
+These checks use synthetic inputs plus owned pinned-producer data replay and the
+local toolchain; they never install/run producers or target dependencies. The root module has no
 external dependencies. The environment settings are not a network sandbox, and these
 commands do **not** run or qualify the separate modules under `probes/`.
 
@@ -192,6 +216,7 @@ exit `2`. This is not a scanner or a producer/native compatibility qualification
 
 ```text
 internal/inventory/  npm lockfile and manifest evidence; root requirement comparison
+internal/projectinventory/  Native evidence-separated inventory and portable closures
 internal/intel/      OSV record reading and evidence projections
 internal/jsoninput/  Shared strict JSON validation
 probes/              Isolated evaluation work, separate from production dependencies

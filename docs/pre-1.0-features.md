@@ -40,6 +40,15 @@ alone does not authorize probes, dependency installation, or publication.
 
 ## 1. Project discovery and dependency inventory
 
+**Current #5 candidate:** the native collector and common scan JSON 1.1 now retain
+declared/locked/installed evidence, selected workspaces and distinct physical slots.
+Five pinned producers generated owned fixtures; their inert native replay preserves
+links and hardlink refusal. See [current compatibility evidence](inventory-compatibility.md#current-owned-producer-candidate-evidence)
+for exact rows and explicit unqualified variants (including Bun1.3.2 Git+file).
+The outer shipping checks below stay open pending the candidate's exact-source
+public native acceptance and protected integration. Historical milestone counts
+and limitations below are records of those increments, not the current whole tree.
+
 - [ ] **npm projects:** inspect the approved npm/lockfile versions, honor
   `npm-shrinkwrap.json` precedence, and report effective lockfile selection.
   - [x] Internal npm v3 byte reader implemented: raw-field preservation, original
