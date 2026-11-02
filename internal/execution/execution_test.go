@@ -19,6 +19,9 @@ import (
 const fixture = `{"lockfile":{"lockfileVersion":3,"packages":{"":{},"node_modules/owned":{"name":"owned","version":"1.2.3"}}},"advisories":[{"id":"OWNED","modified":"2026-01-01T00:00:00Z","affected":[{"package":{"ecosystem":"npm","name":"owned"},"versions":["1.2.3"]}]},42]}`
 
 func TestMain(m *testing.M) {
+	if len(os.Args) == 2 && os.Args[1] == IntelWorkerArgument {
+		os.Exit(IntelWorkerMain(os.Stdin, os.Stdout, os.Stderr))
+	}
 	if len(os.Args) == 2 && os.Args[1] == "--owned-worker-environment-facts" {
 		os.Exit(writeOwnedEnvironmentFacts())
 	}

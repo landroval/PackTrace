@@ -307,6 +307,8 @@ func runObserved(args []string, out, diagnostic io.Writer, observed scanObserver
 	}
 	var text string
 	switch invocation.Action {
+	case cli.ArgumentActionIntelSync, cli.ArgumentActionIntelImport, cli.ArgumentActionIntelExport, cli.ArgumentActionIntelStatus, cli.ArgumentActionIntelPin, cli.ArgumentActionIntelUnpin, cli.ArgumentActionCachePrune:
+		return runIntel(invocation.Intel, out, diagnostic)
 	case cli.ArgumentActionHelp:
 		text = "PackTrace development — experimental metadata tools only\nUsage: packtrace inspect [--format terminal|json] (stdin JSON; portable only)\n       packtrace inspect-batch [--format terminal|json] (bounded stdin advisory array)\n       packtrace inspect-bun [--format terminal|json] (supplied text bun.lock and advisory)\n       packtrace inspect-bun-batch [--format terminal|json] (supplied text bun.lock and advisory array)\n       packtrace compare-bun-root [--format terminal|json] (supplied root manifest and text bun.lock)\n       packtrace compare-npm-root [--format terminal|json] (supplied root manifest and npm lockfile)\n       packtrace check-reference-digest --integrity SRI [--max-bytes N] [--format terminal|json] (raw stdin bytes)\n       packtrace demo [--scenario NAME] [--format terminal|json]\nScenarios: candidate, no-version-match, unsupported, withdrawn, different-identity, malformed\nControls: --help, --version, scan --help\nActual scan execution is unavailable; demo never opens target projects.\n"
 	case cli.ArgumentActionVersion:

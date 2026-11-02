@@ -20,7 +20,7 @@ import (
 // The test executable dispatches both trusted same-executable child roles.
 // No production fixture switch or environment variable is needed.
 func TestMain(m *testing.M) {
-	if len(os.Args) > 1 && (os.Args[1] == execution.WorkerArgument || os.Args[1] == execution.WriterArgument || os.Args[1] == execution.ScanWorkerArgument) {
+	if len(os.Args) > 1 && (os.Args[1] == execution.WorkerArgument || os.Args[1] == execution.WriterArgument || os.Args[1] == execution.ScanWorkerArgument || os.Args[1] == execution.IntelWorkerArgument) {
 		main()
 	}
 	os.Exit(m.Run())

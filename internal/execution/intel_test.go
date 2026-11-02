@@ -48,6 +48,20 @@ func TestIntelObservationRejectsUnclosedClaimsCountsAndGaps(t *testing.T) {
 		t.Fatal("unqualified source claimed freshness")
 	}
 }
+func TestIntelResidentMonitorAdmitsOwnWindowWithoutWideningScan(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	_ = ctx
+	sample := residentSample{ElapsedMS: 6 * 60 * 1000, Bytes: 1, Valid: true}
+	legacy := newScanMonitor(cancel)
+	if legacy.sample(sample) == nil {
+		t.Fatal("legacy window widened")
+	}
+	prepared := newIntelMonitor(cancel)
+	if e := prepared.sample(sample); e != nil {
+		t.Fatal("15min role rejected its own elapsed window", e)
+	}
+}
 func TestIntelPreparationDeadlineDoesNotWidenLegacyRoles(t *testing.T) {
 	ctx := context.Background()
 	legacy := newRunState(ctx)

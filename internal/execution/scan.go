@@ -551,12 +551,13 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 // scanLifecycle independently observes retained processes through runtime exit
 // and confirmed reap, including the writer. Neither mechanism is a hard cap.
 type scanMonitor struct {
-	mu        sync.Mutex
-	resources integrityscan.Resources
-	cancel    context.CancelFunc
-	last      time.Time
-	elapsed   int64
-	worker    uint64
+	mu         sync.Mutex
+	resources  integrityscan.Resources
+	cancel     context.CancelFunc
+	last       time.Time
+	elapsed    int64
+	maxElapsed int64 // zero retains the legacy5min bound
+	worker     uint64
 }
 
 func newScanMonitor(cancel context.CancelFunc) *scanMonitor {
@@ -623,7 +624,11 @@ func (m *scanMonitor) sample(s residentSample) error {
 		m.resources.QueryFailed = true
 		return errScanResource
 	}
-	if s.ElapsedMS < 0 || s.ElapsedMS > int64((5*time.Minute)/time.Millisecond) || s.ElapsedMS < m.elapsed {
+	limit := m.maxElapsed
+	if limit == 0 {
+		limit = int64((5 * time.Minute) / time.Millisecond)
+	}
+	if s.ElapsedMS < 0 || s.ElapsedMS > limit || s.ElapsedMS < m.elapsed {
 		return errScanProtocol
 	}
 	if time.Since(m.last) > 350*time.Millisecond {

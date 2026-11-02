@@ -74,6 +74,9 @@ func (r *BatchRun) WriteOutput(ctx context.Context, out io.Writer, data []byte) 
 	if s.scan != nil {
 		role = "scan-writer"
 	}
+	if s.preparation {
+		role = "intel-writer"
+	}
 	cap, release, e := configureLaunch(cmd, role, file, dataIn)
 	if e != nil {
 		return e
@@ -163,6 +166,9 @@ func WriterMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 	role := "writer"
 	if os.Getenv(launchRole) == "scan-writer" {
 		role = "scan-writer"
+	}
+	if os.Getenv(launchRole) == "intel-writer" {
+		role = "intel-writer"
 	}
 	cap, ids, e := launchCapability(role)
 	if e != nil {
