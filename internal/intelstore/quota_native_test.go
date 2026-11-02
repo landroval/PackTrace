@@ -26,7 +26,7 @@ func TestQuotaAccountsRetainedAndNestedStagingMetadata(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if os.Mkdir(filepath.Join(path, "staging"), 0700) != nil || os.WriteFile(filepath.Join(path, "staging", "partial"), []byte("partial"), 0600) != nil {
+	if os.MkdirAll(filepath.Join(path, "staging"), 0700) != nil || os.WriteFile(filepath.Join(path, "staging", "partial"), []byte("partial"), 0600) != nil {
 		t.Fatal("owned partial staging")
 	}
 	s, err = Open(ctx, path, CreateOwned)

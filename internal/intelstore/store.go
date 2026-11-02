@@ -34,12 +34,14 @@ var (
 )
 
 type Store struct {
-	mu       sync.Mutex
-	root     *nativefs.Root
-	owner    *nativefs.OwnedDirectory
-	mode     Mode
-	identity [32]byte
-	instance [32]byte
+	mu         sync.Mutex
+	root       *nativefs.Root
+	owner      *nativefs.OwnedDirectory
+	mode       Mode
+	identity   [32]byte
+	instance   [32]byte
+	active     bool
+	quotaLimit uint64 // private testable ceiling; production default is32GiB
 }
 
 type storeMarker struct {
@@ -91,6 +93,13 @@ func Open(ctx context.Context, path string, mode Mode) (*Store, error) {
 	}
 	if err := s.readMarker(ctx); err != nil {
 		return fail(err)
+	}
+	if mode == CreateOwned {
+		for _, name := range []string{"objects", "generations", "activation", "locks", "pins", "staging"} {
+			if err := owned.Mkdir(ctx, name); err != nil {
+				return fail(ErrOwnership)
+			}
+		}
 	}
 	return s, nil
 }
@@ -165,6 +174,9 @@ func (s *Store) Close() error {
 	defer s.mu.Unlock()
 	if s.root == nil {
 		return ErrUnavailable
+	}
+	if s.active {
+		return ErrBusy
 	}
 	var err error
 	if s.owner != nil {

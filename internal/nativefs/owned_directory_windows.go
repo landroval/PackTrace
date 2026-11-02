@@ -68,6 +68,10 @@ func ownedSecurityDescriptor() (unsafe.Pointer, error) {
 // The fresh child gets a protected current-user-only owner/DACL. No ambient
 // inheritance, security-setting change or arbitrary NT path is accepted.
 func ownedCreate(parent *os.File, name string, directory bool) (*os.File, error) {
+	return ownedCreateAccess(parent, name, directory, 0)
+}
+
+func ownedCreateAccess(parent *os.File, name string, directory bool, extra uint32) (*os.File, error) {
 	if parent == nil || winComponent(name) != nil {
 		return nil, ErrPath
 	}
@@ -94,7 +98,7 @@ func ownedCreate(parent *os.File, name string, directory bool) (*os.File, error)
 	a := winAttributes{root: syscall.Handle(parentWrite.Fd()), name: &u, attributes: winDontReparse, security: uintptr(sd)}
 	a.length = uint32(unsafe.Sizeof(a))
 	options := uint32(winSynchronous | winOpenReparse | winNonDirectory)
-	access := uint32(0x40000000 | winReadAttrs | winSync | 0x20000)
+	access := uint32(0x40000000 | winReadAttrs | winSync | 0x20000 | extra)
 	if directory {
 		// DIRECTORY_FILE + NO_RECALL is invalid on the admitted NTFS baseline.
 		// This is CREATE of a new typed directory, not opening unknown content.
