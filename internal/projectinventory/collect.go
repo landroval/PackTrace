@@ -78,13 +78,24 @@ func Collect(ctx context.Context, root *nativefs.Root, opts Options) (Result, er
 	if ctx.Err() != nil {
 		return c.result, ErrCollection
 	}
+	if c.metadata.Complete {
+		c.result.Model.Scopes[0].Status = "complete"
+	}
 	rootManifest := c.collectManifest(1, "package.json")
 	c.collectWorkspaces(rootManifest)
 	c.selectInputs(opts)
+	c.collectInstalled()
 	if ctx.Err() != nil {
 		return c.result, ErrCollection
 	}
-	// This stage attests selected inputs/declarations, not an installed inventory.
+	for _, g := range c.result.Model.Gaps {
+		for i := range c.result.Model.Scopes {
+			if g.Scope == 0 || c.result.Model.Scopes[i].ID == g.Scope {
+				c.result.Model.Scopes[i].Status = "incomplete"
+			}
+		}
+	}
+	c.result.Complete = c.metadata.Complete && c.result.Selection.State == "usable" && len(c.result.Model.Gaps) == 0
 	return c.result, nil
 }
 
