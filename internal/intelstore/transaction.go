@@ -46,6 +46,7 @@ type Transaction struct {
 	failed   error
 	closed   bool
 	sealed   map[ID]sealedGeneration
+	prep     *preparationState
 }
 type reservationJournal struct {
 	Version        int    `json:"version"`
@@ -188,7 +189,7 @@ func (t *Transaction) putLocked(ctx context.Context, input io.Reader, max uint64
 	if e := t.work.Err(); e != nil {
 		return fail(e)
 	}
-	if max > 512<<20 || t.held < 4096 || max > t.held-4096 || t.sequence >= 2_000_000 {
+	if max > 512<<20 || t.held < 4096 || max > t.held-4096 || t.sequence >= 2_000_000+65_536+1024 {
 		return fail(ErrLimit)
 	}
 	if e := t.writer.Matches(ctx, t.store.root, "writer.lock", true); e != nil {
