@@ -93,7 +93,7 @@ func controlName(name string) bool {
 // The creating file handle remains retained through the current-slot check.
 // Matching bytes or an equal name cannot substitute for its original inode/ID.
 func ownedControlBinding(n *nativeRoot, f *os.File, name string, size int) error {
-	if n == nil || f == nil || size < 0 || size > 4096 || !controlName(name) {
+	if n == nil || f == nil || size < 0 || size > 4096 || !ownedRelative(name) {
 		return ErrPath
 	}
 	current, err := statNative(f)

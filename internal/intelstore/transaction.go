@@ -24,6 +24,7 @@ type operation uint8
 const (
 	operationSync operation = iota
 	operationImport
+	operationMaintenance
 )
 
 type ObjectRef struct {
@@ -56,7 +57,7 @@ type reservationJournal struct {
 }
 
 func (s *Store) begin(ctx context.Context, kind operation, b *Budget) (*Transaction, error) {
-	if s == nil || ctx == nil || b == nil || kind > operationImport {
+	if s == nil || ctx == nil || b == nil || kind > operationMaintenance {
 		return nil, ErrUnavailable
 	}
 	if e := ctx.Err(); e != nil {
@@ -103,6 +104,9 @@ func (s *Store) begin(ctx context.Context, kind operation, b *Budget) (*Transact
 		closeErr := writer.Close()
 		failActive()
 		return nil, errors.Join(e, closeErr)
+	}
+	if e := s.ensureSelectionGate(ctx); e != nil {
+		return fail(e)
 	}
 	if e := s.reconcileReservations(ctx, writer); e != nil {
 		return fail(e)

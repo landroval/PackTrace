@@ -172,6 +172,11 @@ func (t *Transaction) activate(ctx context.Context, id ID) error {
 	if t.writer.Matches(ctx, t.store.root, "writer.lock", true) != nil {
 		return ErrUnavailable
 	}
+	gate, gateErr := t.store.root.TryOwnedLock(t.work, "locks/selection.lock", true)
+	if gateErr != nil {
+		return ErrBusy
+	}
+	defer gate.Close()
 	sealKey := hex.EncodeToString(candidate.digest[:])
 	if _, e := t.store.checkHeader(t.work, id, sealKey); e != nil {
 		return e

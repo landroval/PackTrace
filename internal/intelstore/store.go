@@ -41,6 +41,7 @@ type Store struct {
 	identity   [32]byte
 	instance   [32]byte
 	active     bool
+	readers    uint64
 	quotaLimit uint64 // private testable ceiling; production default is32GiB
 }
 
@@ -175,7 +176,7 @@ func (s *Store) Close() error {
 	if s.root == nil {
 		return ErrUnavailable
 	}
-	if s.active {
+	if s.active || s.readers != 0 {
 		return ErrBusy
 	}
 	var err error

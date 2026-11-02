@@ -336,8 +336,11 @@ func ownedControlMetadata(n *nativeRoot, name string) (*os.File, stamp, error) {
 	// A single generated component under the retained directory. Ordinary
 	// capture would reject its expected pre-creation directory stamp; the
 	// owned transaction revalidates root/ancestry before refreshing that stamp.
-	if n == nil || !controlName(name) {
+	if n == nil || !ownedRelative(name) {
 		return nil, stamp{}, ErrPath
+	}
+	if !controlName(name) {
+		return n.capture(name, false, true)
 	}
 	f, err := winChild(n.root, name, n.initial.dev)
 	if err != nil {

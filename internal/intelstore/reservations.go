@@ -86,7 +86,7 @@ func (s *Store) checkReservation(ctx context.Context, path string) error {
 		}
 	}
 	var r reservationJournal
-	if json.Unmarshal(data, &r) != nil || r.Version != 1 || r.Instance != hex.EncodeToString(s.instance[:]) || r.Operation > uint8(operationImport) || r.Reservation < 8192 || r.Reservation > 16<<30 || r.PreviousUsed > 32<<30 || r.Reconciliation != "exclusive-lease-and-complete-native-lengths" {
+	if json.Unmarshal(data, &r) != nil || r.Version != 1 || r.Instance != hex.EncodeToString(s.instance[:]) || r.Operation > uint8(operationMaintenance) || r.Reservation < 8192 || r.Reservation > 16<<30 || r.PreviousUsed > 32<<30 || r.Reconciliation != "exclusive-lease-and-complete-native-lengths" {
 		return ErrCorrupt
 	}
 	return nil

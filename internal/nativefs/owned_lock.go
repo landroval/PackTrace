@@ -18,7 +18,7 @@ type OwnedLock struct {
 }
 
 func (r *Root) TryOwnedLock(ctx context.Context, name string, exclusive bool) (*OwnedLock, error) {
-	if ctx == nil || !controlName(name) {
+	if ctx == nil || !ownedRelative(name) {
 		return nil, ErrPath
 	}
 	if _, err := r.OwnedIdentity(ctx); err != nil {
