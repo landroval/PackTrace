@@ -9,6 +9,9 @@ spec.loader.exec_module(validation)
 
 
 class Validation(unittest.TestCase):
+    def test_inventory_producer_replay_is_in_native_and_race_corpus(self):
+        self.assertIn('./internal/projectinventory', validation.PACKAGES)
+
     def test_failed_or_incomplete_stream_cannot_pass(self):
         good = b'{"Action":"pass","Test":"owned"}\n'
         self.assertEqual(validation.test_counts(good)['passed'], 1)
