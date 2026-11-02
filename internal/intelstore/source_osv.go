@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"packtrace/internal/intel"
 	"packtrace/internal/jsoninput"
 	"packtrace/internal/nativefs"
 	"strconv"
@@ -85,11 +86,11 @@ func parseExportMetadata(data []byte) (exportMetadata, error) {
 	if e != nil || len(digest) != 16 || base64.StdEncoding.EncodeToString(digest) != wire.MD5Hash {
 		return exportMetadata{}, ErrCorrupt
 	}
-	updated, e := time.Parse(time.RFC3339Nano, wire.Updated)
-	if e != nil {
+	updated := intel.ProjectOSVTimestampText(wire.Updated)
+	if updated.State != intel.TimestampValue {
 		return exportMetadata{}, ErrCorrupt
 	}
-	result := exportMetadata{Generation: wire.Generation, Size: size, Updated: updated}
+	result := exportMetadata{Generation: wire.Generation, Size: size, Updated: updated.Value}
 	copy(result.MD5[:], digest)
 	return result, nil
 }

@@ -19,6 +19,7 @@ type preparationRecord struct {
 	Records, Memberships, IdentityGaps, OutsideNPM         uint64
 	SourceIDs                                              ObjectRef
 	GitHubRecords, OpenSSFRecords, UnknownPublisherRecords uint64
+	TemporalGaps, DispositionGaps                          uint64
 }
 type preparationState struct {
 	cat, idLines    bytes.Buffer
@@ -29,9 +30,19 @@ type preparationState struct {
 	counts          [256]uint64
 	record          preparationRecord
 }
+type sourceDisposition uint8
+
+const (
+	sourceObserved sourceDisposition = iota
+	sourceWithdrawn
+	sourceOutsideNPM
+	sourceUnresolved
+)
+
 type sourceIDRow struct {
 	ID, Modified string
 	Original     ObjectRef
+	Disposition  sourceDisposition
 }
 type indexRow struct {
 	V              int    `json:"v"`
@@ -99,8 +110,7 @@ func prepareArchive(ctx context.Context, t *Transaction, input io.ReaderAt, size
 	sort.Slice(files, func(i, j int) bool { return files[i].Name < files[j].Name })
 	p := &preparationState{record: preparationRecord{Version: 1, Source: "caller-supplied"}}
 	t.prep = p
-	var expanded uint64
-	for ordinal, f := range files {
+	for _, f := range files {
 		if e := ctx.Err(); e != nil {
 			return generationDraft{}, e
 		}
@@ -116,80 +126,128 @@ func prepareArchive(ctx context.Context, t *Transaction, input io.ReaderAt, size
 		if readErr != nil || closeErr != nil || len(raw) > 4<<20 || uint64(len(raw)) != f.UncompressedSize64 {
 			return generationDraft{}, ErrCorrupt
 		}
-		if uint64(len(raw)) > 8<<30-expanded {
-			return generationDraft{}, ErrLimit
-		}
-		expanded += uint64(len(raw))
-		doc, e := intel.ParseOSVRecord(raw)
-		if e != nil {
-			return generationDraft{}, ErrCorrupt
-		}
-		header, e := intel.ProjectOSVHeader(doc)
-		if e != nil || header.ID.Value != strings.TrimSuffix(f.Name, ".json") || header.Schema != intel.OSVHeaderSchemaV1Implicit && header.Schema != intel.OSVHeaderSchemaV1Declared {
-			return generationDraft{}, ErrCorrupt
-		}
-		affected, e := intel.ProjectOSVAffected(doc)
-		if e != nil {
-			return generationDraft{}, ErrCorrupt
-		}
-		identities, e := intel.QualifyOSVNPMIdentities(header, affected)
-		if e != nil {
-			return generationDraft{}, ErrCorrupt
-		}
-		ref, e := t.put(ctx, bytes.NewReader(raw), uint64(len(raw)))
-		if e != nil {
+		if e := prepareOriginal(ctx, t, strings.TrimSuffix(f.Name, ".json"), raw, nil, sourceObserved); e != nil {
 			return generationDraft{}, e
-		}
-		p.record.Records++
-		switch {
-		case strings.HasPrefix(header.ID.Value, "GHSA-"):
-			p.record.GitHubRecords++
-		case strings.HasPrefix(header.ID.Value, "MAL-"):
-			p.record.OpenSSFRecords++
-		default:
-			p.record.UnknownPublisherRecords++
-		}
-		catalog, _ := json.Marshal(struct {
-			V       int    `json:"v"`
-			Ordinal uint64 `json:"sourceOrdinal"`
-			SHA     string `json:"sha256"`
-			Bytes   uint64 `json:"bytes"`
-		}{1, uint64(ordinal), hex.EncodeToString(ref.SHA256[:]), ref.Bytes})
-		p.cat.Write(catalog)
-		p.cat.WriteByte('\n')
-		p.buffered += uint64(len(catalog) + 1)
-		var modified string
-		_ = json.Unmarshal(doc.Fields["modified"], &modified)
-		idLine, _ := json.Marshal(sourceIDRow{header.ID.Value, modified, ref})
-		p.idLines.Write(idLine)
-		p.idLines.WriteByte('\n')
-		p.buffered += uint64(len(idLine) + 1)
-		if identities.State != intel.OSVFieldValue {
-			p.record.IdentityGaps++
-		}
-		for _, identity := range identities.Entries {
-			if identity.Ecosystem.State == intel.OSVFieldValue && identity.Ecosystem.Value != "npm" {
-				p.record.OutsideNPM++
-				continue
-			}
-			if identity.Qualification != intel.OSVNPMIdentityCandidate {
-				p.record.IdentityGaps++
-				continue
-			}
-			hash := sha256.Sum256(append([]byte("npm\x00"), []byte(identity.Name.Value)...))
-			row := indexRow{1, hex.EncodeToString(hash[:]), "npm", identity.Name.Value, uint64(ordinal), hex.EncodeToString(ref.SHA256[:]), ref.Bytes, uint64(identity.Index)}
-			if e := p.admitRow(row); e != nil {
-				return generationDraft{}, e
-			}
-		}
-		if p.buffered >= 64<<20 {
-			if e := p.flush(ctx, t); e != nil {
-				return generationDraft{}, e
-			}
 		}
 	}
 	return buildIndexes(ctx, t)
 }
+func prepareOriginal(ctx context.Context, t *Transaction, expectedID string, raw []byte, existing *ObjectRef, forced sourceDisposition) error {
+	if forced != sourceObserved && forced != sourceUnresolved {
+		return ErrCorrupt
+	}
+	if t == nil || t.prep == nil || ctx == nil {
+		return ErrUnavailable
+	}
+	p := t.prep
+	if len(raw) > 4<<20 || p.record.Records >= 2_000_000 {
+		return ErrLimit
+	}
+	if e := t.budget.advisory(uint64(len(raw))); e != nil {
+		return e
+	}
+	if p.buffered > 63<<20 {
+		if e := p.flush(ctx, t); e != nil {
+			return e
+		}
+	}
+	doc, e := intel.ParseOSVRecord(raw)
+	if e != nil {
+		return ErrCorrupt
+	}
+	header, e := intel.ProjectOSVHeader(doc)
+	if e != nil || header.ID.Value != expectedID || !publicRecordID(expectedID) || header.Schema != intel.OSVHeaderSchemaV1Implicit && header.Schema != intel.OSVHeaderSchemaV1Declared {
+		return ErrCorrupt
+	}
+	affected, e := intel.ProjectOSVAffected(doc)
+	if e != nil {
+		return ErrCorrupt
+	}
+	identities, e := intel.QualifyOSVNPMIdentities(header, affected)
+	if e != nil {
+		return ErrCorrupt
+	}
+	var ref ObjectRef
+	if existing != nil {
+		ref = *existing
+		if ref.SHA256 != doc.SHA256 || ref.Bytes != uint64(len(raw)) {
+			return ErrCorrupt
+		}
+	} else {
+		ref, e = t.put(ctx, bytes.NewReader(raw), uint64(len(raw)))
+		if e != nil {
+			return e
+		}
+	}
+	ordinal := p.record.Records
+	p.record.Records++
+	switch {
+	case strings.HasPrefix(expectedID, "GHSA-"):
+		p.record.GitHubRecords++
+	case strings.HasPrefix(expectedID, "MAL-"):
+		p.record.OpenSSFRecords++
+	default:
+		p.record.UnknownPublisherRecords++
+	}
+	catalog, _ := json.Marshal(struct {
+		V       int    `json:"v"`
+		Ordinal uint64 `json:"sourceOrdinal"`
+		SHA     string `json:"sha256"`
+		Bytes   uint64 `json:"bytes"`
+	}{1, ordinal, hex.EncodeToString(ref.SHA256[:]), ref.Bytes})
+	p.cat.Write(catalog)
+	p.cat.WriteByte('\n')
+	p.buffered += uint64(len(catalog) + 1)
+	times, e := intel.ProjectOSVTimes(doc)
+	if e != nil {
+		return ErrCorrupt
+	}
+	modified := ""
+	if times.Modified.State == intel.TimestampValue {
+		modified = times.Modified.Value.Format("2006-01-02T15:04:05.999999999Z07:00")
+	} else {
+		p.record.TemporalGaps++
+	}
+	memberships, outside, identityGaps := p.record.Memberships, p.record.OutsideNPM, p.record.IdentityGaps
+	if identities.State != intel.OSVFieldValue {
+		p.record.IdentityGaps++
+	}
+	for _, identity := range identities.Entries {
+		if identity.Ecosystem.State == intel.OSVFieldValue && identity.Ecosystem.Value != "npm" {
+			p.record.OutsideNPM++
+			continue
+		}
+		if identity.Qualification != intel.OSVNPMIdentityCandidate {
+			p.record.IdentityGaps++
+			continue
+		}
+		hash := sha256.Sum256(append([]byte("npm\x00"), []byte(identity.Name.Value)...))
+		row := indexRow{1, hex.EncodeToString(hash[:]), "npm", identity.Name.Value, ordinal, hex.EncodeToString(ref.SHA256[:]), ref.Bytes, uint64(identity.Index)}
+		if e := p.admitRow(row); e != nil {
+			return e
+		}
+	}
+	disposition := sourceObserved
+	if times.Withdrawal == intel.WithdrawalReported {
+		disposition = sourceWithdrawn
+	} else if times.Withdrawal == intel.WithdrawalUnknown {
+		disposition = sourceUnresolved
+	} else if p.record.Memberships == memberships && p.record.OutsideNPM > outside && p.record.IdentityGaps == identityGaps {
+		disposition = sourceOutsideNPM
+	}
+	if forced == sourceUnresolved {
+		disposition = forced
+	}
+	if disposition == sourceUnresolved {
+		p.record.DispositionGaps++
+	}
+	idLine, _ := json.Marshal(sourceIDRow{ID: expectedID, Modified: modified, Original: ref, Disposition: disposition})
+	p.idLines.Write(idLine)
+	p.idLines.WriteByte('\n')
+	p.buffered += uint64(len(idLine) + 1)
+	return nil
+}
+
 func (p *preparationState) admitRow(row indexRow) error {
 	if p.record.Memberships >= 2_000_000 {
 		return ErrLimit

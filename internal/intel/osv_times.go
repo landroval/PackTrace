@@ -76,10 +76,17 @@ func projectOSVTimestamp(fields map[string]json.RawMessage, key string) OSVTimes
 	if bytes.Equal(bytes.TrimSpace(raw), []byte("null")) {
 		return OSVTimestamp{State: TimestampNull}
 	}
-	result := OSVTimestamp{State: TimestampUninterpretable}
-	if err := json.Unmarshal(raw, &result.Text); err != nil {
+	var text string
+	if err := json.Unmarshal(raw, &text); err != nil {
 		return OSVTimestamp{State: TimestampInvalidType}
 	}
+	return ProjectOSVTimestampText(text)
+}
+
+// ProjectOSVTimestampText applies the existing supported timestamp profile to
+// decoded source text. It grants no source, clock, or freshness authority.
+func ProjectOSVTimestampText(text string) OSVTimestamp {
+	result := OSVTimestamp{State: TimestampUninterpretable, Text: text}
 	if !osvTimestampPattern.MatchString(result.Text) {
 		return result
 	}
