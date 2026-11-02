@@ -2,7 +2,10 @@
 // capabilities. Claims never authenticate an origin or prove code execution.
 package projectinventory
 
-import "packtrace/internal/inventory"
+import (
+	"packtrace/internal/inventory"
+	"packtrace/internal/nativefs"
+)
 
 type Options struct {
 	Profile         string
@@ -31,12 +34,16 @@ type Evidence struct {
 // manifest evidence ID. not-observed uses To=0 and complete enumeration evidence.
 // Kind is the closed discriminator; consumers must not mix ID namespaces.
 type Relation struct {
-	From, To, Evidence uint32
-	Kind, Status       string
+	From     uint32 `json:"from"`
+	To       uint32 `json:"to"`
+	Evidence uint32 `json:"evidence"`
+	Kind     string `json:"kind"`
+	Status   string `json:"status"`
 }
 type Gap struct {
-	Scope, Evidence uint32
-	Code            string
+	Scope    uint32 `json:"scope"`
+	Evidence uint32 `json:"evidence"`
+	Code     string `json:"code"`
 }
 type Model struct {
 	Scopes       []Scope
@@ -45,12 +52,22 @@ type Model struct {
 	Relations    []Relation
 	Gaps         []Gap
 }
-type Counters struct{ Declared, Locked, Installed, Scopes, Relations, Evidence, Gaps int }
+type Counters struct {
+	Declared  int `json:"declared"`
+	Locked    int `json:"locked"`
+	Installed int `json:"installed"`
+	Scopes    int `json:"scopes"`
+	Relations int `json:"relations"`
+	Evidence  int `json:"evidence"`
+	Gaps      int `json:"gaps"`
+}
 type Selection struct {
 	Profile, Family, File, State, Reason string
 	Explicit                             bool
 }
 type Result struct {
+	// Metadata is the same live discovery used by collection, never an IPC value.
+	Metadata  nativefs.Snapshot `json:"-"`
 	Model     Model
 	Selection Selection
 	Complete  bool

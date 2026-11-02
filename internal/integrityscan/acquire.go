@@ -3,7 +3,7 @@ package integrityscan
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/json"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -15,8 +15,8 @@ import (
 
 	"packtrace/internal/cli"
 	"packtrace/internal/integrity"
-	"packtrace/internal/inventory"
 	"packtrace/internal/nativefs"
+	"packtrace/internal/projectinventory"
 )
 
 var ErrAcquisition = errors.New("scan: acquisition-unavailable")
@@ -97,88 +97,42 @@ func readLease(ctx context.Context, root *nativefs.Root, name string, limit int6
 }
 
 type lockedInputs struct {
-	claims   map[string]integrity.BindingClaim
-	bundled  map[string]bool
-	complete bool
+	claims  map[string]integrity.BindingClaim
+	bundled map[string]bool
 }
 
-func readLocked(ctx context.Context, root *nativefs.Root, snap nativefs.Snapshot, manager string) lockedInputs {
+// Integrity consumes exactly the collector's selected, stable locked evidence;
+// it never selects or reparses an independent competing root input.
+func lockedFromInventory(r projectinventory.Result) lockedInputs {
 	out := lockedInputs{claims: map[string]integrity.BindingClaim{}, bundled: map[string]bool{}}
-	present := map[string]nativefs.Entry{}
-	for _, entry := range snap.Entries {
-		present[entry.Name] = entry
-	}
-	if strings.HasPrefix(manager, "npm@") {
-		name := "package-lock.json"
-		if _, ok := present["npm-shrinkwrap.json"]; ok {
-			name = "npm-shrinkwrap.json"
-		}
-		if _, ok := present["bun.lock"]; ok {
-			return out
-		} // no silent mixed-manager interpretation
-		data, e := readLease(ctx, root, name, 64<<20)
-		if e != nil {
-			return out
-		}
-		doc, e := inventory.ParseNPMLock(data)
-		if e != nil {
-			return out
-		}
-		projection, e := inventory.ProjectNPMLock(doc)
-		if e != nil {
-			return out
-		}
-		names, e := inventory.ProjectNPMLockNames(projection)
-		if e != nil {
-			return out
-		}
-		for i, r := range projection.Records {
-			if r.Location == "" {
-				continue
-			}
-			var bundled bool
-			if relative(r.Location) && packageLocation(r.Location) &&
-				(r.Link.State == inventory.FieldAbsent || r.Link.State == inventory.FieldValue && !r.Link.Value) &&
-				json.Unmarshal(doc.Packages[r.Location]["inBundle"], &bundled) == nil && bundled {
-				out.bundled[r.Location] = true
-			}
-			if !relative(r.Location) || r.Version.State != inventory.FieldValue || r.Resolved.State != inventory.FieldValue || r.Integrity.State != inventory.FieldValue || (r.Link.State != inventory.FieldAbsent && (r.Link.State != inventory.FieldValue || r.Link.Value)) {
-				continue
-			}
-			n := names.Entries[i]
-			if n.SelectedName == "" {
-				continue
-			}
-			out.claims[r.Location] = integrity.BindingClaim{PackageID: n.SelectedName, Version: r.Version.Value, Origin: r.Resolved.Value, ExpectedSRI: r.Integrity.Value, SourceLocator: name, SourceHash: sourceSRI(data), EvidenceID: "locked:" + r.Location}
-		}
-		out.complete = true
-		return out
-	}
-	if _, ok := present["package-lock.json"]; ok {
-		return out
-	}
-	if _, ok := present["npm-shrinkwrap.json"]; ok {
-		return out
-	}
-	data, e := readLease(ctx, root, "bun.lock", 64<<20)
-	if e != nil {
-		return out
-	}
-	doc, e := inventory.ParseBunLock(data)
-	if e != nil {
-		return out
-	}
-	projection, e := inventory.ProjectBunLock(doc)
-	if e != nil {
-		return out
-	}
-	for _, r := range projection.Records {
-		if r.Kind != inventory.BunKindNPM || r.Name.State != inventory.FieldValue || r.Resolution.State != inventory.FieldValue || r.Registry.State != inventory.FieldValue || r.Integrity.State != inventory.FieldValue {
+	for _, o := range r.Model.Observations {
+		if o.Class != "locked" || o.Location == "" || !relative(o.Location) || o.Source == 0 || int(o.Source) > len(r.Model.Evidence) {
 			continue
 		}
-		out.claims[r.Key] = integrity.BindingClaim{PackageID: r.Name.Value, Version: r.Resolution.Value, Origin: r.Registry.Value, ExpectedSRI: r.Integrity.Value, SourceLocator: "bun.lock", SourceHash: sourceSRI(data), EvidenceID: "locked:" + r.Key}
+		e := r.Model.Evidence[o.Source-1]
+		if !e.Complete {
+			continue
+		}
+		if r.Selection.Family == "npm" {
+			if raw, ok := o.Fields["link"]; ok && raw != "false" {
+				continue
+			}
+			if packageLocation(o.Location) && o.Fields["inBundle"] == "true" {
+				out.bundled[o.Location] = true
+			}
+			if o.Fields["version-state"] != "value" || o.Fields["origin-state"] != "value" || o.Fields["integrity-state"] != "value" {
+				continue
+			}
+		} else {
+			if o.Kind != "package" || o.Fields["name-state"] != "value" || o.Fields["resolution-state"] != "value" || o.Fields["registry-state"] != "value" || o.Fields["integrity-state"] != "value" {
+				continue
+			}
+		}
+		if o.Name == "" {
+			continue
+		}
+		out.claims[o.Location] = integrity.BindingClaim{PackageID: o.Name, Version: o.Version, Origin: o.Origin, ExpectedSRI: o.Fields["integrity"], SourceLocator: r.Selection.File, SourceHash: "sha256-" + base64.StdEncoding.EncodeToString(e.SHA256[:]), EvidenceID: "locked:" + o.Location}
 	}
-	out.complete = true
 	return out
 }
 
@@ -213,6 +167,10 @@ func sameSRI(a, b string) bool {
 // Acquire is called only in the concrete native worker, after PrepareProcess.
 // References stream sequentially, without extraction or target-code execution.
 func Acquire(ctx context.Context, target, prepared, policyHash string, plan Plan, emit func(Record) error) (Summary, error) {
+	return AcquireWithInventory(ctx, target, prepared, policyHash, plan, emit, nil)
+}
+
+func AcquireWithInventory(ctx context.Context, target, prepared, policyHash string, plan Plan, emit func(Record) error, emitInventory func(projectinventory.Result) error) (Summary, error) {
 	summary := Summary{}
 	if ctx.Err() != nil {
 		return summary, ErrAcquisition
@@ -246,13 +204,19 @@ func Acquire(ctx context.Context, target, prepared, policyHash string, plan Plan
 	// the authority exclusion. A hash or child assertion alone cannot admit it.
 	// Discovery is metadata-only. Content is acquired only through a necessary
 	// lock-file selection or a captured package subroot, never root-then-filter.
-	metadata, e := root.Metadata(ctx, nativefs.Limits{Entries: 100000, Depth: 64})
+	collected, e := projectinventory.Collect(ctx, root, projectinventory.Options{Profile: plan.Manager, ExplicitManager: plan.ExplicitManager})
 	if e != nil {
-		metadata.Complete = false
+		return summary, ErrAcquisition
 	}
-	locked := readLocked(ctx, root, metadata, plan.Manager)
+	if emitInventory != nil {
+		if e = emitInventory(collected); e != nil {
+			return summary, e
+		}
+	}
+	metadata := collected.Metadata
+	locked := lockedFromInventory(collected)
 	summary.SnapshotComplete = metadata.Complete
-	summary.InventoryComplete = locked.complete && metadata.Complete
+	summary.InventoryComplete = collected.Complete
 	// Global native qualification is not granted by an operator pin. Reference
 	// authority is separately completed only after every pinned binding succeeds.
 	summary.AuthorityComplete = false
@@ -262,20 +226,8 @@ func Acquire(ctx context.Context, target, prepared, policyHash string, plan Plan
 	entriesRemaining := 100000
 	referenceRemaining, expandedRemaining := int64(16<<30), int64(8<<30)
 	authorityComplete := plan.TrustedPolicyDigest != "" && supportedPolicyPin(plan.TrustedPolicyDigest) && len(plan.Policy.References) > 0
-	mapped := map[string]bool{}
-	for _, r := range plan.Policy.References {
-		mapped[r.Location] = true
-	}
-	for name := range locked.claims {
-		if !mapped[name] && strings.HasPrefix(plan.Manager, "npm@") {
-			summary.InventoryComplete = false
-		}
-	}
-	for _, entry := range metadata.Entries {
-		if entry.Kind == nativefs.KindDirectory && packageLocation(entry.Name) && !mapped[entry.Name] {
-			summary.InventoryComplete = false
-		}
-	}
+	// An observed extra package is inventory evidence, not a missing reference
+	// error. Integrity's mapped comparison/ownership coverage remains separate.
 	if plan.Checks&cli.ArgumentCheckIntegrity == 0 {
 		return summary, nil
 	}

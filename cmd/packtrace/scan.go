@@ -75,7 +75,7 @@ func runScanContextObserved(ctx context.Context, request cli.ScanArgumentRequest
 		run.NoteFailure("checkpoint", e)
 		return fail("scan: resident-observation-failed")
 	}
-	report := integrityscan.BuildReport(run.Plan, run.Records, run.Summary, run.Resources, interrupted, err != nil)
+	report := integrityscan.BuildReportWithInventory(run.Plan, run.Records, run.Summary, run.Resources, interrupted, err != nil, run.Inventory)
 	for i := range report.Coverage {
 		switch report.Coverage[i].Check {
 		case "resident-observation":

@@ -63,14 +63,29 @@ func containedLink(name, target string) (string, bool) {
 }
 func (c *collector) collectInstalled() {
 	locations := map[string]uint32{}
-	for _, s := range c.result.Model.Scopes {
-		if s.Kind == "workspace" && s.Status != "complete" {
-			continue
+	// Check bounded path ancestors, not every workspace against every entry.
+	for name := range c.entries {
+		if c.ctx.Err() != nil {
+			return
 		}
-		for name := range c.entries {
-			if activeSlot(s.Location, name) {
-				locations[name] = s.ID
+		owner := uint32(0)
+		if activeSlot("", name) {
+			owner = 1
+		}
+		prefix := name
+		for {
+			i := strings.LastIndex(prefix, "/")
+			if i < 0 {
+				break
 			}
+			prefix = prefix[:i]
+			if s, ok := c.workspaceScopes[prefix]; ok && s.Status == "complete" && activeSlot(prefix, name) {
+				owner = s.ID
+				break
+			}
+		}
+		if owner != 0 {
+			locations[name] = owner
 		}
 	}
 	names := make([]string, 0, len(locations))
@@ -184,6 +199,7 @@ func (c *collector) observeSlot(scope uint32, name string) {
 	}
 	o.Requirements = groups.Groups
 	if !c.chargeRequirements(scope, source, o.Requirements) {
+		o.Requirements = nil
 		o.Status = "unsupported"
 	}
 	if o.Fields["name-state"] == "invalid" || o.Fields["version-state"] == "invalid" {

@@ -13,8 +13,20 @@ func Reconcile(m Model) Model {
 	m.Relations = append([]Relation(nil), m.Relations...)
 	byLocation := map[string][]Observation{}
 	byIdentity := map[string][]Observation{}
-	containers := map[uint32][]Observation{}
+	type requirementKey struct {
+		scope       uint32
+		group, name string
+	}
+	type requirementReceipt struct {
+		id, source uint32
+		claim      inventory.DeclaredDependency
+	}
+	requirements := map[requirementKey][]requirementReceipt{}
 	evidence := map[uint32]Evidence{}
+	scopeLocations := map[uint32]string{}
+	for _, s := range m.Scopes {
+		scopeLocations[s.ID] = s.Location
+	}
 	var enumeration uint32
 	for _, e := range m.Evidence {
 		evidence[e.ID] = e
@@ -30,8 +42,13 @@ func Reconcile(m Model) Model {
 				byIdentity[key] = append(byIdentity[key], o)
 			}
 		}
-		if o.Class == "locked" && (o.Kind == "project" || o.Kind == "workspace") {
-			containers[o.Workspace] = append(containers[o.Workspace], o)
+		if location, known := scopeLocations[o.Workspace]; known && o.Location == location && o.Class == "locked" && (o.Kind == "project" || o.Kind == "workspace") {
+			for _, g := range o.Requirements {
+				for _, d := range g.Entries {
+					key := requirementKey{o.Workspace, g.Name, d.Name}
+					requirements[key] = append(requirements[key], requirementReceipt{o.ID, o.Source, d})
+				}
+			}
 		}
 	}
 	seen := map[Relation]bool{}
@@ -39,6 +56,9 @@ func Reconcile(m Model) Model {
 		seen[r] = true
 	}
 	limited := false
+	for _, g := range m.Gaps {
+		limited = limited || g.Code == "relation-limit"
+	}
 	add := func(r Relation) bool {
 		if seen[r] {
 			return true
@@ -57,26 +77,16 @@ func Reconcile(m Model) Model {
 	for _, o := range m.Observations {
 		switch o.Class {
 		case "declared":
-			for _, container := range containers[o.Workspace] {
-				for _, g := range container.Requirements {
-					if g.Name != o.Kind {
-						continue
+			for _, r := range requirements[requirementKey{o.Workspace, o.Kind, o.Name}] {
+				status := "indeterminate"
+				if r.claim.State == inventory.FieldValue && o.Fields["requirement-state"] == "value" {
+					status = "conflict"
+					if r.claim.Requirement == o.Requirement {
+						status = "recorded-agreement"
 					}
-					for _, d := range g.Entries {
-						if d.Name != o.Name {
-							continue
-						}
-						status := "indeterminate"
-						if d.State == inventory.FieldValue && o.Fields["requirement-state"] == "value" {
-							status = "conflict"
-							if d.Requirement == o.Requirement {
-								status = "recorded-agreement"
-							}
-						}
-						if !add(Relation{From: o.ID, To: container.ID, Evidence: container.Source, Kind: "declared-requirement", Status: status}) {
-							break
-						}
-					}
+				}
+				if !add(Relation{From: o.ID, To: r.id, Evidence: r.source, Kind: "declared-requirement", Status: status}) {
+					break
 				}
 			}
 		case "locked":

@@ -58,6 +58,9 @@ func scanFaultDriver(mode string) int {
 		_, _ = io.WriteString(os.Stdout, strings.Repeat("X", maxMessage+1))
 		return 0
 	}
+	if cfg.Stage == "acquire" {
+		sendFaultInventory(c, mode)
+	}
 	r := integrityscan.Record{Index: 0, Assessment: integrity.InstanceAssessment{InstanceID: "instance-1", Differences: []integrity.Difference{}, Contexts: []integrity.ScopedContext{}, Gaps: []integrity.Gap{{Code: integrity.GapBinding, InstanceID: "instance-1"}}}}
 	if mode == "forged-completion" {
 		r.Assessment.SuppliedComparisonComplete = true

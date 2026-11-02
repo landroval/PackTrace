@@ -41,7 +41,7 @@ func (c *collector) projectNPM(doc inventory.Document, source uint32) error {
 	for i, r := range p.Records {
 		scope := c.scopeForLocation(r.Location)
 		if !c.chargeRequirements(scope, source, r.Requirements) {
-			break
+			r.Requirements = nil
 		}
 		n := names.Entries[i]
 		fields := map[string]string{"name-state": fieldState(r.Name.State), "version-state": fieldState(r.Version.State), "origin-state": fieldState(r.Resolved.State), "integrity-state": fieldState(r.Integrity.State), "integrity": r.Integrity.Value, "installation-name": n.InstallationName, "name-qualification": n.Qualification, "name-source": n.Source}
@@ -59,11 +59,8 @@ func (c *collector) projectNPM(doc inventory.Document, source uint32) error {
 		case strings.HasPrefix(r.Resolved.Value, "http:") || strings.HasPrefix(r.Resolved.Value, "https:"):
 			kind = "url"
 		}
-		for _, s := range c.result.Model.Scopes {
-			if s.Kind == "workspace" && s.Location == r.Location {
-				kind = "workspace"
-				break
-			}
+		if _, known := c.workspaceScopes[r.Location]; known {
+			kind = "workspace"
 		}
 		c.add(Observation{Workspace: scope, Source: source, Class: "locked", Kind: kind, Status: "complete", Location: r.Location, Name: n.SelectedName, Version: r.Version.Value, Origin: r.Resolved.Value, Fields: fields, Requirements: r.Requirements})
 	}
@@ -81,13 +78,13 @@ func (c *collector) projectBun(doc inventory.BunLockDocument, source uint32) err
 	for _, r := range workspaces.Records {
 		scope := c.scopeForLocation(r.Location)
 		if !c.chargeRequirements(scope, source, r.Requirements) {
-			return nil
+			r.Requirements = nil
 		}
 		c.add(Observation{Workspace: scope, Source: source, Class: "locked", Kind: "workspace", Status: "complete", Location: r.Location, Name: r.Name.Value, Version: r.Version.Value, Fields: map[string]string{"name-state": fieldState(r.Name.State), "version-state": fieldState(r.Version.State)}, Requirements: r.Requirements})
 	}
 	for _, r := range p.Records {
 		if !c.chargeRequirements(1, source, r.Requirements) {
-			return nil
+			r.Requirements = nil
 		}
 		kinds := []string{"unknown", "package", "git", "github", "tarball", "folder", "link", "workspace", "project"}
 		kind := "unknown"

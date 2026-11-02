@@ -30,6 +30,7 @@ type collector struct {
 	metadata              nativefs.Snapshot
 	entries               map[string]nativefs.Entry
 	blocked               map[string]bool
+	workspaceScopes       map[string]Scope
 	manifestRemaining     int64
 	requirementsRemaining int
 	classCounts           map[string]int
@@ -83,11 +84,18 @@ func Collect(ctx context.Context, root *nativefs.Root, opts Options) (Result, er
 	}
 	rootManifest := c.collectManifest(1, "package.json")
 	c.collectWorkspaces(rootManifest)
+	c.workspaceScopes = map[string]Scope{}
+	for _, s := range c.result.Model.Scopes {
+		if s.Kind == "workspace" {
+			c.workspaceScopes[s.Location] = s
+		}
+	}
 	c.selectInputs(opts)
 	c.collectInstalled()
 	if ctx.Err() != nil {
 		return c.result, ErrCollection
 	}
+	c.result.Metadata = c.metadata
 	c.result.Model = Reconcile(c.result.Model)
 	for _, g := range c.result.Model.Gaps {
 		for i := range c.result.Model.Scopes {

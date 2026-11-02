@@ -26,6 +26,26 @@ func TestInvalidVariantTypesRemainUnqualified(t *testing.T) {
 		})
 	}
 }
+func TestInstalledMembershipAllowanceDoesNotRetainUnbudgetedGroups(t *testing.T) {
+	r, _ := ownedProject(t, map[string]string{"node_modules/pkg/package.json": `{"name":"pkg","version":"1.0.0","dependencies":{"a":"1"}}`})
+	snap, e := r.Metadata(context.Background(), nativefs.Limits{})
+	if e != nil {
+		t.Fatal(e)
+	}
+	entries := map[string]nativefs.Entry{}
+	for _, entry := range snap.Entries {
+		entries[entry.Name] = entry
+	}
+	c := collector{ctx: context.Background(), root: r, metadata: snap, entries: entries, blocked: map[string]bool{}, manifestRemaining: maxManifestTotal, classCounts: map[string]int{}}
+	c.observeSlot(1, "node_modules/pkg")
+	if c.result.Model.Counts().Installed != 1 || len(c.result.Model.Gaps) == 0 {
+		t.Fatal("budget failure erased physical presence")
+	}
+	if len(c.result.Model.Observations[0].Requirements) != 0 {
+		t.Fatal("unbudgeted installed membership retained")
+	}
+}
+
 func TestLockedAndDeclaredRequirementBudgetsAreShared(t *testing.T) {
 	r, _ := ownedProject(t, map[string]string{"package.json": declaredRoot, "package-lock.json": `{"lockfileVersion":3,"packages":{"":{"dependencies":{"a":"1"}},"node_modules/pkg":{"dependencies":{"b":"1"}}}}`})
 	snap, e := r.Metadata(context.Background(), nativefs.Limits{})
@@ -46,5 +66,13 @@ func TestLockedAndDeclaredRequirementBudgetsAreShared(t *testing.T) {
 	}
 	if !limited {
 		t.Fatal("requirement allowance reset at lock boundary")
+	}
+	if c.result.Model.Counts().Locked != 2 {
+		t.Fatal("exhausted requirements erased independent locked claims", c.result.Model)
+	}
+	for _, o := range c.result.Model.Observations {
+		if o.Class == "locked" && len(o.Requirements) != 0 {
+			t.Fatal("unbudgeted locked memberships retained", o)
+		}
 	}
 }

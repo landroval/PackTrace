@@ -16,6 +16,7 @@ import (
 	"packtrace/internal/integrity"
 	"packtrace/internal/integrityscan"
 	"packtrace/internal/nativefs"
+	"packtrace/internal/projectinventory"
 )
 
 const ScanWorkerArgument = "--internal-integrity-scan-worker-v1"
@@ -27,6 +28,7 @@ type ScanRun struct {
 	Plan                integrityscan.Plan
 	Records             []integrityscan.Record
 	Summary             integrityscan.Summary
+	Inventory           *projectinventory.PublicInventory
 	Resources           integrityscan.Resources // comparison checkpoint, updated by Checkpoint/Finish
 	Operational         ScanReceipt             // populated only by Finish, never predicted in public bytes
 	Usable, Interrupted bool
@@ -66,6 +68,13 @@ type scanClosure struct {
 	Differences int `json:"differences"`
 	Gaps        int `json:"gaps"`
 }
+type scanInventoryClosure struct {
+	Batches   uint32                           `json:"batches"`
+	Selection projectinventory.PublicSelection `json:"selection"`
+	Counts    projectinventory.Counters        `json:"counts"`
+	Complete  bool                             `json:"complete"`
+}
+
 type scanDone struct {
 	Records int                   `json:"records"`
 	Summary integrityscan.Summary `json:"summary"`
@@ -129,6 +138,20 @@ func (run *ScanRun) scanPhase(ctx context.Context, cfg scanConfig) (policy integ
 // Test boundary only; production always derives this command from os.Executable.
 func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd *exec.Cmd, identity string) (policy integrityscan.PolicyObservation, failure error) {
 	s := run.output.state
+	defer func() {
+		if cfg.Stage == "acquire" && failure != nil && run.Inventory != nil {
+			p := run.Inventory
+			p.Complete = false
+			g := projectinventory.Gap{Code: "execution-incomplete"}
+			if len(p.Gaps) < 257 {
+				p.Gaps = append(p.Gaps, g)
+			} else {
+				p.Gaps[len(p.Gaps)-1] = g
+			}
+			p.Counts.Gaps = len(p.Gaps)
+			run.Summary.InventoryComplete = false
+		}
+	}()
 	// Standalone protocol tests also get actual process observation, but own
 	// only this phase. RunScan owns its observer across rendering/output too.
 	if s.scan == nil {
@@ -161,9 +184,10 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 	defer cancel()
 	monitor := newScanMonitor(cancel)
 	type phaseData struct {
-		policy  integrityscan.PolicyObservation
-		records []integrityscan.Record
-		summary integrityscan.Summary
+		policy    integrityscan.PolicyObservation
+		records   []integrityscan.Record
+		summary   integrityscan.Summary
+		inventory *projectinventory.PublicInventory
 	}
 	parsed := make(chan phaseData, 1)
 	failure = s.runChild(phase, cmd, release, func(_ context.Context, c *channel, input io.Closer) error {
@@ -183,6 +207,9 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 		fatal := ""
 		expected := 0
 		var pending *integrityscan.Record
+		var inventory projectinventory.PublicInventory
+		inventorySequence := uint32(0)
+		inventoryClosed := false
 		for {
 			m, e := c.receive()
 			if e == io.EOF {
@@ -220,9 +247,28 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 					return errScanProtocol
 				}
 				acceptedPolicy = true
+			case "inventory-batch":
+				var v projectinventory.InventoryBatch
+				if !started || cfg.Stage != "acquire" || cfg.Plan == nil || inventoryClosed || pending != nil || expected != 0 || fatal != "" || decode(m.Data, &v) != nil || v.Sequence != inventorySequence || projectinventory.AppendBatch(&inventory, v) != nil {
+					return errScanProtocol
+				}
+				inventorySequence++
+			case "inventory-closure":
+				var v scanInventoryClosure
+				if !started || cfg.Stage != "acquire" || inventoryClosed || pending != nil || expected != 0 || fatal != "" || decode(m.Data, &v) != nil || v.Batches != inventorySequence {
+					return errScanProtocol
+				}
+				inventory.Selection = v.Selection
+				inventory.Counts = v.Counts
+				inventory.Complete = v.Complete
+				if projectinventory.ValidatePublic(inventory) != nil {
+					return errScanProtocol
+				}
+				inventoryClosed = true
+				data.inventory = &inventory
 			case "instance":
 				var v integrityscan.Record
-				if !started || cfg.Stage != "acquire" || cfg.Plan == nil || pending != nil || fatal != "" || decode(m.Data, &v) != nil || v.Index != expected || integrityscan.ValidateRecord(*cfg.Plan, v, cfg.PolicyHash) != nil {
+				if !started || cfg.Stage != "acquire" || !inventoryClosed || cfg.Plan == nil || pending != nil || fatal != "" || decode(m.Data, &v) != nil || v.Index != expected || integrityscan.ValidateRecord(*cfg.Plan, v, cfg.PolicyHash) != nil {
 					return errScanProtocol
 				}
 				pending = &v
@@ -250,6 +296,9 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 						return errScanProtocol
 					}
 				} else if fatal == "" && cfg.Plan != nil {
+					if !inventoryClosed || v.Summary.InventoryComplete != inventory.Complete {
+						return errScanProtocol
+					}
 					want := len(cfg.Plan.Policy.References)
 					if cfg.Plan.Checks&cli.ArgumentCheckIntegrity == 0 {
 						want = 0
@@ -278,6 +327,9 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 		policy = data.policy
 		run.Records = append(run.Records, data.records...)
 		run.Summary = data.summary
+		if data.inventory != nil {
+			run.Inventory = data.inventory
+		}
 	default:
 	}
 	resources := monitor.result()
@@ -445,7 +497,7 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 			e = sender.send("policy", observed)
 		}
 	} else {
-		summary, e = integrityscan.Acquire(ctx, cfg.Target, filepath.Dir(cfg.PolicyPath), cfg.PolicyHash, *cfg.Plan, func(r integrityscan.Record) error {
+		summary, e = integrityscan.AcquireWithInventory(ctx, cfg.Target, filepath.Dir(cfg.PolicyPath), cfg.PolicyHash, *cfg.Plan, func(r integrityscan.Record) error {
 			// Exact shape uses non-null finite collections; no portable report or
 			// child-selected public exit/coverage is sent through this role.
 			if r.Assessment.Differences == nil {
@@ -461,6 +513,19 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 				return errScanProtocol
 			}
 			return sender.send("closure", scanClosure{r.Index, len(r.Assessment.Differences), len(r.Assessment.Gaps)})
+		}, func(r projectinventory.Result) error {
+			p := projectinventory.Portable(r)
+			batches := uint32(0)
+			if e := projectinventory.WalkBatches(p, func(b projectinventory.InventoryBatch) error {
+				if e := sender.send("inventory-batch", b); e != nil {
+					return e
+				}
+				batches++
+				return nil
+			}); e != nil {
+				return e
+			}
+			return sender.send("inventory-closure", scanInventoryClosure{Batches: batches, Selection: p.Selection, Counts: p.Counts, Complete: p.Complete})
 		})
 	}
 	stop()

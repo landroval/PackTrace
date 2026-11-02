@@ -111,15 +111,17 @@ func (c *collector) collectWorkspaces(doc *inventory.ManifestDocument) {
 	}
 }
 func (c *collector) scopeForLocation(name string) uint32 {
-	scope := uint32(1)
-	longest := 0
-	for _, s := range c.result.Model.Scopes {
-		if s.Kind == "workspace" && s.Status == "complete" && (name == s.Location || strings.HasPrefix(name, s.Location+"/")) && len(s.Location) > longest {
-			scope = s.ID
-			longest = len(s.Location)
+	for {
+		if s, ok := c.workspaceScopes[name]; ok && s.Status == "complete" {
+			return s.ID
 		}
+		i := strings.LastIndex(name, "/")
+		if i < 0 {
+			break
+		}
+		name = name[:i]
 	}
-	return scope
+	return 1
 }
 func (c *collector) chargeRequirements(scope, evidence uint32, groups []inventory.DependencyGroup) bool {
 	for _, g := range groups {
