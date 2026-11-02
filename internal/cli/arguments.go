@@ -11,6 +11,13 @@ const (
 	ArgumentActionHelp
 	ArgumentActionScanHelp
 	ArgumentActionVersion
+	ArgumentActionIntelSync
+	ArgumentActionIntelImport
+	ArgumentActionIntelExport
+	ArgumentActionIntelStatus
+	ArgumentActionIntelPin
+	ArgumentActionIntelUnpin
+	ArgumentActionCachePrune
 )
 
 // ArgumentChecks is requested category membership, not qualified coverage.
@@ -35,6 +42,9 @@ const (
 	ArgumentOptionStateDir
 	ArgumentOptionOutput
 	ArgumentOptionTrustedPolicyDigest
+	ArgumentOptionTrustedSnapshotDigest
+	ArgumentOptionApplyPreview
+	ArgumentOptionFull
 )
 
 // ScanArgumentRequest is unvalidated policy/path/output request data.
@@ -49,6 +59,7 @@ type ScanArgumentRequest struct {
 type Invocation struct {
 	Action ArgumentAction
 	Scan   ScanArgumentRequest
+	Intel  IntelArgumentRequest
 }
 
 type ArgumentErrorCode uint8
@@ -120,6 +131,8 @@ func ParseArgs(args []string) (Invocation, error) {
 			action = ArgumentActionVersion
 		}
 		return Invocation{Action: action}, nil
+	case "intel", "cache":
+		return parseIntelArgs(args)
 	case "scan":
 		if len(args) > 1 && args[1] == "--help" {
 			if len(args) != 2 {

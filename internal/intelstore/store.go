@@ -52,6 +52,15 @@ type storeMarker struct {
 }
 
 func Open(ctx context.Context, path string, mode Mode) (*Store, error) {
+	return openStore(ctx, path, mode, mode == CreateOwned)
+}
+
+// OpenExistingOwned grants maintenance only on a pre-existing physically bound
+// owned root. Missing directories are never initialized, even across races.
+func OpenExistingOwned(ctx context.Context, path string) (*Store, error) {
+	return openStore(ctx, path, CreateOwned, false)
+}
+func openStore(ctx context.Context, path string, mode Mode, create bool) (*Store, error) {
 	if ctx == nil || mode != ReadOnly && mode != CreateOwned {
 		return nil, ErrUnavailable
 	}
@@ -61,7 +70,7 @@ func Open(ctx context.Context, path string, mode Mode) (*Store, error) {
 	var owned *nativefs.OwnedDirectory
 	var err error
 	fresh := false
-	if mode == CreateOwned {
+	if mode == CreateOwned && create {
 		owned, err = nativefs.OpenOwnedDirectory(ctx, path, true)
 		fresh = err == nil
 	}

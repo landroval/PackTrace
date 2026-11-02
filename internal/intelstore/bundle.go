@@ -5,28 +5,22 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
-	"strings"
+	"packtrace/internal/intel"
 	"time"
 )
 
 type ImportOptions struct{ TrustedSnapshotDigest string }
 
 func parseSnapshotPin(text string) (ID, error) {
-	var id ID
-	if !strings.HasPrefix(text, "sha256-") {
-		return id, ErrUntrusted
+	id, e := intel.ParseSnapshotDigest(text)
+	if e != nil {
+		return ID{}, ErrUntrusted
 	}
-	raw, e := base64.StdEncoding.DecodeString(strings.TrimPrefix(text, "sha256-"))
-	if e != nil || len(raw) != 32 || "sha256-"+base64.StdEncoding.EncodeToString(raw) != text {
-		return id, ErrUntrusted
-	}
-	copy(id[:], raw)
-	return id, nil
+	return ID(id), nil
 }
 func parseObjectRef(raw []byte, optional bool) (ObjectRef, error) {
 	var result ObjectRef
