@@ -20,7 +20,6 @@ type preparationRecord struct {
 	SourceIDs                                      ObjectRef
 }
 type preparationState struct {
-	originals       []ObjectRef
 	cat, idLines    bytes.Buffer
 	rows            []indexRow
 	buffered        uint64
@@ -140,7 +139,6 @@ func prepareArchive(ctx context.Context, t *Transaction, input io.ReaderAt, size
 		if e != nil {
 			return generationDraft{}, e
 		}
-		p.originals = append(p.originals, ref)
 		p.record.Records++
 		catalog, _ := json.Marshal(struct {
 			V       int    `json:"v"`

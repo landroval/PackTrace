@@ -115,6 +115,7 @@ type indexCursor struct {
 	scanner *bufio.Scanner
 	row     indexRow
 	raw     []byte
+	decode  func([]byte) (indexRow, error)
 }
 type rowHeap []*indexCursor
 
@@ -131,8 +132,10 @@ func (c *indexCursor) advance() (bool, error) {
 		return false, nil
 	}
 	c.raw = append(c.raw[:0], c.scanner.Bytes()...)
-	if json.Unmarshal(c.raw, &c.row) != nil {
-		return false, ErrCorrupt
+	var err error
+	c.row, err = c.decode(c.raw)
+	if err != nil {
+		return false, err
 	}
 	return true, nil
 }
@@ -145,6 +148,15 @@ type mergedRows struct {
 }
 
 func newMergedRows(ctx context.Context, s *Store, refs []ObjectRef) (*mergedRows, error) {
+	return newSortedRows(ctx, s, refs, func(raw []byte) (indexRow, error) {
+		var row indexRow
+		if json.Unmarshal(raw, &row) != nil {
+			return row, ErrCorrupt
+		}
+		return row, nil
+	})
+}
+func newSortedRows(ctx context.Context, s *Store, refs []ObjectRef, decode func([]byte) (indexRow, error)) (*mergedRows, error) {
 	if len(refs) > 32 {
 		return nil, ErrLimit
 	}
@@ -157,7 +169,7 @@ func newMergedRows(ctx context.Context, s *Store, refs []ObjectRef) (*mergedRows
 		}
 		scanner := bufio.NewScanner(reader)
 		scanner.Buffer(make([]byte, 64<<10), 1<<20)
-		c := &indexCursor{reader: reader, scanner: scanner}
+		c := &indexCursor{reader: reader, scanner: scanner, decode: decode}
 		m.cursors = append(m.cursors, c)
 		ok, e := c.advance()
 		if e != nil {
@@ -255,8 +267,7 @@ func buildIndexes(ctx context.Context, t *Transaction) (generationDraft, error) 
 	}
 	p.record.SourceIDs = sourceIDs
 	blocks := make([]any, 256)
-	objects := append([]ObjectRef(nil), p.originals...)
-	objects = append(objects, catalog, sourceIDs)
+	objects := []ObjectRef{catalog, sourceIDs}
 	empty, e := t.put(ctx, bytes.NewReader(nil), 0)
 	if e != nil {
 		return generationDraft{}, e

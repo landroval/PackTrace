@@ -9,7 +9,6 @@ import (
 	"errors"
 	"io"
 	"packtrace/internal/intel"
-	"sort"
 	"strconv"
 )
 
@@ -138,7 +137,7 @@ func (t *Transaction) seal(ctx context.Context, draft generationDraft) (ID, erro
 	}
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	if t.closed || t.failed != nil || ctx == nil || t.work.Err() != nil || ctx.Err() != nil || len(draft.Objects) > 2_001_024 {
+	if t.closed || t.failed != nil || ctx == nil || t.work.Err() != nil || ctx.Err() != nil || len(draft.Objects) > 1024 {
 		return ID{}, ErrCorrupt
 	}
 	// The manifest and every object actually present are checked under this
@@ -177,12 +176,7 @@ func (t *Transaction) seal(ctx context.Context, draft generationDraft) (ID, erro
 			return ID{}, ErrCorrupt
 		}
 	}
-	sort.Slice(refs, func(i, j int) bool { return bytes.Compare(refs[i].SHA256[:], refs[j].SHA256[:]) < 0 })
-	var length uint64
-	for _, v := range refs {
-		length += uint64(68 + len(strconv.FormatUint(v.Bytes, 10)))
-	}
-	objectSet, e := t.putLocked(t.work, &refLines{refs: refs}, length)
+	objectSet, e := t.buildObjectSetLocked(t.work, ObjectRef{manifest.Originals.SHA256, manifest.Originals.Bytes}, manifest.Originals.Records, refs)
 	if e != nil {
 		return ID{}, e
 	}
