@@ -62,46 +62,12 @@ func (s *Store) begin(ctx context.Context, kind operation, b *Budget) (*Transact
 	if s == nil || ctx == nil || b == nil || kind > operationMaintenance {
 		return nil, ErrUnavailable
 	}
-	if e := ctx.Err(); e != nil {
+	writer, limit, e := s.acquireWriter(ctx)
+	if e != nil {
 		return nil, e
 	}
-	s.mu.Lock()
-	if s.root == nil || s.owner == nil || s.mode != CreateOwned {
-		s.mu.Unlock()
-		return nil, ErrUnavailable
-	}
-	if s.active {
-		s.mu.Unlock()
-		return nil, ErrBusy
-	}
-	s.active = true
-	limit := s.quotaLimit
-	if limit == 0 {
-		limit = 32 << 30
-	}
-	owner, root := s.owner, s.root
-	s.mu.Unlock()
+	owner := s.owner
 	failActive := func() { s.mu.Lock(); s.active = false; s.mu.Unlock() }
-	// Create this permanent inode once. A failed exclusive create is not enough
-	// to admit it: the actual native lock constructor rechecks type/link/binding.
-	marker, e := root.OpenMetadata(ctx, "writer.lock")
-	if e != nil {
-		e = owner.WriteControl(ctx, "writer.lock", nil)
-	} else {
-		e = errors.Join(marker.Stable(), marker.Close())
-	}
-	if e != nil {
-		failActive()
-		return nil, ErrUnavailable
-	}
-	writer, e := root.TryOwnedLock(ctx, "writer.lock", true)
-	if e != nil {
-		failActive()
-		if errors.Is(e, nativefs.ErrBusy) {
-			return nil, ErrBusy
-		}
-		return nil, ErrUnavailable
-	}
 	fail := func(e error) (*Transaction, error) {
 		closeErr := writer.Close()
 		failActive()

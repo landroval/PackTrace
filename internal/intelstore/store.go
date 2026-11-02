@@ -96,7 +96,7 @@ func Open(ctx context.Context, path string, mode Mode) (*Store, error) {
 		return fail(err)
 	}
 	if mode == CreateOwned {
-		for _, name := range []string{"objects", "generations", "activation", "locks", "pins", "staging"} {
+		for _, name := range []string{"objects", "generations", "activation", "locks", "pins", "staging", "previews", "quarantine"} {
 			if err := owned.Mkdir(ctx, name); err != nil {
 				return fail(ErrOwnership)
 			}

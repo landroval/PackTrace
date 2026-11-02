@@ -11,7 +11,7 @@ import (
 	"unsafe"
 )
 
-func ownedRename(n *nativeRoot, original *os.File, source, dest string, replace bool) (failure error) {
+func ownedMove(n *nativeRoot, original *os.File, source, dest string, replace, flush bool) (failure error) {
 	// Capture both directory I/O handles before rename changes their stamps.
 	dirs := make([]*os.File, 0, 2)
 	defer func() {
@@ -41,11 +41,19 @@ func ownedRename(n *nativeRoot, original *os.File, source, dest string, replace 
 		}
 		dirs = append(dirs, f)
 	}
-	a, e := syscall.BytePtrFromString(source)
+	sourceLeaf := source
+	if i := strings.LastIndexByte(sourceLeaf, '/'); i >= 0 {
+		sourceLeaf = sourceLeaf[i+1:]
+	}
+	destLeaf := dest
+	if i := strings.LastIndexByte(destLeaf, '/'); i >= 0 {
+		destLeaf = destLeaf[i+1:]
+	}
+	a, e := syscall.BytePtrFromString(sourceLeaf)
 	if e != nil {
 		return ErrPath
 	}
-	b, e := syscall.BytePtrFromString(dest)
+	b, e := syscall.BytePtrFromString(destLeaf)
 	if e != nil {
 		return ErrPath
 	}
@@ -57,7 +65,7 @@ func ownedRename(n *nativeRoot, original *os.File, source, dest string, replace 
 	if replace {
 		flags = 0
 	}
-	_, _, errno := syscall.Syscall6(trap, n.root.Fd(), uintptr(unsafe.Pointer(a)), n.root.Fd(), uintptr(unsafe.Pointer(b)), flags, 0)
+	_, _, errno := syscall.Syscall6(trap, dirs[0].Fd(), uintptr(unsafe.Pointer(a)), dirs[1].Fd(), uintptr(unsafe.Pointer(b)), flags, 0)
 	runtime.KeepAlive(n.root)
 	runtime.KeepAlive(a)
 	runtime.KeepAlive(b)

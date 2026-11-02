@@ -181,6 +181,9 @@ func (t *Transaction) activate(ctx context.Context, id ID) error {
 	if _, e := t.store.checkHeader(t.work, id, sealKey); e != nil {
 		return e
 	}
+	if e := t.reviveRetired(t.work, id); e != nil {
+		return e
+	}
 	old, _, e := t.store.readSelection(t.work)
 	if e != nil && !t.store.emptyActivation(t.work) {
 		return ErrCorrupt

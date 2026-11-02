@@ -13,11 +13,25 @@ import (
 
 var ownedSetInfo = winNT.NewProc("NtSetInformationFile")
 
-func ownedRename(n *nativeRoot, f *os.File, source, dest string, replace bool) error {
+func ownedMove(n *nativeRoot, f *os.File, source, dest string, replace, flush bool) error {
 	if ownedSetInfo.Find() != nil {
 		return ErrUnavailable
 	}
-	units, e := syscall.UTF16FromString(strings.ReplaceAll(dest, "/", `\`))
+	parentName, leaf := ".", dest
+	if i := strings.LastIndexByte(dest, '/'); i >= 0 {
+		parentName, leaf = dest[:i], dest[i+1:]
+	}
+	parent, e := n.captureMetadata(parentName)
+	if e != nil {
+		return e
+	}
+	defer parent.close()
+	if parent.initial.kind() != KindDirectory {
+		return ErrType
+	}
+	// Resolve the admitted destination parent once; the rename name is a
+	// single component relative to that original handle, never a rewalk.
+	units, e := syscall.UTF16FromString(leaf)
 	if e != nil {
 		return ErrPath
 	}
@@ -28,7 +42,7 @@ func ownedRename(n *nativeRoot, f *os.File, source, dest string, replace bool) e
 	if replace {
 		b[0] = 1
 	}
-	binary.LittleEndian.PutUint64(b[8:16], uint64(n.root.Fd()))
+	binary.LittleEndian.PutUint64(b[8:16], uint64(parent.handle.Fd()))
 	binary.LittleEndian.PutUint32(b[16:20], uint32(len(units)*2))
 	for i, u := range units {
 		binary.LittleEndian.PutUint16(b[20+2*i:], u)
@@ -38,6 +52,7 @@ func ownedRename(n *nativeRoot, f *os.File, source, dest string, replace bool) e
 	ok := winFinish(status, syscall.Handle(f.Fd()), ios)
 	runtime.KeepAlive(f)
 	runtime.KeepAlive(n.root)
+	runtime.KeepAlive(parent.handle)
 	runtime.KeepAlive(b)
 	runtime.KeepAlive(ios)
 	if !ok {
@@ -46,7 +61,7 @@ func ownedRename(n *nativeRoot, f *os.File, source, dest string, replace bool) e
 		}
 		return ErrWrite
 	}
-	if f.Sync() != nil {
+	if flush && f.Sync() != nil {
 		return ErrWrite
 	}
 	return nil

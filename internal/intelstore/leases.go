@@ -95,6 +95,11 @@ func (s *Store) Pin(ctx context.Context, selected *ID) (*Pin, error) {
 			return fail(e)
 		}
 	}
+	retired, e := s.generationRetired(ctx, id)
+	if e != nil || retired {
+		gate.Close()
+		return fail(ErrUnavailable)
+	}
 	key := hex.EncodeToString(id[:])
 	lease, e := s.root.TryOwnedLock(ctx, "generations/"+key+"/read.lock", false)
 	closeErr := gate.Close()
@@ -148,6 +153,15 @@ func (s *Store) SetPinned(ctx context.Context, id ID, pinned bool) (failure erro
 	defer func() { failure = errors.Join(failure, tx.Close()) }()
 	if _, e := s.explicitHeader(ctx, id); e != nil {
 		return e
+	}
+	if pinned {
+		retired, e := s.generationRetired(ctx, id)
+		if e != nil {
+			return e
+		}
+		if retired {
+			return ErrUntrusted
+		}
 	}
 	key := hex.EncodeToString(id[:])
 	data, _ := json.Marshal(durablePin{1, key, pinned})

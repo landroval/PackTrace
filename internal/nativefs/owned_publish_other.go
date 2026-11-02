@@ -4,4 +4,4 @@ package nativefs
 
 import "os"
 
-func ownedRename(*nativeRoot, *os.File, string, string, bool) error { return ErrUnavailable }
+func ownedMove(*nativeRoot, *os.File, string, string, bool, bool) error { return ErrUnavailable }
