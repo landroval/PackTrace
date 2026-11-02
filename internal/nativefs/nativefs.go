@@ -60,6 +60,7 @@ var (
 	ErrLimit       = errors.New("nativefs: limit")
 	ErrUnstable    = errors.New("nativefs: unstable")
 	ErrRead        = errors.New("nativefs: read-failed")
+	ErrWrite       = errors.New("nativefs: write-failed")
 )
 
 const maxTotal int64 = 16 << 30
@@ -74,6 +75,8 @@ type Root struct {
 	// Only native constructors can mint external/subroot bindings.
 	anchor *Root
 	budget *Root
+	// Present only on the separately minted owned-directory read view.
+	owned *ownedNative
 }
 type File struct {
 	mu                   sync.Mutex
@@ -251,12 +254,19 @@ func (r *Root) lockNative() (*nativeRoot, func(), error) {
 			return nil, nil, ErrClosed
 		}
 	}
-	return r.native, func() {
+	unlock := func() {
 		if r.anchor != nil {
 			r.anchor.mu.Unlock()
 		}
 		r.mu.Unlock()
-	}, nil
+	}
+	if r.owned != nil {
+		if err := r.owned.guard(r.native); err != nil {
+			unlock()
+			return nil, nil, err
+		}
+	}
+	return r.native, unlock, nil
 }
 
 func (r *Root) lookup(ctx context.Context, name string, follow bool) (*object, error) {
