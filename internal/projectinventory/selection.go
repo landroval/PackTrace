@@ -178,7 +178,10 @@ func (c *collector) inspectNPM(name string) inventory.NPMInputUsability {
 		c.gap(1, id, "lock-unreadable")
 		return inventory.NPMInputUsabilityUnreadable
 	}
-	_, e = inventory.ParseNPMLock(data)
+	doc, e := inventory.ParseNPMLock(data)
+	if e == nil {
+		e = c.projectNPM(doc, id)
+	}
 	if e == nil {
 		return inventory.NPMInputUsabilityUsable
 	}
@@ -211,6 +214,10 @@ func (c *collector) inspectBun(name string) inventory.BunInputUsability {
 			c.gap(1, id, "config-version-unsupported")
 			return inventory.BunInputUsabilityUnsupported
 		}
+	}
+	if c.projectBun(doc, id) != nil {
+		c.gap(1, id, "locked-projection-invalid")
+		return inventory.BunInputUsabilityInvalid
 	}
 	return inventory.BunInputUsabilityUsable
 }

@@ -78,7 +78,8 @@ func Collect(ctx context.Context, root *nativefs.Root, opts Options) (Result, er
 	if ctx.Err() != nil {
 		return c.result, ErrCollection
 	}
-	c.collectManifest(1, "package.json")
+	rootManifest := c.collectManifest(1, "package.json")
+	c.collectWorkspaces(rootManifest)
 	c.selectInputs(opts)
 	if ctx.Err() != nil {
 		return c.result, ErrCollection
@@ -110,8 +111,15 @@ func (c *collector) add(o Observation) bool {
 	return true
 }
 func (c *collector) presence(name string) (string, string) {
-	if c.blocked[strings.ToLower(name)] {
-		return "unknown", "unsafe"
+	for p := strings.ToLower(name); p != ""; {
+		if c.blocked[p] {
+			return "unknown", "unsafe"
+		}
+		i := strings.LastIndexByte(p, '/')
+		if i < 0 {
+			break
+		}
+		p = p[:i]
 	}
 	e, ok := c.entries[name]
 	if !ok {

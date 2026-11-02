@@ -2,6 +2,8 @@
 // capabilities. Claims never authenticate an origin or prove code execution.
 package projectinventory
 
+import "packtrace/internal/inventory"
+
 type Options struct {
 	Profile         string
 	ExplicitManager bool
@@ -12,6 +14,7 @@ type Observation struct {
 	Class, Kind, Status                          string
 	Location, Name, Version, Origin, Requirement string
 	Fields                                       map[string]string
+	Requirements                                 []inventory.DependencyGroup
 }
 type Scope struct {
 	ID, Parent             uint32
