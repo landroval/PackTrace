@@ -10,6 +10,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"packtrace/internal/intel"
 	"packtrace/internal/jsoninput"
@@ -44,6 +45,7 @@ type sourceReceipt struct {
 	Version                                      int
 	Source, Acquisition, PublisherAuthentication string
 	AcquiredAt, CheckedAt, ReconciledAt          time.Time
+	FullReconciliationEstablished                bool
 	ArchiveSHA256                                [32]byte
 	ArchiveBytes                                 uint64
 	Generation                                   string
@@ -144,12 +146,30 @@ func (t *Transaction) stageSourceObject(input io.Reader, max uint64, kind reques
 	copy(md[:], m.Sum(nil))
 	return f, sha, md, nil
 }
-func (s *Store) Sync(ctx context.Context) (OperationResult, error) {
+
+type SyncOptions struct{ FullReconciliation bool }
+
+func (s *Store) Sync(ctx context.Context, options SyncOptions) (OperationResult, error) {
+	if options.FullReconciliation {
+		return s.syncFull(ctx, &Budget{}, fetchPublic)
+	}
 	return s.sync(ctx, &Budget{}, fetchPublic)
 }
 func (s *Store) syncFull(ctx context.Context, b *Budget, fetch sourceFetch) (result OperationResult, failure error) {
 	if fetch == nil {
 		return result, ErrUnavailable
+	}
+	var previous *sourceState
+	if pin, pinErr := s.Pin(ctx, nil); pinErr == nil {
+		defer func() { failure = errors.Join(failure, pin.Close()) }()
+		state, stateErr := s.loadSourceState(ctx, pin.ID())
+		if stateErr == nil {
+			previous = &state
+		} else if s.verifyLocal(ctx, pin.ID()) == nil {
+			return result, stateErr
+		}
+	} else if ctx != nil && ctx.Err() != nil {
+		return result, ctx.Err()
 	}
 	tx, e := s.begin(ctx, operationSync, b)
 	if e != nil {
@@ -163,6 +183,12 @@ func (s *Store) syncFull(ctx context.Context, b *Budget, fetch sourceFetch) (res
 		}
 		failure = errors.Join(failure, tx.Close())
 	}()
+	if previous != nil {
+		selection, _, e := s.readSelection(tx.work)
+		if e != nil || selection.Current != fmt.Sprintf("%x", previous.id) {
+			return result, ErrBusy
+		}
+	}
 	readMetadata := func() (exportMetadata, []byte, error) { return readSourceMetadata(tx.work, tx, requestArchive, fetch) }
 	meta, metadataBytes, e := readMetadata()
 	if e != nil {
@@ -173,6 +199,9 @@ func (s *Store) syncFull(ctx context.Context, b *Budget, fetch sourceFetch) (res
 		return result, e
 	}
 	defer func() { failure = errors.Join(failure, original.Close()) }()
+	if previous != nil && previous.receipt.Generation == meta.Generation && (previous.receipt.ArchiveSHA256 != archiveHash || previous.receipt.ArchiveBytes != meta.Size) {
+		return result, ErrUntrusted
+	}
 	draft, e := prepareArchive(tx.work, tx, original, original.Size())
 	if e != nil {
 		return result, e
@@ -199,7 +228,16 @@ func (s *Store) syncFull(ctx context.Context, b *Budget, fetch sourceFetch) (res
 	if e != nil {
 		return result, e
 	}
-	return publishSourceDraft(tx.work, tx, draft, receipt, meta.Updated, true)
+	if previous != nil {
+		draft, e = reconcileKnown(tx.work, tx, draft, tx.prep.record, *previous, fetch)
+		if e != nil {
+			return result, e
+		}
+		receipt.CheckedAt = previous.receipt.CheckedAt
+		receipt.ReconciledAt = previous.receipt.ReconciledAt
+		receipt.FullReconciliationEstablished = previous.receipt.FullReconciliationEstablished
+	}
+	return publishSourceDraft(tx.work, tx, draft, receipt, meta.Updated, tx.prep.record.DispositionGaps == 0)
 }
 func publishSourceDraft(ctx context.Context, tx *Transaction, draft generationDraft, receipt sourceReceipt, exportedAt time.Time, full bool) (result OperationResult, failure error) {
 	p := tx.prep.record
@@ -235,6 +273,7 @@ func publishSourceDraft(ctx context.Context, tx *Transaction, draft generationDr
 	receipt.CheckedAt = successfulCheckTime(receipt.CheckedAt, now, true)
 	if full {
 		receipt.ReconciledAt = successfulCheckTime(receipt.ReconciledAt, now, true)
+		receipt.FullReconciliationEstablished = true
 	}
 	// Only this private verified acquisition controller sets source dates; data
 	// imported later still needs its independent invocation pin or local seal.
@@ -246,7 +285,11 @@ func publishSourceDraft(ctx context.Context, tx *Transaction, draft generationDr
 	if json.Unmarshal(raw, &manifest) != nil {
 		return result, ErrCorrupt
 	}
-	manifest["source"] = map[string]any{"id": "osv-npm", "acquisitionMethod": receipt.Acquisition, "acquiredAt": now.Format(time.RFC3339Nano), "exportedAt": exportedAt.UTC().Format(time.RFC3339Nano), "lastSuccessfulCheck": receipt.CheckedAt.Format(time.RFC3339Nano), "lastFullReconciliation": receipt.ReconciledAt.Format(time.RFC3339Nano)}
+	sourceFields := map[string]any{"id": "osv-npm", "acquisitionMethod": receipt.Acquisition, "acquiredAt": now.Format(time.RFC3339Nano), "exportedAt": exportedAt.UTC().Format(time.RFC3339Nano), "lastSuccessfulCheck": receipt.CheckedAt.Format(time.RFC3339Nano)}
+	if receipt.FullReconciliationEstablished {
+		sourceFields["lastFullReconciliation"] = receipt.ReconciledAt.Format(time.RFC3339Nano)
+	}
+	manifest["source"] = sourceFields
 	manifestBytes, e := json.Marshal(manifest)
 	if e != nil {
 		return result, ErrCorrupt

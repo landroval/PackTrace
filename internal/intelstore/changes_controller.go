@@ -56,6 +56,9 @@ func prepareListing(ctx context.Context, t *Transaction, base generationDraft, p
 		return draft, cursor, e
 	}
 	defer func() { failure = errors.Join(failure, original.Close()) }()
+	if old != nil && old.Generation == meta.Generation && (old.SHA256 != sum || old.Bytes != meta.Size) {
+		return draft, cursor, ErrUntrusted
+	}
 	cutoff := baseline.Add(-time.Minute)
 	if old != nil {
 		stamp := intel.ProjectOSVTimestampText(old.Point.Modified)

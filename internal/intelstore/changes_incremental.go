@@ -5,7 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"packtrace/internal/intel"
+	"time"
 )
+
+func reconciliationDue(source intel.SnapshotSource, now time.Time) bool {
+	return intel.EvaluateSnapshotFreshness(source, now, true).FullReconciliation != intel.FreshnessCurrent
+}
 
 func (s *Store) sync(ctx context.Context, b *Budget, fetch sourceFetch) (result OperationResult, failure error) {
 	pin, e := s.Pin(ctx, nil)
@@ -16,7 +21,7 @@ func (s *Store) sync(ctx context.Context, b *Budget, fetch sourceFetch) (result 
 		return s.syncFull(ctx, b, fetch)
 	}
 	state, e := s.loadSourceState(ctx, pin.ID())
-	if e != nil || zeroRef(state.descriptor.Cursor) || pin.fallback {
+	if e != nil || zeroRef(state.descriptor.Cursor) || pin.fallback || reconciliationDue(state.manifest.Source, time.Now()) {
 		closeErr := pin.Close()
 		if closeErr != nil {
 			return result, closeErr

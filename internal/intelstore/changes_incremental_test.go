@@ -9,7 +9,7 @@ import (
 )
 
 func TestIncrementalSourceUpdateKeepsOutsideAndUnresolvedEvidence(t *testing.T) {
-	for _, mode := range []string{"outside-update", "unavailable-update", "wrong-id-update", "retry-fail-update"} {
+	for _, mode := range []string{"outside-update", "unavailable-update", "wrong-id-update", "retry-fail-update", "same-generation-update"} {
 		t.Run(mode, func(t *testing.T) {
 			ctx := context.Background()
 			s, _ := transactionFixture(t)
@@ -32,7 +32,7 @@ func TestIncrementalSourceUpdateKeepsOutsideAndUnresolvedEvidence(t *testing.T) 
 				return next(ctx, b, spec, out)
 			}
 			result, e := s.syncIncremental(ctx, &Budget{StagingBytes: 16 << 20}, fetch, old)
-			if mode == "wrong-id-update" || mode == "retry-fail-update" {
+			if mode == "wrong-id-update" || mode == "retry-fail-update" || mode == "same-generation-update" {
 				if e == nil {
 					t.Fatal("mismatched ID advanced cursor")
 				}

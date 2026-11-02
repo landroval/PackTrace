@@ -25,6 +25,15 @@ func fullSourceFixture(t *testing.T, mode string) (func(context.Context, *Budget
 		id = "MAL-2026-1"
 		record = strings.ReplaceAll(ownedOSVRecord, "OWNED-1", id)
 	}
+	archiveGeneration := "123"
+	if strings.HasPrefix(mode, "replacement-") {
+		id = "MAL-2026-2"
+		record = strings.ReplaceAll(ownedOSVRecord, "OWNED-1", id)
+		archiveGeneration = "124"
+		if mode == "replacement-reused-generation" {
+			archiveGeneration = "123"
+		}
+	}
 	archive := ownedArchive(t, []archiveRecord{{id + ".json", record, 0}})
 	digest := md5.Sum(archive)
 	if mode == "checksum" {
@@ -35,10 +44,30 @@ func fullSourceFixture(t *testing.T, mode string) (func(context.Context, *Budget
 	if strings.HasSuffix(mode, "-update") {
 		csvDate, csvGeneration = "2026-11-01T01:00:00Z", "790"
 	}
+	if strings.HasPrefix(mode, "replacement-") {
+		csvGeneration = "791"
+	}
+	if mode == "same-generation-update" {
+		csvGeneration = "789"
+	}
 	csvBody := []byte(csvDate + ",npm/" + id + "\n")
 	csvMD5 := md5.Sum(csvBody)
 	client, close := ownedMappedClient(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.URL.Path, "/v1/vulns/") {
+			if strings.HasPrefix(mode, "replacement-") && r.URL.Path == "/v1/vulns/GHSA-2345-6789-cfgh" {
+				if mode == "replacement-unresolved" {
+					w.WriteHeader(404)
+					return
+				}
+				body := strings.ReplaceAll(ownedOSVRecord, "OWNED-1", "GHSA-2345-6789-cfgh")
+				if mode == "replacement-withdrawn" {
+					body = strings.Replace(body, `"affected":`, `"withdrawn":"2026-11-01T00:00:00Z","affected":`, 1)
+				} else {
+					body = strings.ReplaceAll(body, `"npm"`, `"PyPI"`)
+				}
+				io.WriteString(w, body)
+				return
+			}
 			if r.URL.Path != "/v1/vulns/"+id {
 				t.Error("non-source record lookup")
 			}
@@ -78,7 +107,7 @@ func fullSourceFixture(t *testing.T, mode string) (func(context.Context, *Budget
 		}
 		if strings.HasPrefix(r.URL.Path, "/storage/v1/") {
 			metaCalls++
-			generation := "123"
+			generation := archiveGeneration
 			if mode == "changed" && metaCalls > 1 {
 				generation = "456"
 			}
@@ -89,12 +118,12 @@ func fullSourceFixture(t *testing.T, mode string) (func(context.Context, *Budget
 			json.NewEncoder(w).Encode(map[string]any{"kind": "storage#object", "bucket": "osv-vulnerabilities", "name": "npm/all.zip", "generation": generation, "size": fmt.Sprint(size), "contentType": "application/zip", "md5Hash": base64.StdEncoding.EncodeToString(digest[:]), "updated": "2026-11-01T00:00:00Z"})
 			return
 		}
-		if r.URL.Path != "/osv-vulnerabilities/npm/all.zip" || r.URL.Query().Get("generation") != "123" {
+		if r.URL.Path != "/osv-vulnerabilities/npm/all.zip" || r.URL.Query().Get("generation") != archiveGeneration {
 			t.Error("unbound media endpoint", r.URL.String())
 			w.WriteHeader(400)
 			return
 		}
-		generation := "123"
+		generation := archiveGeneration
 		if mode == "generation" {
 			generation = "456"
 		}
