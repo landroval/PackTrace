@@ -19,7 +19,10 @@ type preparationRecord struct {
 	Records, Memberships, IdentityGaps, OutsideNPM         uint64
 	SourceIDs                                              ObjectRef
 	GitHubRecords, OpenSSFRecords, UnknownPublisherRecords uint64
-	TemporalGaps, DispositionGaps                          uint64
+	// Omit absent additional profiles to preserve old canonical generations.
+	EEFRecords                    uint64 `json:",omitempty"`
+	GSDRecords                    uint64 `json:",omitempty"`
+	TemporalGaps, DispositionGaps uint64
 }
 type preparationState struct {
 	cat, idLines    bytes.Buffer
@@ -186,6 +189,10 @@ func prepareOriginal(ctx context.Context, t *Transaction, expectedID string, raw
 		p.record.GitHubRecords++
 	case strings.HasPrefix(expectedID, "MAL-"):
 		p.record.OpenSSFRecords++
+	case strings.HasPrefix(expectedID, "EEF-"):
+		p.record.EEFRecords++
+	case strings.HasPrefix(expectedID, "GSD-"):
+		p.record.GSDRecords++
 	default:
 		p.record.UnknownPublisherRecords++
 	}

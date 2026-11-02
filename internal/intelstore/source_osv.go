@@ -25,6 +25,9 @@ var githubLicense []byte
 //go:embed licenses/Apache-2.0-OpenSSF.txt
 var openssfLicense []byte
 
+//go:embed licenses/CC0-1.0-GSD.txt
+var gsdLicense []byte
+
 type OperationResult struct {
 	Generation           ID
 	Records, Memberships uint64
@@ -212,7 +215,7 @@ func (s *Store) syncFull(ctx context.Context, b *Budget, fetch sourceFetch) (res
 	// A whole candidate remains unusable when a required publisher/license is
 	// unknown; never drop those records to make the known subset look complete.
 	p := tx.prep.record
-	if p.UnknownPublisherRecords != 0 || p.GitHubRecords+p.OpenSSFRecords != p.Records {
+	if !knownPublisherCounts(p) {
 		return result, ErrUntrusted
 	}
 	after, _, e := readMetadata()
@@ -244,19 +247,12 @@ func (s *Store) syncFull(ctx context.Context, b *Budget, fetch sourceFetch) (res
 }
 func publishSourceDraft(ctx context.Context, tx *Transaction, draft generationDraft, receipt sourceReceipt, exportedAt time.Time, full bool) (result OperationResult, failure error) {
 	p := tx.prep.record
-	if p.UnknownPublisherRecords != 0 || p.GitHubRecords+p.OpenSSFRecords != p.Records {
+	if !knownPublisherCounts(p) {
 		return result, ErrUntrusted
 	}
 	receipt.Preparation = draft.Provenance
 	receipt.Attributions = nil
-	for _, item := range []struct {
-		count                                        uint64
-		publisher, license, origin, licenseURL, hash string
-		text                                         []byte
-	}{
-		{p.GitHubRecords, "GitHub Advisory Database", "CC-BY-4.0", "https://github.com/github/advisory-database", "https://github.com/github/advisory-database/blob/main/LICENSE.md", "9e5f1b3c610b9c2da5c313bf81d577a7d1acec686bdb0384edefa6df0f90cd94", githubLicense},
-		{p.OpenSSFRecords, "OpenSSF Malicious Packages contributors", "Apache-2.0", "https://github.com/ossf/malicious-packages", "https://github.com/ossf/malicious-packages/blob/main/LICENSE", "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4", openssfLicense},
-	} {
+	for _, item := range publisherLicenses(p) {
 		if item.count == 0 {
 			continue
 		}
@@ -269,7 +265,7 @@ func publishSourceDraft(ctx context.Context, tx *Transaction, draft generationDr
 			return result, e
 		}
 		draft.Objects = append(draft.Objects, ref)
-		receipt.Attributions = append(receipt.Attributions, sourceAttribution{item.publisher, item.license, item.origin, item.licenseURL, "OSV serves enriched records; PackTrace preserves received original bytes and adds local indexes. Original credits/notices remain in those bytes. No publisher endorsement or signature is asserted.", ref})
+		receipt.Attributions = append(receipt.Attributions, sourceAttribution{item.publisher, item.license, item.origin, item.licenseURL, sourceChanges, ref})
 	}
 	now := time.Now().UTC()
 	receipt.AcquiredAt = now

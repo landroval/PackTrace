@@ -42,27 +42,34 @@ type Observation struct {
 }
 
 func licenseProfile(receipt sourceReceipt, prep preparationRecord) bool {
-	if receipt.Source != "osv-npm" || receipt.PublisherAuthentication != "not-established" || prep.UnknownPublisherRecords != 0 || prep.GitHubRecords > prep.Records || prep.OpenSSFRecords > prep.Records || prep.GitHubRecords+prep.OpenSSFRecords != prep.Records || len(receipt.Attributions) > 2 {
+	if receipt.Source != "osv-npm" || receipt.PublisherAuthentication != "not-established" || !knownPublisherCounts(prep) || len(receipt.Attributions) > 4 {
 		return false
 	}
-	github, openssf := false, false
+	profiles := publisherLicenses(prep)
+	var seen [4]bool
 	for _, a := range receipt.Attributions {
-		switch a.License {
-		case "CC-BY-4.0":
-			if github || a.Publisher != "GitHub Advisory Database" || a.Text.SHA256 != sha256.Sum256(githubLicense) || a.Text.Bytes != uint64(len(githubLicense)) {
+		found := false
+		for i, p := range profiles {
+			if a.Publisher != p.publisher {
+				continue
+			}
+			if seen[i] || p.count == 0 || a.License != p.license || a.OriginURL != p.origin || a.LicenseURL != p.licenseURL || a.Changes != sourceChanges || a.Text.SHA256 != sha256.Sum256(p.text) || a.Text.Bytes != uint64(len(p.text)) {
 				return false
 			}
-			github = true
-		case "Apache-2.0":
-			if openssf || a.Publisher != "OpenSSF Malicious Packages contributors" || a.Text.SHA256 != sha256.Sum256(openssfLicense) || a.Text.Bytes != uint64(len(openssfLicense)) {
-				return false
-			}
-			openssf = true
-		default:
+			seen[i] = true
+			found = true
+			break
+		}
+		if !found {
 			return false
 		}
 	}
-	return github == (prep.GitHubRecords > 0) && openssf == (prep.OpenSSFRecords > 0)
+	for i, p := range profiles {
+		if seen[i] != (p.count > 0) {
+			return false
+		}
+	}
+	return true
 }
 
 // Observe is readonly and uses an already retained generation. An expected ID

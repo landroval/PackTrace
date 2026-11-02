@@ -34,7 +34,19 @@ func fullSourceFixture(t *testing.T, mode string) (func(context.Context, *Budget
 			archiveGeneration = "123"
 		}
 	}
-	archive := ownedArchive(t, []archiveRecord{{id + ".json", record, 0}})
+	if mode == "eef" || mode == "eef-with-github" {
+		id = "EEF-CVE-2026-12345"
+		record = strings.ReplaceAll(ownedOSVRecord, "OWNED-1", id)
+	}
+	if mode == "gsd" {
+		id = "GSD-2026-12345"
+		record = strings.ReplaceAll(ownedOSVRecord, "OWNED-1", id)
+	}
+	records := []archiveRecord{{id + ".json", record, 0}}
+	if mode == "eef-with-github" {
+		records = append(records, archiveRecord{"GHSA-2345-6789-cfgh.json", strings.ReplaceAll(ownedOSVRecord, "OWNED-1", "GHSA-2345-6789-cfgh"), 0})
+	}
+	archive := ownedArchive(t, records)
 	digest := md5.Sum(archive)
 	if mode == "checksum" {
 		digest[0] ^= 0x55
