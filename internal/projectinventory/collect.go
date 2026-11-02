@@ -88,6 +88,7 @@ func Collect(ctx context.Context, root *nativefs.Root, opts Options) (Result, er
 	if ctx.Err() != nil {
 		return c.result, ErrCollection
 	}
+	c.result.Model = Reconcile(c.result.Model)
 	for _, g := range c.result.Model.Gaps {
 		for i := range c.result.Model.Scopes {
 			if g.Scope == 0 || c.result.Model.Scopes[i].ID == g.Scope {

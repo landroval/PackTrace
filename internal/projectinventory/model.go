@@ -26,6 +26,10 @@ type Evidence struct {
 	SHA256           [32]byte
 	Complete         bool
 }
+
+// Relation endpoints are observation IDs, except physical-link.To which is a
+// manifest evidence ID. not-observed uses To=0 and complete enumeration evidence.
+// Kind is the closed discriminator; consumers must not mix ID namespaces.
 type Relation struct {
 	From, To, Evidence uint32
 	Kind, Status       string
