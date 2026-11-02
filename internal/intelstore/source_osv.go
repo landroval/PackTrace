@@ -27,6 +27,7 @@ var openssfLicense []byte
 type OperationResult struct {
 	Generation           ID
 	Records, Memberships uint64
+	point                cursorPoint
 }
 type sourceFetch func(context.Context, *Budget, requestSpec, io.Writer) (responseEvidence, error)
 type exportMetadata struct {
@@ -57,6 +58,15 @@ func successfulCheckTime(old, now time.Time, verified bool) time.Time {
 	return now
 }
 func parseExportMetadata(data []byte) (exportMetadata, error) {
+	return parseSourceMetadata(data, requestArchive)
+}
+func parseSourceMetadata(data []byte, kind requestKind) (exportMetadata, error) {
+	name, contentType, limit := "npm/all.zip", "application/zip", uint64(1<<30)
+	if kind == requestChanges {
+		name, contentType, limit = "modified_id.csv", "text/csv", 256<<20
+	} else if kind != requestArchive {
+		return exportMetadata{}, ErrUntrusted
+	}
 	fields, code := jsoninput.Object(data, 512<<10)
 	if code != "" {
 		return exportMetadata{}, ErrCorrupt
@@ -71,7 +81,7 @@ func parseExportMetadata(data []byte) (exportMetadata, error) {
 			return exportMetadata{}, ErrCorrupt
 		}
 	}
-	if wire.Kind != "storage#object" || wire.Bucket != "osv-vulnerabilities" || wire.Name != "npm/all.zip" || wire.ContentType != "application/zip" {
+	if wire.Kind != "storage#object" || wire.Bucket != "osv-vulnerabilities" || wire.Name != name || wire.ContentType != contentType {
 		return exportMetadata{}, ErrUntrusted
 	}
 	generation, e := strconv.ParseUint(wire.Generation, 10, 64)
@@ -79,7 +89,7 @@ func parseExportMetadata(data []byte) (exportMetadata, error) {
 		return exportMetadata{}, ErrCorrupt
 	}
 	size, e := strconv.ParseUint(wire.Size, 10, 64)
-	if e != nil || size == 0 || size > 1<<30 || strconv.FormatUint(size, 10) != wire.Size {
+	if e != nil || size == 0 || size > limit || strconv.FormatUint(size, 10) != wire.Size {
 		return exportMetadata{}, ErrLimit
 	}
 	digest, e := base64.StdEncoding.DecodeString(wire.MD5Hash)
@@ -94,16 +104,22 @@ func parseExportMetadata(data []byte) (exportMetadata, error) {
 	copy(result.MD5[:], digest)
 	return result, nil
 }
-func (t *Transaction) stageSourceArchive(input io.Reader, max uint64) (*nativefs.OwnedFile, [32]byte, [16]byte, error) {
+func (t *Transaction) stageSourceObject(input io.Reader, max uint64, kind requestKind) (*nativefs.OwnedFile, [32]byte, [16]byte, error) {
+	name, limit := "source-archive", uint64(1<<30)
+	if kind == requestChanges {
+		name, limit = "source-changes", 256<<20
+	} else if kind != requestArchive {
+		return nil, [32]byte{}, [16]byte{}, ErrUntrusted
+	}
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	var sha [32]byte
 	var md [16]byte
-	if t.closed || t.failed != nil || max > 1<<30 || t.held < 4096 || max > t.held-4096 || t.writer.Matches(t.work, t.store.root, "writer.lock", true) != nil {
+	if t.closed || t.failed != nil || max > limit || t.held < 4096 || max > t.held-4096 || t.writer.Matches(t.work, t.store.root, "writer.lock", true) != nil {
 		return nil, sha, md, ErrLimit
 	}
 	h, m := sha256.New(), md5.New() // MD5 is only the selected GCS transport checksum.
-	f, e := t.store.owner.CopyExclusive(t.work, t.path+"/source-archive", io.TeeReader(input, io.MultiWriter(h, m)), max)
+	f, e := t.store.owner.CopyExclusive(t.work, t.path+"/"+name, io.TeeReader(input, io.MultiWriter(h, m)), max)
 	if f != nil {
 		n := uint64(f.Size())
 		t.written += n
@@ -129,7 +145,7 @@ func (t *Transaction) stageSourceArchive(input io.Reader, max uint64) (*nativefs
 	return f, sha, md, nil
 }
 func (s *Store) Sync(ctx context.Context) (OperationResult, error) {
-	return s.syncFull(ctx, &Budget{}, fetchPublic)
+	return s.sync(ctx, &Budget{}, fetchPublic)
 }
 func (s *Store) syncFull(ctx context.Context, b *Budget, fetch sourceFetch) (result OperationResult, failure error) {
 	if fetch == nil {
@@ -147,46 +163,16 @@ func (s *Store) syncFull(ctx context.Context, b *Budget, fetch sourceFetch) (res
 		}
 		failure = errors.Join(failure, tx.Close())
 	}()
-	budget := &tx.budget
-	readMetadata := func() (exportMetadata, []byte, error) {
-		var data bytes.Buffer
-		ev, e := fetch(tx.work, budget, requestSpec{kind: requestArchiveMeta}, &data)
-		if e != nil || ev.status != 200 {
-			return exportMetadata{}, nil, ErrUnavailable
-		}
-		meta, e := parseExportMetadata(data.Bytes())
-		if e != nil {
-			return meta, nil, e
-		}
-		if meta.Updated.After(time.Now()) {
-			return meta, nil, ErrUntrusted
-		}
-		return meta, data.Bytes(), nil
-	}
+	readMetadata := func() (exportMetadata, []byte, error) { return readSourceMetadata(tx.work, tx, requestArchive, fetch) }
 	meta, metadataBytes, e := readMetadata()
 	if e != nil {
 		return result, e
 	}
-	reader, writer := io.Pipe()
-	type outcome struct {
-		evidence responseEvidence
-		err      error
+	original, archiveHash, e := captureSourceBody(tx.work, tx, requestArchive, meta, fetch)
+	if e != nil {
+		return result, e
 	}
-	done := make(chan outcome, 1)
-	go func() {
-		ev, e := fetch(tx.work, budget, requestSpec{kind: requestArchive, generation: meta.Generation}, writer)
-		closeErr := writer.CloseWithError(e)
-		done <- outcome{ev, errors.Join(e, closeErr)}
-	}()
-	original, archiveHash, archiveMD5, copyErr := tx.stageSourceArchive(reader, meta.Size)
-	reader.CloseWithError(copyErr)
-	download := <-done
-	if original != nil {
-		defer func() { failure = errors.Join(failure, original.Close()) }()
-	}
-	if copyErr != nil || download.err != nil || original == nil || uint64(original.Size()) != meta.Size || download.evidence.status != 200 || download.evidence.bytes != meta.Size || download.evidence.generation != meta.Generation || archiveMD5 != meta.MD5 {
-		return result, ErrCorrupt
-	}
+	defer func() { failure = errors.Join(failure, original.Close()) }()
 	draft, e := prepareArchive(tx.work, tx, original, original.Size())
 	if e != nil {
 		return result, e
@@ -209,6 +195,19 @@ func (s *Store) syncFull(ctx context.Context, b *Budget, fetch sourceFetch) (res
 		return result, e
 	}
 	receipt := sourceReceipt{Version: 1, Source: "osv-npm", Acquisition: "https-generation-bound", PublisherAuthentication: "not-established", ArchiveSHA256: archiveHash, ArchiveBytes: meta.Size, Generation: meta.Generation, Metadata: metadataRef, Preparation: draft.Provenance}
+	draft, _, e = prepareListing(tx.work, tx, draft, p, meta.Updated, meta.Generation, nil, fetch)
+	if e != nil {
+		return result, e
+	}
+	return publishSourceDraft(tx.work, tx, draft, receipt, meta.Updated, true)
+}
+func publishSourceDraft(ctx context.Context, tx *Transaction, draft generationDraft, receipt sourceReceipt, exportedAt time.Time, full bool) (result OperationResult, failure error) {
+	p := tx.prep.record
+	if p.UnknownPublisherRecords != 0 || p.GitHubRecords+p.OpenSSFRecords != p.Records {
+		return result, ErrUntrusted
+	}
+	receipt.Preparation = draft.Provenance
+	receipt.Attributions = nil
 	for _, item := range []struct {
 		count                                        uint64
 		publisher, license, origin, licenseURL, hash string
@@ -233,11 +232,13 @@ func (s *Store) syncFull(ctx context.Context, b *Budget, fetch sourceFetch) (res
 	}
 	now := time.Now().UTC()
 	receipt.AcquiredAt = now
-	receipt.CheckedAt = successfulCheckTime(time.Time{}, now, true)
-	receipt.ReconciledAt = now
+	receipt.CheckedAt = successfulCheckTime(receipt.CheckedAt, now, true)
+	if full {
+		receipt.ReconciledAt = successfulCheckTime(receipt.ReconciledAt, now, true)
+	}
 	// Only this private verified acquisition controller sets source dates; data
 	// imported later still needs its independent invocation pin or local seal.
-	raw, e := s.readRef(tx.work, draft.Manifest, 1<<20)
+	raw, e := tx.store.readRef(tx.work, draft.Manifest, 1<<20)
 	if e != nil {
 		return result, e
 	}
@@ -245,7 +246,7 @@ func (s *Store) syncFull(ctx context.Context, b *Budget, fetch sourceFetch) (res
 	if json.Unmarshal(raw, &manifest) != nil {
 		return result, ErrCorrupt
 	}
-	manifest["source"] = map[string]any{"id": "osv-npm", "acquisitionMethod": "https-generation-bound", "acquiredAt": now.Format(time.RFC3339Nano), "exportedAt": meta.Updated.UTC().Format(time.RFC3339Nano), "lastSuccessfulCheck": receipt.CheckedAt.Format(time.RFC3339Nano), "lastFullReconciliation": receipt.ReconciledAt.Format(time.RFC3339Nano)}
+	manifest["source"] = map[string]any{"id": "osv-npm", "acquisitionMethod": receipt.Acquisition, "acquiredAt": now.Format(time.RFC3339Nano), "exportedAt": exportedAt.UTC().Format(time.RFC3339Nano), "lastSuccessfulCheck": receipt.CheckedAt.Format(time.RFC3339Nano), "lastFullReconciliation": receipt.ReconciledAt.Format(time.RFC3339Nano)}
 	manifestBytes, e := json.Marshal(manifest)
 	if e != nil {
 		return result, ErrCorrupt
@@ -262,7 +263,20 @@ func (s *Store) syncFull(ctx context.Context, b *Budget, fetch sourceFetch) (res
 	if e != nil {
 		return result, e
 	}
-	draft.Objects = append(draft.Objects, metadataRef, manifestRef, receiptRef)
+	draft.Objects = append(draft.Objects, receipt.Metadata, manifestRef, receiptRef)
+	seen := make(map[[32]byte]uint64)
+	objects := draft.Objects[:0]
+	for _, ref := range draft.Objects {
+		if old, ok := seen[ref.SHA256]; ok {
+			if old != ref.Bytes {
+				return result, ErrCorrupt
+			}
+			continue
+		}
+		seen[ref.SHA256] = ref.Bytes
+		objects = append(objects, ref)
+	}
+	draft.Objects = objects
 	draft.Manifest, draft.Provenance = manifestRef, receiptRef
 	id, e := tx.seal(tx.work, draft)
 	if e != nil {

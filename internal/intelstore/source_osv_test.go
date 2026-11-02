@@ -31,7 +31,51 @@ func fullSourceFixture(t *testing.T, mode string) (func(context.Context, *Budget
 		digest[0] ^= 0x55
 	}
 	metaCalls := 0
+	csvDate, csvGeneration := "2026-11-01T00:00:00Z", "789"
+	if strings.HasSuffix(mode, "-update") {
+		csvDate, csvGeneration = "2026-11-01T01:00:00Z", "790"
+	}
+	csvBody := []byte(csvDate + ",npm/" + id + "\n")
+	csvMD5 := md5.Sum(csvBody)
 	client, close := ownedMappedClient(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/v1/vulns/") {
+			if r.URL.Path != "/v1/vulns/"+id {
+				t.Error("non-source record lookup")
+			}
+			body := record
+			if strings.HasSuffix(mode, "-update") {
+				body = strings.ReplaceAll(body, "2026-11-01T00:00:00Z", csvDate)
+			}
+			if mode == "outside-update" {
+				body = strings.ReplaceAll(body, `"npm"`, `"PyPI"`)
+			}
+			if mode == "wrong-id-update" {
+				body = strings.ReplaceAll(body, id, "OTHER-1")
+			}
+			if mode == "unavailable-update" {
+				w.WriteHeader(404)
+				return
+			}
+			if mode == "retry-fail-update" {
+				w.WriteHeader(503)
+				io.WriteString(w, "owned failure")
+				return
+			}
+			io.WriteString(w, body)
+			return
+		}
+		if strings.HasPrefix(r.URL.Path, "/storage/v1/") && strings.HasSuffix(r.URL.Path, "modified_id.csv") {
+			json.NewEncoder(w).Encode(map[string]any{"kind": "storage#object", "bucket": "osv-vulnerabilities", "name": "modified_id.csv", "generation": csvGeneration, "size": fmt.Sprint(len(csvBody)), "contentType": "text/csv", "md5Hash": base64.StdEncoding.EncodeToString(csvMD5[:]), "updated": csvDate})
+			return
+		}
+		if r.URL.Path == "/osv-vulnerabilities/modified_id.csv" {
+			if r.URL.Query().Get("generation") != csvGeneration {
+				t.Error("unbound CSV")
+			}
+			w.Header().Set("X-Goog-Generation", csvGeneration)
+			w.Write(csvBody)
+			return
+		}
 		if strings.HasPrefix(r.URL.Path, "/storage/v1/") {
 			metaCalls++
 			generation := "123"

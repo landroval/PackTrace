@@ -61,7 +61,7 @@ func publicRecordID(id string) bool {
 	}
 	for i, c := range []byte(id) {
 		letter := c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z' || c >= '0' && c <= '9'
-		if !letter && (i == 0 || i == len(id)-1 || c != '-' && c != '_' && c != '.') {
+		if !letter && (i == 0 || i == len(id)-1 || c != '-' && c != '_' && c != '.' && c != ':') {
 			return false
 		}
 	}
