@@ -14,10 +14,11 @@ import (
 )
 
 type preparationRecord struct {
-	Version                                        int    `json:"version"`
-	Source                                         string `json:"source"`
-	Records, Memberships, IdentityGaps, OutsideNPM uint64
-	SourceIDs                                      ObjectRef
+	Version                                                int    `json:"version"`
+	Source                                                 string `json:"source"`
+	Records, Memberships, IdentityGaps, OutsideNPM         uint64
+	SourceIDs                                              ObjectRef
+	GitHubRecords, OpenSSFRecords, UnknownPublisherRecords uint64
 }
 type preparationState struct {
 	cat, idLines    bytes.Buffer
@@ -140,6 +141,14 @@ func prepareArchive(ctx context.Context, t *Transaction, input io.ReaderAt, size
 			return generationDraft{}, e
 		}
 		p.record.Records++
+		switch {
+		case strings.HasPrefix(header.ID.Value, "GHSA-"):
+			p.record.GitHubRecords++
+		case strings.HasPrefix(header.ID.Value, "MAL-"):
+			p.record.OpenSSFRecords++
+		default:
+			p.record.UnknownPublisherRecords++
+		}
 		catalog, _ := json.Marshal(struct {
 			V       int    `json:"v"`
 			Ordinal uint64 `json:"sourceOrdinal"`
