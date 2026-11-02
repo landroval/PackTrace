@@ -307,11 +307,20 @@ func (r *Root) OpenRegular(ctx context.Context, name string, maxbytes int64) (*F
 func (r *Root) OpenInput(ctx context.Context, name string, maxbytes int64) (*File, error) {
 	return r.openRegular(ctx, name, maxbytes, true)
 }
+
+// OpenDistributionInput admits only the explicitly selected offline transport
+// profile. Ordinary target/input calls retain their existing512MiB ceiling.
+func (r *Root) OpenDistributionInput(ctx context.Context, name string) (*File, error) {
+	return r.openRegularBounded(ctx, name, 16<<30, true, 16<<30)
+}
 func (r *Root) openRegular(ctx context.Context, name string, maxbytes int64, input bool) (*File, error) {
+	return r.openRegularBounded(ctx, name, maxbytes, input, 512<<20)
+}
+func (r *Root) openRegularBounded(ctx context.Context, name string, maxbytes int64, input bool, ceiling int64) (*File, error) {
 	if err := validRelative(name); err != nil {
 		return nil, err
 	}
-	if maxbytes < 0 || maxbytes > 512<<20 {
+	if maxbytes < 0 || maxbytes > ceiling {
 		return nil, ErrLimit
 	}
 	o, err := r.lookupMode(ctx, name, true, true, input)

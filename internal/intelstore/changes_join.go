@@ -2,7 +2,6 @@ package intelstore
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"encoding/json"
 	"io"
@@ -40,19 +39,11 @@ func parseSourceIDRow(raw []byte) (sourceIDRow, error) {
 			return row, ErrCorrupt
 		}
 	}
-	object, code := jsoninput.Object(fields["Original"], 1024)
-	if code != "" || len(object) != 2 || !strictObject(fields["Original"], 1024, "SHA256", "Bytes") {
+	ref, e := parseObjectRef(fields["Original"], false)
+	if e != nil || ref.Bytes > 4<<20 {
 		return row, ErrCorrupt
 	}
-	var digest []byte
-	value := bytes.TrimSpace(object["SHA256"])
-	if len(value) == 0 || value[0] != '[' || json.Unmarshal(value, &digest) != nil || len(digest) != 32 || json.Unmarshal(object["Bytes"], &row.Original.Bytes) != nil || row.Original.Bytes > 4<<20 {
-		return row, ErrCorrupt
-	}
-	copy(row.Original.SHA256[:], digest)
-	if row.Original.SHA256 == ([32]byte{}) {
-		return row, ErrCorrupt
-	}
+	row.Original = ref
 	return row, nil
 }
 
@@ -62,6 +53,11 @@ type sourceIDCursor struct {
 	count uint64
 }
 
+func newSourceIDCursor(input io.Reader) *sourceIDCursor {
+	scan := bufio.NewScanner(input)
+	scan.Buffer(make([]byte, 4096), 32<<10)
+	return &sourceIDCursor{scan: scan}
+}
 func (c *sourceIDCursor) next() (*sourceIDRow, error) {
 	if !c.scan.Scan() {
 		if e := c.scan.Err(); e != nil {

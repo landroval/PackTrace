@@ -670,6 +670,9 @@ func snapshotProjectionLogicalBytes(header OSVHeader, affected OSVAffectedProjec
 }
 
 func ReadSnapshotNPMIdentity(ctx context.Context, manifest SnapshotManifest, name string, streams SnapshotNPMStreams) (SnapshotNPMEvidence, error) {
+	return readSnapshotNPMIdentity(ctx, manifest, name, streams, nil)
+}
+func readSnapshotNPMIdentity(ctx context.Context, manifest SnapshotManifest, name string, streams SnapshotNPMStreams, catalog *SnapshotVerifiedCatalog) (SnapshotNPMEvidence, error) {
 	fail := func(code string) (SnapshotNPMEvidence, error) {
 		return SnapshotNPMEvidence{}, &ParseError{Code: code}
 	}
@@ -681,7 +684,10 @@ func ReadSnapshotNPMIdentity(ctx context.Context, manifest SnapshotManifest, nam
 	if len(streams.Originals) > maxSnapshotSuppliedOriginalStreams {
 		return fail("limit-exceeded")
 	}
-	if validateSnapshotNPMManifest(manifest) != "" || !validOSVNPMName(name) || streams.Block == nil || streams.Catalog == nil {
+	if validateSnapshotNPMManifest(manifest) != "" || !validOSVNPMName(name) || streams.Block == nil || catalog == nil && streams.Catalog == nil {
+		return fail("invalid-shape")
+	}
+	if catalog != nil && (!catalog.verified || catalog.manifest != snapshotCatalogFingerprint(manifest)) {
 		return fail("invalid-shape")
 	}
 	identityHash := snapshotNPMIdentityHash(name)
@@ -733,72 +739,84 @@ func ReadSnapshotNPMIdentity(ctx context.Context, manifest SnapshotManifest, nam
 		return out, nil
 	}
 
-	selected := make(map[uint64][]int, len(pending))
-	for i := range pending {
-		selected[pending[i].ordinal] = append(selected[pending[i].ordinal], i)
-	}
-	lengths := make(map[[32]byte]uint64)
-	remainingDeclared := uint64(maxSnapshotManifestObjectBytes)
-	addDirect := func(ref SnapshotObjectReference) string {
-		return snapshotAddDeclaration(lengths, ref.SHA256, ref.Bytes, &remainingDeclared, &retained, nil)
-	}
-	if code = addDirect(manifest.Originals); code != "" {
-		if code == "resource" {
-			out.Gaps = snapshotAddGap(out.Gaps, SnapshotGapResource)
-			return out, nil
+	if catalog != nil {
+		if code := catalog.bind(manifest, pending, &retained); code != "" {
+			if code == "resource" {
+				out.CatalogState = SnapshotStreamUnavailable
+				out.Gaps = snapshotAddGap(out.Gaps, SnapshotGapResource)
+				return out, nil
+			}
+			return fail(code)
 		}
-		return fail(code)
-	}
-	for _, block := range manifest.Blocks {
-		if code = addDirect(block.Reference); code != "" {
+		out.CatalogState = SnapshotStreamStructured
+	} else {
+		selected := make(map[uint64][]int, len(pending))
+		for i := range pending {
+			selected[pending[i].ordinal] = append(selected[pending[i].ordinal], i)
+		}
+		lengths := make(map[[32]byte]uint64)
+		remainingDeclared := uint64(maxSnapshotManifestObjectBytes)
+		addDirect := func(ref SnapshotObjectReference) string {
+			return snapshotAddDeclaration(lengths, ref.SHA256, ref.Bytes, &remainingDeclared, &retained, nil)
+		}
+		if code = addDirect(manifest.Originals); code != "" {
 			if code == "resource" {
 				out.Gaps = snapshotAddGap(out.Gaps, SnapshotGapResource)
 				return out, nil
 			}
 			return fail(code)
 		}
-	}
-	declarationOverflow := false
-	catalogState, resource, code := readSnapshotJSONL(ctx, streams.Catalog, manifest.Originals, &readBudget, func(line []byte, physical uint64) string {
-		row, code := parseSnapshotCatalogRow(line)
-		if code != "" {
-			return code
+		for _, block := range manifest.Blocks {
+			if code = addDirect(block.Reference); code != "" {
+				if code == "resource" {
+					out.Gaps = snapshotAddGap(out.Gaps, SnapshotGapResource)
+					return out, nil
+				}
+				return fail(code)
+			}
 		}
-		if row.ordinal != physical {
-			return "invalid-shape"
-		}
-		if code = snapshotAddDeclaration(lengths, row.digest, row.bytes, &remainingDeclared, &retained, &declarationOverflow); code != "" {
-			return code
-		}
-		for _, index := range selected[row.ordinal] {
-			if pending[index].digest != row.digest || pending[index].bytes != row.bytes {
+		declarationOverflow := false
+		catalogState, resource, code := readSnapshotJSONL(ctx, streams.Catalog, manifest.Originals, &readBudget, func(line []byte, physical uint64) string {
+			row, code := parseSnapshotCatalogRow(line)
+			if code != "" {
+				return code
+			}
+			if row.ordinal != physical {
 				return "invalid-shape"
 			}
-			pending[index].catalogBound = true
+			if code = snapshotAddDeclaration(lengths, row.digest, row.bytes, &remainingDeclared, &retained, &declarationOverflow); code != "" {
+				return code
+			}
+			for _, index := range selected[row.ordinal] {
+				if pending[index].digest != row.digest || pending[index].bytes != row.bytes {
+					return "invalid-shape"
+				}
+				pending[index].catalogBound = true
+			}
+			return ""
+		})
+		if code != "" {
+			if code == "resource" {
+				out.CatalogState = SnapshotStreamUnavailable
+				out.BytesRead = readBudget.used
+				out.Gaps = snapshotAddGap(out.Gaps, SnapshotGapResource)
+				return out, nil
+			}
+			return fail(code)
 		}
-		return ""
-	})
-	if code != "" {
-		if code == "resource" {
-			out.CatalogState = SnapshotStreamUnavailable
-			out.BytesRead = readBudget.used
+		out.CatalogState, out.BytesRead = catalogState, readBudget.used
+		if resource {
 			out.Gaps = snapshotAddGap(out.Gaps, SnapshotGapResource)
 			return out, nil
 		}
-		return fail(code)
-	}
-	out.CatalogState, out.BytesRead = catalogState, readBudget.used
-	if resource {
-		out.Gaps = snapshotAddGap(out.Gaps, SnapshotGapResource)
-		return out, nil
-	}
-	for _, binding := range pending {
-		if !binding.catalogBound {
-			return fail("invalid-shape")
+		for _, binding := range pending {
+			if !binding.catalogBound {
+				return fail("invalid-shape")
+			}
 		}
-	}
-	if declarationOverflow {
-		return fail("limit-exceeded")
+		if declarationOverflow {
+			return fail("limit-exceeded")
+		}
 	}
 	out.Declaration = SnapshotDeclarationVerified
 

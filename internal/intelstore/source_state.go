@@ -31,8 +31,9 @@ func (s *Store) loadSourceState(ctx context.Context, id ID) (sourceState, error)
 	if e != nil {
 		return state, e
 	}
-	if !strictObject(raw, 4096, "Version", "Manifest", "ObjectSet", "Cursor", "Provenance") || json.Unmarshal(raw, &state.descriptor) != nil || state.descriptor.Version != 1 {
-		return state, ErrCorrupt
+	state.descriptor, e = parseGenerationDescriptor(raw)
+	if e != nil {
+		return state, e
 	}
 	raw, e = s.readRef(ctx, state.descriptor.Provenance, 32<<10)
 	if e != nil {

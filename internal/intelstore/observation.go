@@ -93,9 +93,9 @@ func (s *Store) Observe(ctx context.Context, pin *Pin, now time.Time, expected *
 	if e != nil {
 		return result, e
 	}
-	var descriptor generationDescriptor
-	if !strictObject(raw, 4096, "Version", "Manifest", "ObjectSet", "Cursor", "Provenance") || json.Unmarshal(raw, &descriptor) != nil || descriptor.Version != 1 {
-		return result, ErrCorrupt
+	descriptor, e := parseGenerationDescriptor(raw)
+	if e != nil {
+		return result, e
 	}
 	raw, e = s.readRef(ctx, descriptor.Manifest, 1<<20)
 	if e != nil {
