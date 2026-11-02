@@ -61,6 +61,7 @@ var (
 	ErrUnstable    = errors.New("nativefs: unstable")
 	ErrRead        = errors.New("nativefs: read-failed")
 	ErrWrite       = errors.New("nativefs: write-failed")
+	ErrBusy        = errors.New("nativefs: lease-busy")
 )
 
 const maxTotal int64 = 16 << 30
