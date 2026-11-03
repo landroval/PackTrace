@@ -32,6 +32,7 @@ type preparationState struct {
 	runs            [256][]ObjectRef
 	counts          [256]uint64
 	record          preparationRecord
+	last            sourceIDRow
 }
 type sourceDisposition uint8
 
@@ -47,16 +48,7 @@ type sourceIDRow struct {
 	Original     ObjectRef
 	Disposition  sourceDisposition
 }
-type indexRow struct {
-	V              int    `json:"v"`
-	IdentityHash   string `json:"identityHash"`
-	Ecosystem      string `json:"ecosystem"`
-	Name           string `json:"name"`
-	SourceOrdinal  uint64 `json:"sourceOrdinal"`
-	OriginalSHA256 string `json:"originalSHA256"`
-	OriginalBytes  uint64 `json:"originalBytes"`
-	AffectedIndex  uint64 `json:"affectedIndex"`
-}
+type indexRow intel.SnapshotNPMIndexRow
 
 func publicRecordID(id string) bool {
 	if len(id) == 0 || len(id) > 240 {
@@ -248,7 +240,8 @@ func prepareOriginal(ctx context.Context, t *Transaction, expectedID string, raw
 	if disposition == sourceUnresolved {
 		p.record.DispositionGaps++
 	}
-	idLine, _ := json.Marshal(sourceIDRow{ID: expectedID, Modified: modified, Original: ref, Disposition: disposition})
+	p.last = sourceIDRow{ID: expectedID, Modified: modified, Original: ref, Disposition: disposition}
+	idLine, _ := json.Marshal(p.last)
 	p.idLines.Write(idLine)
 	p.idLines.WriteByte('\n')
 	p.buffered += uint64(len(idLine) + 1)

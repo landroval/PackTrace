@@ -96,11 +96,10 @@ func prepareListing(ctx context.Context, t *Transaction, base generationDraft, p
 		draft = base
 		t.prep = &preparationState{record: prep}
 	} else {
-		t.prep = &preparationState{record: preparationRecord{Version: 1, Source: "caller-supplied"}}
-		if e := joinStoredChanges(ctx, t, prep.SourceIDs, groups, func(a updateAction) error { return applySourceAction(ctx, t, a, fetch) }); e != nil {
-			return draft, cursor, e
+		walk := func(emit func(indexUpdateAction) error) error {
+			return joinStoredChanges(ctx, t, prep.SourceIDs, groups, func(a updateAction) error { return emit(indexUpdateAction{a, a.Old != nil}) })
 		}
-		draft, e = buildIndexes(ctx, t)
+		draft, e = reuseIndexDraft(ctx, t, base, prep, []ObjectRef{prep.SourceIDs, groups}, walk, fetch)
 		if e != nil {
 			return draft, cursor, e
 		}

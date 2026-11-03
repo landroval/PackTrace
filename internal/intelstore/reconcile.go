@@ -81,11 +81,10 @@ func reconcileKnown(ctx context.Context, t *Transaction, base generationDraft, p
 	if t.budget.Requests >= 10000 || missing > 10000-t.budget.Requests {
 		return generationDraft{}, ErrLimit
 	}
-	t.prep = &preparationState{record: preparationRecord{Version: 1, Source: "caller-supplied"}}
-	if e := pass(func(a updateAction) error { return applySourceAction(ctx, t, a, fetch) }); e != nil {
-		return generationDraft{}, e
+	walk := func(emit func(indexUpdateAction) error) error {
+		return pass(func(a updateAction) error { return emit(indexUpdateAction{a, !a.Fetch}) })
 	}
-	draft, e := buildIndexes(ctx, t)
+	draft, e := reuseIndexDraft(ctx, t, base, prep, []ObjectRef{old.preparation.SourceIDs, prep.SourceIDs}, walk, fetch)
 	if e != nil {
 		return draft, e
 	}

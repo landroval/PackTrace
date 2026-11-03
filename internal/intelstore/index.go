@@ -265,9 +265,7 @@ func buildIndexes(ctx context.Context, t *Transaction) (generationDraft, error) 
 	if e != nil {
 		return generationDraft{}, e
 	}
-	p.record.SourceIDs = sourceIDs
-	blocks := make([]any, 256)
-	objects := []ObjectRef{catalog, sourceIDs}
+	var refs [256]ObjectRef
 	empty, e := t.put(ctx, bytes.NewReader(nil), 0)
 	if e != nil {
 		return generationDraft{}, e
@@ -280,10 +278,21 @@ func buildIndexes(ctx context.Context, t *Transaction) (generationDraft, error) 
 				return generationDraft{}, e
 			}
 		}
-		objects = append(objects, ref)
-		blocks[i] = map[string]any{"index": i, "sha256": hex.EncodeToString(ref.SHA256[:]), "bytes": ref.Bytes, "records": p.counts[i]}
+		refs[i] = ref
 	}
-	provenanceBytes, e := json.Marshal(p.record)
+	return finishIndexes(ctx, t, p.record, catalog, sourceIDs, refs, p.counts)
+}
+
+func finishIndexes(ctx context.Context, t *Transaction, record preparationRecord, catalog, sourceIDs ObjectRef, refs [256]ObjectRef, counts [256]uint64) (generationDraft, error) {
+	record.SourceIDs = sourceIDs
+	t.prep.record = record
+	blocks := make([]any, 256)
+	objects := []ObjectRef{catalog, sourceIDs}
+	for i, ref := range refs {
+		objects = append(objects, ref)
+		blocks[i] = map[string]any{"index": i, "sha256": hex.EncodeToString(ref.SHA256[:]), "bytes": ref.Bytes, "records": counts[i]}
+	}
+	provenanceBytes, e := json.Marshal(record)
 	if e != nil {
 		return generationDraft{}, ErrCorrupt
 	}
@@ -292,7 +301,7 @@ func buildIndexes(ctx context.Context, t *Transaction) (generationDraft, error) 
 		return generationDraft{}, e
 	}
 	objects = append(objects, provenance)
-	manifestBytes, e := json.Marshal(map[string]any{"schemaVersion": "1.1", "source": map[string]any{"id": "caller-supplied-osv-npm", "acquisitionMethod": "caller-supplied"}, "originals": map[string]any{"sha256": hex.EncodeToString(catalog.SHA256[:]), "bytes": catalog.Bytes, "records": p.record.Records}, "blocks": blocks})
+	manifestBytes, e := json.Marshal(map[string]any{"schemaVersion": "1.1", "source": map[string]any{"id": "caller-supplied-osv-npm", "acquisitionMethod": "caller-supplied"}, "originals": map[string]any{"sha256": hex.EncodeToString(catalog.SHA256[:]), "bytes": catalog.Bytes, "records": record.Records}, "blocks": blocks})
 	if e != nil {
 		return generationDraft{}, ErrCorrupt
 	}
