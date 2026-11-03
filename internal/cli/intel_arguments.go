@@ -8,6 +8,11 @@ import (
 
 // All fields are requests, not native/state/network/output authority. Empty
 // StateDir defers cache-root resolution to the controller, never this parser.
+func canonicalSnapshotDigest(value string) bool {
+	_, e := intel.ParseSnapshotDigest(value)
+	return e == nil
+}
+
 type IntelArgumentRequest struct {
 	Action                                                                           ArgumentAction
 	StateDir, Input, Output, TrustedSnapshotDigest, Generation, ApplyPreview, Format string
@@ -119,7 +124,7 @@ func parseIntelArgs(args []string) (Invocation, error) {
 			}
 			request.Format = value
 		case ArgumentOptionTrustedSnapshotDigest:
-			if _, e := intel.ParseSnapshotDigest(value); e != nil {
+			if !canonicalSnapshotDigest(value) {
 				return argumentFailure(ArgumentErrorOptionValueInvalid, i, option)
 			}
 			request.TrustedSnapshotDigest = value

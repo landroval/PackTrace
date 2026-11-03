@@ -58,6 +58,22 @@ func scanFaultDriver(mode string) int {
 		_, _ = io.WriteString(os.Stdout, strings.Repeat("X", maxMessage+1))
 		return 0
 	}
+	if cfg.Intelligence != nil && mode != "intel-missing" {
+		info := integrityscan.UnavailableIntelligence()
+		if mode == "intel-wrong-id" {
+			n := uint64(1)
+			info = integrityscan.Intelligence{ID: strings.Repeat("2", 64), State: "available", Selection: "current", Provenance: "local-acquisition", CheckAge: "current", ReconciliationAge: "current", Records: &n, Gaps: []string{"advisory-originals-lazy", "storage-usage-not-observed"}}
+		}
+		c.send("intel-state", info)
+		if mode == "intel-duplicate" {
+			c.send("intel-state", info)
+		}
+		count := 1
+		if mode == "intel-bad-closure" {
+			count = 2
+		}
+		c.send("intel-closure", scanIntelligenceClosure{count})
+	}
 	if cfg.Stage == "acquire" {
 		sendFaultInventory(c, mode)
 	}

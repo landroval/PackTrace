@@ -172,6 +172,9 @@ func Acquire(ctx context.Context, target, prepared, policyHash string, plan Plan
 
 func AcquireWithInventory(ctx context.Context, target, prepared, policyHash string, plan Plan, emit func(Record) error, emitInventory func(projectinventory.Result) error) (Summary, error) {
 	summary := Summary{}
+	if plan.StateDir != "" || plan.TrustedSnapshotDigest != "" {
+		return summary, ErrOptions
+	}
 	if ctx.Err() != nil {
 		return summary, ErrAcquisition
 	}
@@ -183,6 +186,19 @@ func AcquireWithInventory(ctx context.Context, target, prepared, policyHash stri
 		return summary, ErrAcquisition
 	}
 	defer root.Close()
+	return AcquireFromRoot(ctx, root, prepared, policyHash, plan, emit, emitInventory)
+}
+
+// AcquireFromRoot borrows the exact original metadata root already admitted by
+// the worker. It never reopens the target pathname after intelligence binding.
+func AcquireFromRoot(ctx context.Context, root *nativefs.Root, prepared, policyHash string, plan Plan, emit func(Record) error, emitInventory func(projectinventory.Result) error) (Summary, error) {
+	summary := Summary{}
+	if ctx == nil || ctx.Err() != nil || root == nil {
+		return summary, ErrAcquisition
+	}
+	if ValidatePolicy(plan.Policy) != nil || plan.Manager != plan.Policy.Manager || !filepath.IsAbs(prepared) {
+		return summary, ErrPolicy
+	}
 	// Reject a target-backed reference directory BEFORE discovery/comparison.
 	refs, e := root.OpenExternalRoot(ctx, prepared)
 	if e != nil {

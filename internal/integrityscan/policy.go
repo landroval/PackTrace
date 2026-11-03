@@ -15,6 +15,7 @@ import (
 	"unicode/utf8"
 
 	"packtrace/internal/cli"
+	"packtrace/internal/intel"
 	"packtrace/internal/jsoninput"
 )
 
@@ -51,13 +52,15 @@ type Reference struct {
 type Plan struct {
 	// PolicyFile is a source selector, never authority. Acquisition must reread
 	// it through a newly proven external capability before target content.
-	PolicyFile          string             `json:"policyFile"`
-	TrustedPolicyDigest string             `json:"trustedPolicyDigest,omitempty"`
-	Manager             string             `json:"manager"`
-	ExplicitManager     bool               `json:"explicitManager"`
-	Checks              cli.ArgumentChecks `json:"checks"`
-	FailOn              cli.ArgumentChecks `json:"failOn"`
-	Policy              Policy             `json:"policy"`
+	PolicyFile            string             `json:"policyFile"`
+	TrustedPolicyDigest   string             `json:"trustedPolicyDigest,omitempty"`
+	StateDir              string             `json:"stateDir,omitempty"`
+	TrustedSnapshotDigest string             `json:"trustedSnapshotDigest,omitempty"`
+	Manager               string             `json:"manager"`
+	ExplicitManager       bool               `json:"explicitManager"`
+	Checks                cli.ArgumentChecks `json:"checks"`
+	FailOn                cli.ArgumentChecks `json:"failOn"`
+	Policy                Policy             `json:"policy"`
 }
 
 func ParsePolicy(data []byte) (Policy, error) {
@@ -100,14 +103,18 @@ func Configure(r cli.ScanArgumentRequest, p Policy) (Plan, error) {
 	}
 	required, _ := categories(p.RequiredChecks)
 	fail, _ := categories(p.FailOn)
-	if r.PolicyPath == "" || r.Privacy != "portable" || r.Output != "-" || r.StateDir != "" || (p.MinimumAssurance == "independently-anchored" && r.TrustedPolicyDigest == "") || (r.TrustedPolicyDigest != "" && !supportedPolicyPin(r.TrustedPolicyDigest)) || required & ^r.Checks != 0 || (r.FailOn|fail) & ^r.Checks != 0 {
+	if r.PolicyPath == "" || r.Privacy != "portable" || r.Output != "-" || (r.StateDir != "" && !filepath.IsAbs(r.StateDir)) || (r.TrustedSnapshotDigest != "" && !supportedSnapshotPin(r.TrustedSnapshotDigest)) || (p.MinimumAssurance == "independently-anchored" && r.TrustedPolicyDigest == "") || (r.TrustedPolicyDigest != "" && !supportedPolicyPin(r.TrustedPolicyDigest)) || required & ^r.Checks != 0 || (r.FailOn|fail) & ^r.Checks != 0 {
 		return Plan{}, ErrOptions
 	}
 	family := strings.Split(p.Manager, "@")[0]
 	if r.Manager != "auto" && r.Manager != family && r.Manager != p.Manager {
 		return Plan{}, ErrOptions
 	}
-	return Plan{PolicyFile: filepath.Base(r.PolicyPath), TrustedPolicyDigest: r.TrustedPolicyDigest, Manager: p.Manager, ExplicitManager: r.Manager != "auto", Checks: r.Checks, FailOn: r.FailOn | fail, Policy: p}, nil
+	return Plan{PolicyFile: filepath.Base(r.PolicyPath), TrustedPolicyDigest: r.TrustedPolicyDigest, StateDir: r.StateDir, TrustedSnapshotDigest: r.TrustedSnapshotDigest, Manager: p.Manager, ExplicitManager: r.Manager != "auto", Checks: r.Checks, FailOn: r.FailOn | fail, Policy: p}, nil
+}
+func supportedSnapshotPin(value string) bool {
+	_, e := intel.ParseSnapshotDigest(value)
+	return e == nil
 }
 func categories(values []string) (cli.ArgumentChecks, bool) {
 	if values == nil {

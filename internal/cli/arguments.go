@@ -51,6 +51,7 @@ const (
 // Empty StateDir defers default resolution; no field establishes native safety.
 type ScanArgumentRequest struct {
 	Path, Manager, Format, Privacy, PolicyPath, StateDir, Output, TrustedPolicyDigest string
+	TrustedSnapshotDigest                                                             string
 	Checks, FailOn                                                                    ArgumentChecks
 	Provided                                                                          ArgumentOptions
 }
@@ -221,6 +222,8 @@ func argumentOption(name string) ArgumentOptions {
 		return ArgumentOptionOutput
 	case "--trusted-policy-digest":
 		return ArgumentOptionTrustedPolicyDigest
+	case "--trusted-snapshot-digest":
+		return ArgumentOptionTrustedSnapshotDigest
 	default:
 		return 0
 	}
@@ -270,6 +273,11 @@ func applyArgumentOption(request *ScanArgumentRequest, option ArgumentOptions, v
 		request.StateDir = value
 	case ArgumentOptionOutput:
 		request.Output = value
+	case ArgumentOptionTrustedSnapshotDigest:
+		if !canonicalSnapshotDigest(value) {
+			return false
+		}
+		request.TrustedSnapshotDigest = value
 	case ArgumentOptionTrustedPolicyDigest:
 		if len(value) > 2048 {
 			return false

@@ -247,6 +247,12 @@ func (r *ScanRun) Checkpoint() error {
 	if s.scan == nil {
 		return errScanResource
 	}
+	if s.intelligence != nil {
+		if e := s.intelligence.check(s.caller); e != nil {
+			s.scan.noteFault("intelligence-binding", e)
+			return e
+		}
+	}
 	s.scan.tick()
 	r.Resources = s.scan.snapshot().Resources
 	if e := s.contextError(s.caller); e != nil {
@@ -268,6 +274,18 @@ func (r *ScanRun) Finish() (ScanReceipt, error) {
 		s.scan.noteFault("cleanup", errReap)
 	}
 	receipt, e := s.scan.finish()
+	if q := s.intelligence; q != nil && receipt.CleanupConfirmed && !s.broken {
+		if !q.closed {
+			bindingErr := q.check(s.caller)
+			closeErr := q.close()
+			q.closeErr = errors.Join(bindingErr, closeErr)
+		}
+		if q.closeErr != nil {
+			s.scan.noteFault("intelligence-close", q.closeErr)
+			e = errors.Join(e, q.closeErr)
+			receipt = s.scan.snapshot()
+		}
+	}
 	r.Operational = receipt
 	r.Resources = receipt.Resources
 	if s.broken {

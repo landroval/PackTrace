@@ -122,6 +122,45 @@ func (p *Pin) ID() ID {
 	}
 	return p.id
 }
+
+// PhysicalBinding is a private cross-process continuity token, not a lease or
+// authority by itself. The controller must retain THIS original pin/root while
+// the worker independently opens and checks its selected root and generation.
+func (p *Pin) PhysicalBinding(ctx context.Context) ([32]byte, error) {
+	if p == nil || ctx == nil {
+		return [32]byte{}, ErrBinding
+	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if p.closed || p.store == nil || p.lease == nil {
+		return [32]byte{}, ErrBinding
+	}
+	s := p.store
+	key := hex.EncodeToString(p.id[:])
+	if p.lease.Matches(ctx, s.root, "generations/"+key+"/read.lock", false) != nil {
+		return [32]byte{}, ErrBinding
+	}
+	identity, e := s.root.OwnedIdentity(ctx)
+	if e != nil || identity != s.identity {
+		return [32]byte{}, ErrBinding
+	}
+	h := sha256.New()
+	h.Write([]byte("PackTrace live pinned root v1\x00"))
+	h.Write(identity[:])
+	h.Write(s.instance[:])
+	h.Write(p.id[:])
+	var result [32]byte
+	copy(result[:], h.Sum(nil))
+	return result, nil
+}
+func (p *Pin) Fallback() bool {
+	if p == nil {
+		return false
+	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return !p.closed && p.fallback
+}
 func (p *Pin) Close() error {
 	if p == nil {
 		return ErrUnavailable

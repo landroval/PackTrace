@@ -121,6 +121,7 @@ type Report struct {
 	Resources           Resources                         `json:"resources"`
 	Comparison          integrity.PortableIntegrityResult `json:"comparison"`
 	Inventory           *projectinventory.PublicInventory `json:"inventory,omitempty"`
+	Intelligence        *Intelligence                     `json:"intelligence,omitempty"`
 }
 
 func BuildReport(plan Plan, records []Record, summary Summary, resources Resources, interrupted, abnormal bool) Report {
@@ -211,6 +212,9 @@ func BuildReportWithInventory(plan Plan, records []Record, summary Summary, reso
 }
 
 func Render(r Report, format string) ([]byte, error) {
+	if r.Intelligence != nil && (r.SchemaVersion != "1.2" || ValidateIntelligence(*r.Intelligence) != nil) {
+		return nil, errors.New("scan: report-failed")
+	}
 	if r.Inventory != nil && projectinventory.ValidatePublic(*r.Inventory) != nil {
 		return nil, errors.New("scan: report-failed")
 	}
@@ -231,6 +235,16 @@ func Render(r Report, format string) ([]byte, error) {
 			}
 			for _, g := range p.Gaps {
 				fmt.Fprintf(&out, "Inventory gap: %s scope=%d evidence=%d\n", g.Code, g.Scope, g.Evidence)
+			}
+		}
+		if i := r.Intelligence; i != nil {
+			records := "unknown"
+			if i.Records != nil {
+				records = fmt.Sprintf("%d", *i.Records)
+			}
+			fmt.Fprintf(&out, "Intelligence: %s; snapshot=%s; selection=%s; provenance=%s; check=%s; reconciliation=%s; records=%s; objects/bytes/reserved=unknown\n", i.State, i.ID, i.Selection, i.Provenance, i.CheckAge, i.ReconciliationAge, records)
+			for _, g := range i.Gaps {
+				fmt.Fprintf(&out, "Intelligence gap: %s\n", g)
 			}
 		}
 		for _, c := range r.Coverage {

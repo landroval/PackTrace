@@ -29,13 +29,14 @@ var errJoin = errors.New("inspect-batch: cleanup-unconfirmed")
 var errOutput = errors.New("cli: output-failed")
 
 type runState struct {
-	mu          sync.Mutex // one live role, including concurrent WriteOutput calls
-	budget      traffic
-	deadline    time.Time
-	caller      context.Context
-	broken      bool
-	scan        *scanLifecycle // opt-in retained observer; nil for all legacy batch roles
-	preparation bool           // only the fixed Intel preparation constructor
+	mu           sync.Mutex // one live role, including concurrent WriteOutput calls
+	budget       traffic
+	deadline     time.Time
+	caller       context.Context
+	broken       bool
+	scan         *scanLifecycle         // opt-in retained observer; nil for all legacy batch roles
+	preparation  bool                   // only the fixed Intel preparation constructor
+	intelligence *scanIntelligenceOwner // original roots/pin retained to final reap
 }
 
 func newRunState(ctx context.Context) *runState {
