@@ -32,6 +32,11 @@ func walkChanges(ctx context.Context, input io.Reader, now time.Time, emit func(
 	var previous time.Time
 	havePrevious := false
 	var newest time.Time
+	var lineReader bytes.Reader
+	buffer := bufio.NewReader(&lineReader)
+	reader := csv.NewReader(buffer)
+	reader.FieldsPerRecord = 2
+	reader.ReuseRecord = true
 	for scan.Scan() {
 		if e := ctx.Err(); e != nil {
 			return cursorPoint{}, e
@@ -40,8 +45,10 @@ func walkChanges(ctx context.Context, input io.Reader, now time.Time, emit func(
 		if len(line) == 0 || !utf8.Valid(line) {
 			return cursorPoint{}, ErrCorrupt
 		}
-		reader := csv.NewReader(bytes.NewReader(line))
-		reader.FieldsPerRecord = 2
+		// Preserve the strict single-line grammar and second-read EOF check, but
+		// reuse the stdlib parser/buffer instead of allocating a page per row.
+		lineReader.Reset(line)
+		buffer.Reset(&lineReader)
 		fields, e := reader.Read()
 		if e != nil {
 			return cursorPoint{}, ErrCorrupt

@@ -208,9 +208,16 @@ func (s *Store) syncFull(ctx context.Context, b *Budget, fetch sourceFetch) (res
 	if previous != nil && previous.receipt.Generation == meta.Generation && (previous.receipt.ArchiveSHA256 != archiveHash || previous.receipt.ArchiveBytes != meta.Size) {
 		return result, ErrUntrusted
 	}
-	draft, e := prepareArchive(tx.work, tx, original, original.Size())
+	captured, e := newArchiveCache(tx.work, original)
 	if e != nil {
 		return result, e
+	}
+	draft, e := prepareArchive(tx.work, tx, captured, original.Size())
+	if e != nil {
+		return result, e
+	}
+	if e := captured.Stable(); e != nil {
+		return result, ErrCorrupt
 	}
 	// A whole candidate remains unusable when a required publisher/license is
 	// unknown; never drop those records to make the known subset look complete.
