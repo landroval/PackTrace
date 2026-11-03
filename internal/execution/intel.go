@@ -231,15 +231,15 @@ func (run *IntelRun) superviseIntel(ctx context.Context, request cli.IntelArgume
 		}
 	})
 	s.scan.protocolResult(monitor.result())
-	if received && failure == nil {
-		run.Result = result
-		run.Usable = true
-	}
 	if s.broken {
 		return errReap
 	}
 	if e := s.scan.check(); e != nil {
 		return e
+	}
+	if received && failure == nil {
+		run.Result = result
+		run.Usable = true
 	}
 	return failure
 }
