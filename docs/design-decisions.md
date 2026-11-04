@@ -1392,3 +1392,33 @@ The approvals above do not settle the following contracts:
 These decisions authorize neither live synchronization nor artifact-fetch execution.
 Review the remaining sections before producing the complete written specification.
 Written-spec approval then permits implementation planning, not implementation.
+
+## 31. Intelligence lifecycle candidate (#9)
+
+The separately approved #9 specification/implementation now has a filesystem-only
+candidate. [Intelligence compatibility](intelligence-compatibility.md) records its
+implemented command grammar, source/license profiles, resource bounds, trust and
+remaining acceptance gates. This updates the implementation-status portions of
+sections20/22/29/30, not their authorization or safety boundaries.
+
+- Keep section29's lowercase `os.UserCacheDir()/packtrace` default. Explicit
+  selectors remain invocation-relative; lexical paths never prove separation.
+- Scans retain original target/store metadata and their selected generation
+  through output and confirmed reap. They neither initialize nor repair state.
+- Online sync, offline import/export and explicit retention remain separate.
+  Root-bound local acquisition seals are private; imported designation needs an
+  independently expected descriptor. Neither authenticates advisory publishers.
+- Unchanged verified catalog/index metadata may be reused with bounded ordinal
+  remapping. Final sealing still verifies every mandatory original/object;
+  untrusted imports still rebuild projections from actual original bytes.
+- Quota reservations and original-handle durability fences remain mandatory.
+  Prune requires independent preview confirmation and original-handle quarantine;
+  incomplete cleanup remains charged and does not claim rollback.
+- Selected intelligence adds scan schema1.2; historical stdin and unselected
+  inventory contracts remain unchanged. Matching is still #6, not an implied
+  result of preparing or activating intelligence.
+
+Local official-toolchain verification and controlled/cached-source tests do not
+close real-source, native, independent-review or protected-integration gates.
+No new execution, download, destructive-cleanup or merge permission is granted
+by this documentation or by a successful test.

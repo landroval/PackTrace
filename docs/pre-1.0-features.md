@@ -187,6 +187,15 @@ scope; it never claims that a malicious payload executed.
 
 ## 3. Offline intelligence lifecycle
 
+**#9 candidate, not yet integrated/qualified:** filesystem-owned immutable
+snapshots, explicit OSV sync/full reconciliation, offline import/export,
+root-bound acquisition seals, bounded readers, quota/reservations, durable pins,
+verified prune preview/apply and parent-held scan observations are implemented
+on the feature branch. See [intelligence compatibility](intelligence-compatibility.md)
+for command effects, licensing, measured-evidence distinctions and remaining
+live-source/native/review gates. Checkboxes below remain shipping gates, not a
+claim that passing local tests completes them. Matching remains in #6.
+
 - [ ] **Offline scans by default:** investigate using prepared local intelligence
   and references without making network requests.
 - [ ] **Explicit synchronization:** provide a user-authorized operation to acquire
@@ -211,7 +220,9 @@ scope; it never claims that a malicious payload executed.
   **Documentation evidence:** [approved source/trust contract](design-decisions.md#7-intelligence-acquisition-sources)
   separates acquisition source, publisher, HTTPS, and local hashes, and records
   aggregator limitations. This closes the documentation requirement only;
-  runtime networking/authenticity controls remain unimplemented and unqualified.
+  runtime transport/acquisition controls exist in the #9 candidate but remain
+  subject to its complete qualification/integration gates; publisher
+  authentication is not supplied by HTTPS, local hashes or the local seal.
 
 **Shipping condition:** unavailable or unacceptable intelligence produces an
 incomplete applicable check, not a successful no-findings result.

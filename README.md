@@ -20,6 +20,7 @@ preserve evidence and uncertainty without executing the investigated project's c
 | Package manifests | Bounded JSON reading and separate dependency declaration groups | Dependency resolution or package-manager execution |
 | Root comparison | Exact textual comparison of explicitly paired manifest and lockfile root requirements | Semantic range equivalence, installation drift, or findings |
 | OSV records | Bounded JSON reading, temporal claims, affected identities, explicit versions, ranges and events | Full schema/identity qualification, interval evaluation, advisory applicability, or matching |
+| Intelligence lifecycle candidate | Owned immutable storage, explicit OSV sync/offline import/export, quota/retention, fixed-generation scan observations | Complete live-source/native qualification, protected integration, advisory matching or publisher authentication |
 | Shared validation | Strict JSON object validation, duplicate-key/Unicode checks and bounded nesting | Native filesystem containment or a hard process-memory cap |
 
 The readers retain raw fields and source digests. Projections distinguish missing,
@@ -34,7 +35,8 @@ contracts, limits and tests.
 ## Intended investigation flow
 
 The experimental native scan keeps **declared**, **locked**, and **observed installed**
-evidence separate. Its common terminal, additive scan JSON **1.1**, and SARIF model
+evidence separate. Its common terminal, additive scan JSON **1.1** (**1.2** with
+selected intelligence), and SARIF model
 exports privacy-safe IDs/classes/relations/counts/gaps, not private names, paths,
 requirements, origins or digests. Historical stdin command schemas remain unchanged.
 
@@ -44,7 +46,8 @@ compatibility claims. Native bounded inventory now observes root/member manifest
 effective inputs, physical copies and active contained links, including extra
 packages absent from a lockfile. Five pinned producers generated owned inert
 fixtures on Linux; replay is not execution of those producers on other platforms.
-Matching and intelligence synchronization remain future work. The native integrity candidate now compares
+Matching remains future work; the experimental intelligence lifecycle is described
+[below](#experimental-intelligence-lifecycle). The native integrity candidate now compares
 explicitly mapped installed scopes against validated prepared archives and emits
 portable terminal/JSON/SARIF results; this is not complete product coverage.
 
@@ -76,6 +79,23 @@ This can complete only the explicit reference-authority scope. It does not
 authenticate a publisher, establish benignness, authorize network access or waive
 remaining native/producer/ownership/reporting gates. Unpinned behavior and exit
 selection are preserved; the candidate can still return incomplete coverage.
+
+## Experimental intelligence lifecycle
+
+The #9 candidate provides separate `intel sync [--full]`, `intel import/export`,
+`intel status`, retention pins and explicit `cache prune` preview/apply commands.
+Only sync goes online; it accepts no target project/package list. Missing or
+corrupt state is never initialized, repaired or downloaded by a scan.
+
+A selected scan holds the original external generation through public output and
+confirmed child reap. A locally authenticated acquisition and an independently
+pinned offline import have distinct authority; neither is publisher approval or
+advisory matching. Raw advisories, private paths and source key/MAC stay private.
+
+See [intelligence compatibility](docs/intelligence-compatibility.md) for exact
+command effects, source/license profiles, limits and qualification gaps. Whole
+public-source/native acceptance and owner-controlled integration remain pending;
+controlled fixtures and local tests do not close those gates.
 
 ## Scoped installed ownership
 
@@ -218,6 +238,7 @@ exit `2`. This is not a scanner or a producer/native compatibility qualification
 internal/inventory/  npm lockfile and manifest evidence; root requirement comparison
 internal/projectinventory/  Native evidence-separated inventory and portable closures
 internal/intel/      OSV record reading and evidence projections
+internal/intelstore/ Owned immutable intelligence preparation, readers and retention
 internal/jsoninput/  Shared strict JSON validation
 probes/              Isolated evaluation work, separate from production dependencies
 docs/               Design, compatibility evidence and increment contracts
