@@ -88,13 +88,24 @@ func ownedIdentity(n *nativeRoot) ([32]byte, error) {
 	if err != nil {
 		return [32]byte{}, err
 	}
-	identity, err := durableLinuxOwnedIdentity(n, raw, mount)
-	if err != nil {
-		return [32]byte{}, err
+	var identity [32]byte
+	if proof := n.ownedProof; proof != nil {
+		if proof.uid != raw.Uid || proof.mount != mount {
+			return [32]byte{}, ErrUnstable
+		}
+		identity = proof.identity
+	} else {
+		identity, err = durableLinuxOwnedIdentity(n, raw, mount)
+		if err != nil {
+			return [32]byte{}, err
+		}
 	}
 	var after syscall.Stat_t
 	if n.guard() != nil || syscall.Fstat(int(n.root.Fd()), &after) != nil || after.Dev != raw.Dev || after.Ino != raw.Ino || after.Uid != raw.Uid || after.Mode != raw.Mode {
 		return [32]byte{}, ErrUnstable
+	}
+	if n.ownedProof == nil {
+		n.ownedProof = &linuxOwnedRootProof{identity, raw.Uid, mount}
 	}
 	return identity, nil
 }

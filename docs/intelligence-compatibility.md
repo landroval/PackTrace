@@ -46,8 +46,10 @@ No command elevates privileges, changes host settings, executes target code,
 installs dependencies, or adopts third-party caches.
 
 Linux durable owned-state binding v3 uses the original filesystem's full UUID
-and its exported inode/subvolume/generation handle, with owner checks. Runtime
-device/mount/ancestry checks still apply, but boot-assigned `st_dev` and mount IDs
+and its exported inode/subvolume/generation handle, with owner checks. The positive
+native proof belongs only to its retained original root, not a pathname cache;
+every use still checks the original owner/device/mount/ancestry. Boot-assigned
+`st_dev` and mount IDs
 are not persisted. Old v2 bindings are rejected, never silently converted or
 rewritten. Only supported ext4/XFS/Btrfs native UUID/handle shapes are admitted;
 volatile tmpfs/overlay and unavailable native queries cannot claim durable owned
@@ -149,7 +151,7 @@ controller failure, arbitrary hardware or filesystem faults.
 
 ## Evidence status
 
-Local root race tests (4641 passes, no failures,7 skips) and local/Windows-targeted
+Local root race tests (4644 passes, no failures,7 skips) and local/Windows-targeted
 vet passed with the independently pinned official Go1.27.1 Linux amd64 SDK.
 Earlier development measurements used a modified SDK and remain separately
 scoped. Local official-toolchain tests do not replace exact-source public CI or

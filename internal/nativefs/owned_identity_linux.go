@@ -11,6 +11,16 @@ import (
 	"unsafe"
 )
 
+// Minted only from this retained original root's positive native query. It is
+// not decoded, caller-set authority, a pathname cache or a verified boolean.
+// The original descriptor and normal UID/device/mount/ancestry guards remain
+// alive and checked on every use. A new root must mint its own proof.
+type linuxOwnedRootProof struct {
+	identity [32]byte
+	uid      uint32
+	mount    uint64
+}
+
 // Linux st_dev and mount IDs are lifetime coordinates, not durable volume IDs.
 // Query only the retained ORIGINAL directory. No path/marker/key can mint this
 // identity, and unsupported volatile/unknown profiles have no fallback.

@@ -32,6 +32,7 @@ type nativeRoot struct {
 	external     *separation
 	parent       *nativeRoot
 	parentName   string
+	ownedProof   *linuxOwnedRootProof
 }
 
 func openat2(dir int, name string, flags int, resolve uint64) (*os.File, error) {
