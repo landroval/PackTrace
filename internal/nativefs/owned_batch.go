@@ -11,7 +11,7 @@ import (
 
 // DurabilityBatch defers persistence, never binding/ownership checks. Only an
 // actual original exclusive writer can mint it. Fence is mandatory before seal.
-// Pending originals<=64, directory handles<=272, concurrent flushes<=16.
+// Pending originals<=128, directory handles<=272, concurrent flushes<=16.
 type DurabilityBatch struct {
 	mu     sync.Mutex
 	owner  *OwnedDirectory
@@ -153,7 +153,7 @@ func (b *DurabilityBatch) CopyExclusive(ctx context.Context, name string, input 
 	if e := b.check(ctx); e != nil {
 		return nil, e
 	}
-	if len(b.files) >= 64 {
+	if len(b.files) >= 128 {
 		if e := b.fence(ctx); e != nil {
 			return nil, e
 		}
