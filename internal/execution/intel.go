@@ -115,7 +115,7 @@ func normalizeIntelRequest(r cli.IntelArgumentRequest) (cli.IntelArgumentRequest
 		if e != nil {
 			return r, errIntelProtocol
 		}
-		r.StateDir = filepath.Join(cache, "PackTrace")
+		r.StateDir = filepath.Join(cache, "packtrace")
 	}
 	for _, value := range []*string{&r.StateDir, &r.Input, &r.Output} {
 		if *value != "" {
