@@ -3,8 +3,6 @@
 package nativefs
 
 import (
-	"crypto/sha256"
-	"encoding/binary"
 	"errors"
 	"os"
 	"path/filepath"
@@ -85,16 +83,20 @@ func ownedIdentity(n *nativeRoot) ([32]byte, error) {
 	if raw.Uid != uint32(os.Geteuid()) || raw.Mode&07777 != 0700 || raw.Mode&syscall.S_IFMT != syscall.S_IFDIR {
 		return [32]byte{}, ErrPath
 	}
-	// The lifetime guard above still checks the original mount. Its kernel ID
-	// is not durable across reboot/remount and must not enter a stored marker.
-	if _, err := n.mountID(); err != nil {
+	// Both device and mount numbers are runtime guards, never stored identity.
+	mount, err := n.mountID()
+	if err != nil {
 		return [32]byte{}, err
 	}
-	var data [24]byte
-	binary.LittleEndian.PutUint64(data[0:8], uint64(raw.Dev))
-	binary.LittleEndian.PutUint64(data[8:16], raw.Ino)
-	binary.LittleEndian.PutUint64(data[16:24], uint64(raw.Uid))
-	return sha256.Sum256(append([]byte("PackTrace:owned-root:linux:v2\x00"), data[:]...)), nil
+	identity, err := durableLinuxOwnedIdentity(n, raw, mount)
+	if err != nil {
+		return [32]byte{}, err
+	}
+	var after syscall.Stat_t
+	if n.guard() != nil || syscall.Fstat(int(n.root.Fd()), &after) != nil || after.Dev != raw.Dev || after.Ino != raw.Ino || after.Uid != raw.Uid || after.Mode != raw.Mode {
+		return [32]byte{}, ErrUnstable
+	}
+	return identity, nil
 }
 
 // Caller holds the root and original parent mutexes. The full retained chain

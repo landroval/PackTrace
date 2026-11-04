@@ -1403,6 +1403,11 @@ sections20/22/29/30, not their authorization or safety boundaries.
 
 - Keep section29's lowercase `os.UserCacheDir()/packtrace` default. Explicit
   selectors remain invocation-relative; lexical paths never prove separation.
+- Linux owned binding v3 uses a native filesystem UUID plus an original exported
+  object/subvolume/generation handle and owner checks. Device/mount IDs remain
+  mandatory runtime guards, not durable identity. Unsupported/volatile owned
+  storage and old v2 markers are rejected without adoption, migration or rewrite;
+  readonly investigation-root admission and Windows binding are unchanged.
 - Scans retain original target/store metadata and their selected generation
   through output and confirmed reap. They neither initialize nor repair state.
 - Online sync, offline import/export and explicit retention remain separate.

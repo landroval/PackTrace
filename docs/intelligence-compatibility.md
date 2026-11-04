@@ -45,6 +45,16 @@ state under the current project. Lexical normalization is not a safety proof.
 No command elevates privileges, changes host settings, executes target code,
 installs dependencies, or adopts third-party caches.
 
+Linux durable owned-state binding v3 uses the original filesystem's full UUID
+and its exported inode/subvolume/generation handle, with owner checks. Runtime
+device/mount/ancestry checks still apply, but boot-assigned `st_dev` and mount IDs
+are not persisted. Old v2 bindings are rejected, never silently converted or
+rewritten. Only supported ext4/XFS/Btrfs native UUID/handle shapes are admitted;
+volatile tmpfs/overlay and unavailable native queries cannot claim durable owned
+storage. Readonly investigation-root admission is unchanged. Btrfs has local
+native evidence; ext4/XFS ABI checks and cross-compilation are not runtime
+qualification. No actual host reboot/remount campaign is implied.
+
 ## Offline scan and portable output
 
 `scan --state-dir DIR` selects an already prepared external store. The independent
@@ -139,7 +149,7 @@ controller failure, arbitrary hardware or filesystem faults.
 
 ## Evidence status
 
-Local root race tests (4632 passes, no failures,7 skips) and local/Windows-targeted
+Local root race tests (4641 passes, no failures,7 skips) and local/Windows-targeted
 vet passed with the independently pinned official Go1.27.1 Linux amd64 SDK.
 Earlier development measurements used a modified SDK and remain separately
 scoped. Local official-toolchain tests do not replace exact-source public CI or
@@ -147,9 +157,11 @@ native acceptance campaigns. Windows cross-checks are static, not runtime or
 native x64-hardware acceptance.
 Controlled TLS fixtures, cached real ZIP replays and authored large global CSV
 fixtures do not qualify a live public OSV acquisition. Failed operations consume
-their authorized attempt. At the last recorded public attempt, bootstrap exhausted
-900s and activated no generation; later controlled performance evidence must not
-be relabelled as a successful public sync. Exact-source official CI, newly
+their authorized attempt. The first public bootstrap exhausted900s without activation; the second attempt
+failed admission because its old Btrfs binding used a boot-dependent device ID.
+Both consume their authorized attempts. The v3 correction preserves the rejected
+state and requires fresh qualification; it does not turn controlled performance
+evidence into a successful public sync. Exact-source official CI, newly
 authorized native execution and owner-controlled review/integration remain gates.
 No live advisory dataset, downloaded binaries or caches are embedded in this repo;
 the small transport fixture is explicitly authored inert test data.
