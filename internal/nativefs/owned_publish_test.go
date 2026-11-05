@@ -63,6 +63,12 @@ func TestOwnedPublicationKeepsOriginalAndRefusesClobber(t *testing.T) {
 	if e := a.Stable(); e == nil {
 		t.Fatal("replaced old slot remained bound")
 	}
+	// Replacement must not obtain success by closing the old capability.
+	// Its slot is no longer bound, but its original bytes remain readable.
+	original := make([]byte, 5)
+	if n, e := a.file.ReadAt(original, 0); e != nil || n != len(original) || string(original) != "first" {
+		t.Fatal("replacement discarded the retained original", n, e)
+	}
 	if e := b.Stable(); e != nil {
 		t.Fatal(e)
 	}

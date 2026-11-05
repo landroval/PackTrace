@@ -127,7 +127,7 @@ func TestDurabilityBatchChangedOriginalOrCancellationCannotFence(t *testing.T) {
 		t.Fatal(e)
 	}
 	file.Close()
-	if e := os.WriteFile(filepath.Join(path, "item"), []byte("change"), 0600); e != nil {
+	if e := writeOwnedFixture(filepath.Join(path, "item"), []byte("change")); e != nil {
 		t.Fatal(e)
 	}
 	if e := batch.Fence(ctx); e == nil {

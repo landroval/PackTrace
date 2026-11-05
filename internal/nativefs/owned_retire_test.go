@@ -41,7 +41,7 @@ func TestOwnedQuarantineRetainsOriginalBeforeVerifiedRemoval(t *testing.T) {
 	if _, e := os.Lstat(filepath.Join(path, "item")); !os.IsNotExist(e) {
 		t.Fatal("source slot not retired", e)
 	}
-	data, e := os.ReadFile(filepath.Join(path, "trash/item"))
+	data, e := readOwnedFixture(filepath.Join(path, "trash/item"))
 	if e != nil || string(data) != "owned-data" {
 		t.Fatal("original bytes not retained", e)
 	}
@@ -80,13 +80,13 @@ func TestQuarantinedChangedObjectIsPreserved(t *testing.T) {
 	}
 	defer retired.Close()
 	target := filepath.Join(path, "trash/item")
-	if e := os.WriteFile(target, []byte("changed!"), 0600); e != nil {
+	if e := writeOwnedFixture(target, []byte("changed!")); e != nil {
 		t.Fatal(e)
 	}
 	if e := retired.Remove(ctx); e == nil {
 		t.Fatal("changed original authorized unlink")
 	}
-	got, e := os.ReadFile(target)
+	got, e := readOwnedFixture(target)
 	if e != nil || string(got) != "changed!" {
 		t.Fatal("changed bytes lost", e)
 	}

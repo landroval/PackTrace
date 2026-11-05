@@ -57,8 +57,12 @@ func TestDurabilityBatchRetains128OriginalsThenFencesBefore129(t *testing.T) {
 		if i < 128 && originalErr != nil {
 			t.Fatal("caller close lost pending original", originalErr)
 		}
-		if i == 128 && !errors.Is(originalErr, os.ErrClosed) {
-			t.Fatal("rollover did not close the successfully fenced original", originalErr)
+		if i == 128 {
+			// Windows Stat can report ERROR_INVALID_HANDLE after Close rather
+			// than os.ErrClosed. Require unusability AND an already-closed file.
+			if originalErr == nil || !errors.Is(first.file.Close(), os.ErrClosed) {
+				t.Fatal("rollover did not close the successfully fenced original", originalErr)
+			}
 		}
 	}
 	if e := batch.Fence(ctx); e != nil {

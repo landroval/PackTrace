@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
@@ -83,7 +82,7 @@ func TestOwnedStreamRetainsFailedBytesAndRefusesEscape(t *testing.T) {
 	if e := f.Stable(); e == nil {
 		t.Fatal("failed stream became valid")
 	}
-	raw, e := os.ReadFile(filepath.Join(path, "partial"))
+	raw, e := readOwnedFixture(filepath.Join(path, "partial"))
 	if e != nil || string(raw) != "partial" {
 		t.Fatal("partial bytes discarded")
 	}

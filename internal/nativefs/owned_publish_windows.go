@@ -39,11 +39,16 @@ func ownedMoveMode(n *nativeRoot, f *os.File, source, dest string, replace, flus
 		return ErrPath
 	}
 	units = units[:len(units)-1]
-	// FILE_RENAME_INFORMATION: BOOLEAN/union at0, HANDLE at8, length at16,
-	// UTF16 name at20 for the admitted Windows amd64 ABI. No absolute name.
+	// Both admitted amd64 layouts place flags/BOOLEAN at0, HANDLE at8,
+	// length at16 and UTF16 name at20. No absolute name or parent rewalk.
 	b := make([]byte, 20+len(units)*2)
+	class := uintptr(10) // FileRenameInformation; no-clobber remains unchanged.
 	if replace {
-		b[0] = 1
+		// Like the pinned SDK's Renameat, NTFS POSIX replacement preserves an
+		// already-open destination's original handle instead of closing it.
+		// No legacy fallback: an unsupported operation remains a failure.
+		class = 65                                // FileRenameInformationEx
+		binary.LittleEndian.PutUint32(b[:4], 1|2) // REPLACE_IF_EXISTS | POSIX_SEMANTICS
 	}
 	binary.LittleEndian.PutUint64(b[8:16], uint64(parent.handle.Fd()))
 	binary.LittleEndian.PutUint32(b[16:20], uint32(len(units)*2))
@@ -51,7 +56,7 @@ func ownedMoveMode(n *nativeRoot, f *os.File, source, dest string, replace, flus
 		binary.LittleEndian.PutUint16(b[20+2*i:], u)
 	}
 	ios := new(winIOStatus)
-	status, _, _ := ownedSetInfo.Call(f.Fd(), uintptr(unsafe.Pointer(ios)), uintptr(unsafe.Pointer(&b[0])), uintptr(len(b)), 10)
+	status, _, _ := ownedSetInfo.Call(f.Fd(), uintptr(unsafe.Pointer(ios)), uintptr(unsafe.Pointer(&b[0])), uintptr(len(b)), class)
 	ok := winFinish(status, syscall.Handle(f.Fd()), ios)
 	runtime.KeepAlive(f)
 	runtime.KeepAlive(n.root)

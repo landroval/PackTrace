@@ -78,6 +78,12 @@ func TestActivationRejectsCorruptObjectAndForgedSeal(t *testing.T) {
 	}
 	defer tx.Close()
 	draft := storageDraft(t, tx, "data")
+	// Successful durability is not semantic closure: seal must still reject
+	// subsequent corruption. Retained pending-writer changes have their own
+	// native batch fault controls; do not release them without a real fence.
+	if e := tx.fence(ctx); e != nil {
+		t.Fatal(e)
+	}
 	sum := sha256.Sum256([]byte("data"))
 	key := hex.EncodeToString(sum[:])
 	if os.WriteFile(filepath.Join(path, "objects", key[:2], key), []byte("fake"), 0600) != nil {

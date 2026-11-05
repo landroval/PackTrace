@@ -33,7 +33,7 @@ func TestPublicationExplicitOutsideOriginalExclusivelyPublishes(t *testing.T) {
 	if e := pub.Commit(); e != nil {
 		t.Fatal(e)
 	}
-	data, e := os.ReadFile(output)
+	data, e := readOwnedFixture(output)
 	if e != nil || string(data) != "owned payload" {
 		t.Fatal("actual published bytes absent", e)
 	}
