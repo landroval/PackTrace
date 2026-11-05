@@ -93,7 +93,7 @@ func (c *changeGroupCursor) next() (*changeGroup, error) {
 		return nil, ErrCorrupt
 	}
 	var row changeGroup
-	if json.Unmarshal(c.scan.Bytes(), &row) != nil || !publicRecordID(row.ID) || row.ID <= c.last || !row.NPM && !row.Empty && !row.Other {
+	if json.Unmarshal(c.scan.Bytes(), &row) != nil || !listingRecordID(row.ID) || row.NPM && !publicRecordID(row.ID) || row.ID <= c.last || !row.NPM && !row.Empty && !row.Other {
 		return nil, ErrCorrupt
 	}
 	stamp := intel.ProjectOSVTimestampText(row.Modified)

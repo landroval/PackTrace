@@ -15,6 +15,12 @@ import (
 type cursorPoint struct{ Modified, ID string }
 type changeRow struct{ Modified, Directory, ID string }
 
+// Global listing-only IDs may contain interior spaces; their exact bytes stay
+// in groups/cursors. This validator never grants npm or HTTP request authority.
+func listingRecordID(id string) bool {
+	return publicRecordID(strings.ReplaceAll(id, " ", "_"))
+}
+
 func committedCursor(old, candidate cursorPoint, activated bool) cursorPoint {
 	if !activated {
 		return old
@@ -67,7 +73,7 @@ func walkChanges(ctx context.Context, input io.Reader, now time.Time, emit func(
 			return cursorPoint{}, ErrCorrupt
 		}
 		directory, id := fields[1][:slash], fields[1][slash+1:]
-		if len(directory) == 0 || len(directory) > 128 || !publicRecordID(id) {
+		if len(directory) == 0 || len(directory) > 128 || !listingRecordID(id) || directory == "npm" && !publicRecordID(id) {
 			return cursorPoint{}, ErrCorrupt
 		}
 		for _, component := range strings.Split(directory, "/") {

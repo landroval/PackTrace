@@ -28,7 +28,7 @@ func (s *Store) readSourceCursor(ctx context.Context, ref ObjectRef) (sourceCurs
 	if e != nil {
 		return c, e
 	}
-	if !strictObject(raw, 4096, "Version", "Point", "Generation", "BaseGeneration", "SHA256", "Bytes", "Metadata") || json.Unmarshal(raw, &c) != nil || c.Version != 1 || c.Bytes > 256<<20 || !publicRecordID(c.Point.ID) || intel.ProjectOSVTimestampText(c.Point.Modified).State != intel.TimestampValue {
+	if !strictObject(raw, 4096, "Version", "Point", "Generation", "BaseGeneration", "SHA256", "Bytes", "Metadata") || json.Unmarshal(raw, &c) != nil || c.Version != 1 || c.Bytes > 256<<20 || !listingRecordID(c.Point.ID) || intel.ProjectOSVTimestampText(c.Point.Modified).State != intel.TimestampValue {
 		return c, ErrCorrupt
 	}
 	return c, nil
