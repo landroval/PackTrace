@@ -131,7 +131,7 @@ reconciliation are not a guarantee of upstream listing completeness.
 | Offline USTAR / members |16GiB /2001024 |
 | Logical catalog retention / entries |256MiB /2100000 |
 | Index runs / merge heads |64MiB /32 |
-| Pending original files / directories / concurrent flushes |64 /272 /16 |
+| Pending original files / directories / concurrent flushes |128 /272 /16 |
 | Private IPC frame / total |1MiB /64MiB |
 
 These are not promises of physical disk usage or portable hard RSS containment.
@@ -151,19 +151,38 @@ controller failure, arbitrary hardware or filesystem faults.
 
 ## Evidence status
 
-Local root race tests (4644 passes, no failures,7 skips) and local/Windows-targeted
+Local root race tests (4648 passes, no failures,7 skips) and local/Windows/Linux-arm64-targeted
 vet passed with the independently pinned official Go1.27.1 Linux amd64 SDK.
 Earlier development measurements used a modified SDK and remain separately
 scoped. Local official-toolchain tests do not replace exact-source public CI or
 native acceptance campaigns. Windows cross-checks are static, not runtime or
 native x64-hardware acceptance.
 Controlled TLS fixtures, cached real ZIP replays and authored large global CSV
-fixtures do not qualify a live public OSV acquisition. Failed operations consume
-their authorized attempt. The first public bootstrap exhausted900s without activation; the second attempt
-failed admission because its old Btrfs binding used a boot-dependent device ID.
-Both consume their authorized attempts. The v3 correction preserves the rejected
-state and requires fresh qualification; it does not turn controlled performance
-evidence into a successful public sync. Exact-source official CI, newly
-authorized native execution and owner-controlled review/integration remain gates.
+fixtures do not qualify a live public OSV acquisition. The controlled full corpus
+with128 pending originals activated231048 records in833s within the unchanged900s
+limit. Actual retained-handle rollover tests enforce the128/129 boundary.
+
+The separately authorized public campaign on candidate `5a4f0602` completed a
+bootstrap in657s, an incremental revalidation in55s and a full reconciliation
+in305s. Separate readonly status processes confirmed each selected generation
+and local-acquisition authority. All retained231211 records and233350 memberships;
+859 identity gaps remained explicit, with no temporal or disposition gaps in
+these observations. Each command returned3 for incomplete identity coverage,
+not operational failure. The incremental renewed only the source-check time;
+the full operation renewed the independent reconciliation time. The listing
+body did not change during these follow-ups: real changed/withdrawn events were
+**unobserved**, not passed by absence; their causal fixtures remain separate.
+Local acquisition is not publisher authentication or advisory matching.
+
+Three earlier public operations failed and remain charged/preserved: a900s
+bootstrap deadline, an old boot-dependent Btrfs binding, and an overly strict
+ID grammar applied to an unrelated ecosystem in the global CSV. The corrected
+parser retains interior spaces in listing-only IDs without granting npm/HTTP
+request authority; it replayed all2771470 captured rows without skipping older
+rows. No old marker was rewritten. Explicit owner extensions capped the complete
+campaign at6 operations; all6 are consumed, with no further acquisition authority.
+Wire totals were unavailable, so full admitted envelopes were conservatively
+reserved rather than reporting zero. Exact-source official CI, newly authorized
+native execution and owner-controlled review/integration remain gates.
 No live advisory dataset, downloaded binaries or caches are embedded in this repo;
 the small transport fixture is explicitly authored inert test data.

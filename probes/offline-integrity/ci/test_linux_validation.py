@@ -12,6 +12,36 @@ class Validation(unittest.TestCase):
     def test_inventory_producer_replay_is_in_native_and_race_corpus(self):
         self.assertIn('./internal/projectinventory', validation.PACKAGES)
 
+    def test_intelligence_packages_are_in_native_and_race_corpus(self):
+        self.assertIn('./internal/intelstore', validation.PACKAGES)
+        self.assertIn('./internal/intel', validation.PACKAGES)
+
+    def test_windows_selector_includes_store_catalog_and_inventory(self):
+        import re
+        source = (Path(__file__).parent/'windowsrunner/main_windows.go').read_text()
+        selected = re.search(r'packages := \[\]string\{([^}]+)\}', source)
+        self.assertIsNotNone(selected)
+        packages = json.loads('['+selected.group(1)+']')
+        for package in ('./internal/intelstore', './internal/intel', './internal/projectinventory'):
+            self.assertIn(package, packages)
+
+    def test_required_intelligence_cases_need_exact_positive_terminal_events(self):
+        required = validation.INTELLIGENCE_CASES
+        self.assertEqual(len(required), 15)
+        self.assertIn('packtrace/internal/intelstore#TestParentGenerationPinOutlivesActualReaderChild', required)
+        self.assertIn('packtrace/cmd/packtrace#TestScanSnapshotPinSurvivesComparisonAndStalledOutputUntilFinish', required)
+        events = [dict(Action='pass', Package=key.split('#')[0], Test=key.split('#')[1]) for key in required]
+        def encode(rows):
+            return ''.join(json.dumps(row)+'\n' for row in rows).encode()
+        self.assertEqual(validation.intelligence_cases(encode(events)), list(required))
+        for bad in (events[1:], [dict(events[0], Action='skip')]+events[1:],
+                    [dict(events[0], Package='wrong-package')]+events[1:],
+                    events+[events[0]], events+[dict(events[0], Action='fail')]):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                validation.intelligence_cases(encode(bad))
+        with self.assertRaises(ValueError):
+            validation.intelligence_cases(encode(events)[:-1])
+
     def test_failed_or_incomplete_stream_cannot_pass(self):
         good = b'{"Action":"pass","Test":"owned"}\n'
         self.assertEqual(validation.test_counts(good)['passed'], 1)

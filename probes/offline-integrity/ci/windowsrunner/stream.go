@@ -78,6 +78,61 @@ func (c *capture) Write(p []byte) (int, error) {
 
 type counts struct{ Passed, Failed, Skipped, BuildFailed int }
 
+var requiredIntelligenceCases = []string{
+	"packtrace/internal/intel#TestCatalogProofReusesVerifiedMetadataWithoutChangingLegacyGaps",
+	"packtrace/internal/nativefs#TestDurabilityBatchRetains128OriginalsThenFencesBefore129",
+	"packtrace/internal/intelstore#TestStoreCreatesOwnedRootAndReopensReadOnly",
+	"packtrace/internal/intelstore#TestTransactionReservesBeforeReadingAndSerializesWriters",
+	"packtrace/internal/intelstore#TestActivationOriginalProcessCrashBeforeAndAfterPublication",
+	"packtrace/internal/intelstore#TestParentGenerationPinOutlivesActualReaderChild",
+	"packtrace/internal/intelstore#TestPruneRealReaderMustExitAndReapBeforeHistoryBecomesCandidate",
+	"packtrace/internal/intelstore#TestSnapshotDiskReaderUsesActualPreparedGeneration",
+	"packtrace/internal/intelstore#TestIncrementalReprojectsOnlyChangedOriginalsButPreservesWholeCatalog",
+	"packtrace/internal/intelstore#TestGlobalSpacedIDSurvivesGroupingAndCursorWithoutFetchAuthority",
+	"packtrace/internal/execution#TestScanIntelligenceWorkerUsesFixedGenerationAfterSelectorMutation",
+	"packtrace/internal/execution#TestScanIntelligenceCloseFailureStaysIncompleteAcrossFinish",
+	"packtrace/cmd/packtrace#TestScanSnapshotPinSurvivesComparisonAndStalledOutputUntilFinish",
+	"packtrace/cmd/packtrace#TestScanWithMissingStateDoesNotInitialize",
+}
+
+func intelligenceCases(data []byte) ([]string, error) {
+	c, e := testCounts(data)
+	if e != nil || c.Failed != 0 || c.BuildFailed != 0 {
+		return nil, errors.New("invalid-intelligence-test-stream")
+	}
+	passed := make(map[string]bool, len(requiredIntelligenceCases))
+	for _, key := range requiredIntelligenceCases {
+		passed[key] = false
+	}
+	scan := bufio.NewScanner(bytes.NewReader(data))
+	scan.Buffer(make([]byte, 4096), 1<<20)
+	for scan.Scan() {
+		var event struct{ Action, Package, Test string }
+		if e := json.Unmarshal(scan.Bytes(), &event); e != nil {
+			return nil, e
+		}
+		if event.Action != "pass" && event.Action != "skip" {
+			continue
+		}
+		key := event.Package + "#" + event.Test
+		if seen, required := passed[key]; required {
+			if seen || event.Action != "pass" {
+				return nil, errors.New("intelligence-case-not-passed-once")
+			}
+			passed[key] = true
+		}
+	}
+	if e := scan.Err(); e != nil {
+		return nil, e
+	}
+	for _, seen := range passed {
+		if !seen {
+			return nil, errors.New("missing-intelligence-case")
+		}
+	}
+	return append([]string(nil), requiredIntelligenceCases...), nil
+}
+
 func testCounts(data []byte) (counts, error) {
 	var c counts
 	scan := bufio.NewScanner(bytes.NewReader(data))

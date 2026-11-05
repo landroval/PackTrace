@@ -57,10 +57,11 @@ type phase struct {
 	Reaped, GroupClean, CaptureComplete bool
 	StdoutBytes, StderrBytes            int
 	StdoutSHA256, StderrSHA256          string
-	Counts                              *counts `json:",omitempty"`
-	StorageScope, StorageFailureStage   string  `json:",omitempty"`
-	StorageFailureErrno                 uint32  `json:",omitempty"`
-	ObservedStorageBytes                int64   `json:",omitempty"`
+	Counts                              *counts  `json:",omitempty"`
+	IntelligenceCases                   []string `json:",omitempty"`
+	StorageScope, StorageFailureStage   string   `json:",omitempty"`
+	StorageFailureErrno                 uint32   `json:",omitempty"`
+	ObservedStorageBytes                int64    `json:",omitempty"`
 }
 type receipt struct {
 	Schema, SourceSHA, Tree, GoVersion, Compiler, Qualification string
@@ -383,7 +384,7 @@ func mainCode() (code int) {
 		r.Failure = "harness-self-check-stream"
 		return
 	}
-	packages := []string{"./internal/nativefs", "./internal/nativeresource", "./internal/integrityscan", "./internal/execution", "./cmd/packtrace"}
+	packages := []string{"./internal/nativefs", "./internal/nativeresource", "./internal/integrityscan", "./internal/projectinventory", "./internal/intel", "./internal/intelstore", "./internal/execution", "./cmd/packtrace"}
 	tests := []struct {
 		name, cgo string
 		seconds   int
@@ -412,6 +413,15 @@ func mainCode() (code int) {
 			r.Failure = "test-stream"
 			diagnostics(test.name, "stdout", out)
 			return
+		}
+		if test.name != "race-original-wider-reproducer" {
+			cases, e := intelligenceCases(out)
+			if e != nil {
+				r.Failure = "intelligence-case-evidence"
+				diagnostics(test.name, "stdout", out)
+				return
+			}
+			r.Phases[len(r.Phases)-1].IntelligenceCases = cases
 		}
 		if test.name == "root-corpus" {
 			// Publish the already bounded owned-test stream even on success,
