@@ -103,6 +103,14 @@ func validateIntelRequest(r cli.IntelArgumentRequest) error {
 	}
 	return nil
 }
+func defaultIntelStateDirectory() (string, error) {
+	cache, e := os.UserCacheDir()
+	if e != nil || !filepath.IsAbs(cache) {
+		return "", errIntelProtocol
+	}
+	return filepath.Join(cache, "packtrace"), nil
+}
+
 func normalizeIntelRequest(r cli.IntelArgumentRequest) (cli.IntelArgumentRequest, error) {
 	if r.Format == "" {
 		r.Format = "terminal"
@@ -111,11 +119,11 @@ func normalizeIntelRequest(r cli.IntelArgumentRequest) (cli.IntelArgumentRequest
 		return r, e
 	}
 	if r.StateDir == "" {
-		cache, e := os.UserCacheDir()
+		var e error
+		r.StateDir, e = defaultIntelStateDirectory()
 		if e != nil {
-			return r, errIntelProtocol
+			return r, e
 		}
-		r.StateDir = filepath.Join(cache, "packtrace")
 	}
 	for _, value := range []*string{&r.StateDir, &r.Input, &r.Output} {
 		if *value != "" {

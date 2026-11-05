@@ -118,11 +118,10 @@ func RunScan(ctx context.Context, request cli.ScanArgumentRequest) (ScanRun, err
 	wantsIntelligence := request.StateDir != "" || request.TrustedSnapshotDigest != "" || request.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) != 0
 	if wantsIntelligence {
 		if request.StateDir == "" {
-			cache, e := os.UserCacheDir()
+			request.StateDir, e = defaultIntelStateDirectory()
 			if e != nil {
 				return run, integrityscan.ErrOptions
 			}
-			request.StateDir = filepath.Join(cache, "PackTrace")
 		}
 		request.StateDir, e = filepath.Abs(request.StateDir)
 		if e != nil {
