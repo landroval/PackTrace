@@ -44,6 +44,15 @@ func desktopEmulation(compiledArch string, host uint16) bool {
 	return compiledArch == "amd64" && host == 0xaa64
 }
 
+func rootCorpusSeconds(compatibility bool) int {
+	if compatibility {
+		// No race rows in emulation: reuse its existing total allowance.
+		// The 890s supervisor/900s outer and native profiles stay unchanged.
+		return 700
+	}
+	return 270
+}
+
 func volumeDiagnostic(profile string) (bool, error) {
 	switch profile {
 	case "windows-scan-amd64-v1", "windows11-x64-compat-arm64-v1":

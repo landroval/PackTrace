@@ -390,7 +390,7 @@ func mainCode() (code int) {
 		seconds   int
 		args      []string
 	}{
-		{"root-corpus", "0", 270, []string{"./..."}},
+		{"root-corpus", "0", rootCorpusSeconds(compatibility), []string{"./..."}},
 		{"race-corpus", "1", 350, packages},
 		{"race-original-wider-reproducer", "1", 230, []string{"./internal/integrityscan", "./internal/nativefs", "./cmd/packtrace"}},
 	}
