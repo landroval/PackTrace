@@ -79,6 +79,7 @@ func (c *capture) Write(p []byte) (int, error) {
 type counts struct{ Passed, Failed, Skipped, BuildFailed int }
 
 var requiredIntelligenceCases = []string{
+	"packtrace/internal/intelstore#TestArchiveCacheRetainsCapturedBytesButCannotHideChangedOriginalFence",
 	"packtrace/internal/intel#TestCatalogProofReusesVerifiedMetadataWithoutChangingLegacyGaps",
 	"packtrace/internal/nativefs#TestDurabilityBatchRetains128OriginalsThenFencesBefore129",
 	"packtrace/internal/intelstore#TestStoreCreatesOwnedRootAndReopensReadOnly",

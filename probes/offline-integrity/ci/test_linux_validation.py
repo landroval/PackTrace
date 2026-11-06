@@ -27,7 +27,8 @@ class Validation(unittest.TestCase):
 
     def test_required_intelligence_cases_need_exact_positive_terminal_events(self):
         required = validation.INTELLIGENCE_CASES
-        self.assertEqual(len(required), 16)
+        self.assertEqual(len(required), 17)
+        self.assertIn('packtrace/internal/intelstore#TestArchiveCacheRetainsCapturedBytesButCannotHideChangedOriginalFence', required)
         self.assertIn('packtrace/internal/intelstore#TestChangedOriginalReusesEmptyPartitionsButStillRequiresTheirActualObject', required)
         self.assertIn('packtrace/internal/intelstore#TestParentGenerationPinOutlivesActualReaderChild', required)
         self.assertIn('packtrace/cmd/packtrace#TestScanSnapshotPinSurvivesComparisonAndStalledOutputUntilFinish', required)

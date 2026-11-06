@@ -24,6 +24,7 @@ PACKAGES = ['./internal/nativefs', './internal/nativeresource', './internal/inte
 ORIGINAL_PACKAGES = ['./internal/integrityscan', './internal/nativefs', './cmd/packtrace']
 INTELLIGENCE_CASES = (
     'packtrace/internal/intel#TestCatalogProofReusesVerifiedMetadataWithoutChangingLegacyGaps',
+    'packtrace/internal/intelstore#TestArchiveCacheRetainsCapturedBytesButCannotHideChangedOriginalFence',
     'packtrace/internal/nativefs#TestDurabilityBatchRetains128OriginalsThenFencesBefore129',
     'packtrace/internal/nativefs#TestOwnedPersistentIdentityUsesNativeVolumeAndObjectGenerationNotBootNumbers',
     'packtrace/internal/intelstore#TestStoreCreatesOwnedRootAndReopensReadOnly',

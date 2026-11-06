@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"packtrace/internal/testfile"
 )
 
 func TestPublicationExplicitOutsideOriginalExclusivelyPublishes(t *testing.T) {
@@ -33,7 +35,7 @@ func TestPublicationExplicitOutsideOriginalExclusivelyPublishes(t *testing.T) {
 	if e := pub.Commit(); e != nil {
 		t.Fatal(e)
 	}
-	data, e := readOwnedFixture(output)
+	data, e := testfile.Read(output)
 	if e != nil || string(data) != "owned payload" {
 		t.Fatal("actual published bytes absent", e)
 	}

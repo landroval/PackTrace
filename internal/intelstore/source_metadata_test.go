@@ -8,10 +8,11 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"packtrace/internal/testfile"
 )
 
 func TestSourceMetadataUsesExactCanonicalFields(t *testing.T) {
@@ -37,7 +38,7 @@ func TestFullSyncSealFailureCannotPublishSourceDates(t *testing.T) {
 				raw := strings.ReplaceAll(ownedOSVRecord, "OWNED-1", "GHSA-2345-6789-cfgh")
 				sum := sha256.Sum256([]byte(raw))
 				ref := ObjectRef{sum, uint64(len(raw))}
-				if e := os.WriteFile(filepath.Join(path, filepath.FromSlash(objectPath(ref))), bytes.Repeat([]byte{'x'}, len(raw)), 0600); e != nil {
+				if e := testfile.Overwrite(filepath.Join(path, filepath.FromSlash(objectPath(ref))), bytes.Repeat([]byte{'x'}, len(raw))); e != nil {
 					t.Fatal(e)
 				}
 			}

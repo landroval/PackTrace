@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"os"
-	"packtrace/internal/nativefs"
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"packtrace/internal/nativefs"
+	"packtrace/internal/testfile"
 )
 
 func TestArchiveCacheRetainsCapturedBytesButCannotHideChangedOriginalFence(t *testing.T) {
@@ -63,14 +64,20 @@ func TestArchiveCacheRetainsCapturedBytesButCannotHideChangedOriginalFence(t *te
 	if cache.captured-before > 2<<20 {
 		t.Fatal("alternating ZIP central/local observations thrash the bounded capture", cache.captured-before)
 	}
-	file, e := os.OpenFile(filepath.Join(path, "archive"), os.O_WRONLY, 0600)
+	file, e := testfile.OpenExisting(filepath.Join(path, "archive"), true)
 	if e != nil {
 		t.Fatal(e)
 	}
 	if _, e := file.WriteAt([]byte("changed"), 0); e != nil {
 		t.Fatal(e)
 	}
-	file.Close()
+	if e := file.Sync(); e != nil {
+		file.Close()
+		t.Fatal("fixture mutation did not flush", e)
+	}
+	if e := file.Close(); e != nil {
+		t.Fatal("fixture mutation did not close successfully", e)
+	}
 	if e := cache.Stable(); e == nil {
 		t.Fatal("cached bytes replaced mandatory ORIGINAL source fence")
 	}

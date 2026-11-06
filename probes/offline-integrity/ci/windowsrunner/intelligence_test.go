@@ -8,8 +8,11 @@ import (
 )
 
 func TestRequiredIntelligenceCasesNeedExactPositiveTerminalEvents(t *testing.T) {
-	if len(requiredIntelligenceCases) != 15 || !strings.Contains(strings.Join(requiredIntelligenceCases, "\n"), "packtrace/internal/intelstore#TestChangedOriginalReusesEmptyPartitionsButStillRequiresTheirActualObject") {
+	if len(requiredIntelligenceCases) != 16 || !strings.Contains(strings.Join(requiredIntelligenceCases, "\n"), "packtrace/internal/intelstore#TestChangedOriginalReusesEmptyPartitionsButStillRequiresTheirActualObject") {
 		t.Fatal("missing required cross-platform lifecycle cases")
+	}
+	if !strings.Contains(strings.Join(requiredIntelligenceCases, "\n"), "packtrace/internal/intelstore#TestArchiveCacheRetainsCapturedBytesButCannotHideChangedOriginalFence") {
+		t.Fatal("missing original source cache fence case")
 	}
 	type event struct{ Action, Package, Test string }
 	var rows []event

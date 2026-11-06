@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"packtrace/internal/testfile"
 )
 
 func TestDurabilityFlushJoinsActualFileSyncFailure(t *testing.T) {
@@ -127,7 +129,7 @@ func TestDurabilityBatchChangedOriginalOrCancellationCannotFence(t *testing.T) {
 		t.Fatal(e)
 	}
 	file.Close()
-	if e := writeOwnedFixture(filepath.Join(path, "item"), []byte("change")); e != nil {
+	if e := testfile.Overwrite(filepath.Join(path, "item"), []byte("change")); e != nil {
 		t.Fatal(e)
 	}
 	if e := batch.Fence(ctx); e == nil {

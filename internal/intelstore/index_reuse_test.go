@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
+
+	"packtrace/internal/testfile"
 )
 
 func TestIncrementalReprojectsOnlyChangedOriginalsButPreservesWholeCatalog(t *testing.T) {
@@ -138,7 +139,7 @@ func TestIndexReuseBeforeMiddleAfterInsertionsAreCanonicalAndAllOriginalsRemainR
 		t.Fatal(e)
 	}
 	damaged := bytes.Repeat([]byte{' '}, int(old.Original.Bytes))
-	if e := os.WriteFile(filepath.Join(path, objectPath(old.Original)), damaged, 0600); e != nil {
+	if e := testfile.Overwrite(filepath.Join(path, objectPath(old.Original)), damaged); e != nil {
 		t.Fatal(e)
 	}
 	if _, e := tx.seal(ctx, actual); e == nil {
@@ -147,7 +148,7 @@ func TestIndexReuseBeforeMiddleAfterInsertionsAreCanonicalAndAllOriginalsRemainR
 }
 func TestReusedSourceIDsEqualBytesReplacementCannotSupplyNetworkAuthority(t *testing.T) {
 	ctx := context.Background()
-	tx, base, path := reuseFixture(t, "MAL-2026-2")
+	tx, base, _ := reuseFixture(t, "MAL-2026-2")
 	prep := tx.prep.record
 	raw, e := tx.store.readRef(ctx, prep.SourceIDs, 1<<20)
 	if e != nil {
@@ -158,17 +159,24 @@ func TestReusedSourceIDsEqualBytesReplacementCannotSupplyNetworkAuthority(t *tes
 		t.Fatal(e)
 	}
 	passes, calls := 0, 0
+	replaced := false
 	walk := func(emit func(indexUpdateAction) error) error {
 		passes++
 		if passes == 2 {
-			name := filepath.Join(path, objectPath(prep.SourceIDs))
-			temp := name + ".test-replacement"
-			if e := os.WriteFile(temp, raw, 0600); e != nil {
-				return e
+			// Complete an actual same-byte slot replacement while the old
+			// metadata original stays retained; failure to mutate is not proof.
+			file, e := tx.store.owner.CopyExclusive(ctx, tx.path+"/test-replacement", bytes.NewReader(raw), uint64(len(raw)))
+			if e != nil {
+				t.Fatal("replacement fixture was not created", e)
 			}
-			if e := os.Rename(temp, name); e != nil {
-				return e
+			defer file.Close()
+			if e := tx.store.owner.Publish(ctx, file, objectPath(prep.SourceIDs), true); e != nil {
+				t.Fatal("replacement fixture was not executed", e)
 			}
+			if e := file.Close(); e != nil {
+				t.Fatal("replacement fixture did not close", e)
+			}
+			replaced = true
 		}
 		return emit(indexUpdateAction{updateAction: updateAction{ID: row.ID, Old: &row, Fetch: true}, inBase: true})
 	}
@@ -176,8 +184,8 @@ func TestReusedSourceIDsEqualBytesReplacementCannotSupplyNetworkAuthority(t *tes
 		calls++
 		return responseEvidence{}, ErrUnavailable
 	}
-	if _, e := reuseIndexDraft(ctx, tx, base, prep, []ObjectRef{prep.SourceIDs}, walk, fetch); e == nil || calls != 0 {
-		t.Fatal("reopened checksum-equal name supplied network IDs", e, calls)
+	if _, e := reuseIndexDraft(ctx, tx, base, prep, []ObjectRef{prep.SourceIDs}, walk, fetch); e == nil || calls != 0 || !replaced {
+		t.Fatal("reopened checksum-equal name supplied network IDs or fixture did not replace", e, calls, replaced)
 	}
 	if _, e := tx.seal(ctx, base); e == nil {
 		t.Fatal("metadata binding failure did not poison the transaction")

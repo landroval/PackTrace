@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"packtrace/internal/testfile"
 )
 
 func TestOwnedStreamNestedOriginalAndNoOverwrite(t *testing.T) {
@@ -82,7 +84,7 @@ func TestOwnedStreamRetainsFailedBytesAndRefusesEscape(t *testing.T) {
 	if e := f.Stable(); e == nil {
 		t.Fatal("failed stream became valid")
 	}
-	raw, e := readOwnedFixture(filepath.Join(path, "partial"))
+	raw, e := testfile.Read(filepath.Join(path, "partial"))
 	if e != nil || string(raw) != "partial" {
 		t.Fatal("partial bytes discarded")
 	}
