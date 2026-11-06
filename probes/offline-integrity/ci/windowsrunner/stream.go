@@ -88,6 +88,7 @@ var requiredIntelligenceCases = []string{
 	"packtrace/internal/intelstore#TestPruneRealReaderMustExitAndReapBeforeHistoryBecomesCandidate",
 	"packtrace/internal/intelstore#TestSnapshotDiskReaderUsesActualPreparedGeneration",
 	"packtrace/internal/intelstore#TestIncrementalReprojectsOnlyChangedOriginalsButPreservesWholeCatalog",
+	"packtrace/internal/intelstore#TestChangedOriginalReusesEmptyPartitionsButStillRequiresTheirActualObject",
 	"packtrace/internal/intelstore#TestGlobalSpacedIDSurvivesGroupingAndCursorWithoutFetchAuthority",
 	"packtrace/internal/execution#TestScanIntelligenceWorkerUsesFixedGenerationAfterSelectorMutation",
 	"packtrace/internal/execution#TestScanIntelligenceCloseFailureStaysIncompleteAcrossFinish",

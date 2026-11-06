@@ -27,13 +27,17 @@ class Validation(unittest.TestCase):
 
     def test_required_intelligence_cases_need_exact_positive_terminal_events(self):
         required = validation.INTELLIGENCE_CASES
-        self.assertEqual(len(required), 15)
+        self.assertEqual(len(required), 16)
+        self.assertIn('packtrace/internal/intelstore#TestChangedOriginalReusesEmptyPartitionsButStillRequiresTheirActualObject', required)
         self.assertIn('packtrace/internal/intelstore#TestParentGenerationPinOutlivesActualReaderChild', required)
         self.assertIn('packtrace/cmd/packtrace#TestScanSnapshotPinSurvivesComparisonAndStalledOutputUntilFinish', required)
         events = [dict(Action='pass', Package=key.split('#')[0], Test=key.split('#')[1]) for key in required]
         def encode(rows):
             return ''.join(json.dumps(row)+'\n' for row in rows).encode()
         self.assertEqual(validation.intelligence_cases(encode(events)), list(required))
+        for missing in range(len(events)):
+            with self.subTest(missing=required[missing]), self.assertRaises(ValueError):
+                validation.intelligence_cases(encode(events[:missing]+events[missing+1:]))
         for bad in (events[1:], [dict(events[0], Action='skip')]+events[1:],
                     [dict(events[0], Package='wrong-package')]+events[1:],
                     events+[events[0]], events+[dict(events[0], Action='fail')]):

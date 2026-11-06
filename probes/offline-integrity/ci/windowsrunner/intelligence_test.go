@@ -8,7 +8,7 @@ import (
 )
 
 func TestRequiredIntelligenceCasesNeedExactPositiveTerminalEvents(t *testing.T) {
-	if len(requiredIntelligenceCases) != 14 {
+	if len(requiredIntelligenceCases) != 15 || !strings.Contains(strings.Join(requiredIntelligenceCases, "\n"), "packtrace/internal/intelstore#TestChangedOriginalReusesEmptyPartitionsButStillRequiresTheirActualObject") {
 		t.Fatal("missing required cross-platform lifecycle cases")
 	}
 	type event struct{ Action, Package, Test string }
@@ -31,7 +31,12 @@ func TestRequiredIntelligenceCasesNeedExactPositiveTerminalEvents(t *testing.T) 
 	if e != nil || strings.Join(got, "\n") != strings.Join(requiredIntelligenceCases, "\n") {
 		t.Fatal("complete cases not retained", got, e)
 	}
-	bad := [][]byte{encode(rows[1:]), good[:len(good)-1], append(append([]byte(nil), good...), encode(rows[:1])...)}
+	bad := [][]byte{good[:len(good)-1], append(append([]byte(nil), good...), encode(rows[:1])...)}
+	for missing := range rows {
+		remaining := append([]event(nil), rows[:missing]...)
+		remaining = append(remaining, rows[missing+1:]...)
+		bad = append(bad, encode(remaining))
+	}
 	for _, field := range []string{"skip", "wrong-package", "fail"} {
 		changed := append([]event(nil), rows...)
 		if field == "wrong-package" {

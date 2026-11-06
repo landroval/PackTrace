@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -367,11 +368,15 @@ func reuseIndexDraft(ctx context.Context, t *Transaction, base generationDraft, 
 	var blocks [256]ObjectRef
 	var counts [256]uint64
 	var memberships uint64
+	emptyDigest := sha256.Sum256(nil)
 	for i := range blocks {
 		old := manifest.Blocks[i].Reference
 		oldRef := ObjectRef{old.SHA256, old.Bytes}
-		// Without changed originals or ordinal insertions every old row is identical.
-		if len(changed) == 0 && len(insertions) == 0 && fresh.counts[i] == 0 {
+		// Empty partitions have no rows to remove/remap. Keep their canonical
+		// reference; seal still verifies the actual mandatory empty object.
+		unchanged := len(changed) == 0 && len(insertions) == 0
+		empty := old.Records == 0 && old.Bytes == 0 && old.SHA256 == emptyDigest
+		if fresh.counts[i] == 0 && (unchanged || empty) {
 			blocks[i], counts[i] = oldRef, old.Records
 			memberships += counts[i]
 			continue
