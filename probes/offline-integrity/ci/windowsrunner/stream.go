@@ -107,12 +107,16 @@ var requiredIntelligenceCases = []string{
 }
 
 func intelligenceCases(data []byte) ([]string, error) {
+	return intelligenceCasesRequired(data, requiredIntelligenceCases)
+}
+
+func intelligenceCasesRequired(data []byte, requiredCases []string) ([]string, error) {
 	c, e := testCounts(data)
 	if e != nil || c.Failed != 0 || c.BuildFailed != 0 {
 		return nil, errors.New("invalid-intelligence-test-stream")
 	}
-	passed := make(map[string]bool, len(requiredIntelligenceCases))
-	for _, key := range requiredIntelligenceCases {
+	passed := make(map[string]bool, len(requiredCases))
+	for _, key := range requiredCases {
 		passed[key] = false
 	}
 	scan := bufio.NewScanner(bytes.NewReader(data))
@@ -141,7 +145,7 @@ func intelligenceCases(data []byte) ([]string, error) {
 			return nil, errors.New("missing-intelligence-case")
 		}
 	}
-	return append([]string(nil), requiredIntelligenceCases...), nil
+	return append([]string(nil), requiredCases...), nil
 }
 
 func testCounts(data []byte) (counts, error) {

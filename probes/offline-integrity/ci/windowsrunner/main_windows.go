@@ -71,6 +71,9 @@ type receipt struct {
 	ValidationPassed                                            bool
 	DiagnosticCompleted                                         bool   `json:",omitempty"`
 	CompatibilityPassed                                         bool   `json:",omitempty"`
+	CorpusShard, CorpusShardPattern, CorpusInventorySHA256      string `json:",omitempty"`
+	CorpusInventoryCount                                        int    `json:",omitempty"`
+	CorpusShardCommandsPassed                                   bool   `json:",omitempty"`
 	CompatibilityScope                                          string `json:",omitempty"`
 	Wow64Machine, HostMachine                                   uint16 `json:",omitempty"`
 	ProcessArchitecture                                         string `json:",omitempty"`
@@ -272,6 +275,11 @@ func mainCode() (code int) {
 		r.Failure = "runner-profile"
 		return
 	}
+	shard, shardErr := corpusShardSelection(os.Getenv("VALIDATION_PROFILE"), os.Getenv("CORPUS_SHARD"))
+	if shardErr != nil {
+		r.Failure = "runner-corpus-shard"
+		return
+	}
 	compatibility := os.Getenv("VALIDATION_PROFILE") == "windows11-x64-compat-arm64-v1"
 	if compatibility {
 		r.CompatibilityScope = "Windows11-client-ARM64-host-x64-emulation; CGO0; race-not-run; not-native-x64-qualification"
@@ -384,6 +392,27 @@ func mainCode() (code int) {
 		r.Failure = "harness-self-check-stream"
 		return
 	}
+	var pattern string
+	var corpusDeadline time.Time
+	if shard >= 0 {
+		// Inventory and execution SHARE the existing 700s root allocation.
+		corpusDeadline = time.Now().Add(time.Duration(rootCorpusSeconds(true)) * time.Second)
+		listed, ok := command("corpus-inventory", goexe, []string{"test", "-count=1", "-list", "^(Test|Example|Fuzz)", "-json", "-timeout=85s", "./..."}, 90, "0")
+		if !ok {
+			return
+		}
+		diagnostics("corpus-inventory", "stdout", listed)
+		var inventory []string
+		var e error
+		pattern, inventory, e = corpusShardPattern(listed, shard)
+		if e != nil {
+			r.Failure = "corpus-inventory"
+			return
+		}
+		sum := sha256.Sum256([]byte(strings.Join(inventory, "\n") + "\n"))
+		r.CorpusShard, r.CorpusShardPattern = fmt.Sprint(shard), pattern
+		r.CorpusInventoryCount, r.CorpusInventorySHA256 = len(inventory), hex.EncodeToString(sum[:])
+	}
 	packages := []string{"./internal/nativefs", "./internal/nativeresource", "./internal/integrityscan", "./internal/projectinventory", "./internal/intel", "./internal/intelstore", "./internal/execution", "./cmd/packtrace"}
 	tests := []struct {
 		name, cgo string
@@ -398,12 +427,23 @@ func mainCode() (code int) {
 		tests = tests[:1]
 	}
 	for _, test := range tests {
-		args := []string{"test", "-count=1", "-json", fmt.Sprintf("-timeout=%ds", test.seconds-5)}
+		seconds := test.seconds
+		if shard >= 0 {
+			seconds = int(time.Until(corpusDeadline) / time.Second)
+			if seconds <= 5 {
+				r.Failure = "corpus-shared-deadline"
+				return
+			}
+		}
+		args := []string{"test", "-count=1", "-json", fmt.Sprintf("-timeout=%ds", seconds-5)}
+		if shard >= 0 {
+			args = append(args, "-run="+pattern)
+		}
 		if test.cgo == "1" {
 			args = append(args, "-race")
 		}
 		args = append(args, test.args...)
-		out, ok := command(test.name, goexe, args, test.seconds, test.cgo)
+		out, ok := command(test.name, goexe, args, seconds, test.cgo)
 		if !ok {
 			return
 		}
@@ -415,7 +455,7 @@ func mainCode() (code int) {
 			return
 		}
 		if test.name != "race-original-wider-reproducer" {
-			cases, e := intelligenceCases(out)
+			cases, e := intelligenceCasesRequired(out, corpusShardRequirements(shard))
 			if e != nil {
 				r.Failure = "intelligence-case-evidence"
 				diagnostics(test.name, "stdout", out)
@@ -441,8 +481,13 @@ func mainCode() (code int) {
 		return
 	}
 	if compatibility {
-		r.Native = "emulated-compatibility-passed-not-native-x64"
-		r.CompatibilityPassed = true
+		if shard >= 0 {
+			r.Native = "emulated-shard-commands-passed-not-full-compatibility"
+			r.CorpusShardCommandsPassed = true
+		} else {
+			r.Native = "emulated-compatibility-passed-not-native-x64"
+			r.CompatibilityPassed = true
+		}
 		// Deliberately keep ValidationPassed false; server native/race evidence
 		// and desktop emulated compatibility remain separately attributable.
 	} else {
