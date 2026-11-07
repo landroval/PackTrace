@@ -58,6 +58,10 @@ func matchingFaultFrames(c *channel, cfg scanConfig, mode string) int {
 		d.Observation = 2
 	case "matching-bad-sequence":
 		d.Sequence = 1
+	case "matching-problem-unbound":
+		d.FirstVersionProblem = &integrityscan.AdvisoryVersionProblem{Scope: "affected", Kind: "version-outside-profile", Version: 0, Range: -1, Event: -1}
+	case "matching-problem-private-kind":
+		d.FirstVersionProblem = &integrityscan.AdvisoryVersionProblem{Scope: "affected", Kind: "PRIVATE-untrusted-condition", Version: -1, Range: -1, Event: -1}
 	}
 	if mode == "matching-zero-work-limit" {
 		s.Decisions, s.Observations, s.Work = 0, 0, 0
@@ -99,7 +103,7 @@ func TestMatchingProtocolRequiresExactClosedParentScope(t *testing.T) {
 	// Independent owned streams can share the test runner's existing bounded
 	// parallelism; race-runtime teardown need not serialize fourteen children.
 	t.Parallel()
-	for _, mode := range []string{"matching-valid", "matching-bad-source", "matching-bad-eligibility", "matching-private-gap", "matching-wrong-observation", "matching-bad-sequence", "matching-duplicate-decision", "matching-bad-count", "matching-zero-work-limit", "matching-missing-closure", "matching-duplicate-closure", "matching-late-decision", "matching-after-done", "matching-crash-after-closure", "matching-local-valid", "matching-local-unsolicited", "matching-local-missing-closure", "matching-local-absolute", "matching-local-bad-count"} {
+	for _, mode := range []string{"matching-valid", "matching-bad-source", "matching-bad-eligibility", "matching-private-gap", "matching-wrong-observation", "matching-bad-sequence", "matching-problem-unbound", "matching-problem-private-kind", "matching-duplicate-decision", "matching-bad-count", "matching-zero-work-limit", "matching-missing-closure", "matching-duplicate-closure", "matching-late-decision", "matching-after-done", "matching-crash-after-closure", "matching-local-valid", "matching-local-unsolicited", "matching-local-missing-closure", "matching-local-absolute", "matching-local-bad-count"} {
 		t.Run(mode, func(t *testing.T) {
 			t.Parallel()
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

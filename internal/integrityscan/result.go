@@ -221,7 +221,7 @@ func Render(r Report, format string) ([]byte, error) {
 	if !validRenderedAdvisories(r) {
 		return nil, errors.New("scan: report-failed")
 	}
-	if r.Intelligence != nil && ((r.SchemaVersion != "1.2" && r.SchemaVersion != "1.3" && r.SchemaVersion != "1.4") || ValidateIntelligence(*r.Intelligence) != nil) {
+	if r.Intelligence != nil && (!oneOf(r.SchemaVersion, "1.2", "1.3", "1.4", "1.5") || ValidateIntelligence(*r.Intelligence) != nil) {
 		return nil, errors.New("scan: report-failed")
 	}
 	if r.Inventory != nil && projectinventory.ValidatePublic(*r.Inventory) != nil {

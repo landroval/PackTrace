@@ -25,12 +25,13 @@ func BuildReportWithAdvisories(plan Plan, records []Record, summary Summary, res
 	if plan.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) == 0 {
 		return r
 	}
-	r.SchemaVersion = "1.4"
+	r.SchemaVersion = "1.5"
 	a := AdvisoryReport{State: "unavailable", Decisions: []AdvisoryDecision{}, Summary: AdvisorySummary{Gaps: []string{}}}
 	if advisories != nil && inventory != nil && intelligence != nil && validateAdvisoryReport(plan, *inventory, *intelligence, *advisories) {
 		a = *advisories
 		a.Decisions = append([]AdvisoryDecision{}, advisories.Decisions...)
 		for i := range a.Decisions {
+			a.Decisions[i].FirstVersionProblem = cloneAdvisoryVersionProblem(advisories.Decisions[i].FirstVersionProblem)
 			a.Decisions[i].Gaps = append([]string{}, advisories.Decisions[i].Gaps...)
 			a.Decisions[i].Support = append([]AdvisorySupport{}, advisories.Decisions[i].Support...)
 		}
@@ -91,12 +92,19 @@ func validateAdvisoryReport(plan Plan, inventory projectinventory.PublicInventor
 // above additionally uses the parent-selected policy and admitted inventory.
 func validRenderedAdvisories(r Report) bool {
 	if r.Advisories == nil {
-		return r.SchemaVersion != "1.3" && r.SchemaVersion != "1.4"
+		return !oneOf(r.SchemaVersion, "1.3", "1.4", "1.5")
 	}
-	if r.SchemaVersion != "1.3" && r.SchemaVersion != "1.4" {
+	if !oneOf(r.SchemaVersion, "1.3", "1.4", "1.5") {
 		return false
 	}
 	a := r.Advisories
+	if r.SchemaVersion != "1.5" {
+		for _, d := range a.Decisions {
+			if d.FirstVersionProblem != nil {
+				return false
+			}
+		}
+	}
 	if a.State == "unavailable" {
 		return a.Local == nil && a.Decisions != nil && len(a.Decisions) == 0 && a.Findings == 0 && a.Summary.Decisions == 0 && a.Summary.Observations == 0 && a.Summary.TotalObservations == 0 && a.Summary.InstalledObservations == 0 && a.Summary.TotalInstalledObservations == 0 && a.Summary.Work == 0 && a.Summary.BytesRead == 0 && a.Summary.Gaps != nil && len(a.Summary.Gaps) == 0
 	}
@@ -123,6 +131,9 @@ func renderAdvisories(out *strings.Builder, a *AdvisoryReport, inventory *projec
 			if advisory, ok := advisories[d.Advisory]; ok {
 				fmt.Fprintf(out, "  Local advisory: id=%q original-sha256=%s\n", advisory.ID, advisory.SHA256)
 			}
+		}
+		if p := d.FirstVersionProblem; p != nil {
+			fmt.Fprintf(out, "  First version problem: kind=%q scope=%q version=%d range=%d event=%d\n", p.Kind, p.Scope, p.Version, p.Range, p.Event)
 		}
 		for _, support := range d.Support {
 			fmt.Fprintf(out, "  Support version=%d range=%d\n", support.Version, support.Range)

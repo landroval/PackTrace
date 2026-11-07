@@ -105,7 +105,9 @@ Raw advisories, private paths and source key/MAC stay private.
 See [intelligence compatibility](docs/intelligence-compatibility.md) for exact
 command effects, source/license profiles, limits and qualification gaps, and the
 [usable matching contract](docs/increments/issue-6-usable-advisory-scan.md) for
-both categories, distinct evidence, scale and privacy. Bounded fixtures and local tests do not qualify an unrestricted
+both categories, distinct evidence, scale and privacy, plus the
+[first-condition explanation](docs/increments/issue-6-explain-version-conditions.md)
+for a fixed first blocker with numeric source positions (advisory schema1.5). Bounded fixtures and local tests do not qualify an unrestricted
 feed/category corpus, every native platform, or a release.
 
 ## Scoped installed ownership

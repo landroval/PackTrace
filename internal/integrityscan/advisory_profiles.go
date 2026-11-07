@@ -21,6 +21,7 @@ type AdvisoryQualification struct {
 
 var githubProfileID = regexp.MustCompile(`^GHSA-[23456789cfghjmpqrvwx]{4}-[23456789cfghjmpqrvwx]{4}-[23456789cfghjmpqrvwx]{4}$`)
 var githubProfileDate = regexp.MustCompile(`^[0-9]{4}/(0[1-9]|1[0-2])$`)
+var advisoryCWEID = regexp.MustCompile(`^CWE-[1-9][0-9]{0,6}$`)
 
 // qualifyAdvisory requires the verified original and unchanged projections. The
 // caller must separately qualify OSV acquisition and the selected affected binding.
@@ -81,12 +82,15 @@ func qualifyAdvisory(record intel.SnapshotOriginalEvidence, affectedIndex int, n
 		}
 		db, ok := closedObject(a["database_specific"], "source", "cwes")
 		var source string
-		if !ok || json.Unmarshal(db["source"], &source) != nil || !profileStringList(db["cwes"], 256) {
+		if !ok || json.Unmarshal(db["source"], &source) != nil {
 			return unsupported(true)
 		}
 		c, p := advisorySourceProfile(source, id, name)
 		if c == "" || (category != "" && (category != c || profile != p)) {
 			return unsupported(false)
+		}
+		if !advisoryAffectedCWEs(db["cwes"], p) {
+			return unsupported(true)
 		}
 		category, profile = c, p
 	}
@@ -145,6 +149,29 @@ func profileStringList(raw json.RawMessage, limit int) bool {
 	}
 	for _, value := range values {
 		if !text(value, 256) {
+			return false
+		}
+	}
+	return true
+}
+
+// OpenSSF also supplies bounded descriptive CWE objects. They are informational:
+// only the independently qualified exact source path determines advisory type.
+func advisoryAffectedCWEs(raw json.RawMessage, profile string) bool {
+	if profileStringList(raw, 256) {
+		return true
+	}
+	if profile != "osv-openssf-malicious-v1" {
+		return false
+	}
+	var values []json.RawMessage
+	if json.Unmarshal(raw, &values) != nil || values == nil || len(values) > 256 {
+		return false
+	}
+	for _, value := range values {
+		fields, ok := closedObject(value, "cweId", "name", "description")
+		var id, name, description string
+		if !ok || len(fields) != 3 || json.Unmarshal(fields["cweId"], &id) != nil || !advisoryCWEID.MatchString(id) || json.Unmarshal(fields["name"], &name) != nil || !text(name, 256) || json.Unmarshal(fields["description"], &description) != nil || !text(description, 4096) {
 			return false
 		}
 	}
