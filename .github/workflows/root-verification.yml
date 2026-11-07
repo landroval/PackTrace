@@ -13,6 +13,10 @@ on:
       expected_sha:
         type: string
         default: ''
+      corpus_shard:
+        type: choice
+        default: unsharded
+        options: [unsharded, '0', '1', '2']
       owned_confirmation:
         type: string
         default: ''
@@ -20,11 +24,12 @@ permissions: {}
 jobs:
   root:
     if: >-
-      ${{ github.event_name != 'workflow_dispatch' || inputs.validation_profile == '' ||
-          inputs.validation_profile == 'root' ||
-          (github.repository == 'landroval/PackTrace' && github.event.repository.private == false &&
-           (inputs.validation_profile == 'linux-scan-amd64-v1' || inputs.validation_profile == 'linux-scan-arm64-v1') && inputs.expected_sha == github.sha &&
-           inputs.owned_confirmation == 'owned-linux-fixtures-only') }}
+      ${{ github.event_name != 'workflow_dispatch' ||
+          ((inputs.corpus_shard == '' || inputs.corpus_shard == 'unsharded') &&
+           (inputs.validation_profile == '' || inputs.validation_profile == 'root' ||
+            (github.repository == 'landroval/PackTrace' && github.event.repository.private == false &&
+             (inputs.validation_profile == 'linux-scan-amd64-v1' || inputs.validation_profile == 'linux-scan-arm64-v1') && inputs.expected_sha == github.sha &&
+             inputs.owned_confirmation == 'owned-linux-fixtures-only'))) }}
     name: Root tests and vet
     runs-on: ${{ github.event_name == 'workflow_dispatch' && inputs.validation_profile == 'linux-scan-arm64-v1' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     timeout-minutes: ${{ github.event_name == 'workflow_dispatch' && (inputs.validation_profile == 'linux-scan-amd64-v1' || inputs.validation_profile == 'linux-scan-arm64-v1') && 35 || 15 }}
@@ -451,6 +456,7 @@ jobs:
       SOURCE_SHA: ${{ github.sha }}
       EXPECTED_SHA: ${{ inputs.expected_sha }}
       VALIDATION_PROFILE: ${{ inputs.validation_profile }}
+      CORPUS_SHARD: ${{ inputs.corpus_shard }}
       REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
       OWNED_CONFIRMATION: ${{ inputs.owned_confirmation }}
     steps:

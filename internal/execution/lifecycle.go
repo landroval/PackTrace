@@ -29,12 +29,14 @@ var errJoin = errors.New("inspect-batch: cleanup-unconfirmed")
 var errOutput = errors.New("cli: output-failed")
 
 type runState struct {
-	mu       sync.Mutex // one live role, including concurrent WriteOutput calls
-	budget   traffic
-	deadline time.Time
-	caller   context.Context
-	broken   bool
-	scan     *scanLifecycle // opt-in only from RunScan; nil for all legacy batch roles
+	mu           sync.Mutex // one live role, including concurrent WriteOutput calls
+	budget       traffic
+	deadline     time.Time
+	caller       context.Context
+	broken       bool
+	scan         *scanLifecycle         // opt-in retained observer; nil for all legacy batch roles
+	preparation  bool                   // only the fixed Intel preparation constructor
+	intelligence *scanIntelligenceOwner // original roots/pin retained to final reap
 }
 
 func newRunState(ctx context.Context) *runState {
@@ -43,6 +45,16 @@ func newRunState(ctx context.Context) *runState {
 		deadline = d
 	}
 	return &runState{deadline: deadline, caller: ctx}
+}
+
+// Only explicit intelligence preparation gets15min; legacy constructors and
+// their output roles keep the existing5min absolute budget.
+func newIntelRunState(ctx context.Context) *runState {
+	deadline := time.Now().Add(15 * time.Minute)
+	if d, ok := ctx.Deadline(); ok && d.Before(deadline) {
+		deadline = d
+	}
+	return &runState{deadline: deadline, caller: ctx, preparation: true}
 }
 func (s *runState) work(ctx context.Context) (context.Context, context.CancelFunc) {
 	work, cancel := context.WithDeadline(s.caller, s.deadline)
@@ -102,11 +114,18 @@ func configureLaunch(cmd *exec.Cmd, role string, files ...*os.File) (string, fun
 // Metadata is supplied only by the trusted launch, never a path/handle from
 // JSONL. This capability is consistency/private-entry gating, not a sandbox.
 func launchCapability(role string) (string, []uintptr, error) {
-	arg := WorkerArgument
-	if role == "writer" || role == "scan-writer" {
+	var arg string
+	switch role {
+	case "parser":
+		arg = WorkerArgument
+	case "writer", "scan-writer", "intel-writer":
 		arg = WriterArgument
-	} else if role == "scan" {
+	case "scan":
 		arg = ScanWorkerArgument
+	case "intel":
+		arg = IntelWorkerArgument
+	default:
+		return "", nil, errProtocol
 	}
 	if len(os.Args) != 2 || os.Args[1] != arg || os.Getenv(launchRole) != role {
 		return "", nil, errProtocol
@@ -117,7 +136,7 @@ func launchCapability(role string) (string, []uintptr, error) {
 		return "", nil, errProtocol
 	}
 	names := []string{launchHandle}
-	if role == "writer" || role == "scan-writer" {
+	if role == "writer" || role == "scan-writer" || role == "intel-writer" {
 		names = append(names, launchData)
 	} else if os.Getenv(launchData) != "" {
 		return "", nil, errProtocol

@@ -17,6 +17,7 @@ func (*nativeRoot) lookup(string, bool) (*object, error)                 { retur
 func (*nativeRoot) check(string, stamp) error                            { return ErrUnavailable }
 func statNative(*os.File) (stamp, error)                                 { return stamp{}, ErrUnavailable }
 func (*nativeRoot) bindExternal(*nativeRoot) error                       { return ErrUnavailable }
+func (*nativeRoot) bindPublication(*nativeRoot) error                    { return ErrUnavailable }
 func (*nativeRoot) subroot(string) (*nativeRoot, error)                  { return nil, ErrUnavailable }
 func (*nativeRoot) lookupMode(string, bool, bool, bool) (*object, error) { return nil, ErrUnavailable }
 func (*nativeRoot) validateRead(*os.File, stamp, bool) error             { return ErrUnavailable }

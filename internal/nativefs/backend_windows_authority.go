@@ -59,8 +59,10 @@ func (r *nativeRoot) guard() error {
 	}
 	return nil
 }
-func (r *nativeRoot) bindExternal(target *nativeRoot) error {
-	if r.external != nil || r.parent != nil || target.external != nil || target.parent != nil {
+func (r *nativeRoot) bindExternal(target *nativeRoot) error    { return r.bindSeparated(target, false) }
+func (r *nativeRoot) bindPublication(target *nativeRoot) error { return r.bindSeparated(target, true) }
+func (r *nativeRoot) bindSeparated(target *nativeRoot, publication bool) error {
+	if r.external != nil || r.parent != nil || target.external != nil || (!publication && target.parent != nil) {
 		return ErrPath
 	}
 	// Different volumes and unprovable bootstrap conditions are unavailable, not
@@ -83,6 +85,18 @@ func (r *nativeRoot) bindExternal(target *nativeRoot) error {
 		b[i] = target.chain[i].initial
 	}
 	common, e := winDisjointChains(a, b)
+	if publication {
+		// An existing parent can be an ancestor of state, never its descendant.
+		// Exclusive leaf publication cannot replace that existing state edge.
+		common = -1
+		for i := 0; i < len(a) && i < len(b) && winSame(a[i], b[i]); i++ {
+			common = i
+		}
+		if common < 0 || common == len(b)-1 {
+			return ErrPath
+		}
+		e = nil
+	}
 	if e != nil {
 		return e
 	}

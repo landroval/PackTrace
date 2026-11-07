@@ -20,8 +20,12 @@ func (r *Root) OpenMetadata(ctx context.Context, name string) (*MetadataLease, e
 	if e := ctx.Err(); e != nil {
 		return nil, e
 	}
-	if e := validRelative(name); e != nil {
-		return nil, e
+	// Like directory metadata, the explicit root slot is metadata-only. Input,
+	// publication and mutation path validators retain their strict old rules.
+	if name != "." {
+		if e := validRelative(name); e != nil {
+			return nil, e
+		}
 	}
 	n, unlock, e := r.lockNative()
 	if e != nil {

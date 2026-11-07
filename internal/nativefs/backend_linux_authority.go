@@ -123,8 +123,15 @@ func disjoint(a, b []ancestor) bool {
 	}
 	return true
 }
-func (r *nativeRoot) bindExternal(target *nativeRoot) error {
-	if r.external != nil || r.parent != nil || target.external != nil || target.parent != nil {
+func (r *nativeRoot) bindExternal(target *nativeRoot) error { return r.bindSeparated(target, false) }
+func (r *nativeRoot) bindPublication(target *nativeRoot) error {
+	if e := target.guard(); e != nil {
+		return e
+	}
+	return r.bindSeparated(target, true)
+}
+func (r *nativeRoot) bindSeparated(target *nativeRoot, publication bool) error {
+	if r.external != nil || r.parent != nil || target.external != nil || (!publication && target.parent != nil) {
 		return ErrPath
 	}
 	mount, e := r.mountID()
@@ -144,7 +151,17 @@ func (r *nativeRoot) bindExternal(target *nativeRoot) error {
 		closeAncestors(a)
 		return e
 	}
-	if !disjoint(a, b) {
+	allowed := disjoint(a, b)
+	if publication {
+		allowed = true
+		for _, x := range a {
+			if sameObject(x.initial, b[0].initial) {
+				allowed = false
+				break
+			}
+		}
+	}
+	if !allowed {
 		closeAncestors(a)
 		closeAncestors(b)
 		return ErrPath

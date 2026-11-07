@@ -60,6 +60,9 @@ var (
 	ErrLimit       = errors.New("nativefs: limit")
 	ErrUnstable    = errors.New("nativefs: unstable")
 	ErrRead        = errors.New("nativefs: read-failed")
+	ErrWrite       = errors.New("nativefs: write-failed")
+	ErrBusy        = errors.New("nativefs: lease-busy")
+	ErrExists      = errors.New("nativefs: destination-exists")
 )
 
 const maxTotal int64 = 16 << 30
@@ -74,6 +77,8 @@ type Root struct {
 	// Only native constructors can mint external/subroot bindings.
 	anchor *Root
 	budget *Root
+	// Present only on the separately minted owned-directory read view.
+	owned *ownedNative
 }
 type File struct {
 	mu                   sync.Mutex
@@ -251,12 +256,19 @@ func (r *Root) lockNative() (*nativeRoot, func(), error) {
 			return nil, nil, ErrClosed
 		}
 	}
-	return r.native, func() {
+	unlock := func() {
 		if r.anchor != nil {
 			r.anchor.mu.Unlock()
 		}
 		r.mu.Unlock()
-	}, nil
+	}
+	if r.owned != nil {
+		if err := r.owned.guard(r.native); err != nil {
+			unlock()
+			return nil, nil, err
+		}
+	}
+	return r.native, unlock, nil
 }
 
 func (r *Root) lookup(ctx context.Context, name string, follow bool) (*object, error) {
@@ -295,11 +307,20 @@ func (r *Root) OpenRegular(ctx context.Context, name string, maxbytes int64) (*F
 func (r *Root) OpenInput(ctx context.Context, name string, maxbytes int64) (*File, error) {
 	return r.openRegular(ctx, name, maxbytes, true)
 }
+
+// OpenDistributionInput admits only the explicitly selected offline transport
+// profile. Ordinary target/input calls retain their existing512MiB ceiling.
+func (r *Root) OpenDistributionInput(ctx context.Context, name string) (*File, error) {
+	return r.openRegularBounded(ctx, name, 16<<30, true, 16<<30)
+}
 func (r *Root) openRegular(ctx context.Context, name string, maxbytes int64, input bool) (*File, error) {
+	return r.openRegularBounded(ctx, name, maxbytes, input, 512<<20)
+}
+func (r *Root) openRegularBounded(ctx context.Context, name string, maxbytes int64, input bool, ceiling int64) (*File, error) {
 	if err := validRelative(name); err != nil {
 		return nil, err
 	}
-	if maxbytes < 0 || maxbytes > 512<<20 {
+	if maxbytes < 0 || maxbytes > ceiling {
 		return nil, ErrLimit
 	}
 	o, err := r.lookupMode(ctx, name, true, true, input)

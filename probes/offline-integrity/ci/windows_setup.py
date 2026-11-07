@@ -11,6 +11,8 @@ import sys
 import urllib.request
 import zipfile
 
+from windows_shards import select_shard
+
 SIZE = 78931360
 SHA = 'a3911b5e0e1b1053f25ed0675f4c1c6aad1e2bfcf253df2b9be4caabd2edd95d'
 URL = 'https://go.dev/dl/go1.27.1.windows-amd64.zip'
@@ -23,6 +25,7 @@ def compatibility_profile(env,machine,facts):
             or not re.fullmatch('[0-9a-f]{40}',env.get('SOURCE_SHA','')) or env['SOURCE_SHA']!=env.get('EXPECTED_SHA')):
         raise ValueError('environment-outside-profile')
     profile=env.get('VALIDATION_PROFILE')
+    select_shard(env)  # Reject conflicting/unknown selectors BEFORE SDK acquisition.
     if profile=='windows11-x64-compat-arm64-v1':
         if facts['major']!=10 or facts['build']<22000 or facts['product_type']!=1 or facts['native_machine']!=0xaa64:
             raise ValueError('not-client-windows11-arm64')
@@ -167,6 +170,7 @@ def main():
                                             'sdkBytes': SIZE, 'expandedBytes': expanded, 'goVersion': version,
                                             'compiler': str(cc), 'os': platform.platform(), 'windowsFacts':facts,
                                             'compatibilityOnly':compatibility,
+                                            'corpusShard':os.environ.get('CORPUS_SHARD') or 'unsharded',
                                             'imageOS': os.environ.get('ImageOS'), 'imageVersion': os.environ.get('ImageVersion')}))
 
 

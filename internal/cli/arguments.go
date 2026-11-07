@@ -11,6 +11,13 @@ const (
 	ArgumentActionHelp
 	ArgumentActionScanHelp
 	ArgumentActionVersion
+	ArgumentActionIntelSync
+	ArgumentActionIntelImport
+	ArgumentActionIntelExport
+	ArgumentActionIntelStatus
+	ArgumentActionIntelPin
+	ArgumentActionIntelUnpin
+	ArgumentActionCachePrune
 )
 
 // ArgumentChecks is requested category membership, not qualified coverage.
@@ -35,12 +42,16 @@ const (
 	ArgumentOptionStateDir
 	ArgumentOptionOutput
 	ArgumentOptionTrustedPolicyDigest
+	ArgumentOptionTrustedSnapshotDigest
+	ArgumentOptionApplyPreview
+	ArgumentOptionFull
 )
 
 // ScanArgumentRequest is unvalidated policy/path/output request data.
 // Empty StateDir defers default resolution; no field establishes native safety.
 type ScanArgumentRequest struct {
 	Path, Manager, Format, Privacy, PolicyPath, StateDir, Output, TrustedPolicyDigest string
+	TrustedSnapshotDigest                                                             string
 	Checks, FailOn                                                                    ArgumentChecks
 	Provided                                                                          ArgumentOptions
 }
@@ -49,6 +60,7 @@ type ScanArgumentRequest struct {
 type Invocation struct {
 	Action ArgumentAction
 	Scan   ScanArgumentRequest
+	Intel  IntelArgumentRequest
 }
 
 type ArgumentErrorCode uint8
@@ -120,6 +132,8 @@ func ParseArgs(args []string) (Invocation, error) {
 			action = ArgumentActionVersion
 		}
 		return Invocation{Action: action}, nil
+	case "intel", "cache":
+		return parseIntelArgs(args)
 	case "scan":
 		if len(args) > 1 && args[1] == "--help" {
 			if len(args) != 2 {
@@ -208,6 +222,8 @@ func argumentOption(name string) ArgumentOptions {
 		return ArgumentOptionOutput
 	case "--trusted-policy-digest":
 		return ArgumentOptionTrustedPolicyDigest
+	case "--trusted-snapshot-digest":
+		return ArgumentOptionTrustedSnapshotDigest
 	default:
 		return 0
 	}
@@ -257,6 +273,11 @@ func applyArgumentOption(request *ScanArgumentRequest, option ArgumentOptions, v
 		request.StateDir = value
 	case ArgumentOptionOutput:
 		request.Output = value
+	case ArgumentOptionTrustedSnapshotDigest:
+		if !canonicalSnapshotDigest(value) {
+			return false
+		}
+		request.TrustedSnapshotDigest = value
 	case ArgumentOptionTrustedPolicyDigest:
 		if len(value) > 2048 {
 			return false

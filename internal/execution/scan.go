@@ -29,6 +29,7 @@ type ScanRun struct {
 	Records             []integrityscan.Record
 	Summary             integrityscan.Summary
 	Inventory           *projectinventory.PublicInventory
+	Intelligence        *integrityscan.Intelligence
 	Resources           integrityscan.Resources // comparison checkpoint, updated by Checkpoint/Finish
 	Operational         ScanReceipt             // populated only by Finish, never predicted in public bytes
 	Usable, Interrupted bool
@@ -52,13 +53,14 @@ func (r *ScanRun) WriteOutput(ctx context.Context, out io.Writer, data []byte) e
 }
 
 type scanConfig struct {
-	Nonce               string              `json:"nonce"`
-	Stage               string              `json:"stage"`
-	Target              string              `json:"target"`
-	PolicyPath          string              `json:"policyPath"`
-	PolicyHash          string              `json:"policyHash"`
-	TrustedPolicyDigest string              `json:"trustedPolicyDigest,omitempty"`
-	Plan                *integrityscan.Plan `json:"plan"`
+	Nonce               string                  `json:"nonce"`
+	Stage               string                  `json:"stage"`
+	Target              string                  `json:"target"`
+	PolicyPath          string                  `json:"policyPath"`
+	PolicyHash          string                  `json:"policyHash"`
+	TrustedPolicyDigest string                  `json:"trustedPolicyDigest,omitempty"`
+	Plan                *integrityscan.Plan     `json:"plan"`
+	Intelligence        *scanIntelligenceConfig `json:"intelligence,omitempty"`
 }
 type scanStart struct {
 	Stage string `json:"stage"`
@@ -97,7 +99,7 @@ func RunScan(ctx context.Context, request cli.ScanArgumentRequest) (ScanRun, err
 		return run, errors.New("scan: interrupted")
 	}
 	s.scan = newScanLifecycle(ctx, s.deadline)
-	if request.PolicyPath == "" || request.Privacy != "portable" || request.Output != "-" || request.StateDir != "" {
+	if request.PolicyPath == "" || request.Privacy != "portable" || request.Output != "-" {
 		return run, integrityscan.ErrOptions
 	}
 	target, e := filepath.Abs(request.Path)
@@ -113,13 +115,38 @@ func RunScan(ctx context.Context, request cli.ScanArgumentRequest) (ScanRun, err
 		run.Interrupted = explicitCancel(ctx)
 		return run, e
 	}
+	wantsIntelligence := request.StateDir != "" || request.TrustedSnapshotDigest != "" || request.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) != 0
+	if wantsIntelligence {
+		if request.StateDir == "" {
+			request.StateDir, e = defaultIntelStateDirectory()
+			if e != nil {
+				return run, integrityscan.ErrOptions
+			}
+		}
+		request.StateDir, e = filepath.Abs(request.StateDir)
+		if e != nil {
+			return run, integrityscan.ErrOptions
+		}
+	}
 	plan, e := integrityscan.Configure(request, observation.Policy)
 	if e != nil {
 		return run, e
 	}
 	run.Plan = plan
 	run.Usable = true
-	_, e = run.scanPhase(ctx, scanConfig{Stage: "acquire", Target: target, PolicyPath: policyPath, PolicyHash: observation.SourceHash, TrustedPolicyDigest: request.TrustedPolicyDigest, Plan: &plan})
+	var intelligence *scanIntelligenceConfig
+	if wantsIntelligence {
+		info := integrityscan.UnavailableIntelligence()
+		run.Intelligence = &info
+		owner, openErr := openScanIntelligence(ctx, target, request.StateDir, request.TrustedSnapshotDigest, nil)
+		s.intelligence = owner
+		if openErr != nil {
+			run.Usable = false
+			return run, errors.New("scan: intelligence-binding-unavailable")
+		}
+		intelligence = &owner.cfg
+	}
+	_, e = run.scanPhase(ctx, scanConfig{Stage: "acquire", Target: target, PolicyPath: policyPath, PolicyHash: observation.SourceHash, TrustedPolicyDigest: request.TrustedPolicyDigest, Plan: &plan, Intelligence: intelligence})
 	run.Interrupted = explicitCancel(ctx)
 	return run, e
 }
@@ -184,10 +211,11 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 	defer cancel()
 	monitor := newScanMonitor(cancel)
 	type phaseData struct {
-		policy    integrityscan.PolicyObservation
-		records   []integrityscan.Record
-		summary   integrityscan.Summary
-		inventory *projectinventory.PublicInventory
+		policy       integrityscan.PolicyObservation
+		records      []integrityscan.Record
+		summary      integrityscan.Summary
+		inventory    *projectinventory.PublicInventory
+		intelligence *integrityscan.Intelligence
 	}
 	parsed := make(chan phaseData, 1)
 	failure = s.runChild(phase, cmd, release, func(_ context.Context, c *channel, input io.Closer) error {
@@ -210,6 +238,7 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 		var inventory projectinventory.PublicInventory
 		inventorySequence := uint32(0)
 		inventoryClosed := false
+		intelligenceClosed := cfg.Intelligence == nil
 		for {
 			m, e := c.receive()
 			if e == io.EOF {
@@ -247,15 +276,30 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 					return errScanProtocol
 				}
 				acceptedPolicy = true
+			case "intel-state":
+				var v integrityscan.Intelligence
+				if !started || cfg.Stage != "acquire" || cfg.Intelligence == nil || data.intelligence != nil || intelligenceClosed || inventorySequence != 0 || expected != 0 || fatal != "" || decode(m.Data, &v) != nil || integrityscan.ValidateIntelligence(v) != nil {
+					return errScanProtocol
+				}
+				if v.State == "available" && (v.ID != cfg.Intelligence.Generation || v.Selection != cfg.Intelligence.Selection) {
+					return errScanProtocol
+				}
+				data.intelligence = &v
+			case "intel-closure":
+				var v scanIntelligenceClosure
+				if cfg.Intelligence == nil || data.intelligence == nil || intelligenceClosed || decode(m.Data, &v) != nil || v.States != 1 {
+					return errScanProtocol
+				}
+				intelligenceClosed = true
 			case "inventory-batch":
 				var v projectinventory.InventoryBatch
-				if !started || cfg.Stage != "acquire" || cfg.Plan == nil || inventoryClosed || pending != nil || expected != 0 || fatal != "" || decode(m.Data, &v) != nil || v.Sequence != inventorySequence || projectinventory.AppendBatch(&inventory, v) != nil {
+				if !started || cfg.Stage != "acquire" || cfg.Plan == nil || !intelligenceClosed || inventoryClosed || pending != nil || expected != 0 || fatal != "" || decode(m.Data, &v) != nil || v.Sequence != inventorySequence || projectinventory.AppendBatch(&inventory, v) != nil {
 					return errScanProtocol
 				}
 				inventorySequence++
 			case "inventory-closure":
 				var v scanInventoryClosure
-				if !started || cfg.Stage != "acquire" || inventoryClosed || pending != nil || expected != 0 || fatal != "" || decode(m.Data, &v) != nil || v.Batches != inventorySequence {
+				if !started || cfg.Stage != "acquire" || !intelligenceClosed || inventoryClosed || pending != nil || expected != 0 || fatal != "" || decode(m.Data, &v) != nil || v.Batches != inventorySequence {
 					return errScanProtocol
 				}
 				inventory.Selection = v.Selection
@@ -268,7 +312,7 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 				data.inventory = &inventory
 			case "instance":
 				var v integrityscan.Record
-				if !started || cfg.Stage != "acquire" || !inventoryClosed || cfg.Plan == nil || pending != nil || fatal != "" || decode(m.Data, &v) != nil || v.Index != expected || integrityscan.ValidateRecord(*cfg.Plan, v, cfg.PolicyHash) != nil {
+				if !started || cfg.Stage != "acquire" || !intelligenceClosed || !inventoryClosed || cfg.Plan == nil || pending != nil || fatal != "" || decode(m.Data, &v) != nil || v.Index != expected || integrityscan.ValidateRecord(*cfg.Plan, v, cfg.PolicyHash) != nil {
 					return errScanProtocol
 				}
 				pending = &v
@@ -288,7 +332,7 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 				fatal = v.Code
 			case "done":
 				var v scanDone
-				if !started || pending != nil || decode(m.Data, &v) != nil || v.Records != expected || v.Summary.Records != expected || v.Summary.ObservedEntries < 0 || v.Summary.ObservedEntries > 100000 || v.Summary.Qualified {
+				if !started || !intelligenceClosed || pending != nil || decode(m.Data, &v) != nil || v.Records != expected || v.Summary.Records != expected || v.Summary.ObservedEntries < 0 || v.Summary.ObservedEntries > 100000 || v.Summary.Qualified {
 					return errScanProtocol
 				}
 				if cfg.Stage == "policy" {
@@ -329,6 +373,9 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 		run.Summary = data.summary
 		if data.inventory != nil {
 			run.Inventory = data.inventory
+		}
+		if data.intelligence != nil {
+			run.Intelligence = data.intelligence
 		}
 	default:
 	}
@@ -447,11 +494,28 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 	if c.expect("config", &cfg) != nil || cfg.Nonce != cap || !one(cfg.Stage, "policy", "acquire") || !filepath.IsAbs(cfg.Target) || !filepath.IsAbs(cfg.PolicyPath) {
 		return 2
 	}
-	if cfg.Stage == "policy" && (cfg.Plan != nil || cfg.PolicyHash != "") {
+	if cfg.Stage == "policy" && (cfg.Plan != nil || cfg.PolicyHash != "" || cfg.Intelligence != nil) {
 		return 2
 	}
 	if cfg.Stage == "acquire" && (cfg.Plan == nil || integrityscan.ValidatePolicy(cfg.Plan.Policy) != nil || !scanSourceHash(cfg.PolicyHash) || cfg.TrustedPolicyDigest != cfg.Plan.TrustedPolicyDigest) {
 		return 2
+	}
+	if cfg.Stage == "acquire" {
+		if (cfg.Plan.StateDir != "") != (cfg.Intelligence != nil) {
+			return 2
+		}
+		if v := cfg.Intelligence; v != nil {
+			if v.Path != cfg.Plan.StateDir || v.TrustedDigest != cfg.Plan.TrustedSnapshotDigest || !filepath.IsAbs(v.Path) || !intelResultID(v.TargetBinding) || v.NowUnixNS <= 0 {
+				return 2
+			}
+			if v.Generation == "" {
+				if v.Binding != "" || v.Selection != "none" {
+					return 2
+				}
+			} else if !intelResultID(v.Generation) || !intelResultID(v.Binding) || !one(v.Selection, "current", "previous-fallback", "expected-digest") {
+				return 2
+			}
+		}
 	}
 	if _, e = c.receive(); e != io.EOF {
 		return 2
@@ -497,7 +561,16 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 			e = sender.send("policy", observed)
 		}
 	} else {
-		summary, e = integrityscan.AcquireWithInventory(ctx, cfg.Target, filepath.Dir(cfg.PolicyPath), cfg.PolicyHash, *cfg.Plan, func(r integrityscan.Record) error {
+		var intelligenceOwner *scanIntelligenceOwner
+		e = nil // The launch witness's successful empty read left io.EOF.
+		if cfg.Intelligence != nil {
+			var info integrityscan.Intelligence
+			intelligenceOwner, info, e = workerScanIntelligence(ctx, cfg.Target, *cfg.Intelligence)
+			if sender.send("intel-state", info) != nil || sender.send("intel-closure", scanIntelligenceClosure{1}) != nil {
+				e = errScanProtocol
+			}
+		}
+		emitRecord := func(r integrityscan.Record) error {
 			// Exact shape uses non-null finite collections; no portable report or
 			// child-selected public exit/coverage is sent through this role.
 			if r.Assessment.Differences == nil {
@@ -513,7 +586,8 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 				return errScanProtocol
 			}
 			return sender.send("closure", scanClosure{r.Index, len(r.Assessment.Differences), len(r.Assessment.Gaps)})
-		}, func(r projectinventory.Result) error {
+		}
+		emitInventory := func(r projectinventory.Result) error {
 			p := projectinventory.Portable(r)
 			batches := uint32(0)
 			if e := projectinventory.WalkBatches(p, func(b projectinventory.InventoryBatch) error {
@@ -526,7 +600,17 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 				return e
 			}
 			return sender.send("inventory-closure", scanInventoryClosure{Batches: batches, Selection: p.Selection, Counts: p.Counts, Complete: p.Complete})
-		})
+		}
+		if e == nil {
+			if intelligenceOwner != nil {
+				summary, e = integrityscan.AcquireFromRoot(ctx, intelligenceOwner.target, filepath.Dir(cfg.PolicyPath), cfg.PolicyHash, *cfg.Plan, emitRecord, emitInventory)
+			} else {
+				summary, e = integrityscan.AcquireWithInventory(ctx, cfg.Target, filepath.Dir(cfg.PolicyPath), cfg.PolicyHash, *cfg.Plan, emitRecord, emitInventory)
+			}
+		}
+		if intelligenceOwner != nil {
+			e = errors.Join(e, intelligenceOwner.check(ctx), intelligenceOwner.close())
+		}
 	}
 	stop()
 	if sender.resident() != nil {
@@ -551,12 +635,13 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 // scanLifecycle independently observes retained processes through runtime exit
 // and confirmed reap, including the writer. Neither mechanism is a hard cap.
 type scanMonitor struct {
-	mu        sync.Mutex
-	resources integrityscan.Resources
-	cancel    context.CancelFunc
-	last      time.Time
-	elapsed   int64
-	worker    uint64
+	mu         sync.Mutex
+	resources  integrityscan.Resources
+	cancel     context.CancelFunc
+	last       time.Time
+	elapsed    int64
+	maxElapsed int64 // zero retains the legacy5min bound
+	worker     uint64
 }
 
 func newScanMonitor(cancel context.CancelFunc) *scanMonitor {
@@ -623,7 +708,11 @@ func (m *scanMonitor) sample(s residentSample) error {
 		m.resources.QueryFailed = true
 		return errScanResource
 	}
-	if s.ElapsedMS < 0 || s.ElapsedMS > int64((5*time.Minute)/time.Millisecond) || s.ElapsedMS < m.elapsed {
+	limit := m.maxElapsed
+	if limit == 0 {
+		limit = int64((5 * time.Minute) / time.Millisecond)
+	}
+	if s.ElapsedMS < 0 || s.ElapsedMS > limit || s.ElapsedMS < m.elapsed {
 		return errScanProtocol
 	}
 	if time.Since(m.last) > 350*time.Millisecond {

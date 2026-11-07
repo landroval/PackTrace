@@ -19,8 +19,28 @@ PROFILE = 'linux-scan-amd64-v1'
 GO_SIZE = 70553950
 GO_SHA256 = '63d339f0da5ab53635a56f2490a7984dfe12dfcff22ad749f63edaf590168445'
 PACKAGES = ['./internal/nativefs', './internal/nativeresource', './internal/integrityscan',
-            './internal/projectinventory', './internal/execution', './cmd/packtrace']
+            './internal/projectinventory', './internal/intel', './internal/intelstore',
+            './internal/execution', './cmd/packtrace']
 ORIGINAL_PACKAGES = ['./internal/integrityscan', './internal/nativefs', './cmd/packtrace']
+INTELLIGENCE_CASES = (
+    'packtrace/internal/intel#TestCatalogProofReusesVerifiedMetadataWithoutChangingLegacyGaps',
+    'packtrace/internal/intelstore#TestArchiveCacheRetainsCapturedBytesButCannotHideChangedOriginalFence',
+    'packtrace/internal/nativefs#TestDurabilityBatchRetains128OriginalsThenFencesBefore129',
+    'packtrace/internal/nativefs#TestOwnedPersistentIdentityUsesNativeVolumeAndObjectGenerationNotBootNumbers',
+    'packtrace/internal/intelstore#TestStoreCreatesOwnedRootAndReopensReadOnly',
+    'packtrace/internal/intelstore#TestTransactionReservesBeforeReadingAndSerializesWriters',
+    'packtrace/internal/intelstore#TestActivationOriginalProcessCrashBeforeAndAfterPublication',
+    'packtrace/internal/intelstore#TestParentGenerationPinOutlivesActualReaderChild',
+    'packtrace/internal/intelstore#TestPruneRealReaderMustExitAndReapBeforeHistoryBecomesCandidate',
+    'packtrace/internal/intelstore#TestSnapshotDiskReaderUsesActualPreparedGeneration',
+    'packtrace/internal/intelstore#TestIncrementalReprojectsOnlyChangedOriginalsButPreservesWholeCatalog',
+    'packtrace/internal/intelstore#TestChangedOriginalReusesEmptyPartitionsButStillRequiresTheirActualObject',
+    'packtrace/internal/intelstore#TestGlobalSpacedIDSurvivesGroupingAndCursorWithoutFetchAuthority',
+    'packtrace/internal/execution#TestScanIntelligenceWorkerUsesFixedGenerationAfterSelectorMutation',
+    'packtrace/internal/execution#TestScanIntelligenceCloseFailureStaysIncompleteAcrossFinish',
+    'packtrace/cmd/packtrace#TestScanSnapshotPinSurvivesComparisonAndStalledOutputUntilFinish',
+    'packtrace/cmd/packtrace#TestScanWithMissingStateDoesNotInitialize',
+)
 
 
 class ValidationRejected(ValueError):
@@ -67,6 +87,25 @@ def test_counts(raw):
     if counts['passed'] == 0 or counts['failedEvents']:
         raise ValidationRejected('test-events-failed')
     return counts
+
+
+def intelligence_cases(raw):
+    test_counts(raw)
+    required, passed = set(INTELLIGENCE_CASES), set()
+    for event in (json.loads(line) for line in raw.splitlines()):
+        if event.get('Action') not in ('pass', 'skip') or not event.get('Test'):
+            continue
+        package, test = event.get('Package'), event['Test']
+        if not isinstance(package, str) or not isinstance(test, str):
+            raise ValidationRejected('invalid-intelligence-case')
+        key = package+'#'+test
+        if key in required:
+            if event['Action'] != 'pass' or key in passed:
+                raise ValidationRejected('intelligence-case-not-passed-once')
+            passed.add(key)
+    if passed != required:
+        raise ValidationRejected('missing-intelligence-case')
+    return list(INTELLIGENCE_CASES)
 
 
 def diagnostic(raw):
@@ -227,11 +266,13 @@ def main():
             raw = command(name, argv, settings, limit, storage)
             try:
                 counts = test_counts(raw)
+                required_cases = intelligence_cases(raw) if name != 'race-original-wider-reproducer' else []
             except (ValueError, UnicodeError):
                 publish_failure(name, {'stdout': raw, 'stderr': b'', 'phase': 'invalid-test-evidence'})
                 raise
             receipt['cases'].append({'name': name, 'counts': counts, 'cgo': settings['CGO_ENABLED'],
-                                     'command': argv, 'testStreamSHA256': hashlib.sha256(raw).hexdigest()})
+                                     'command': argv, 'testStreamSHA256': hashlib.sha256(raw).hexdigest(),
+                                     'intelligenceCases': required_cases})
         clean = command('source-after', ['/usr/bin/git', 'status', '--porcelain', '--untracked-files=all'],
                         env, min(5, end-time.monotonic()-3))
         if clean:

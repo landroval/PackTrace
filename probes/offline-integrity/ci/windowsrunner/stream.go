@@ -44,6 +44,15 @@ func desktopEmulation(compiledArch string, host uint16) bool {
 	return compiledArch == "amd64" && host == 0xaa64
 }
 
+func rootCorpusSeconds(compatibility bool) int {
+	if compatibility {
+		// No race rows in emulation: reuse its existing total allowance.
+		// The 890s supervisor/900s outer and native profiles stay unchanged.
+		return 700
+	}
+	return 270
+}
+
 func volumeDiagnostic(profile string) (bool, error) {
 	switch profile {
 	case "windows-scan-amd64-v1", "windows11-x64-compat-arm64-v1":
@@ -77,6 +86,67 @@ func (c *capture) Write(p []byte) (int, error) {
 }
 
 type counts struct{ Passed, Failed, Skipped, BuildFailed int }
+
+var requiredIntelligenceCases = []string{
+	"packtrace/internal/intelstore#TestArchiveCacheRetainsCapturedBytesButCannotHideChangedOriginalFence",
+	"packtrace/internal/intel#TestCatalogProofReusesVerifiedMetadataWithoutChangingLegacyGaps",
+	"packtrace/internal/nativefs#TestDurabilityBatchRetains128OriginalsThenFencesBefore129",
+	"packtrace/internal/intelstore#TestStoreCreatesOwnedRootAndReopensReadOnly",
+	"packtrace/internal/intelstore#TestTransactionReservesBeforeReadingAndSerializesWriters",
+	"packtrace/internal/intelstore#TestActivationOriginalProcessCrashBeforeAndAfterPublication",
+	"packtrace/internal/intelstore#TestParentGenerationPinOutlivesActualReaderChild",
+	"packtrace/internal/intelstore#TestPruneRealReaderMustExitAndReapBeforeHistoryBecomesCandidate",
+	"packtrace/internal/intelstore#TestSnapshotDiskReaderUsesActualPreparedGeneration",
+	"packtrace/internal/intelstore#TestIncrementalReprojectsOnlyChangedOriginalsButPreservesWholeCatalog",
+	"packtrace/internal/intelstore#TestChangedOriginalReusesEmptyPartitionsButStillRequiresTheirActualObject",
+	"packtrace/internal/intelstore#TestGlobalSpacedIDSurvivesGroupingAndCursorWithoutFetchAuthority",
+	"packtrace/internal/execution#TestScanIntelligenceWorkerUsesFixedGenerationAfterSelectorMutation",
+	"packtrace/internal/execution#TestScanIntelligenceCloseFailureStaysIncompleteAcrossFinish",
+	"packtrace/cmd/packtrace#TestScanSnapshotPinSurvivesComparisonAndStalledOutputUntilFinish",
+	"packtrace/cmd/packtrace#TestScanWithMissingStateDoesNotInitialize",
+}
+
+func intelligenceCases(data []byte) ([]string, error) {
+	return intelligenceCasesRequired(data, requiredIntelligenceCases)
+}
+
+func intelligenceCasesRequired(data []byte, requiredCases []string) ([]string, error) {
+	c, e := testCounts(data)
+	if e != nil || c.Failed != 0 || c.BuildFailed != 0 {
+		return nil, errors.New("invalid-intelligence-test-stream")
+	}
+	passed := make(map[string]bool, len(requiredCases))
+	for _, key := range requiredCases {
+		passed[key] = false
+	}
+	scan := bufio.NewScanner(bytes.NewReader(data))
+	scan.Buffer(make([]byte, 4096), 1<<20)
+	for scan.Scan() {
+		var event struct{ Action, Package, Test string }
+		if e := json.Unmarshal(scan.Bytes(), &event); e != nil {
+			return nil, e
+		}
+		if event.Action != "pass" && event.Action != "skip" {
+			continue
+		}
+		key := event.Package + "#" + event.Test
+		if seen, required := passed[key]; required {
+			if seen || event.Action != "pass" {
+				return nil, errors.New("intelligence-case-not-passed-once")
+			}
+			passed[key] = true
+		}
+	}
+	if e := scan.Err(); e != nil {
+		return nil, e
+	}
+	for _, seen := range passed {
+		if !seen {
+			return nil, errors.New("missing-intelligence-case")
+		}
+	}
+	return append([]string(nil), requiredCases...), nil
+}
 
 func testCounts(data []byte) (counts, error) {
 	var c counts

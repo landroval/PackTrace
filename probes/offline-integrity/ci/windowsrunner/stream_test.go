@@ -7,6 +7,21 @@ import (
 	"testing"
 )
 
+func TestCompatibilityRootBudgetReusesOnlyItsExistingSupervisorAllowance(t *testing.T) {
+	if rootCorpusSeconds(false) != 270 {
+		t.Fatal("native Windows root allocation changed")
+	}
+	root := rootCorpusSeconds(true)
+	if root != 700 {
+		t.Fatal("compatibility root allocation not reassigned", root)
+	}
+	// Source, Go version, self-check, root, vet, source-clean: compatibility
+	// does not run race rows. Keep a margin inside the unchanged supervisor.
+	if total := 10 + 10 + 90 + root + 25 + 10; total > 890-45 {
+		t.Fatal("compatibility allocation escaped its existing total", total)
+	}
+}
+
 func TestStorageFactsKeepLimitsAndHidePaths(t *testing.T) {
 	for _, tc := range []struct {
 		err   error

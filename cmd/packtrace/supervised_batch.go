@@ -21,6 +21,11 @@ func runMain(args []string, in io.Reader, out, diagnostic io.Writer) int {
 func runMainObserved(args []string, in io.Reader, out, diagnostic io.Writer, observed scanObserver) int {
 	if len(args) > 0 {
 		switch args[0] {
+		case execution.IntelWorkerArgument:
+			if len(args) != 1 {
+				return failure(diagnostic, "intel: invalid-worker-arguments")
+			}
+			return execution.IntelWorkerMain(in, out, diagnostic)
 		case execution.ScanWorkerArgument:
 			if len(args) != 1 {
 				return failure(diagnostic, "scan: invalid-worker-arguments")
