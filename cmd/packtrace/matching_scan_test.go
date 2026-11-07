@@ -86,6 +86,7 @@ func TestScanActualOfflineAdvisoryMatching(t *testing.T) {
 	if runtime.GOOS != "linux" && runtime.GOOS != "windows" {
 		t.Skip("native authored scan")
 	}
+	t.Parallel()
 	for _, tc := range []struct {
 		name, version     string
 		rule, snapshotPin bool
@@ -97,6 +98,7 @@ func TestScanActualOfflineAdvisoryMatching(t *testing.T) {
 		{"import-does-not-inherit-source-authority", "1.0.0", true, false, 0},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			target, policy, state, policyPin, snapshotPin := matchingScanFixture(t, tc.version, tc.rule)
 			formats := []string{"json"}
 			// The positive case checks all views; semantic controls need only one
@@ -158,7 +160,7 @@ func TestScanActualOfflineAdvisoryMatching(t *testing.T) {
 						}
 					}
 					a := report.Advisories
-					if report.SchemaVersion != "1.3" || report.ExitCode != 3 || report.Findings != 0 || a == nil || a.State != "observed" || a.Findings != tc.findings || a.Summary.Observations != 1 || a.Summary.TotalObservations != 1 || len(a.Decisions) == 0 {
+					if report.SchemaVersion != "1.4" || report.ExitCode != 3 || report.Findings != 0 || a == nil || a.State != "observed" || a.Findings != tc.findings || a.Summary.Observations != 1 || a.Summary.TotalObservations != 1 || len(a.Decisions) == 0 {
 						t.Fatal("actual matching/independent drift model disagrees", out.String())
 					}
 					negative, withdrawn, unsupported := false, false, false

@@ -38,6 +38,8 @@ type Policy struct {
 	MinimumAssurance       string          `json:"minimumAssurance"`
 	References             []Reference     `json:"references"`
 	NPMOrigins             []NPMOriginRule `json:"npmOrigins,omitempty"`
+	NPMRegistry            string          `json:"npmRegistry,omitempty"`
+	RequirePortable        bool            `json:"requirePortable,omitempty"`
 }
 
 // NPMOriginRule authorizes only this exact locked tuple's namespace correspondence.
@@ -71,11 +73,19 @@ type Plan struct {
 	Checks                cli.ArgumentChecks `json:"checks"`
 	FailOn                cli.ArgumentChecks `json:"failOn"`
 	Policy                Policy             `json:"policy"`
+	Privacy               string             `json:"privacy,omitempty"`
 }
 
 func ParsePolicy(data []byte) (Policy, error) {
-	if _, code := jsoninput.Object(data, MaxPolicyBytes); code != "" {
+	fields, code := jsoninput.Object(data, MaxPolicyBytes)
+	if code != "" {
 		return Policy{}, ErrPolicy
+	}
+	// Optional scope/privacy fields are absent or typed values, never null.
+	for _, key := range []string{"npmRegistry", "requirePortable"} {
+		if raw, ok := fields[key]; ok && bytes.Equal(bytes.TrimSpace(raw), []byte("null")) {
+			return Policy{}, ErrPolicy
+		}
 	}
 	var p Policy
 	d := json.NewDecoder(bytes.NewReader(data))
@@ -95,6 +105,9 @@ func ValidatePolicy(p Policy) error {
 	}
 	fail, ok := categories(p.FailOn)
 	if !ok || fail & ^checks != 0 {
+		return ErrPolicy
+	}
+	if p.NPMRegistry != "" && (p.NPMRegistry != "https://registry.npmjs.org" || !strings.HasPrefix(p.Manager, "npm@")) {
 		return ErrPolicy
 	}
 	if len(p.NPMOrigins) > 64 || len(p.NPMOrigins) != 0 && !strings.HasPrefix(p.Manager, "npm@") {
@@ -124,14 +137,17 @@ func Configure(r cli.ScanArgumentRequest, p Policy) (Plan, error) {
 	}
 	required, _ := categories(p.RequiredChecks)
 	fail, _ := categories(p.FailOn)
-	if r.PolicyPath == "" || r.Privacy != "portable" || r.Output != "-" || (r.StateDir != "" && !filepath.IsAbs(r.StateDir)) || (r.TrustedSnapshotDigest != "" && !supportedSnapshotPin(r.TrustedSnapshotDigest)) || ((p.MinimumAssurance == "independently-anchored" || len(p.NPMOrigins) != 0) && r.TrustedPolicyDigest == "") || (r.TrustedPolicyDigest != "" && !supportedPolicyPin(r.TrustedPolicyDigest)) || required & ^r.Checks != 0 || (r.FailOn|fail) & ^r.Checks != 0 {
+	if r.Privacy == "" {
+		r.Privacy = "portable"
+	}
+	if r.PolicyPath == "" || !oneOf(r.Privacy, "portable", "local") || p.RequirePortable && r.Privacy == "local" || r.Output != "-" || (r.StateDir != "" && !filepath.IsAbs(r.StateDir)) || (r.TrustedSnapshotDigest != "" && !supportedSnapshotPin(r.TrustedSnapshotDigest)) || ((p.MinimumAssurance == "independently-anchored" || len(p.NPMOrigins) != 0 || p.NPMRegistry != "") && r.TrustedPolicyDigest == "") || (r.TrustedPolicyDigest != "" && !supportedPolicyPin(r.TrustedPolicyDigest)) || required & ^r.Checks != 0 || (r.FailOn|fail) & ^r.Checks != 0 {
 		return Plan{}, ErrOptions
 	}
 	family := strings.Split(p.Manager, "@")[0]
 	if r.Manager != "auto" && r.Manager != family && r.Manager != p.Manager {
 		return Plan{}, ErrOptions
 	}
-	return Plan{PolicyFile: filepath.Base(r.PolicyPath), TrustedPolicyDigest: r.TrustedPolicyDigest, StateDir: r.StateDir, TrustedSnapshotDigest: r.TrustedSnapshotDigest, Manager: p.Manager, ExplicitManager: r.Manager != "auto", Checks: r.Checks, FailOn: r.FailOn | fail, Policy: p}, nil
+	return Plan{PolicyFile: filepath.Base(r.PolicyPath), TrustedPolicyDigest: r.TrustedPolicyDigest, StateDir: r.StateDir, TrustedSnapshotDigest: r.TrustedSnapshotDigest, Manager: p.Manager, ExplicitManager: r.Manager != "auto", Privacy: r.Privacy, Checks: r.Checks, FailOn: r.FailOn | fail, Policy: p}, nil
 }
 func canonicalNPMName(name string) bool {
 	if len(name) == 0 || len(name) > 214 {

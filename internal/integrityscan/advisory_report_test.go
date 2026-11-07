@@ -19,11 +19,11 @@ func TestAdvisoryReportRetainsIndependentGapsAndRejectsForgedRendering(t *testin
 		Counts:    projectinventory.Counters{Scopes: 1, Evidence: 1, Locked: 1, Gaps: 1},
 	}
 	info := UnavailableIntelligence()
-	a := AdvisoryReport{State: "observed", Decisions: []AdvisoryDecision{{Observation: 1, Affected: -1, VersionOutcome: "indeterminate", Outcome: "indeterminate", Category: "unknown", Profile: "unknown", Activity: "unknown", Origin: "unqualified", Source: "unqualified", Support: []AdvisorySupport{}, Gaps: []string{"origin-unqualified", "source-unqualified", "intelligence-unavailable"}}}, Summary: AdvisorySummary{Decisions: 1, Observations: 1, TotalObservations: 1, Gaps: []string{"locked-only", "installed-unassessed", "declared-unassessed", "index-completeness", "inventory-incomplete"}}}
+	a := AdvisoryReport{State: "observed", Decisions: []AdvisoryDecision{{Observation: 1, Affected: -1, VersionOutcome: "indeterminate", Outcome: "indeterminate", Category: "unknown", Profile: "unknown", Activity: "unknown", Origin: "unqualified", Source: "unqualified", Support: []AdvisorySupport{}, Gaps: []string{"origin-unqualified", "source-unqualified", "intelligence-unavailable"}}}, Summary: AdvisorySummary{Decisions: 1, Observations: 1, TotalObservations: 1, Work: 1, Gaps: []string{"declared-unassessed", "index-completeness", "inventory-incomplete"}}}
 	r := BuildReportWithAdvisories(plan, nil, Summary{}, Resources{}, false, false, &inventory, &info, &a)
 	a.Decisions[0].Gaps[0] = "PRIVATE-mutated"
 	a.Summary.Gaps[0] = "PRIVATE-mutated"
-	if r.SchemaVersion != "1.3" || r.ExitCode != 3 || r.Findings != 0 || r.Advisories == nil || r.Advisories.State != "observed" {
+	if r.SchemaVersion != "1.4" || r.ExitCode != 3 || r.Findings != 0 || r.Advisories == nil || r.Advisories.State != "observed" {
 		t.Fatal("matching silently disappeared or changed global coverage", r)
 	}
 	for _, format := range []string{"json", "terminal", "sarif"} {

@@ -820,8 +820,18 @@ func readSnapshotNPMIdentity(ctx context.Context, manifest SnapshotManifest, nam
 	}
 	out.Declaration = SnapshotDeclarationVerified
 
-	supplied := make(map[[32]byte]io.Reader, len(streams.Originals))
-	for _, item := range streams.Originals {
+	return hydrateSnapshotNPMIdentity(ctx, out, pending, streams.Originals, &readBudget, &retained)
+}
+
+// hydrateSnapshotNPMIdentity is shared by the legacy readers and grouped walk.
+// Only bindings selected from a completely verified original block reach here.
+func hydrateSnapshotNPMIdentity(ctx context.Context, out SnapshotNPMEvidence, pending []snapshotPendingBinding, originals []SnapshotOriginalStream, readBudget *snapshotReadBudget, retained *snapshotRetainedBudget) (SnapshotNPMEvidence, error) {
+	fail := func(code string) (SnapshotNPMEvidence, error) {
+		return SnapshotNPMEvidence{}, &ParseError{Code: code}
+	}
+	name, identityHash := out.Name, out.IdentityHash
+	supplied := make(map[[32]byte]io.Reader, len(originals))
+	for _, item := range originals {
 		if item.Reader == nil {
 			continue
 		}
@@ -869,7 +879,7 @@ func readSnapshotNPMIdentity(ctx context.Context, manifest SnapshotManifest, nam
 			out.Records = append(out.Records, record)
 			continue
 		}
-		raw, resource, readCode := readSnapshotOriginalBytes(ctx, reader, record.Bytes, &readBudget)
+		raw, resource, readCode := readSnapshotOriginalBytes(ctx, reader, record.Bytes, readBudget)
 		out.BytesRead = readBudget.used
 		if readCode == "canceled" {
 			return fail(readCode)

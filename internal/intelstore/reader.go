@@ -3,6 +3,7 @@ package intelstore
 import (
 	"context"
 	"errors"
+	"io"
 	"packtrace/internal/intel"
 	"sync"
 	"time"
@@ -216,6 +217,54 @@ func (s *Snapshot) readIdentity(ctx context.Context, name string, budget *identi
 	got.BytesRead += preview.BytesRead
 	return got, nil
 }
+
+// ErrIdentityWalkStopped lets a callback finish a window without hydrating its
+// remaining identities. Close, budget, context and lease failures still fail it.
+var ErrIdentityWalkStopped = errors.New("intel: identity-walk-stopped")
+
+// WalkIdentities verifies one complete original index block for a validated
+// window, then hydrates and emits one identity at a time. Consumed includes
+// actual block/original bytes on every failure path. Callbacks must not retain
+// successive evidence or reenter this Snapshot (the generation lock is held).
+func (s *Snapshot) WalkIdentities(ctx context.Context, names []string, remaining uint64, emit func(string, intel.SnapshotNPMEvidence) error) (consumed uint64, err error) {
+	if remaining > 8<<30 {
+		return 0, ErrLimit
+	}
+	names, index, err := intel.SnapshotNPMIdentityNames(names)
+	if err != nil {
+		return 0, err
+	}
+	if s == nil || ctx == nil || emit == nil {
+		return 0, ErrUnavailable
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.closed || s.pin.ID() == (ID{}) {
+		return 0, ErrUnavailable
+	}
+	if err := s.pin.lease.Stable(ctx); err != nil {
+		return 0, ErrBinding
+	}
+	budget := &identityReadBudget{remaining: remaining}
+	defer func() {
+		consumed = budget.consumed
+		err = errors.Join(err, budget.err, ctx.Err(), s.pin.lease.Stable(ctx))
+	}()
+	reference := s.manifest.Blocks[index].Reference
+	block, err := s.store.objectReader(ctx, ObjectRef{reference.SHA256, reference.Bytes})
+	if err != nil {
+		return 0, err
+	}
+	defer func() { err = errors.Join(err, block.Close()) }()
+	err = intel.WalkSnapshotNPMIdentitiesWithCatalog(ctx, s.manifest, names, s.catalog, identityIndexReader{block, budget}, func(ref intel.SnapshotObjectReference) (io.ReadCloser, error) {
+		return &lazyOriginal{ctx: ctx, store: s.store, ref: ObjectRef{ref.SHA256, ref.Bytes}, budget: budget}, nil
+	}, emit)
+	if err == ErrIdentityWalkStopped {
+		err = nil // Deferred actual-reader close and lease checks still run.
+	}
+	return budget.consumed, err
+}
+
 func (s *Snapshot) Close() error {
 	if s == nil {
 		return ErrUnavailable

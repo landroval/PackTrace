@@ -31,8 +31,22 @@ func matchingFaultFrames(c *channel, cfg scanConfig, mode string) int {
 		return 91
 	}
 	_ = c.send("inventory-closure", scanInventoryClosure{Batches: batches, Selection: p.Selection, Counts: p.Counts})
+	if strings.HasPrefix(mode, "matching-local-") {
+		observation := integrityscan.LocalObservation{Observation: 1, Name: "left-pad", Version: "1.0.0", Location: "node_modules/left-pad"}
+		if mode == "matching-local-absolute" {
+			observation.Location = "/PRIVATE-absolute"
+		}
+		_ = c.send("local-observations", scanLocalObservations{Observations: []integrityscan.LocalObservation{observation}})
+		if mode != "matching-local-missing-closure" {
+			count := 1
+			if mode == "matching-local-bad-count" {
+				count = 2
+			}
+			_ = c.send("local-closure", scanLocalClosure{Batches: 1, Observations: count})
+		}
+	}
 	d := integrityscan.AdvisoryDecision{Observation: 1, Affected: -1, VersionOutcome: "indeterminate", Outcome: "indeterminate", Category: "unknown", Profile: "unknown", Activity: "unknown", Origin: "unqualified", Source: "unqualified", Support: []integrityscan.AdvisorySupport{}, Gaps: []string{"origin-unqualified", "source-unqualified", "intelligence-unavailable"}}
-	s := integrityscan.AdvisorySummary{Decisions: 1, Observations: 1, TotalObservations: 1, Gaps: []string{"locked-only", "installed-unassessed", "declared-unassessed", "index-completeness", "inventory-incomplete"}}
+	s := integrityscan.AdvisorySummary{Decisions: 1, Observations: 1, TotalObservations: 1, Work: 1, Gaps: []string{"declared-unassessed", "index-completeness", "inventory-incomplete"}}
 	switch mode {
 	case "matching-bad-source":
 		d.Source = "qualified"
@@ -46,7 +60,7 @@ func matchingFaultFrames(c *channel, cfg scanConfig, mode string) int {
 		d.Sequence = 1
 	}
 	if mode == "matching-zero-work-limit" {
-		s.Decisions, s.Observations = 0, 0
+		s.Decisions, s.Observations, s.Work = 0, 0, 0
 		s.Gaps = append(s.Gaps, "evaluation-limit")
 	} else {
 		_ = c.send("matching-decision", d)
@@ -85,13 +99,16 @@ func TestMatchingProtocolRequiresExactClosedParentScope(t *testing.T) {
 	// Independent owned streams can share the test runner's existing bounded
 	// parallelism; race-runtime teardown need not serialize fourteen children.
 	t.Parallel()
-	for _, mode := range []string{"matching-valid", "matching-bad-source", "matching-bad-eligibility", "matching-private-gap", "matching-wrong-observation", "matching-bad-sequence", "matching-duplicate-decision", "matching-bad-count", "matching-zero-work-limit", "matching-missing-closure", "matching-duplicate-closure", "matching-late-decision", "matching-after-done", "matching-crash-after-closure"} {
+	for _, mode := range []string{"matching-valid", "matching-bad-source", "matching-bad-eligibility", "matching-private-gap", "matching-wrong-observation", "matching-bad-sequence", "matching-duplicate-decision", "matching-bad-count", "matching-zero-work-limit", "matching-missing-closure", "matching-duplicate-closure", "matching-late-decision", "matching-after-done", "matching-crash-after-closure", "matching-local-valid", "matching-local-unsolicited", "matching-local-missing-closure", "matching-local-absolute", "matching-local-bad-count"} {
 		t.Run(mode, func(t *testing.T) {
 			t.Parallel()
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 			p := integrityscan.Policy{Version: 1, Designation: "user-designated", Reason: "owned", Provenance: "owned", Manager: "npm@10.9.4", RequiredChecks: []string{"malicious"}, FailOn: []string{}, MinimumAssurance: "lockfile-consistent", References: []integrityscan.Reference{}}
 			plan := integrityscan.Plan{Manager: p.Manager, Policy: p, Checks: cli.ArgumentCheckMalicious}
+			if strings.HasPrefix(mode, "matching-local-") && mode != "matching-local-unsolicited" {
+				plan.Privacy = "local"
+			}
 			s := newRunState(ctx)
 			run := ScanRun{Plan: plan, Usable: true, output: BatchRun{state: s}}
 			cmd := exec.Command(os.Args[0], "--scan-fault-driver", mode)
@@ -101,12 +118,15 @@ func TestMatchingProtocolRequiresExactClosedParentScope(t *testing.T) {
 			}
 			cfg := scanConfig{Stage: "acquire", Target: t.TempDir(), PolicyPath: t.TempDir() + "/p.json", PolicyHash: "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=", Plan: &plan, Intelligence: &scanIntelligenceConfig{}}
 			_, e = run.superviseScanPhase(ctx, cfg, cmd, identity)
-			if (e == nil) != (mode == "matching-valid") || cmd.ProcessState == nil {
+			if (e == nil) != (mode == "matching-valid" || mode == "matching-local-valid") || cmd.ProcessState == nil {
 				t.Fatalf("protocol outcome: %v state=%v", e, cmd.ProcessState)
 			}
-			closed := mode == "matching-valid" || mode == "matching-duplicate-closure" || mode == "matching-late-decision" || mode == "matching-after-done" || mode == "matching-crash-after-closure"
+			closed := mode == "matching-valid" || mode == "matching-local-valid" || mode == "matching-duplicate-closure" || mode == "matching-late-decision" || mode == "matching-after-done" || mode == "matching-crash-after-closure"
 			if closed != (run.Advisories != nil) {
 				t.Fatal("unclosed rows promoted or closed partial evidence lost", run.Advisories)
+			}
+			if mode == "matching-local-valid" && (run.Advisories == nil || run.Advisories.Local == nil || len(run.Advisories.Local.Observations) != 1) {
+				t.Fatal("explicit local closed evidence lost")
 			}
 			if run.Advisories != nil && (len(run.Advisories.Decisions) != 1 || run.Advisories.Findings != 0 || run.Advisories.Decisions[0].Outcome != "indeterminate") {
 				t.Fatal("protocol controls invented an eligible finding")

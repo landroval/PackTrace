@@ -91,15 +91,21 @@ A selected scan holds the original external generation through public output and
 confirmed child reap. A locally authenticated acquisition and an independently
 pinned offline import have distinct authority; neither is publisher approval or
 automatic advisory eligibility. Selecting advisory checks now produces bounded
-locked-npm matching with explicit pinned `npmOrigins` rules and the documented
-OpenSSF metadata profile. Unknown categories/corrections and installed
-applicability remain incomplete; matches do not prove installation or execution.
+npm matching with explicit pinned `npmOrigins` rules or the optional public
+`npmRegistry` grant, and documented OSV-delivered OpenSSF/GitHub type profiles.
+Observed-installed decisions require their own manifest evidence and unambiguous
+qualified lock correspondence; they are not copied from a lock entry. Grouped
+lookup covers more than64 total observations under the existing byte/time caps.
+Use explicit `--privacy local` for permitted names, advisory IDs and relative
+paths; portable remains the default, and policy can require it. Unknown
+categories/corrections/correspondence remain incomplete; matches do not prove
+execution or content authenticity.
 Raw advisories, private paths and source key/MAC stay private.
 
 See [intelligence compatibility](docs/intelligence-compatibility.md) for exact
 command effects, source/license profiles, limits and qualification gaps, and the
-[matching contract](docs/increments/issue-6-offline-matching.md) for this first
-functional slice. Bounded fixtures and local tests do not qualify an unrestricted
+[usable matching contract](docs/increments/issue-6-usable-advisory-scan.md) for
+both categories, distinct evidence, scale and privacy. Bounded fixtures and local tests do not qualify an unrestricted
 feed/category corpus, every native platform, or a release.
 
 ## Scoped installed ownership
