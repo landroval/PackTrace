@@ -48,6 +48,9 @@ func scanFaultDriver(mode string) int {
 		}
 		_ = c.send("resident", residentSample{ElapsedMS: 0, Bytes: rss, Valid: true})
 	}
+	if strings.HasPrefix(mode, "matching-") {
+		return matchingFaultFrames(c, cfg, mode)
+	}
 	if mode == "policy-pin-forgery" {
 		p := integrityscan.Policy{Version: 1, Designation: "user-designated", Reason: "owned", Provenance: "owned", Manager: "npm@10.9.4", RequiredChecks: []string{"integrity"}, FailOn: []string{}, MinimumAssurance: "lockfile-consistent", References: []integrityscan.Reference{}}
 		_ = c.send("policy", integrityscan.PolicyObservation{Policy: p, SourceHash: "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=", MatchedOperatorDigest: "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="})

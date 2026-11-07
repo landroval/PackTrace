@@ -122,6 +122,8 @@ type Report struct {
 	Comparison          integrity.PortableIntegrityResult `json:"comparison"`
 	Inventory           *projectinventory.PublicInventory `json:"inventory,omitempty"`
 	Intelligence        *Intelligence                     `json:"intelligence,omitempty"`
+	Advisories          *AdvisoryReport                   `json:"advisories,omitempty"`
+	advisoryPlan        *Plan                             // Parent-owned validation context; never serialized.
 }
 
 func BuildReport(plan Plan, records []Record, summary Summary, resources Resources, interrupted, abnormal bool) Report {
@@ -212,7 +214,10 @@ func BuildReportWithInventory(plan Plan, records []Record, summary Summary, reso
 }
 
 func Render(r Report, format string) ([]byte, error) {
-	if r.Intelligence != nil && (r.SchemaVersion != "1.2" || ValidateIntelligence(*r.Intelligence) != nil) {
+	if !validRenderedAdvisories(r) {
+		return nil, errors.New("scan: report-failed")
+	}
+	if r.Intelligence != nil && ((r.SchemaVersion != "1.2" && r.SchemaVersion != "1.3") || ValidateIntelligence(*r.Intelligence) != nil) {
 		return nil, errors.New("scan: report-failed")
 	}
 	if r.Inventory != nil && projectinventory.ValidatePublic(*r.Inventory) != nil {
@@ -247,6 +252,7 @@ func Render(r Report, format string) ([]byte, error) {
 				fmt.Fprintf(&out, "Intelligence gap: %s\n", g)
 			}
 		}
+		renderAdvisories(&out, r.Advisories)
 		for _, c := range r.Coverage {
 			fmt.Fprintf(&out, "%s: %s (%s)\n", c.Check, c.Outcome, c.Reason)
 		}
@@ -264,16 +270,23 @@ func Render(r Report, format string) ([]byte, error) {
 			Text string `json:"text"`
 		}
 		type result struct {
-			RuleID     string                       `json:"ruleId"`
-			Level      string                       `json:"level"`
-			Message    message                      `json:"message"`
-			Properties integrity.PortableDifference `json:"properties"`
+			RuleID     string  `json:"ruleId"`
+			Level      string  `json:"level"`
+			Message    message `json:"message"`
+			Properties any     `json:"properties"`
 		}
 		results := []result{}
 		for _, d := range r.Comparison.Differences {
 			if d.Kind != integrity.DifferenceUnchanged {
 				label := differenceName(d.Kind)
 				results = append(results, result{"PT-INTEGRITY-" + strings.ToUpper(label), "warning", message{"Observed integrity drift: " + label + "; not evidence of malicious execution"}, d})
+			}
+		}
+		if a := r.Advisories; a != nil {
+			for _, d := range a.Decisions {
+				if d.EnforcementEligible {
+					results = append(results, result{"PT-MALICIOUS-ADVISORY", "warning", message{"Matched malicious-package advisory on locked evidence; not proof of installation or execution"}, d})
+				}
 			}
 		}
 		notifications := []any{}

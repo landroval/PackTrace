@@ -181,7 +181,7 @@ func TestScanPreparedSnapshotIsOfflinePrivateAndNotMatching(t *testing.T) {
 			if strings.Contains(out.String()+diag.String(), "PRIVATE") || strings.Contains(out.String(), "sha256-") {
 				t.Fatal("private selectors or expected SRI leaked")
 			}
-			if !strings.Contains(out.String(), hex.EncodeToString(id[:])) || !strings.Contains(out.String(), "operator-designated") || !strings.Contains(out.String(), "matching-not-implemented") {
+			if !strings.Contains(out.String(), hex.EncodeToString(id[:])) || !strings.Contains(out.String(), "operator-designated") || !strings.Contains(out.String(), "bounded-npm-locked-evidence") {
 				t.Fatal("prepared source identity or uncertainty lost", out.String())
 			}
 			if format == "json" {
@@ -193,7 +193,7 @@ func TestScanPreparedSnapshotIsOfflinePrivateAndNotMatching(t *testing.T) {
 					} `json:"intelligence"`
 					Findings int `json:"findings"`
 				}
-				if json.Unmarshal(out.Bytes(), &report) != nil || report.SchemaVersion != "1.2" || report.Intelligence.State != "available" || report.Intelligence.Selection != "expected-digest" || report.Findings != 1 || report.Intelligence.Objects != nil || report.Intelligence.Bytes != nil || report.Intelligence.Reserved != nil {
+				if json.Unmarshal(out.Bytes(), &report) != nil || report.SchemaVersion != "1.3" || report.Intelligence.State != "available" || report.Intelligence.Selection != "expected-digest" || report.Findings != 1 || report.Intelligence.Objects != nil || report.Intelligence.Bytes != nil || report.Intelligence.Reserved != nil {
 					t.Fatal("state changed integrity or invented storage occupation", out.String())
 				}
 			}

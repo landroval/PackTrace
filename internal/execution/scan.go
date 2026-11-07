@@ -15,6 +15,7 @@ import (
 	"packtrace/internal/cli"
 	"packtrace/internal/integrity"
 	"packtrace/internal/integrityscan"
+	"packtrace/internal/intelstore"
 	"packtrace/internal/nativefs"
 	"packtrace/internal/projectinventory"
 )
@@ -30,6 +31,7 @@ type ScanRun struct {
 	Summary             integrityscan.Summary
 	Inventory           *projectinventory.PublicInventory
 	Intelligence        *integrityscan.Intelligence
+	Advisories          *integrityscan.AdvisoryReport
 	Resources           integrityscan.Resources // comparison checkpoint, updated by Checkpoint/Finish
 	Operational         ScanReceipt             // populated only by Finish, never predicted in public bytes
 	Usable, Interrupted bool
@@ -216,6 +218,7 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 		summary      integrityscan.Summary
 		inventory    *projectinventory.PublicInventory
 		intelligence *integrityscan.Intelligence
+		advisories   *integrityscan.AdvisoryReport
 	}
 	parsed := make(chan phaseData, 1)
 	failure = s.runChild(phase, cmd, release, func(_ context.Context, c *channel, input io.Closer) error {
@@ -239,6 +242,9 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 		inventorySequence := uint32(0)
 		inventoryClosed := false
 		intelligenceClosed := cfg.Intelligence == nil
+		advisoryClosed := cfg.Stage != "acquire" || cfg.Plan == nil || cfg.Plan.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) == 0
+		advisoryDecisions := []integrityscan.AdvisoryDecision{}
+		advisorySeen := map[[3]int]bool{}
 		for {
 			m, e := c.receive()
 			if e == io.EOF {
@@ -310,9 +316,33 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 				}
 				inventoryClosed = true
 				data.inventory = &inventory
+			case "matching-decision":
+				var v integrityscan.AdvisoryDecision
+				if !started || cfg.Stage != "acquire" || cfg.Plan == nil || data.intelligence == nil || !intelligenceClosed || !inventoryClosed || advisoryClosed || pending != nil || expected != 0 || fatal != "" || decode(m.Data, &v) != nil || len(advisoryDecisions) >= 4096 || v.Sequence != len(advisoryDecisions) || integrityscan.ValidateAdvisoryDecision(*cfg.Plan, inventory, *data.intelligence, v) != nil {
+					return errScanProtocol
+				}
+				key := [3]int{int(v.Observation), v.Advisory, v.Affected}
+				if advisorySeen[key] {
+					return errScanProtocol
+				}
+				advisorySeen[key] = true
+				advisoryDecisions = append(advisoryDecisions, v)
+			case "matching-closure":
+				var v integrityscan.AdvisorySummary
+				if !started || cfg.Stage != "acquire" || cfg.Plan == nil || data.intelligence == nil || !intelligenceClosed || !inventoryClosed || advisoryClosed || pending != nil || expected != 0 || fatal != "" || decode(m.Data, &v) != nil || integrityscan.ValidateAdvisorySummary(v, advisoryDecisions, inventory) != nil {
+					return errScanProtocol
+				}
+				a := &integrityscan.AdvisoryReport{State: "observed", Decisions: advisoryDecisions, Summary: v}
+				for _, d := range advisoryDecisions {
+					if d.EnforcementEligible {
+						a.Findings++
+					}
+				}
+				data.advisories = a
+				advisoryClosed = true
 			case "instance":
 				var v integrityscan.Record
-				if !started || cfg.Stage != "acquire" || !intelligenceClosed || !inventoryClosed || cfg.Plan == nil || pending != nil || fatal != "" || decode(m.Data, &v) != nil || v.Index != expected || integrityscan.ValidateRecord(*cfg.Plan, v, cfg.PolicyHash) != nil {
+				if !started || cfg.Stage != "acquire" || !intelligenceClosed || !inventoryClosed || !advisoryClosed || cfg.Plan == nil || pending != nil || fatal != "" || decode(m.Data, &v) != nil || v.Index != expected || integrityscan.ValidateRecord(*cfg.Plan, v, cfg.PolicyHash) != nil {
 					return errScanProtocol
 				}
 				pending = &v
@@ -340,7 +370,7 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 						return errScanProtocol
 					}
 				} else if fatal == "" && cfg.Plan != nil {
-					if !inventoryClosed || v.Summary.InventoryComplete != inventory.Complete {
+					if !inventoryClosed || !advisoryClosed || v.Summary.InventoryComplete != inventory.Complete {
 						return errScanProtocol
 					}
 					want := len(cfg.Plan.Policy.References)
@@ -376,6 +406,9 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 		}
 		if data.intelligence != nil {
 			run.Intelligence = data.intelligence
+		}
+		if data.advisories != nil {
+			run.Advisories = data.advisories
 		}
 	default:
 	}
@@ -562,11 +595,11 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 		}
 	} else {
 		var intelligenceOwner *scanIntelligenceOwner
+		intelligenceInfo := integrityscan.UnavailableIntelligence()
 		e = nil // The launch witness's successful empty read left io.EOF.
 		if cfg.Intelligence != nil {
-			var info integrityscan.Intelligence
-			intelligenceOwner, info, e = workerScanIntelligence(ctx, cfg.Target, *cfg.Intelligence)
-			if sender.send("intel-state", info) != nil || sender.send("intel-closure", scanIntelligenceClosure{1}) != nil {
+			intelligenceOwner, intelligenceInfo, e = workerScanIntelligence(ctx, cfg.Target, *cfg.Intelligence)
+			if sender.send("intel-state", intelligenceInfo) != nil || sender.send("intel-closure", scanIntelligenceClosure{1}) != nil {
 				e = errScanProtocol
 			}
 		}
@@ -599,7 +632,27 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 			}); e != nil {
 				return e
 			}
-			return sender.send("inventory-closure", scanInventoryClosure{Batches: batches, Selection: p.Selection, Counts: p.Counts, Complete: p.Complete})
+			if e := sender.send("inventory-closure", scanInventoryClosure{Batches: batches, Selection: p.Selection, Counts: p.Counts, Complete: p.Complete}); e != nil {
+				return e
+			}
+			if cfg.Plan.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) == 0 {
+				return nil
+			}
+			var snapshot *intelstore.Snapshot
+			if intelligenceOwner != nil {
+				snapshot = intelligenceOwner.snapshot
+			}
+			now := time.Now()
+			if cfg.Intelligence != nil {
+				now = time.Unix(0, cfg.Intelligence.NowUnixNS)
+			}
+			matched, e := integrityscan.MatchInventory(ctx, *cfg.Plan, r, snapshot, intelligenceInfo, now, func(d integrityscan.AdvisoryDecision) error {
+				return sender.send("matching-decision", d)
+			})
+			if e != nil {
+				return e
+			}
+			return sender.send("matching-closure", matched)
 		}
 		if e == nil {
 			if intelligenceOwner != nil {

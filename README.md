@@ -19,8 +19,8 @@ preserve evidence and uncertainty without executing the investigated project's c
 | Bun text lockfiles | Bounded JSONC evidence, selected workspaces and active in-root hoisted/isolated inventory | External stores, unsafe/hardlinked inputs, unexecuted variants or blanket producer/native qualification |
 | Package manifests | Bounded JSON reading and separate dependency declaration groups | Dependency resolution or package-manager execution |
 | Root comparison | Exact textual comparison of explicitly paired manifest and lockfile root requirements | Semantic range equivalence, installation drift, or findings |
-| OSV records | Bounded JSON reading, temporal claims, affected identities, explicit versions, ranges and events | Full schema/identity qualification, interval evaluation, advisory applicability, or matching |
-| Intelligence lifecycle candidate | Owned immutable storage, explicit OSV sync/offline import/export, quota/retention, fixed-generation scan observations | Complete live-source/native qualification, protected integration, advisory matching or publisher authentication |
+| OSV records | Bounded JSON reading, temporal/identity projections and concrete SemVer/version-condition evaluation | General schema/source/category qualification or complete advisory applicability |
+| Intelligence lifecycle and bounded matching | Owned immutable storage, explicit preparation/transport, fixed-generation scan; pinned exact npm rules and documented OpenSSF matching profile | Complete matching/category coverage, unrestricted platform qualification or publisher authentication |
 | Shared validation | Strict JSON object validation, duplicate-key/Unicode checks and bounded nesting | Native filesystem containment or a hard process-memory cap |
 
 The readers retain raw fields and source digests. Projections distinguish missing,
@@ -90,12 +90,17 @@ corrupt state is never initialized, repaired or downloaded by a scan.
 A selected scan holds the original external generation through public output and
 confirmed child reap. A locally authenticated acquisition and an independently
 pinned offline import have distinct authority; neither is publisher approval or
-advisory matching. Raw advisories, private paths and source key/MAC stay private.
+automatic advisory eligibility. Selecting advisory checks now produces bounded
+locked-npm matching with explicit pinned `npmOrigins` rules and the documented
+OpenSSF metadata profile. Unknown categories/corrections and installed
+applicability remain incomplete; matches do not prove installation or execution.
+Raw advisories, private paths and source key/MAC stay private.
 
 See [intelligence compatibility](docs/intelligence-compatibility.md) for exact
-command effects, source/license profiles, limits and qualification gaps. Whole
-public-source/native acceptance and owner-controlled integration remain pending;
-controlled fixtures and local tests do not close those gates.
+command effects, source/license profiles, limits and qualification gaps, and the
+[matching contract](docs/increments/issue-6-offline-matching.md) for this first
+functional slice. Bounded fixtures and local tests do not qualify an unrestricted
+feed/category corpus, every native platform, or a release.
 
 ## Scoped installed ownership
 
