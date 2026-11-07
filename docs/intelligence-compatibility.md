@@ -77,7 +77,7 @@ contract; historical supplied-input schemas remain unchanged. The report exposes
 snapshot identity, closed source/freshness labels, counts and gaps—not private
 paths, targets, raw advisories, source credentials or local HMAC material.
 Readonly storage-occupation observations are `null`/unknown, not fabricated zero.
-Selecting advisory checks adds schema **1.4** with grouped bounded npm matching,
+Selecting advisory checks adds schema **1.5** with grouped bounded npm matching,
 explicit pinned exact `npmOrigins` or optional public `npmRegistry` correspondence,
 and documented OSV-delivered OpenSSF/GitHub category profiles. Installed decisions
 require their own native manifest evidence and qualified selected-lock agreement.
@@ -85,7 +85,12 @@ The new registry grant must explicitly authorize installed association; old exac
 rules remain locked-only. Optional local detail is explicit, never the default.
 Advisory counts remain observation-level matches separate from drift findings;
 unknown categories, corrections and correspondence keep coverage incomplete. See
-the [usable matching contract](increments/issue-6-usable-advisory-scan.md).
+the [usable matching contract](increments/issue-6-usable-advisory-scan.md) and
+[first-version-blocker increment](increments/issue-6-explain-version-conditions.md).
+The latter retains one fixed evaluator reason with numeric source positions,
+without changing version verdicts or treating diagnostics as coverage. The
+OpenSSF profile additionally accepts the bounded descriptive CWE shape; CWE
+metadata remains informational, never category authority.
 
 Intel command output uses its separate schema **1.0**. Successful bounded
 maintenance/preparation is not successful complete project security coverage.

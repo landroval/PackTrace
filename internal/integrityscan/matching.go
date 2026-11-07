@@ -30,23 +30,24 @@ type AdvisorySupport struct {
 	Range   int `json:"range"`
 }
 type AdvisoryDecision struct {
-	Sequence            int               `json:"sequence"`
-	Observation         uint32            `json:"observation"`
-	LockedObservation   uint32            `json:"lockedObservation,omitempty"`
-	Advisory            int               `json:"advisory"`
-	Affected            int               `json:"affected"`
-	Rule                int               `json:"rule"`
-	VersionOutcome      string            `json:"versionOutcome"`
-	Outcome             string            `json:"outcome"`
-	FullyEvaluated      bool              `json:"fullyEvaluated"`
-	Category            string            `json:"category"`
-	Profile             string            `json:"profile"`
-	Activity            string            `json:"activity"`
-	Origin              string            `json:"origin"`
-	Source              string            `json:"source"`
-	EnforcementEligible bool              `json:"enforcementEligible"`
-	Support             []AdvisorySupport `json:"support"`
-	Gaps                []string          `json:"gaps"`
+	Sequence            int                     `json:"sequence"`
+	Observation         uint32                  `json:"observation"`
+	LockedObservation   uint32                  `json:"lockedObservation,omitempty"`
+	Advisory            int                     `json:"advisory"`
+	Affected            int                     `json:"affected"`
+	Rule                int                     `json:"rule"`
+	VersionOutcome      string                  `json:"versionOutcome"`
+	Outcome             string                  `json:"outcome"`
+	FullyEvaluated      bool                    `json:"fullyEvaluated"`
+	FirstVersionProblem *AdvisoryVersionProblem `json:"firstVersionProblem,omitempty"`
+	Category            string                  `json:"category"`
+	Profile             string                  `json:"profile"`
+	Activity            string                  `json:"activity"`
+	Origin              string                  `json:"origin"`
+	Source              string                  `json:"source"`
+	EnforcementEligible bool                    `json:"enforcementEligible"`
+	Support             []AdvisorySupport       `json:"support"`
+	Gaps                []string                `json:"gaps"`
 }
 type AdvisorySummary struct {
 	Decisions                  int      `json:"decisions"`
@@ -442,6 +443,7 @@ func MatchInventoryWithLocal(ctx context.Context, plan Plan, inventory projectin
 						}
 						if !v.FullyEvaluated {
 							row.Gaps = addMatchingGap(row.Gaps, "version-unsupported")
+							row.FirstVersionProblem = firstAdvisoryVersionProblem(result, idx)
 						}
 					} else {
 						row.Gaps = addMatchingGap(row.Gaps, "binding-unqualified")
@@ -483,6 +485,7 @@ func MatchInventoryWithLocal(ctx context.Context, plan Plan, inventory projectin
 					if template.Advisory > 0 {
 						d.Category, d.Profile, d.Activity, d.VersionOutcome, d.FullyEvaluated = template.Category, template.Profile, template.Activity, template.VersionOutcome, template.FullyEvaluated
 						d.Support = append(d.Support, template.Support...)
+						d.FirstVersionProblem = cloneAdvisoryVersionProblem(template.FirstVersionProblem)
 					}
 					for _, gap := range template.Gaps {
 						d.Gaps = addMatchingGap(d.Gaps, gap)
@@ -800,6 +803,9 @@ func publicMatchingEndpoint(inv projectinventory.PublicInventory, o projectinven
 
 func ValidateAdvisoryDecision(plan Plan, inventory projectinventory.PublicInventory, info Intelligence, d AdvisoryDecision) error {
 	if projectinventory.ValidatePublic(inventory) != nil || ValidateIntelligence(info) != nil || ValidatePolicy(plan.Policy) != nil || plan.Manager != plan.Policy.Manager || !oneOf(plan.Privacy, "", "portable", "local") || plan.Policy.RequirePortable && plan.Privacy == "local" || plan.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) == 0 || d.Sequence < 0 || d.Sequence >= 4096 || d.Observation == 0 || int(d.Observation) > len(inventory.Observations) || d.Advisory < 0 || d.Advisory > 4096 || d.Affected < -1 || d.Affected >= 20000 || d.Rule < 0 || d.Rule > len(plan.Policy.NPMOrigins) || !oneOf(d.VersionOutcome, "match", "no-match", "indeterminate") || !oneOf(d.Outcome, "match", "no-match", "indeterminate") || !oneOf(d.Category, "malicious", "vulnerability", "unknown") || !oneOf(d.Profile, "openssf-malicious-v1", "osv-openssf-malicious-v1", "osv-github-reviewed-v1", "osv-github-malware-v1", "unknown") || !oneOf(d.Activity, "not-withdrawn", "withdrawn", "unknown") || !oneOf(d.Origin, "operator-npm-rule", "operator-npm-registry", "unqualified") || !oneOf(d.Source, "qualified", "unqualified") || d.Support == nil || len(d.Support) > 256 || !matchingGapShape(d.Gaps) {
+		return ErrAdvisory
+	}
+	if !validAdvisoryVersionProblem(d) {
 		return ErrAdvisory
 	}
 	if info.State == "available" {

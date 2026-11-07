@@ -55,6 +55,11 @@ func (tr matchingFixtureTransport) RoundTrip(r *http.Request) (*http.Response, e
 // fixed standard-library test clock. No descriptor/receipt/seal is fabricated.
 func matchingFixtureBundle(t *testing.T) ([]byte, ID) {
 	t.Helper()
+	return matchingFixtureBundleFor(t, "matching", 3)
+}
+
+func matchingFixtureBundleFor(t *testing.T, mode string, records uint64) ([]byte, ID) {
+	t.Helper()
 	var data []byte
 	var id ID
 	synctest.Test(t, func(t *testing.T) {
@@ -65,7 +70,7 @@ func matchingFixtureBundle(t *testing.T) ([]byte, ID) {
 		time.Sleep(fixed.Sub(time.Now()))
 		t.Logf("fixed clock: %s", time.Now().UTC())
 		s, _ := transactionFixture(t)
-		fetch, close := fullSourceFixture(t, "matching")
+		fetch, close := fullSourceFixture(t, mode)
 		defer close()
 		traced := func(ctx context.Context, b *Budget, spec requestSpec, out io.Writer) (responseEvidence, error) {
 			ev, err := fetch(ctx, b, spec, out)
@@ -76,7 +81,7 @@ func matchingFixtureBundle(t *testing.T) ([]byte, ID) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if result.Records != 3 {
+		if result.Records != records {
 			t.Fatal("missing authored records", result)
 		}
 		id = result.Generation

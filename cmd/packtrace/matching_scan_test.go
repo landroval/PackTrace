@@ -21,6 +21,11 @@ import (
 
 func matchingScanFixture(t *testing.T, version string, originRule bool) (string, string, string, string, string) {
 	t.Helper()
+	return matchingScanFixtureBundle(t, version, originRule, "matching.bundle")
+}
+
+func matchingScanFixtureBundle(t *testing.T, version string, originRule bool, bundle string) (string, string, string, string, string) {
+	t.Helper()
 	base := t.TempDir()
 	target, external, state := filepath.Join(base, "PRIVATE-target"), filepath.Join(base, "PRIVATE-policy"), filepath.Join(base, "PRIVATE-state")
 	location := "node_modules/left-pad"
@@ -64,7 +69,7 @@ func matchingScanFixture(t *testing.T, version string, originRule bool) (string,
 		t.Fatal(e)
 	}
 	defer root.Close()
-	input, e := root.OpenDistributionInput(ctx, "matching.bundle")
+	input, e := root.OpenDistributionInput(ctx, bundle)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -160,7 +165,7 @@ func TestScanActualOfflineAdvisoryMatching(t *testing.T) {
 						}
 					}
 					a := report.Advisories
-					if report.SchemaVersion != "1.4" || report.ExitCode != 3 || report.Findings != 0 || a == nil || a.State != "observed" || a.Findings != tc.findings || a.Summary.Observations != 1 || a.Summary.TotalObservations != 1 || len(a.Decisions) == 0 {
+					if report.SchemaVersion != "1.5" || report.ExitCode != 3 || report.Findings != 0 || a == nil || a.State != "observed" || a.Findings != tc.findings || a.Summary.Observations != 1 || a.Summary.TotalObservations != 1 || len(a.Decisions) == 0 {
 						t.Fatal("actual matching/independent drift model disagrees", out.String())
 					}
 					negative, withdrawn, unsupported := false, false, false

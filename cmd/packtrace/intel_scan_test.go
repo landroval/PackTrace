@@ -193,7 +193,7 @@ func TestScanPreparedSnapshotIsOfflinePrivateAndNotMatching(t *testing.T) {
 					} `json:"intelligence"`
 					Findings int `json:"findings"`
 				}
-				if json.Unmarshal(out.Bytes(), &report) != nil || report.SchemaVersion != "1.4" || report.Intelligence.State != "available" || report.Intelligence.Selection != "expected-digest" || report.Findings != 1 || report.Intelligence.Objects != nil || report.Intelligence.Bytes != nil || report.Intelligence.Reserved != nil {
+				if json.Unmarshal(out.Bytes(), &report) != nil || report.SchemaVersion != "1.5" || report.Intelligence.State != "available" || report.Intelligence.Selection != "expected-digest" || report.Findings != 1 || report.Intelligence.Objects != nil || report.Intelligence.Bytes != nil || report.Intelligence.Reserved != nil {
 					t.Fatal("state changed integrity or invented storage occupation", out.String())
 				}
 			}

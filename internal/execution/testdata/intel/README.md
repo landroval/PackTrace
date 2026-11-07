@@ -75,3 +75,21 @@ never overwritten. No local key/MAC is included. Source designation, explicit
 pinned namespace policy and actual observation qualification remain independent
 of fixture import. These checks do not qualify a live feed, every project,
 publisher authentication or a native platform.
+
+## First-version-blocker and descriptive-CWE fixture
+
+`explanation.bundle` is authored by `TestExplanationFixtureReproducible` through
+the same actual source/seal/export pipeline, using in-memory transport and the
+fixed test clock. It contains two inert records: a supported explicit version
+plus an unsupported version-string canary, and a separate scoped OpenSSF record
+with descriptive CWE objects. No real advisory or package code is copied.
+
+Generation: `bfbaf97ecbb9bf8ca8374c24bcaa817390803cce9e14f4141a9098f9f84e3110`.
+Transport:119296 bytes; SHA256
+`809df8657e0096497981154a99d8e19373b78ebb4ba1fdfc084585743ab2efcf`.
+
+Normal tests regenerate and compare exact bytes. Exclusive NEW output creation
+is opt-in through `PACKTRACE_EXPLANATION_FIXTURE_NEW_OUTPUT`; existing files are
+never overwritten. Actual scan tests verify first-reason locators and unchanged
+partial-positive/indeterminate behavior without leaking the canary or granting
+source authority from import alone. Historical fixtures remain byte-identical.
