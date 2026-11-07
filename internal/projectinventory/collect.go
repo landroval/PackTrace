@@ -90,7 +90,7 @@ func Collect(ctx context.Context, root *nativefs.Root, opts Options) (Result, er
 			c.workspaceScopes[s.Location] = s
 		}
 	}
-	c.selectInputs(opts)
+	c.selectInputs(builtinSelectionOptions(opts, rootManifest))
 	c.collectInstalled()
 	if ctx.Err() != nil {
 		return c.result, ErrCollection

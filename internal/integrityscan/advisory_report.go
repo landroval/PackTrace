@@ -151,11 +151,11 @@ func validRenderedAdvisories(r Report) bool {
 	if r.Advisories == nil {
 		return !oneOf(r.SchemaVersion, "1.3", "1.4", "1.5", "1.6")
 	}
-	if !oneOf(r.SchemaVersion, "1.3", "1.4", "1.5", "1.6") {
+	if !oneOf(r.SchemaVersion, "1.3", "1.4", "1.5", "1.6", "1.7") {
 		return false
 	}
 	a := r.Advisories
-	if r.SchemaVersion != "1.6" {
+	if !oneOf(r.SchemaVersion, "1.6", "1.7") {
 		if a.candidatesPresent || a.candidateFlagsPresent || a.Candidates != 0 || r.advisoryPlan != nil && r.advisoryPlan.Policy.AdvisoryCandidates {
 			return false
 		}
@@ -167,7 +167,7 @@ func validRenderedAdvisories(r Report) bool {
 	} else if !a.candidatesPresent || a.legacyCandidates {
 		return false
 	}
-	if !oneOf(r.SchemaVersion, "1.5", "1.6") {
+	if !oneOf(r.SchemaVersion, "1.5", "1.6", "1.7") {
 		for _, d := range a.Decisions {
 			if d.FirstVersionProblem != nil {
 				return false

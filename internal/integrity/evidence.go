@@ -80,9 +80,14 @@ type ReferenceCatalog struct {
 	entries                      []ReferenceEntry // owned catalog; never expose mutable evidence
 	CompressedRead, ExpandedRead int64
 	verified                     bool
+	observedSRI                  string
 }
 
 func (c ReferenceCatalog) InstanceID() string { return c.instanceID }
+
+// ObservedSRI is the actual compressed artifact digest, exposed only after
+// successful verification. It is not the binding's set of allowed digests.
+func (c ReferenceCatalog) ObservedSRI() string { return c.observedSRI }
 
 // Entries returns an owned copy of the fully validated published paths. It does
 // not expose mutable catalog evidence or establish installed ownership by itself.

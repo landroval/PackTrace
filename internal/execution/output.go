@@ -15,6 +15,10 @@ import (
 // already been reaped. Real public files are written exclusively in a second,
 // sequential, same-executable process; backpressure never pins a parent thread.
 func (r *BatchRun) WriteOutput(ctx context.Context, out io.Writer, data []byte) error {
+	return r.writeOutput(ctx, out, data, nil)
+}
+
+func (r *BatchRun) writeOutput(ctx context.Context, out io.Writer, data []byte, fileConfig *scanFileOutputConfig) error {
 	if r.state == nil {
 		r.state = newRunState(ctx)
 	}
@@ -38,23 +42,42 @@ func (r *BatchRun) WriteOutput(ctx context.Context, out io.Writer, data []byte) 
 	}
 	// Only these known nonblocking memory sinks have a synchronous compatibility
 	// path. Never invoke arbitrary Writer code or attempt public-file fallback.
-	switch out.(type) {
-	case *bytes.Buffer, *strings.Builder:
-		if reflect.ValueOf(out).IsNil() {
-			return errOutput
-		}
-		n, e := out.Write(data)
-		if e != nil || n != len(data) {
-			return errOutput
-		}
-		return nil
-	}
-	if out == io.Discard {
-		return nil
-	}
-	file, ok := out.(*os.File)
-	if !ok || file == nil {
+	if fileConfig != nil && (s.scan == nil || s.preparation || !fileConfig.valid()) {
 		return errOutput
+	}
+	if fileConfig == nil {
+		switch out.(type) {
+		case *bytes.Buffer, *strings.Builder:
+			if reflect.ValueOf(out).IsNil() {
+				return errOutput
+			}
+			n, e := out.Write(data)
+			if e != nil || n != len(data) {
+				return errOutput
+			}
+			return nil
+		}
+		if out == io.Discard {
+			return nil
+		}
+	}
+	var file *os.File
+	if fileConfig == nil {
+		var ok bool
+		file, ok = out.(*os.File)
+		if !ok || file == nil {
+			return errOutput
+		}
+	} else {
+		witness, feed, e := privatePipe()
+		if e != nil {
+			return e
+		}
+		defer witness.Close()
+		if e := feed.Close(); e != nil {
+			return errOutput
+		}
+		file = witness
 	}
 	cmd, e := childCommand(WriterArgument)
 	if e != nil {
@@ -82,7 +105,7 @@ func (r *BatchRun) WriteOutput(ctx context.Context, out io.Writer, data []byte) 
 		return e
 	}
 	sum := sha256.Sum256(data)
-	cfg := writerConfig{Nonce: cap, Size: len(data), SHA256: hex.EncodeToString(sum[:])}
+	cfg := writerLaunchConfig{Nonce: cap, Size: len(data), SHA256: hex.EncodeToString(sum[:]), File: fileConfig}
 	// Preflight all fixed writer traffic before launch. Both directions and every
 	// LF are still charged by the actual channel; no rendered length from worker.
 	if e = writerTrafficFits(&s.budget, identity, cfg); e != nil {
@@ -140,7 +163,7 @@ func (r *BatchRun) WriteOutput(ctx context.Context, out io.Writer, data []byte) 
 
 // Compute encoded sizes without allocating/serializing the rendered bytes into
 // control JSONL. This is a preflight, not a second charge against the budget.
-func writerTrafficFits(b *traffic, identity string, cfg writerConfig) error {
+func writerTrafficFits(b *traffic, identity string, cfg writerLaunchConfig) error {
 	var sink bytes.Buffer
 	c := newChannel(strings.NewReader(""), &sink, &traffic{})
 	if c.send("hello", hello{identity}) != nil || c.send("config", cfg) != nil {
@@ -192,7 +215,7 @@ func WriterMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 	if c.expect("hello", &h) != nil || h.Build != identity {
 		return 2
 	}
-	var cfg writerConfig
+	var cfg writerLaunchConfig
 	if c.expect("config", &cfg) != nil || cfg.Nonce != cap || cfg.Size < 0 || cfg.Size > maxTraffic {
 		return 2
 	}
@@ -224,7 +247,11 @@ func WriterMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 		return 2
 	}
 	defer public.Close()
-	if n, e := public.Write(data); e != nil || n != len(data) {
+	if cfg.File != nil {
+		if role != "scan-writer" || writeScanFile(cfg.File, public, data) != nil || public.Close() != nil {
+			return 2
+		}
+	} else if n, e := public.Write(data); e != nil || n != len(data) {
 		return 2
 	}
 	if c.send("written", writerDone{cfg.Size, cfg.SHA256}) != nil {

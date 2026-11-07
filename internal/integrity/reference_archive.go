@@ -7,6 +7,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"crypto/subtle"
+	"encoding/base64"
 	"errors"
 	"hash"
 	"io"
@@ -132,6 +133,7 @@ func InspectReferenceArchive(ctx context.Context, b ReferenceBinding, r io.Reade
 			result.bindingFingerprint = b.fingerprint
 			result.entries = entries
 			result.verified = true
+			result.observedSRI = name + "-" + base64.StdEncoding.EncodeToString(observed)
 			return result, nil
 		}
 		if len(entries) >= l.Entries || !validUSTAR(block[:]) {

@@ -131,7 +131,11 @@ func (r *nativeRoot) bindPublication(target *nativeRoot) error {
 	return r.bindSeparated(target, true)
 }
 func (r *nativeRoot) bindSeparated(target *nativeRoot, publication bool) error {
-	if r.external != nil || r.parent != nil || target.external != nil || (!publication && target.parent != nil) {
+	// Publication alone can exclude an already target-bound state/reference
+	// root. Its original external guard is never replaced: bindPublication
+	// checks it, and Publication holds the source/anchor locks and rechecks it
+	// for every operation. Ordinary external-root admission is unchanged.
+	if r.external != nil || r.parent != nil || (!publication && (target.external != nil || target.parent != nil)) {
 		return ErrPath
 	}
 	mount, e := r.mountID()

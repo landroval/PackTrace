@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"runtime/debug"
 	"sync"
 	"time"
@@ -26,16 +27,19 @@ var errScanProtocol = errors.New("scan: worker-protocol")
 var errScanResource = errors.New("scan: resident-observation-failed")
 
 type ScanRun struct {
-	Plan                integrityscan.Plan
-	Records             []integrityscan.Record
-	Summary             integrityscan.Summary
-	Inventory           *projectinventory.PublicInventory
-	Intelligence        *integrityscan.Intelligence
-	Advisories          *integrityscan.AdvisoryReport
-	Resources           integrityscan.Resources // comparison checkpoint, updated by Checkpoint/Finish
-	Operational         ScanReceipt             // populated only by Finish, never predicted in public bytes
-	Usable, Interrupted bool
-	output              BatchRun
+	Plan                  integrityscan.Plan
+	Records               []integrityscan.Record
+	Summary               integrityscan.Summary
+	Inventory             *projectinventory.PublicInventory
+	Intelligence          *integrityscan.Intelligence
+	Advisories            *integrityscan.AdvisoryReport
+	PolicyMaterials       []integrityscan.PolicyMaterial // Private evidence, never a report projection.
+	PolicyMaterialLimited bool
+	Resources             integrityscan.Resources // comparison checkpoint, updated by Checkpoint/Finish
+	Operational           ScanReceipt             // populated only by Finish, never predicted in public bytes
+	Usable, Interrupted   bool
+	output                BatchRun
+	fileOutput            *scanFileOutputState
 }
 
 func (r *ScanRun) WriteOutput(ctx context.Context, out io.Writer, data []byte) error {
@@ -63,6 +67,7 @@ type scanConfig struct {
 	TrustedPolicyDigest string                  `json:"trustedPolicyDigest,omitempty"`
 	Plan                *integrityscan.Plan     `json:"plan"`
 	Intelligence        *scanIntelligenceConfig `json:"intelligence,omitempty"`
+	FileOutput          *scanFileOutputConfig   `json:"fileOutput,omitempty"`
 }
 type scanStart struct {
 	Stage string `json:"stage"`
@@ -111,21 +116,25 @@ func RunScan(ctx context.Context, request cli.ScanArgumentRequest) (ScanRun, err
 		return run, errors.New("scan: interrupted")
 	}
 	s.scan = newScanLifecycle(ctx, s.deadline)
-	if request.PolicyPath == "" || (request.Privacy != "portable" && request.Privacy != "local") || request.Output != "-" {
+	if request.Privacy != "portable" && request.Privacy != "local" || request.Output == "" {
 		return run, integrityscan.ErrOptions
 	}
 	target, e := filepath.Abs(request.Path)
 	if e != nil {
 		return run, integrityscan.ErrOptions
 	}
-	policyPath, e := filepath.Abs(request.PolicyPath)
-	if e != nil {
-		return run, integrityscan.ErrOptions
-	}
-	observation, e := run.scanPhase(ctx, scanConfig{Stage: "policy", Target: target, PolicyPath: policyPath, TrustedPolicyDigest: request.TrustedPolicyDigest})
-	if e != nil {
-		run.Interrupted = explicitCancel(ctx)
-		return run, e
+	var policyPath string
+	var observation integrityscan.PolicyObservation
+	if request.PolicyPath != "" {
+		policyPath, e = filepath.Abs(request.PolicyPath)
+		if e != nil {
+			return run, integrityscan.ErrOptions
+		}
+		observation, e = run.scanPhase(ctx, scanConfig{Stage: "policy", Target: target, PolicyPath: policyPath, TrustedPolicyDigest: request.TrustedPolicyDigest})
+		if e != nil {
+			run.Interrupted = explicitCancel(ctx)
+			return run, e
+		}
 	}
 	wantsIntelligence := request.StateDir != "" || request.TrustedSnapshotDigest != "" || request.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) != 0
 	if wantsIntelligence {
@@ -140,7 +149,14 @@ func RunScan(ctx context.Context, request cli.ScanArgumentRequest) (ScanRun, err
 			return run, integrityscan.ErrOptions
 		}
 	}
-	plan, e := integrityscan.Configure(request, observation.Policy)
+	var plan integrityscan.Plan
+	if request.PolicyPath == "" {
+		plan, e = integrityscan.ConfigureBuiltin(request)
+		observation.Policy = plan.Policy
+		observation.SourceHash = builtinPolicyHash(plan)
+	} else {
+		plan, e = integrityscan.Configure(request, observation.Policy)
+	}
 	if e != nil {
 		return run, e
 	}
@@ -158,7 +174,20 @@ func RunScan(ctx context.Context, request cli.ScanArgumentRequest) (ScanRun, err
 		}
 		intelligence = &owner.cfg
 	}
-	_, e = run.scanPhase(ctx, scanConfig{Stage: "acquire", Target: target, PolicyPath: policyPath, PolicyHash: observation.SourceHash, TrustedPolicyDigest: request.TrustedPolicyDigest, Plan: &plan, Intelligence: intelligence})
+	if request.Output != "-" {
+		destination, err := filepath.Abs(request.Output)
+		if err != nil {
+			return run, integrityscan.ErrOptions
+		}
+		policyDirectory := ""
+		if policyPath != "" {
+			policyDirectory = filepath.Dir(policyPath)
+		}
+		if err := run.prepareFileOutput(ctx, target, policyDirectory, destination); err != nil {
+			return run, errors.New("scan: output-destination-unavailable")
+		}
+	}
+	_, e = run.scanPhase(ctx, scanConfig{Stage: "acquire", Target: target, PolicyPath: policyPath, PolicyHash: observation.SourceHash, TrustedPolicyDigest: request.TrustedPolicyDigest, Plan: &plan, Intelligence: intelligence, FileOutput: run.fileOutputConfig()})
 	run.Interrupted = explicitCancel(ctx)
 	return run, e
 }
@@ -229,6 +258,7 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 		inventory    *projectinventory.PublicInventory
 		intelligence *integrityscan.Intelligence
 		advisories   *integrityscan.AdvisoryReport
+		materials    *scanPolicyMaterialBuffer
 	}
 	parsed := make(chan phaseData, 1)
 	failure = s.runChild(phase, cmd, release, func(_ context.Context, c *channel, input io.Closer) error {
@@ -255,6 +285,9 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 		advisoryClosed := cfg.Stage != "acquire" || cfg.Plan == nil || cfg.Plan.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) == 0
 		advisoryDecisions := []integrityscan.AdvisoryDecision{}
 		advisorySeen := map[[3]int]bool{}
+		materialWanted := policyMaterialWanted(cfg.Plan)
+		material := scanPolicyMaterialBuffer{}
+		materialSeen := map[[5]int]bool{}
 		localWanted := !advisoryClosed && integrityscan.PlanPrivacy(*cfg.Plan) == "local"
 		localClosed := !localWanted
 		localBatches := uint32(0)
@@ -400,9 +433,41 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 				}
 				data.advisories = a
 				advisoryClosed = true
+			case "policy-material":
+				var v integrityscan.PolicyMaterial
+				if !started || cfg.Stage != "acquire" || !materialWanted || !inventoryClosed || pending != nil || fatal != "" || decode(m.Data, &v) != nil || material.accept(v) != nil {
+					return errScanProtocol
+				}
+				key := [5]int{0, int(v.Observation), v.Advisory, v.Affected, 0}
+				if v.Scope.Category == "integrity" {
+					key = [5]int{1, v.Record, v.Difference, 0, 0}
+				}
+				if materialSeen[key] {
+					return errScanProtocol
+				}
+				materialSeen[key] = true
+			case "policy-material-closure":
+				var v scanPolicyMaterialClosure
+				if !started || cfg.Stage != "acquire" || !materialWanted || !inventoryClosed || !advisoryClosed || pending != nil || fatal != "" || decode(m.Data, &v) != nil || material.finish(v) != nil {
+					return errScanProtocol
+				}
+				if material.limited {
+					// Budget exhaustion cannot certify partially transported witness
+					// associations. Retain findings, but accept none of this phase.
+					material.rows = nil
+				}
+				data.materials = &material
 			case "instance":
 				var v integrityscan.Record
-				if !started || cfg.Stage != "acquire" || !intelligenceClosed || !inventoryClosed || !advisoryClosed || cfg.Plan == nil || pending != nil || fatal != "" || decode(m.Data, &v) != nil || v.Index != expected || integrityscan.ValidateRecord(*cfg.Plan, v, cfg.PolicyHash) != nil {
+				if !started || cfg.Stage != "acquire" || !intelligenceClosed || !inventoryClosed || !advisoryClosed || cfg.Plan == nil || pending != nil || material.closed || fatal != "" || decode(m.Data, &v) != nil || v.Index != expected || integrityscan.ValidateRecord(*cfg.Plan, v, cfg.PolicyHash) != nil {
+					return errScanProtocol
+				}
+				if materialWanted {
+					material.limited = material.limited || v.PolicyMaterialLimited
+					if material.addWitnesses(v.PolicyWitnesses) != nil {
+						return errScanProtocol
+					}
+				} else if v.PolicyObservation != 0 || len(v.PolicyWitnesses) != 0 || v.PolicyMaterialLimited {
 					return errScanProtocol
 				}
 				pending = &v
@@ -430,7 +495,7 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 						return errScanProtocol
 					}
 				} else if fatal == "" && cfg.Plan != nil {
-					if !inventoryClosed || !advisoryClosed || v.Summary.InventoryComplete != inventory.Complete {
+					if !inventoryClosed || !advisoryClosed || materialWanted && !material.closed || v.Summary.InventoryComplete != inventory.Complete {
 						return errScanProtocol
 					}
 					want := len(cfg.Plan.Policy.References)
@@ -469,6 +534,24 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 		}
 		if data.advisories != nil {
 			run.Advisories = data.advisories
+		}
+		if data.materials != nil && failure == nil {
+			var decisions []integrityscan.AdvisoryDecision
+			if data.advisories != nil {
+				decisions = data.advisories.Decisions
+			}
+			// No material becomes usable until closure, EOF, exchange join and
+			// semantic admission. Keep expensive shared-graph work out of the
+			// receive loop so periodic worker samples can be consumed on time.
+			if data.inventory == nil || len(data.materials.rows) != 0 && integrityscan.ValidatePolicyMaterials(*cfg.Plan, *data.inventory, data.records, decisions, data.materials.rows) != nil {
+				failure = errScanProtocol
+				run.PolicyMaterialLimited = true
+			} else {
+				run.PolicyMaterials = data.materials.rows
+				run.PolicyMaterialLimited = data.materials.limited
+			}
+		} else if cfg.Stage == "acquire" && policyMaterialWanted(cfg.Plan) {
+			run.PolicyMaterialLimited = true
 		}
 	default:
 	}
@@ -584,16 +667,29 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 		return 2
 	}
 	var cfg scanConfig
-	if c.expect("config", &cfg) != nil || cfg.Nonce != cap || !one(cfg.Stage, "policy", "acquire") || !filepath.IsAbs(cfg.Target) || !filepath.IsAbs(cfg.PolicyPath) {
+	if c.expect("config", &cfg) != nil || cfg.Nonce != cap || !one(cfg.Stage, "policy", "acquire") || !filepath.IsAbs(cfg.Target) {
 		return 2
 	}
-	if cfg.Stage == "policy" && (cfg.Plan != nil || cfg.PolicyHash != "" || cfg.Intelligence != nil) {
+	if cfg.Stage == "policy" && (cfg.Plan != nil || cfg.PolicyHash != "" || cfg.Intelligence != nil || cfg.FileOutput != nil || !filepath.IsAbs(cfg.PolicyPath)) {
 		return 2
 	}
-	if cfg.Stage == "acquire" && (cfg.Plan == nil || integrityscan.ValidatePolicy(cfg.Plan.Policy) != nil || !scanSourceHash(cfg.PolicyHash) || cfg.TrustedPolicyDigest != cfg.Plan.TrustedPolicyDigest) {
+	if cfg.Stage == "acquire" && (cfg.Plan == nil || integrityscan.ValidatePlanPolicy(*cfg.Plan) != nil || !scanSourceHash(cfg.PolicyHash) || cfg.TrustedPolicyDigest != cfg.Plan.TrustedPolicyDigest) {
 		return 2
 	}
 	if cfg.Stage == "acquire" {
+		if cfg.FileOutput != nil {
+			v := cfg.FileOutput
+			if !v.valid() || v.Target != cfg.Target || v.PolicyDirectory != "" && v.PolicyDirectory != filepath.Dir(cfg.PolicyPath) || cfg.Plan.Builtin != (v.PolicyDirectory == "") || !reflect.DeepEqual(v.Intelligence, cfg.Intelligence) {
+				return 2
+			}
+		}
+		if cfg.Plan.Builtin {
+			if cfg.PolicyPath != "" || cfg.TrustedPolicyDigest != "" || cfg.PolicyHash != builtinPolicyHash(*cfg.Plan) {
+				return 2
+			}
+		} else if !filepath.IsAbs(cfg.PolicyPath) {
+			return 2
+		}
 		privacy := integrityscan.PlanPrivacy(*cfg.Plan)
 		if !one(privacy, "portable", "local") || cfg.Plan.Policy.RequirePortable && privacy == "local" {
 			return 2
@@ -667,7 +763,17 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 				e = errScanProtocol
 			}
 		}
+		material := scanPolicyMaterialBuffer{}
+		var emitEvidence integrityscan.PolicyEvidenceEmitter
+		if policyMaterialWanted(cfg.Plan) {
+			emitEvidence = func(v integrityscan.PolicyMaterial) error { return material.emit(sender.send, v) }
+		}
 		emitRecord := func(r integrityscan.Record) error {
+			material.limited = material.limited || r.PolicyMaterialLimited
+			if emitEvidence != nil && material.addWitnesses(r.PolicyWitnesses) != nil {
+				material.limited = true
+				r.PolicyWitnesses = nil
+			}
 			// Exact shape uses non-null finite collections; no portable report or
 			// child-selected public exit/coverage is sent through this role.
 			if r.Assessment.Differences == nil {
@@ -686,7 +792,7 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 		}
 		emitInventory := func(r projectinventory.Result) error {
 			p := projectinventory.Portable(r)
-			if cfg.Plan.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) != 0 {
+			if policyMaterialWanted(cfg.Plan) || cfg.Plan.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) != 0 {
 				p = projectinventory.PortableMatching(r)
 			}
 			batches := uint32(0)
@@ -729,23 +835,32 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 				}
 				emitLocal = func(d integrityscan.LocalAdvisory) error { return sender.send("matching-advisory", d) }
 			}
-			matched, e := integrityscan.MatchInventoryWithLocal(ctx, *cfg.Plan, r, snapshot, intelligenceInfo, now, func(d integrityscan.AdvisoryDecision) error {
+			matched, e := integrityscan.MatchInventoryWithPolicyEvidence(ctx, *cfg.Plan, r, snapshot, intelligenceInfo, now, func(d integrityscan.AdvisoryDecision) error {
 				return sender.send("matching-decision", d)
-			}, emitLocal)
+			}, emitLocal, emitEvidence)
 			if e != nil {
 				return e
 			}
 			return sender.send("matching-closure", matched)
 		}
 		if e == nil {
-			if intelligenceOwner != nil {
-				summary, e = integrityscan.AcquireFromRoot(ctx, intelligenceOwner.target, filepath.Dir(cfg.PolicyPath), cfg.PolicyHash, *cfg.Plan, emitRecord, emitInventory)
+			prepared := ""
+			if !cfg.Plan.Builtin {
+				prepared = filepath.Dir(cfg.PolicyPath)
+			}
+			if cfg.FileOutput != nil {
+				summary, e = acquireBoundFileScan(ctx, cfg, intelligenceOwner, emitRecord, emitInventory, emitEvidence)
+			} else if intelligenceOwner != nil {
+				summary, e = integrityscan.AcquireFromRootWithPolicyEvidence(ctx, intelligenceOwner.target, prepared, cfg.PolicyHash, *cfg.Plan, emitRecord, emitInventory, emitEvidence)
 			} else {
-				summary, e = integrityscan.AcquireWithInventory(ctx, cfg.Target, filepath.Dir(cfg.PolicyPath), cfg.PolicyHash, *cfg.Plan, emitRecord, emitInventory)
+				summary, e = integrityscan.AcquireWithPolicyEvidence(ctx, cfg.Target, prepared, cfg.PolicyHash, *cfg.Plan, emitRecord, emitInventory, emitEvidence)
 			}
 		}
 		if intelligenceOwner != nil {
 			e = errors.Join(e, intelligenceOwner.check(ctx), intelligenceOwner.close())
+		}
+		if e == nil && emitEvidence != nil {
+			e = material.close(sender.send)
 		}
 	}
 	stop()
@@ -754,8 +869,8 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 	}
 	if e != nil {
 		code := "scan: acquisition-unavailable"
-		if e == integrityscan.ErrPolicy {
-			code = e.Error()
+		if errors.Is(e, integrityscan.ErrPolicy) {
+			code = integrityscan.ErrPolicy.Error()
 		}
 		if sender.send("diagnostic", diagnostic{code}) != nil {
 			return 2

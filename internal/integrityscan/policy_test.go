@@ -56,7 +56,6 @@ func TestPolicyEffectiveSettingsAreParentOwned(t *testing.T) {
 	for _, mutate := range []func(*cli.ScanArgumentRequest){
 		func(r *cli.ScanArgumentRequest) { r.Checks = cli.ArgumentCheckMalicious },
 		func(r *cli.ScanArgumentRequest) { r.Privacy = "unrecognized" },
-		func(r *cli.ScanArgumentRequest) { r.Output = "inside/report.json" },
 		func(r *cli.ScanArgumentRequest) { r.StateDir = "unqualified-store" },
 		func(r *cli.ScanArgumentRequest) { r.Manager = "bun@1.4.2" },
 	} {

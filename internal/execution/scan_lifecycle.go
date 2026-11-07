@@ -253,6 +253,12 @@ func (r *ScanRun) Checkpoint() error {
 			return e
 		}
 	}
+	if r.fileOutput != nil {
+		if e := r.fileOutput.check(); e != nil {
+			s.scan.noteFault("file-output-binding", e)
+			return e
+		}
+	}
 	s.scan.tick()
 	r.Resources = s.scan.snapshot().Resources
 	if e := s.contextError(s.caller); e != nil {
@@ -274,6 +280,13 @@ func (r *ScanRun) Finish() (ScanReceipt, error) {
 		s.scan.noteFault("cleanup", errReap)
 	}
 	receipt, e := s.scan.finish()
+	if f := r.fileOutput; f != nil && receipt.CleanupConfirmed && !s.broken {
+		if closeErr := f.finish(); closeErr != nil {
+			s.scan.noteFault("file-output-close", closeErr)
+			e = errors.Join(e, closeErr)
+			receipt = s.scan.snapshot()
+		}
+	}
 	if q := s.intelligence; q != nil && receipt.CleanupConfirmed && !s.broken {
 		if !q.closed {
 			bindingErr := q.check(s.caller)
