@@ -41,7 +41,9 @@ type Policy struct {
 	NPMRegistry            string          `json:"npmRegistry,omitempty"`
 	RequirePortable        bool            `json:"requirePortable,omitempty"`
 	// AdvisoryCandidates grants local ambiguous-origin lookups, not origin authority.
-	AdvisoryCandidates bool `json:"advisoryCandidates,omitempty"`
+	AdvisoryCandidates bool        `json:"advisoryCandidates,omitempty"`
+	Exceptions         []Exception `json:"exceptions,omitempty"`
+	MaxExceptionDays   int         `json:"maxExceptionDays,omitempty"`
 }
 
 // NPMOriginRule authorizes only this exact locked tuple's namespace correspondence.
@@ -64,6 +66,8 @@ type Reference struct {
 	Context        string `json:"context"`
 }
 type Plan struct {
+	Builtin  bool                `json:"builtin,omitempty"`
+	Provided cli.ArgumentOptions `json:"provided,omitempty"`
 	// PolicyFile is a source selector, never authority. Acquisition must reread
 	// it through a newly proven external capability before target content.
 	PolicyFile            string             `json:"policyFile"`
@@ -83,17 +87,10 @@ func ParsePolicy(data []byte) (Policy, error) {
 	if code != "" {
 		return Policy{}, ErrPolicy
 	}
-	// Do not let encoding/json's case folding introduce alternate grant keys.
-	for key := range fields {
-		if strings.EqualFold(key, "advisoryCandidates") && key != "advisoryCandidates" {
-			return Policy{}, ErrPolicy
-		}
-	}
-	// Optional scope/privacy fields are absent or typed values, never null.
-	for _, key := range []string{"npmRegistry", "requirePortable", "advisoryCandidates"} {
-		if raw, ok := fields[key]; ok && bytes.Equal(bytes.TrimSpace(raw), []byte("null")) {
-			return Policy{}, ErrPolicy
-		}
+	// Canonical tags only, at every typed object boundary. A pin authenticates
+	// bytes, not encoding/json's case-folded interpretation of ambiguous keys.
+	if !canonicalPolicyFields(fields) || !strictExceptionFields(fields) {
+		return Policy{}, ErrPolicy
 	}
 	var p Policy
 	d := json.NewDecoder(bytes.NewReader(data))
@@ -103,7 +100,38 @@ func ParsePolicy(data []byte) (Policy, error) {
 	}
 	return p, nil
 }
+func canonicalPolicyFields(fields map[string]json.RawMessage) bool {
+	if !canonicalFields(fields, []string{"version", "designation", "reason", "provenance", "manager", "requiredChecks", "failOn", "requireHardMemoryLimit", "minimumAssurance", "references", "npmOrigins", "npmRegistry", "requirePortable", "advisoryCandidates", "exceptions", "maxExceptionDays"}) {
+		return false
+	}
+	for _, list := range []struct {
+		key    string
+		fields []string
+	}{
+		{"references", []string{"location", "lockKey", "name", "version", "origin", "classification", "expectedSRI", "archive", "context"}},
+		{"npmOrigins", []string{"location", "name", "version", "origin"}},
+	} {
+		raw, exists := fields[list.key]
+		if !exists {
+			continue
+		}
+		var rows []json.RawMessage
+		if json.Unmarshal(raw, &rows) != nil || rows == nil {
+			return false
+		}
+		for _, row := range rows {
+			if _, ok := strictFields(row, list.fields); !ok {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func ValidatePolicy(p Policy) error {
+	if validateExceptions(p) != nil {
+		return ErrPolicy
+	}
 	if p.Version != 1 || p.Designation != "user-designated" || !text(p.Reason, 4096) || !text(p.Provenance, 4096) || !profile(p.Manager) || p.RequireHardMemoryLimit || (p.MinimumAssurance != "lockfile-consistent" && p.MinimumAssurance != "independently-anchored") || len(p.References) > 20000 || p.References == nil {
 		return ErrPolicy
 	}
@@ -143,6 +171,12 @@ func ValidatePolicy(p Policy) error {
 	return nil
 }
 func Configure(r cli.ScanArgumentRequest, p Policy) (Plan, error) {
+	return configureSource(r, p, false)
+}
+func configureSource(r cli.ScanArgumentRequest, p Policy, builtin bool) (Plan, error) {
+	if builtin {
+		return configureBuiltin(r)
+	}
 	if ValidatePolicy(p) != nil {
 		return Plan{}, ErrPolicy
 	}
@@ -151,14 +185,14 @@ func Configure(r cli.ScanArgumentRequest, p Policy) (Plan, error) {
 	if r.Privacy == "" {
 		r.Privacy = "portable"
 	}
-	if r.PolicyPath == "" || !oneOf(r.Privacy, "portable", "local") || p.RequirePortable && r.Privacy == "local" || r.Output != "-" || (r.StateDir != "" && !filepath.IsAbs(r.StateDir)) || (r.TrustedSnapshotDigest != "" && !supportedSnapshotPin(r.TrustedSnapshotDigest)) || ((p.MinimumAssurance == "independently-anchored" || len(p.NPMOrigins) != 0 || p.NPMRegistry != "" || p.AdvisoryCandidates) && r.TrustedPolicyDigest == "") || (r.TrustedPolicyDigest != "" && !supportedPolicyPin(r.TrustedPolicyDigest)) || required & ^r.Checks != 0 || (r.FailOn|fail) & ^r.Checks != 0 {
+	if r.PolicyPath == "" || !oneOf(r.Privacy, "portable", "local") || p.RequirePortable && r.Privacy == "local" || r.Output == "" || (r.StateDir != "" && !filepath.IsAbs(r.StateDir)) || (r.TrustedSnapshotDigest != "" && !supportedSnapshotPin(r.TrustedSnapshotDigest)) || ((p.MinimumAssurance == "independently-anchored" || len(p.NPMOrigins) != 0 || p.NPMRegistry != "" || p.AdvisoryCandidates || len(p.Exceptions) != 0 || p.MaxExceptionDays != 0) && r.TrustedPolicyDigest == "") || (r.TrustedPolicyDigest != "" && !supportedPolicyPin(r.TrustedPolicyDigest)) || required & ^r.Checks != 0 || (r.FailOn|fail) & ^r.Checks != 0 || (r.Provided&cli.ArgumentOptionFailOn != 0 && fail & ^r.FailOn != 0) {
 		return Plan{}, ErrOptions
 	}
 	family := strings.Split(p.Manager, "@")[0]
 	if r.Manager != "auto" && r.Manager != family && r.Manager != p.Manager {
 		return Plan{}, ErrOptions
 	}
-	return Plan{PolicyFile: filepath.Base(r.PolicyPath), TrustedPolicyDigest: r.TrustedPolicyDigest, StateDir: r.StateDir, TrustedSnapshotDigest: r.TrustedSnapshotDigest, Manager: p.Manager, ExplicitManager: r.Manager != "auto", Privacy: r.Privacy, Checks: r.Checks, FailOn: r.FailOn | fail, Policy: p}, nil
+	return Plan{Provided: r.Provided, PolicyFile: filepath.Base(r.PolicyPath), TrustedPolicyDigest: r.TrustedPolicyDigest, StateDir: r.StateDir, TrustedSnapshotDigest: r.TrustedSnapshotDigest, Manager: p.Manager, ExplicitManager: r.Manager != "auto", Privacy: r.Privacy, Checks: r.Checks, FailOn: r.FailOn | fail, Policy: p}, nil
 }
 func canonicalNPMName(name string) bool {
 	if len(name) == 0 || len(name) > 214 {

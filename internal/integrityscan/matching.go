@@ -264,6 +264,24 @@ func indexedMatchingOrigins(plan Plan, inv projectinventory.Result) map[uint32]A
 // MatchInventoryWithLocal retains only one identity's raw evidence at a time.
 // A window groups at most 64 names in one selected block; budgets are global.
 func MatchInventoryWithLocal(ctx context.Context, plan Plan, inventory projectinventory.Result, snapshot *intelstore.Snapshot, info Intelligence, now time.Time, emit func(AdvisoryDecision) error, local func(LocalAdvisory) error) (AdvisorySummary, error) {
+	return MatchInventoryWithPolicyEvidence(ctx, plan, inventory, snapshot, info, now, emit, local, nil)
+}
+
+func MatchInventoryWithPolicyEvidence(ctx context.Context, plan Plan, inventory projectinventory.Result, snapshot *intelstore.Snapshot, info Intelligence, now time.Time, emit func(AdvisoryDecision) error, local func(LocalAdvisory) error, emitEvidence PolicyEvidenceEmitter) (AdvisorySummary, error) {
+	var project ProjectEvidence
+	if emitEvidence == nil || !policyEvidenceNeeded(plan) {
+		emitEvidence = nil
+	} else {
+		var projectOK bool
+		project, projectOK = BuildProjectEvidence(inventory)
+		if !projectOK {
+			emitEvidence = nil
+		}
+	}
+	var evidenceIndex policyEvidenceInventory
+	if emitEvidence != nil {
+		evidenceIndex = indexPolicyInventory(inventory)
+	}
 	s := AdvisorySummary{Gaps: []string{"declared-unassessed", "index-completeness"}}
 	if !inventory.Complete {
 		s.Gaps = addMatchingGap(s.Gaps, "inventory-incomplete")
@@ -368,6 +386,11 @@ func MatchInventoryWithLocal(ctx context.Context, plan Plan, inventory projectin
 		return hex.EncodeToString(a[:]) < hex.EncodeToString(b[:])
 	})
 	process := func(name string, evidence intel.SnapshotNPMEvidence) error {
+		// Only narrow verified-original receipts survive evaluation; never raw OSV.
+		var originals map[int]LocalAdvisory
+		if emitEvidence != nil {
+			originals = map[int]LocalAdvisory{}
+		}
 		scopeGap := matchingIdentityScopeGap(evidence)
 		if scopeGap != "" {
 			s.Gaps = addMatchingGap(s.Gaps, scopeGap)
@@ -467,6 +490,9 @@ func MatchInventoryWithLocal(ctx context.Context, plan Plan, inventory projectin
 						}
 					}
 					row.Advisory = ids[record.SHA256]
+					if emitEvidence != nil {
+						originals[row.Advisory] = localAdvisoryRecord(record, row.Advisory)
+					}
 					rows = append(rows, row)
 					if len(rows) >= maxMatchingDecisions {
 						limited = true
@@ -508,8 +534,16 @@ func MatchInventoryWithLocal(ctx context.Context, plan Plan, inventory projectin
 					}
 					d.Candidate = activeAdvisoryCandidate(d)
 					d.EnforcementEligible = d.Outcome == "match" && categorySelected(plan, d.Category)
+					before := s.Decisions
 					if err := send(d); err != nil {
 						return err
+					}
+					if emitEvidence != nil && s.Decisions > before && d.EnforcementEligible && !d.Candidate {
+						if material, ok := buildAdvisoryPolicyEvidence(project, evidenceIndex, o, d, originals[d.Advisory]); ok && ValidatePolicyMaterialShape(material) == nil {
+							if err := emitEvidence(material); err != nil {
+								return err
+							}
+						}
 					}
 				}
 			}
@@ -812,7 +846,13 @@ func publicMatchingEndpoint(inv projectinventory.PublicInventory, o projectinven
 }
 
 func ValidateAdvisoryDecision(plan Plan, inventory projectinventory.PublicInventory, info Intelligence, d AdvisoryDecision) error {
-	if projectinventory.ValidatePublic(inventory) != nil || ValidateIntelligence(info) != nil || ValidatePolicy(plan.Policy) != nil || plan.Manager != plan.Policy.Manager || !oneOf(plan.Privacy, "", "portable", "local") || plan.Policy.RequirePortable && plan.Privacy == "local" || plan.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) == 0 || d.Sequence < 0 || d.Sequence >= 4096 || d.Observation == 0 || int(d.Observation) > len(inventory.Observations) || d.Advisory < 0 || d.Advisory > 4096 || d.Affected < -1 || d.Affected >= 20000 || d.Rule < 0 || d.Rule > len(plan.Policy.NPMOrigins) || !oneOf(d.VersionOutcome, "match", "no-match", "indeterminate") || !oneOf(d.Outcome, "match", "no-match", "indeterminate") || !oneOf(d.Category, "malicious", "vulnerability", "unknown") || !oneOf(d.Profile, "openssf-malicious-v1", "osv-openssf-malicious-v1", "osv-github-reviewed-v1", "osv-github-malware-v1", "unknown") || !oneOf(d.Activity, "not-withdrawn", "withdrawn", "unknown") || !oneOf(d.Origin, "operator-npm-rule", "operator-npm-registry", "unqualified") || !oneOf(d.Source, "qualified", "unqualified") || d.Support == nil || len(d.Support) > 256 || !matchingGapShape(d.Gaps) {
+	// Historical supplied/report-only plans need no physical source selector.
+	// The operational supervisor/acquisition validate the complete plan separately.
+	policyErr := ValidatePolicy(plan.Policy)
+	if plan.Builtin {
+		policyErr = ValidatePlanPolicy(plan)
+	}
+	if projectinventory.ValidatePublic(inventory) != nil || ValidateIntelligence(info) != nil || policyErr != nil || plan.Manager != plan.Policy.Manager || !oneOf(plan.Privacy, "", "portable", "local") || plan.Policy.RequirePortable && plan.Privacy == "local" || plan.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) == 0 || d.Sequence < 0 || d.Sequence >= 4096 || d.Observation == 0 || int(d.Observation) > len(inventory.Observations) || d.Advisory < 0 || d.Advisory > 4096 || d.Affected < -1 || d.Affected >= 20000 || d.Rule < 0 || d.Rule > len(plan.Policy.NPMOrigins) || !oneOf(d.VersionOutcome, "match", "no-match", "indeterminate") || !oneOf(d.Outcome, "match", "no-match", "indeterminate") || !oneOf(d.Category, "malicious", "vulnerability", "unknown") || !oneOf(d.Profile, "openssf-malicious-v1", "osv-openssf-malicious-v1", "osv-github-reviewed-v1", "osv-github-malware-v1", "unknown") || !oneOf(d.Activity, "not-withdrawn", "withdrawn", "unknown") || !oneOf(d.Origin, "operator-npm-rule", "operator-npm-registry", "unqualified") || !oneOf(d.Source, "qualified", "unqualified") || d.Support == nil || len(d.Support) > 256 || !matchingGapShape(d.Gaps) {
 		return ErrAdvisory
 	}
 	if !validAdvisoryVersionProblem(d) {

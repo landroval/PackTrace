@@ -46,7 +46,7 @@ compatibility claims. Native bounded inventory now observes root/member manifest
 effective inputs, physical copies and active contained links, including extra
 packages absent from a lockfile. Five pinned producers generated owned inert
 fixtures on Linux; replay is not execution of those producers on other platforms.
-Matching remains future work; the experimental intelligence lifecycle is described
+Advisory matching is bounded to documented npm profiles; the intelligence lifecycle is described
 [below](#experimental-intelligence-lifecycle). The native integrity candidate now compares
 explicitly mapped installed scopes against validated prepared archives and emits
 portable terminal/JSON/SARIF results; this is not complete product coverage.
@@ -65,6 +65,29 @@ limitations. The initial #7 delivery uses the explicitly accepted combined evide
 in [design decisions, section 2](docs/design-decisions.md#2-native-targets-and-initial-delivery-acceptance);
 that is not whole-product release or native Windows 11 x64-hardware qualification.
 macOS is deferred, not completed. No safety gate is waived by choosing a target.
+
+## Effective policy and reviewed exceptions
+
+`scan` accepts optional explicit `--policy FILE`; otherwise it uses conservative
+compiled defaults: all checks, no finding enforcement, portable output and no
+reference/origin/candidate/exception grants. No project/user policy or `.npmrc`
+credentials are discovered. Exact supported `packageManager` hints select only
+interpretation, never trusted authority. Unknown scope stays incomplete.
+
+Pinned policies may contain narrow, evidence-bound, expiring exceptions (30-day
+default maximum). Accepted findings remain visible and coverage gaps remain gaps.
+Explicit weakening flags fail rather than silently erasing policy requirements.
+Operational schema1.7 records effective policy and derives coverage/enforcement
+conditions for every selected category. Local review evidence includes safe
+fingerprints; portable output remains opaque.
+
+Explicit file output is bounded to an existing report directory physically
+disjoint from project, state and references, never overwrites, and fails closed
+where native publication is unavailable. Its observed writer and original-root
+admission are distinct from caller-managed shell redirection. See the
+[issue 8 contract and verification boundary](docs/increments/issue-8-trusted-policy-and-exceptions.md).
+These capabilities do not remove genuine native/index/freshness/ownership gaps:
+a real bounded scan may still correctly return3, not a safety verdict.
 
 ## Operator-pinned prepared policies
 

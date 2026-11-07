@@ -8,8 +8,43 @@ import (
 	"packtrace/internal/inventory"
 )
 
+// builtinSelectionOptions resolves only unresolved built-in requests. The hint
+// selects an interpretation, not an authenticated producer or policy grant.
+// Concrete external-policy profiles are deliberately unaffected.
+func builtinSelectionOptions(opts Options, manifest *inventory.ManifestDocument) Options {
+	if opts.Profile != "auto" && opts.Profile != "npm" && opts.Profile != "bun" {
+		return opts
+	}
+	requested := opts.Profile
+	// Explicit --manager auto is still not authority to resolve competing locks.
+	if requested == "auto" {
+		opts.ExplicitManager = false
+	}
+	if manifest == nil {
+		return opts
+	}
+	var hint string
+	if json.Unmarshal(manifest.Fields["packageManager"], &hint) != nil || !SupportedSelectionProfile(hint) {
+		return opts
+	}
+	if requested != "auto" && !strings.HasPrefix(hint, requested+"@") {
+		return opts
+	}
+	opts.Profile = hint
+	return opts
+}
+
+// SupportedSelectionProfile reports the exact interpretation anchors supported
+// by the existing input selectors. It grants no producer/source authority.
+func SupportedSelectionProfile(profile string) bool {
+	npm, ne := inventory.SelectNPMInput(profile, inventory.NPMInputState{}, inventory.NPMInputState{})
+	bun, be := inventory.SelectBunInput(profile, inventory.BunInputState{}, inventory.BunInputState{})
+	return ne == nil && npm.ProfileQualified || be == nil && bun.ProfileQualified
+}
+
 func (c *collector) selectInputs(opts Options) {
 	s := &c.result.Selection
+	s.Profile = opts.Profile
 	n1, n2 := c.npmState("npm-shrinkwrap.json"), c.npmState("package-lock.json")
 	b1, b2 := c.bunState("bun.lock"), c.bunState("bun.lockb")
 	npmPresent := n1.Presence == inventory.NPMInputPresencePresent || n2.Presence == inventory.NPMInputPresencePresent

@@ -90,6 +90,19 @@ func matchingFaultFrames(c *channel, cfg scanConfig, mode string) int {
 		d.Sequence = 1
 		_ = c.send("matching-decision", d)
 	}
+	if policyMaterialWanted(cfg.Plan) && mode != "matching-local-policy-missing-closure" || mode == "matching-policy-unsolicited" {
+		closure := scanPolicyMaterialClosure{}
+		if mode == "matching-local-policy-bad-count" {
+			closure.Rows = 1
+		}
+		if mode == "matching-local-policy-bad-bytes" {
+			closure.Bytes = 1
+		}
+		_ = c.send("policy-material-closure", closure)
+		if mode == "matching-local-policy-duplicate-closure" {
+			_ = c.send("policy-material-closure", closure)
+		}
+	}
 	_ = c.send("done", scanDone{})
 	if mode == "matching-after-done" {
 		_ = c.send("matching-closure", s)
@@ -107,7 +120,7 @@ func TestMatchingProtocolRequiresExactClosedParentScope(t *testing.T) {
 	// Independent owned streams can share the test runner's existing bounded
 	// parallelism; race-runtime teardown need not serialize fourteen children.
 	t.Parallel()
-	for _, mode := range []string{"matching-valid", "matching-bad-source", "matching-bad-eligibility", "matching-candidate-unsolicited", "matching-assessment-unsolicited", "matching-private-gap", "matching-wrong-observation", "matching-bad-sequence", "matching-problem-unbound", "matching-problem-private-kind", "matching-duplicate-decision", "matching-bad-count", "matching-zero-work-limit", "matching-missing-closure", "matching-duplicate-closure", "matching-late-decision", "matching-after-done", "matching-crash-after-closure", "matching-local-valid", "matching-local-unsolicited", "matching-local-missing-closure", "matching-local-absolute", "matching-local-bad-count"} {
+	for _, mode := range []string{"matching-valid", "matching-bad-source", "matching-bad-eligibility", "matching-candidate-unsolicited", "matching-assessment-unsolicited", "matching-private-gap", "matching-wrong-observation", "matching-bad-sequence", "matching-problem-unbound", "matching-problem-private-kind", "matching-duplicate-decision", "matching-bad-count", "matching-zero-work-limit", "matching-missing-closure", "matching-duplicate-closure", "matching-late-decision", "matching-after-done", "matching-crash-after-closure", "matching-local-valid", "matching-local-unsolicited", "matching-local-missing-closure", "matching-local-absolute", "matching-local-bad-count", "matching-local-policy-missing-closure", "matching-local-policy-bad-count", "matching-local-policy-bad-bytes", "matching-local-policy-duplicate-closure", "matching-policy-unsolicited"} {
 		t.Run(mode, func(t *testing.T) {
 			t.Parallel()
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -129,7 +142,7 @@ func TestMatchingProtocolRequiresExactClosedParentScope(t *testing.T) {
 			if (e == nil) != (mode == "matching-valid" || mode == "matching-local-valid") || cmd.ProcessState == nil {
 				t.Fatalf("protocol outcome: %v state=%v", e, cmd.ProcessState)
 			}
-			closed := mode == "matching-valid" || mode == "matching-local-valid" || mode == "matching-duplicate-closure" || mode == "matching-late-decision" || mode == "matching-after-done" || mode == "matching-crash-after-closure"
+			closed := mode == "matching-valid" || mode == "matching-local-valid" || strings.HasPrefix(mode, "matching-local-policy-") || mode == "matching-policy-unsolicited" || mode == "matching-duplicate-closure" || mode == "matching-late-decision" || mode == "matching-after-done" || mode == "matching-crash-after-closure"
 			if closed != (run.Advisories != nil) {
 				t.Fatal("unclosed rows promoted or closed partial evidence lost", run.Advisories)
 			}

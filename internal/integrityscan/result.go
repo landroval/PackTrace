@@ -17,7 +17,7 @@ import (
 // worker field grants policy authority, privacy, public exit or qualification.
 func ValidateRecord(plan Plan, r Record, policyHash string) error {
 	bad := errors.New("scan: worker-protocol")
-	if r.Index < 0 || r.Index >= len(plan.Policy.References) || r.ObservedEntries < 0 || r.ObservedEntries > 100000 {
+	if r.Index < 0 || r.Index >= len(plan.Policy.References) || r.ObservedEntries < 0 || r.ObservedEntries > 100000 || !validPolicyWitnesses(r) {
 		return bad
 	}
 	id := instanceID(r.Index)
@@ -91,6 +91,26 @@ func ValidateRecord(plan Plan, r Record, policyHash string) error {
 	return nil
 }
 
+// Legacy records have no policy witnesses. New witnesses are a bounded private
+// association table admitted with the original record, not policy authority.
+func validPolicyWitnesses(r Record) bool {
+	if len(r.PolicyWitnesses) > 4096 || len(r.PolicyWitnesses) != 0 && r.PolicyObservation == 0 {
+		return false
+	}
+	seen := map[int]bool{}
+	for _, w := range r.PolicyWitnesses {
+		if w.Difference < 0 || w.Difference >= len(r.Assessment.Differences) || seen[w.Difference] || !fingerprintShape(w.Fingerprint) {
+			return false
+		}
+		d := r.Assessment.Differences[w.Difference]
+		if !oneOf(differenceName(d.Kind), "modified", "missing", "added", "type-changed") || w.EntryID != d.EntryID || w.EvidenceID != d.EvidenceID || w.EvidenceID == "" {
+			return false
+		}
+		seen[w.Difference] = true
+	}
+	return true
+}
+
 type Resources struct {
 	WorkerSamples       int    `json:"workerSamples"`
 	SupervisorSamples   int    `json:"supervisorSamples"`
@@ -124,6 +144,9 @@ type Report struct {
 	Inventory           *projectinventory.PublicInventory `json:"inventory,omitempty"`
 	Intelligence        *Intelligence                     `json:"intelligence,omitempty"`
 	Advisories          *AdvisoryReport                   `json:"advisories,omitempty"`
+	Policy              *PolicyEvaluation                 `json:"policy,omitempty"`
+	policyContext       *policyReportContext              // Immutable parent-derived comparison snapshot.
+	policyPresent       bool                              // Even explicit null is new-schema provenance.
 	advisoryPlan        *Plan                             // Parent-owned validation context; never serialized.
 }
 
@@ -215,20 +238,23 @@ func BuildReportWithInventory(plan Plan, records []Record, summary Summary, reso
 }
 
 func Render(r Report, format string) ([]byte, error) {
+	if !validRenderedPolicy(r) {
+		return nil, errors.New("scan: report-failed")
+	}
 	if !oneOf(r.Privacy, "portable", "local") || r.advisoryPlan != nil && r.Privacy != PlanPrivacy(*r.advisoryPlan) || r.Privacy == "local" && (r.advisoryPlan == nil || PlanPrivacy(*r.advisoryPlan) != "local" || r.advisoryPlan.Policy.RequirePortable) {
 		return nil, errors.New("scan: report-failed")
 	}
 	if !validRenderedAdvisories(r) {
 		return nil, errors.New("scan: report-failed")
 	}
-	if r.Intelligence != nil && (!oneOf(r.SchemaVersion, "1.2", "1.3", "1.4", "1.5", "1.6") || ValidateIntelligence(*r.Intelligence) != nil) {
+	if r.Intelligence != nil && (!oneOf(r.SchemaVersion, "1.2", "1.3", "1.4", "1.5", "1.6", "1.7") || ValidateIntelligence(*r.Intelligence) != nil) {
 		return nil, errors.New("scan: report-failed")
 	}
 	if r.Inventory != nil && projectinventory.ValidatePublic(*r.Inventory) != nil {
 		return nil, errors.New("scan: report-failed")
 	}
 	// Historical schemas must not acquire the 1.6 count merely by rendering.
-	if r.Advisories != nil && r.SchemaVersion != "1.6" {
+	if r.Advisories != nil && !oneOf(r.SchemaVersion, "1.6", "1.7") {
 		a := *r.Advisories
 		a.legacyCandidates = true
 		r.Advisories = &a
@@ -267,6 +293,7 @@ func Render(r Report, format string) ([]byte, error) {
 			}
 		}
 		renderAdvisories(&out, r.Advisories, r.Inventory)
+		renderPolicy(&out, r.Policy)
 		for _, c := range r.Coverage {
 			fmt.Fprintf(&out, "%s: %s (%s)\n", c.Check, c.Outcome, c.Reason)
 		}
@@ -277,7 +304,15 @@ func Render(r Report, format string) ([]byte, error) {
 			return nil, e
 		}
 		out.Write(detail)
-		fmt.Fprintf(&out, "Required coverage: incomplete\nExit: %d\n", r.ExitCode)
+		coverage := "incomplete"
+		if r.SchemaVersion == "1.7" && !RequiredCoverageIncomplete(r) {
+			coverage = "complete"
+		}
+		exitLabel := "Exit"
+		if r.SchemaVersion == "1.7" {
+			exitLabel = "Comparison exit"
+		}
+		fmt.Fprintf(&out, "Required coverage: %s\n%s: %d\n", coverage, exitLabel, r.ExitCode)
 		return []byte(out.String()), nil
 	case "sarif":
 		type message struct {
@@ -291,21 +326,21 @@ func Render(r Report, format string) ([]byte, error) {
 			Locations  []any   `json:"locations,omitempty"`
 		}
 		results := []result{}
-		for _, d := range r.Comparison.Differences {
+		for i, d := range r.Comparison.Differences {
 			if d.Kind != integrity.DifferenceUnchanged {
 				label := differenceName(d.Kind)
-				results = append(results, result{RuleID: "PT-INTEGRITY-" + strings.ToUpper(label), Level: "warning", Message: message{"Observed integrity drift: " + label + "; not evidence of malicious execution"}, Properties: d})
+				results = append(results, result{RuleID: "PT-INTEGRITY-" + strings.ToUpper(label), Level: "warning", Message: message{"Observed integrity drift: " + label + "; not evidence of malicious execution"}, Properties: policyAlertProperties(r, d, i, false)})
 			}
 		}
 		if a := r.Advisories; a != nil {
 			observations, advisories := localDetailMaps(a.Local)
-			for _, d := range a.Decisions {
+			for i, d := range a.Decisions {
 				if !d.EnforcementEligible {
 					continue
 				}
 				class := r.Inventory.Observations[d.Observation-1].Class
 				text := "Matched " + d.Category + " advisory on " + class + " evidence; not proof of execution or content authenticity"
-				entry := result{RuleID: "PT-" + strings.ToUpper(d.Category) + "-ADVISORY", Level: "warning", Properties: d}
+				entry := result{RuleID: "PT-" + strings.ToUpper(d.Category) + "-ADVISORY", Level: "warning", Properties: policyAlertProperties(r, d, i, true)}
 				if a.Local != nil {
 					if observation, ok := observations[d.Observation]; ok {
 						text += fmt.Sprintf("; package=%q version=%q relative-path=%q", observation.Name, observation.Version, observation.Location)
@@ -324,7 +359,7 @@ func Render(r Report, format string) ([]byte, error) {
 		}
 		notifications := []any{}
 		for _, c := range r.Coverage {
-			if c.Required && c.Outcome != "completed" {
+			if c.Required && c.Outcome != "completed" && c.Outcome != "not-applicable" {
 				notifications = append(notifications, struct {
 					Level   string  `json:"level"`
 					Message message `json:"message"`
@@ -351,7 +386,7 @@ func Render(r Report, format string) ([]byte, error) {
 		}{toolName}}, results, []any{struct {
 			ExecutionSuccessful        bool  `json:"executionSuccessful"`
 			ToolExecutionNotifications []any `json:"toolExecutionNotifications"`
-		}{false, notifications}}, r}}})
+		}{r.SchemaVersion == "1.7" && !ReportConditions(r).Interrupted && !ReportConditions(r).ReportPreventingError && !RequiredCoverageIncomplete(r), notifications}}, r}}})
 		return append(data, '\n'), e
 	}
 	return nil, errors.New("scan: report-failed")

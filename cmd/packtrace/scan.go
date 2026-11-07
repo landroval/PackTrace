@@ -37,7 +37,7 @@ func runScanContextObserved(ctx context.Context, request cli.ScanArgumentRequest
 	run, err := execution.RunScan(work, request)
 	run.NoteFailure("run", err)
 	interrupted := errors.Is(ctx.Err(), context.Canceled)
-	conditions := cli.ScanExitConditions{Interrupted: interrupted, RequiredCoverageIncomplete: true, ReportPreventingError: err != nil}
+	conditions := cli.ScanExitConditions{Interrupted: interrupted, ReportPreventingError: !run.Usable || !reportableScanFailure(err)}
 	defer func() {
 		// This operational receipt necessarily exists AFTER public bytes. Never
 		// predict it in the comparison report or recursively render new metrics.
@@ -57,14 +57,14 @@ func runScanContextObserved(ctx context.Context, request cli.ScanArgumentRequest
 	}
 	fail := func(code string) int {
 		if work.Err() == nil && !conditions.Interrupted {
-			if e := run.WriteOutput(work, diagnostic, []byte(code+"\n")); e != nil {
+			if e := run.WriteDiagnostic(work, diagnostic, code); e != nil {
 				run.NoteFailure("diagnostic", e)
 			}
 		}
 		conditions.ReportPreventingError = true
 		return selectExit()
 	}
-	if !run.Usable {
+	if !run.Usable || conditions.ReportPreventingError {
 		code := "scan: unavailable"
 		if err != nil {
 			code = err.Error()
@@ -75,15 +75,11 @@ func runScanContextObserved(ctx context.Context, request cli.ScanArgumentRequest
 		run.NoteFailure("checkpoint", e)
 		return fail("scan: resident-observation-failed")
 	}
-	report := integrityscan.BuildReportWithAdvisories(run.Plan, run.Records, run.Summary, run.Resources, interrupted, err != nil, run.Inventory, run.Intelligence, run.Advisories)
-	for i := range report.Coverage {
-		switch report.Coverage[i].Check {
-		case "resident-observation":
-			report.Coverage[i].Reason = "pre-output-comparison-snapshot; 100ms-retained-child-and-supervisor-observation; rendering-writer-teardown-reap-pending-in-caller; sampled-sum-not-hard-ceiling"
-		case "execution":
-			report.Coverage[i].Reason = "comparison-only: " + report.Coverage[i].Reason + "; output-and-final-lifecycle-pending-in-caller"
-		}
-	}
+	report := integrityscan.BuildReportWithPolicy(run.Plan, run.Records, run.Summary, run.Resources, interrupted, err != nil, run.Inventory, run.Intelligence, run.Advisories, run.PolicyMaterials, run.PolicyMaterialLimited, time.Now().UTC())
+	comparison := integrityscan.ReportConditions(report)
+	conditions.RequiredCoverageIncomplete = comparison.RequiredCoverageIncomplete
+	conditions.EnforcedUnacceptedFindings = comparison.EnforcedUnacceptedFindings
+	conditions.ReportPreventingError = conditions.ReportPreventingError || comparison.ReportPreventingError
 	data, renderErr := integrityscan.Render(report, request.Format)
 	if renderErr != nil {
 		run.NoteFailure("render", renderErr)
@@ -93,9 +89,22 @@ func runScanContextObserved(ctx context.Context, request cli.ScanArgumentRequest
 		run.NoteFailure("checkpoint", e)
 		return fail("scan: resident-observation-failed")
 	}
-	if e := run.WriteOutput(work, out, data); e != nil {
+	if e := run.WriteReportOutput(work, out, data); e != nil {
 		run.NoteFailure("output", e)
 		return fail("cli: output-failed")
 	}
 	return selectExit()
+}
+
+// These fixed worker failures can leave independently admitted results. A
+// selected policy error, unsafe binding or unknown error cannot become a gap.
+func reportableScanFailure(err error) bool {
+	if err == nil {
+		return true
+	}
+	switch err.Error() {
+	case "scan: acquisition-unavailable", "scan: worker-incomplete", "scan: input-unusable":
+		return true
+	}
+	return false
 }

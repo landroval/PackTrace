@@ -120,7 +120,7 @@ func TestScanFiveHundredPackagesDistinguishesInstalledAndLocalPrivacy(t *testing
 			t.Fatalf("500-package scan: privacy=%s err=%v state=%v out=%s diag=%s receipt=%s", privacy, e, cmd.ProcessState, out.String(), diag.String(), receipt())
 		}
 		var report integrityscan.Report
-		if json.Unmarshal(out.Bytes(), &report) != nil || report.SchemaVersion != "1.6" || report.Privacy != privacy || report.Advisories == nil || report.Advisories.State != "observed" {
+		if json.Unmarshal(out.Bytes(), &report) != nil || report.SchemaVersion != "1.7" || report.Privacy != privacy || report.Advisories == nil || report.Advisories.State != "observed" {
 			t.Fatal("actual large scan/report unavailable", out.String())
 		}
 		a := report.Advisories

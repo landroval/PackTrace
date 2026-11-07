@@ -24,9 +24,29 @@ type Publication struct {
 	written    uint64
 	failed     error
 	committed  bool
+	// Each additional exclusion has its own original-parent native proof.
+	// No nativeRoot.external binding is ever replaced.
+	exclusions []publicationExclusion
+	retained   bool // proof handles belong to a PublicationPlan
 }
 
 func OpenPublication(ctx context.Context, forbidden *Root, path string) (*Publication, error) {
+	return openPublication(ctx, forbidden, path, nil)
+}
+
+func openPublication(ctx context.Context, forbidden *Root, path string, additional []*Root) (*Publication, error) {
+	p, e := capturePublication(ctx, forbidden, path, additional)
+	if e != nil {
+		return nil, e
+	}
+	if e = p.begin(); e != nil {
+		p.closeProofs()
+		return nil, e
+	}
+	return p, nil
+}
+
+func capturePublication(ctx context.Context, forbidden *Root, path string, additional []*Root) (*Publication, error) {
 	if ctx == nil || forbidden == nil || !filepath.IsAbs(path) {
 		return nil, ErrPath
 	}
@@ -49,25 +69,36 @@ func OpenPublication(ctx context.Context, forbidden *Root, path string) (*Public
 		return fail(e)
 	}
 	p := &Publication{ctx: ctx, parent: parent, forbidden: forbidden, name: leaf}
+	if e := p.bindExclusions(ctx, filepath.Dir(path), additional); e != nil {
+		return fail(e)
+	}
+	return p, nil
+}
+
+func (p *Publication) begin() error {
 	var nonce [32]byte
 	if _, e := rand.Read(nonce[:]); e != nil {
-		return fail(ErrUnavailable)
+		return ErrUnavailable
 	}
 	temp := "packtrace-export-" + hex.EncodeToString(nonce[:]) + ".tmp"
 	n, unlock, e := p.lockNative()
 	if e != nil {
-		return fail(e)
+		return e
+	}
+	if e = n.guard(); e != nil {
+		unlock()
+		return e
 	}
 	f, e := ownedCreatePath(n, temp, false)
 	if e != nil {
 		unlock()
-		return fail(e)
+		return e
 	}
 	initial, e := statNative(f)
 	if e != nil || initial.kind() != KindRegular || initial.links != 1 || initial.size != 0 {
 		f.Close()
 		unlock()
-		return fail(ErrUnstable)
+		return ErrUnstable
 	}
 	p.file, p.temp, p.initial = f, temp, initial
 	e = p.bind(n, temp)
@@ -76,12 +107,16 @@ func OpenPublication(ctx context.Context, forbidden *Root, path string) (*Public
 	}
 	unlock()
 	if e != nil {
-		p.Close()
-		return nil, e
+		p.file.Close()
+		p.file = nil
+		return e
 	}
-	return p, nil
+	return nil
 }
 func (p *Publication) lockNative() (*nativeRoot, func(), error) {
+	if len(p.exclusions) != 0 {
+		return p.lockExclusions()
+	}
 	source, release, e := p.forbidden.lockNative()
 	if e != nil {
 		return nil, nil, e
@@ -101,7 +136,20 @@ func (p *Publication) refresh(n *nativeRoot) error {
 	if e := publicationRefresh(n); e != nil {
 		return e
 	}
-	return publicationRefreshForbidden(n, p.forbidden)
+	for _, exclusion := range p.exclusions {
+		if e := publicationRefresh(exclusion.parent.native); e != nil {
+			return e
+		}
+	}
+	if e := publicationRefreshForbidden(n, p.forbidden); e != nil {
+		return e
+	}
+	for _, exclusion := range p.exclusions {
+		if e := publicationRefreshForbidden(exclusion.parent.native, exclusion.root); e != nil {
+			return e
+		}
+	}
+	return nil
 }
 func (p *Publication) bind(n *nativeRoot, name string) error {
 	now, e := statNative(p.file)
@@ -143,6 +191,11 @@ func (p *Publication) Write(data []byte) (int, error) {
 	}
 	defer unlock()
 	if e := n.guard(); e != nil {
+		return fail(e)
+	}
+	// Refuse observable name/link substitution BEFORE writing, not just at
+	// Commit. This is a live check, not continuous host-mutator isolation.
+	if e := p.bind(n, p.temp); e != nil {
 		return fail(e)
 	}
 	count, e := p.file.Write(data)
@@ -215,7 +268,19 @@ func (p *Publication) Close() error {
 	if p.file == nil {
 		return nil
 	}
-	e := errors.Join(p.file.Close(), p.parent.Close())
+	e := p.file.Close()
+	if !p.retained {
+		e = errors.Join(e, p.closeProofs())
+	}
 	p.file = nil
+	return e
+}
+
+func (p *Publication) closeProofs() error {
+	e := p.parent.Close()
+	for _, exclusion := range p.exclusions {
+		e = errors.Join(e, exclusion.parent.Close())
+	}
+	p.exclusions = nil
 	return e
 }

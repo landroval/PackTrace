@@ -27,10 +27,13 @@ type PolicyObservation struct {
 	MatchedOperatorDigest string `json:"matchedOperatorDigest,omitempty"`
 }
 type Record struct {
-	Index           int                          `json:"index"`
-	Lock            integrity.BindingClaim       `json:"lock"`
-	Assessment      integrity.InstanceAssessment `json:"assessment"`
-	ObservedEntries int                          `json:"observedEntries"`
+	Index                 int                          `json:"index"`
+	Lock                  integrity.BindingClaim       `json:"lock"`
+	Assessment            integrity.InstanceAssessment `json:"assessment"`
+	ObservedEntries       int                          `json:"observedEntries"`
+	PolicyObservation     uint32                       `json:"policyObservation,omitempty"`
+	PolicyWitnesses       []PolicyDifferenceWitness    `json:"policyWitnesses,omitempty"`
+	PolicyMaterialLimited bool                         `json:"policyMaterialLimited,omitempty"`
 }
 type Summary struct {
 	Records           int  `json:"records"`
@@ -171,6 +174,10 @@ func Acquire(ctx context.Context, target, prepared, policyHash string, plan Plan
 }
 
 func AcquireWithInventory(ctx context.Context, target, prepared, policyHash string, plan Plan, emit func(Record) error, emitInventory func(projectinventory.Result) error) (Summary, error) {
+	return AcquireWithPolicyEvidence(ctx, target, prepared, policyHash, plan, emit, emitInventory, nil)
+}
+
+func AcquireWithPolicyEvidence(ctx context.Context, target, prepared, policyHash string, plan Plan, emit func(Record) error, emitInventory func(projectinventory.Result) error, emitEvidence PolicyEvidenceEmitter) (Summary, error) {
 	summary := Summary{}
 	if plan.StateDir != "" || plan.TrustedSnapshotDigest != "" {
 		return summary, ErrOptions
@@ -178,7 +185,7 @@ func AcquireWithInventory(ctx context.Context, target, prepared, policyHash stri
 	if ctx.Err() != nil {
 		return summary, ErrAcquisition
 	}
-	if ValidatePolicy(plan.Policy) != nil || plan.Manager != plan.Policy.Manager || !filepath.IsAbs(target) || !filepath.IsAbs(prepared) || containedName(target, prepared) {
+	if ValidatePlanPolicy(plan) != nil || !filepath.IsAbs(target) || (!plan.Builtin && (!filepath.IsAbs(prepared) || containedName(target, prepared))) {
 		return summary, ErrPolicy
 	}
 	root, e := nativefs.OpenRoot(ctx, target)
@@ -186,35 +193,60 @@ func AcquireWithInventory(ctx context.Context, target, prepared, policyHash stri
 		return summary, ErrAcquisition
 	}
 	defer root.Close()
-	return AcquireFromRoot(ctx, root, prepared, policyHash, plan, emit, emitInventory)
+	return AcquireFromRootWithPolicyEvidence(ctx, root, prepared, policyHash, plan, emit, emitInventory, emitEvidence)
 }
 
 // AcquireFromRoot borrows the exact original metadata root already admitted by
 // the worker. It never reopens the target pathname after intelligence binding.
 func AcquireFromRoot(ctx context.Context, root *nativefs.Root, prepared, policyHash string, plan Plan, emit func(Record) error, emitInventory func(projectinventory.Result) error) (Summary, error) {
-	summary := Summary{}
+	return AcquireFromRootWithPolicyEvidence(ctx, root, prepared, policyHash, plan, emit, emitInventory, nil)
+}
+
+func AcquireFromRootWithPolicyEvidence(ctx context.Context, root *nativefs.Root, prepared, policyHash string, plan Plan, emit func(Record) error, emitInventory func(projectinventory.Result) error, emitEvidence PolicyEvidenceEmitter) (Summary, error) {
+	return AcquireFromRootWithPolicyEvidenceAdmission(ctx, root, prepared, policyHash, plan, emit, emitInventory, emitEvidence, nil)
+}
+
+// Admission observes the ACTUAL reference root before any controller/target
+// content read; its closer runs before that reference root is released.
+func AcquireFromRootWithPolicyEvidenceAdmission(ctx context.Context, root *nativefs.Root, prepared, policyHash string, plan Plan, emit func(Record) error, emitInventory func(projectinventory.Result) error, emitEvidence PolicyEvidenceEmitter, admit func(*nativefs.Root) (func() error, error)) (summary Summary, failure error) {
 	if ctx == nil || ctx.Err() != nil || root == nil {
 		return summary, ErrAcquisition
 	}
-	if ValidatePolicy(plan.Policy) != nil || plan.Manager != plan.Policy.Manager || !filepath.IsAbs(prepared) {
+	if ValidatePlanPolicy(plan) != nil || (!plan.Builtin && !filepath.IsAbs(prepared)) {
 		return summary, ErrPolicy
 	}
-	// Reject a target-backed reference directory BEFORE discovery/comparison.
-	refs, e := root.OpenExternalRoot(ctx, prepared)
-	if e != nil {
-		return summary, ErrAcquisition
+	var refs *nativefs.Root
+	if !plan.Builtin {
+		// Reject a target-backed reference directory BEFORE discovery/comparison.
+		var e error
+		refs, e = root.OpenExternalRoot(ctx, prepared)
+		if e != nil {
+			return summary, ErrAcquisition
+		}
+		defer refs.Close()
 	}
-	defer refs.Close()
-	if !relative(plan.PolicyFile) || strings.Contains(plan.PolicyFile, "/") {
-		return summary, ErrPolicy
+	if admit != nil {
+		closeAdmission, err := admit(refs)
+		if err != nil {
+			return summary, err
+		}
+		if closeAdmission == nil {
+			return summary, ErrAcquisition
+		}
+		defer func() { failure = errors.Join(failure, closeAdmission()) }()
 	}
-	policyData, e := readLease(ctx, refs, plan.PolicyFile, MaxPolicyBytes)
-	if e != nil || sourceSRI(policyData) != policyHash || (plan.TrustedPolicyDigest != "" && !policyPinMatches(ctx, plan.TrustedPolicyDigest, policyData)) {
-		return summary, ErrPolicy
-	}
-	policy, e := ParsePolicy(policyData)
-	if e != nil || !reflect.DeepEqual(policy, plan.Policy) {
-		return summary, ErrPolicy
+	if !plan.Builtin {
+		if !relative(plan.PolicyFile) || strings.Contains(plan.PolicyFile, "/") {
+			return summary, ErrPolicy
+		}
+		policyData, e := readLease(ctx, refs, plan.PolicyFile, MaxPolicyBytes)
+		if e != nil || sourceSRI(policyData) != policyHash || (plan.TrustedPolicyDigest != "" && !policyPinMatches(ctx, plan.TrustedPolicyDigest, policyData)) {
+			return summary, ErrPolicy
+		}
+		policy, e := ParsePolicy(policyData)
+		if e != nil || !reflect.DeepEqual(policy, plan.Policy) {
+			return summary, ErrPolicy
+		}
 	}
 	// The hash checks continuity only; the native external lease above supplies
 	// the authority exclusion. A hash or child assertion alone cannot admit it.
@@ -229,6 +261,20 @@ func AcquireFromRoot(ctx context.Context, root *nativefs.Root, prepared, policyH
 			return summary, e
 		}
 	}
+	var project ProjectEvidence
+	if emitEvidence == nil || !policyEvidenceNeeded(plan) {
+		emitEvidence = nil
+	} else {
+		var projectOK bool
+		project, projectOK = BuildProjectEvidence(collected)
+		if !projectOK {
+			emitEvidence = nil
+		}
+	}
+	var evidenceIndex policyEvidenceInventory
+	if emitEvidence != nil {
+		evidenceIndex = indexPolicyInventory(collected)
+	}
 	metadata := collected.Metadata
 	locked := lockedFromInventory(collected)
 	summary.SnapshotComplete = metadata.Complete
@@ -237,6 +283,9 @@ func AcquireFromRoot(ctx context.Context, root *nativefs.Root, prepared, policyH
 	// authority is separately completed only after every pinned binding succeeds.
 	summary.AuthorityComplete = false
 	summary.Qualified = false
+	if plan.Builtin {
+		return summary, nil
+	}
 	var reread int64 = 7 << 30
 	var snapshotRemaining int64 = 8 << 30
 	entriesRemaining := 100000
@@ -310,6 +359,11 @@ func AcquireFromRoot(ctx context.Context, root *nativefs.Root, prepared, policyH
 							}
 							record.Assessment = assessment
 							record.ObservedEntries = count
+							if emitEvidence != nil {
+								if err := emitIntegrityPolicyEvidence(project, plan, &record, evidenceIndex, catalog, installed, emitEvidence); err != nil {
+									return summary, err
+								}
+							}
 						}
 					}
 				} else {

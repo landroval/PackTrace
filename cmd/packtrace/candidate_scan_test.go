@@ -61,7 +61,7 @@ func TestScanExplicitOfflineCandidatesNeverBecomeFindings(t *testing.T) {
 				}
 			}
 			var report integrityscan.Report
-			if e = json.Unmarshal(out.Bytes(), &report); e != nil || report.SchemaVersion != "1.6" || report.Advisories == nil || report.Advisories.State != "observed" {
+			if e = json.Unmarshal(out.Bytes(), &report); e != nil || report.SchemaVersion != "1.7" || report.Advisories == nil || report.Advisories.State != "observed" {
 				t.Fatal("candidate report", e)
 			}
 			a := report.Advisories

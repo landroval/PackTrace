@@ -294,8 +294,8 @@ project-policy or per-user configuration discovery.
   with exit `2`. Invalid policy never silently falls back to built-in defaults.
 - Exceptions come from the explicitly supplied policy and remain visible. They
   require scoped evidence, a reason, and expiry; they cannot make an unperformed
-  check complete. Exact exception schema and evidence-binding rules remain to be
-  specified under the existing engineering constraints.
+  check complete. The operational schema and canonical evidence binding are
+  specified in the [issue 8 increment](increments/issue-8-trusted-policy-and-exceptions.md).
 - Record effective settings, their origins, and the policy digest in the result,
   with sensitive values redacted.
 
@@ -314,6 +314,12 @@ output goes to stdout; diagnostics go to stderr. An explicit output-file option
 must reject unsafe or in-target destinations. Caller-managed shell redirection
 remains the caller's responsibility; application destination checks do not
 control a shell opening redirected stdout before PackTrace starts.
+
+The owner-selected initial explicit-file profile requires an existing report
+directory physically disjoint from project, state and reference roots; it may
+refuse ancestor/common-parent destinations. It never overwrites an existing file.
+Read-only native admission and the terminable writer retain original bindings;
+unsupported mechanisms fail closed. See the [issue 8 increment](increments/issue-8-trusted-policy-and-exceptions.md).
 
 **Required acceptance coverage, not yet executed:** policy precedence, weakening
 conflicts, invalid-policy handling, target configuration unable to grant authority,
@@ -730,8 +736,10 @@ Maintain separate fingerprints:
    reviewed.
 
 A tracking fingerprint alone cannot transfer acceptance to new evidence. Sensitive
-fingerprints are omitted in portable output. Canonical encodings and exact bound
-fields remain to be specified and tested.
+fingerprints are omitted in portable output. The owner-selected operational
+project scope binds root-manifest and effective selected-lock original bytes,
+never absolute host paths. Exact fields, canonical encoding, limits and verification
+boundaries are in the [issue 8 increment](increments/issue-8-trusted-policy-and-exceptions.md).
 
 ### Evaluation
 

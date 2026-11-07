@@ -97,7 +97,7 @@ func TestActualScanInventoryIsCommonAndPrivateAcrossFormats(t *testing.T) {
 				var schema string
 				_ = json.Unmarshal(report["schemaVersion"], &schema)
 				var inv projectinventory.PublicInventory
-				if schema != "1.1" || json.Unmarshal(report["inventory"], &inv) != nil || projectinventory.ValidatePublic(inv) != nil || inv.Counts.Declared != 1 || inv.Counts.Locked != locked || inv.Counts.Installed != installed || inv.Counts.Scopes != scopes || inv.Complete != complete {
+				if schema != "1.7" || json.Unmarshal(report["inventory"], &inv) != nil || projectinventory.ValidatePublic(inv) != nil || inv.Counts.Declared != 1 || inv.Counts.Locked != locked || inv.Counts.Installed != installed || inv.Counts.Scopes != scopes || inv.Complete != complete {
 					t.Fatalf("common inventory model omitted or promoted: %s", out.String())
 				}
 				if mode == "version-conflict" {
