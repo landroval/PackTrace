@@ -105,6 +105,23 @@ func concatObjects(ctx context.Context, t *Transaction, refs []ObjectRef) (Objec
 		}
 		size += v.Bytes
 	}
+	if len(refs) == 1 {
+		if t == nil || ctx == nil {
+			return ObjectRef{}, ErrUnavailable
+		}
+		t.mu.Lock()
+		defer t.mu.Unlock()
+		if t.closed || t.failed != nil || t.work == nil {
+			return ObjectRef{}, ErrUnavailable
+		}
+		if e := errors.Join(ctx.Err(), t.work.Err()); e != nil {
+			t.failed = e
+			return ObjectRef{}, e
+		}
+		// One complete CAS run already is the concatenation, as in
+		// mergePartition. Mandatory seal/fence still checks its actual original.
+		return refs[0], nil
+	}
 	reader := &concatenated{ctx: ctx, store: t.store, refs: refs}
 	ref, e := t.put(ctx, reader, size)
 	return ref, errors.Join(e, reader.Close())
