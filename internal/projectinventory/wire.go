@@ -4,17 +4,19 @@ import (
 	"encoding/json"
 	"errors"
 	"slices"
+	"strconv"
 )
 
 var ErrWire = errors.New("inventory: invalid-public-data")
 
 type PublicObservation struct {
-	ID        uint32 `json:"id"`
-	Workspace uint32 `json:"scope"`
-	Source    uint32 `json:"evidence"`
-	Class     string `json:"class"`
-	Kind      string `json:"kind"`
-	Status    string `json:"status"`
+	ID               uint32 `json:"id"`
+	Workspace        uint32 `json:"scope"`
+	Source           uint32 `json:"evidence"`
+	Class            string `json:"class"`
+	Kind             string `json:"kind"`
+	Status           string `json:"status"`
+	MetadataEvidence uint32 `json:"metadataEvidence,omitempty"`
 }
 type PublicScope struct {
 	ID     uint32 `json:"id"`
@@ -88,6 +90,22 @@ func Portable(r Result) PublicInventory {
 	p.Counts = p.counts()
 	return p
 }
+
+// PortableMatching adds a numeric native-directory witness only to the newer
+// matching projection. Historical Portable inventories keep their exact shape.
+func PortableMatching(r Result) PublicInventory {
+	p := Portable(r)
+	for i, observation := range r.Model.Observations {
+		if observation.Class != "installed" {
+			continue
+		}
+		if id, e := strconv.ParseUint(observation.Fields["metadata-evidence"], 10, 32); e == nil {
+			p.Observations[i].MetadataEvidence = uint32(id)
+		}
+	}
+	return p
+}
+
 func (p PublicInventory) counts() Counters {
 	c := Counters{Scopes: len(p.Scopes), Evidence: len(p.Evidence), Relations: len(p.Relations), Gaps: len(p.Gaps)}
 	for _, o := range p.Observations {

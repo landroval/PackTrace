@@ -116,6 +116,16 @@ func TestScanPreflightRejectsUnsafeModesAndPolicyWeakening(t *testing.T) {
 		t.Skip("owned Linux/Windows process cases only")
 	}
 	root, policy := scanFixture(t)
+	data, e := os.ReadFile(policy)
+	var selected integrityscan.Policy
+	if e != nil || json.Unmarshal(data, &selected) != nil {
+		t.Fatal("owned policy", e)
+	}
+	selected.RequirePortable = true
+	data, e = json.Marshal(selected)
+	if e != nil || os.WriteFile(policy, data, 0600) != nil {
+		t.Fatal("owned portable policy", e)
+	}
 	for _, extra := range [][]string{{"--privacy", "local"}, {"--output", filepath.Join(root, "report.json")}, {"--state-dir", root}, {"--checks", "malicious"}} {
 		args := append([]string{"scan", "--policy", policy}, extra...)
 		args = append(args, root)

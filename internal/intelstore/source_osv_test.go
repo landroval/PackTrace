@@ -15,13 +15,14 @@ import (
 
 func fullSourceFixture(t *testing.T, mode string) (func(context.Context, *Budget, requestSpec, io.Writer) (responseEvidence, error), func()) {
 	t.Helper()
+	matchingMode := mode == "matching" || mode == "matching-full" || mode == "matching-corrected"
 	record := strings.ReplaceAll(ownedOSVRecord, "OWNED-1", "GHSA-2345-6789-cfgh")
 	id := "GHSA-2345-6789-cfgh"
 	if mode == "license" {
 		record = ownedOSVRecord
 		id = "OWNED-1"
 	}
-	if mode == "malicious" || mode == "matching" {
+	if mode == "malicious" || matchingMode {
 		id = "MAL-2026-1"
 		record = strings.ReplaceAll(ownedOSVRecord, "OWNED-1", id)
 	}
@@ -53,6 +54,9 @@ func fullSourceFixture(t *testing.T, mode string) (func(context.Context, *Budget
 	}
 	if mode == "matching" {
 		records = matchingSourceRecords()
+	} else if matchingMode {
+		records = fullMatchingSourceRecords(mode == "matching-corrected")
+		id = strings.TrimSuffix(records[0].name, ".json")
 	}
 	archive := ownedArchive(t, records)
 	digest := md5.Sum(archive)
@@ -71,14 +75,18 @@ func fullSourceFixture(t *testing.T, mode string) (func(context.Context, *Budget
 		csvGeneration = "789"
 	}
 	metadataDate := "2026-11-01T00:00:00Z"
-	if mode == "matching" {
+	if matchingMode {
 		csvDate, metadataDate = matchingFixtureDate, matchingFixtureDate
+	}
+	if mode == "matching-corrected" {
+		archiveGeneration, csvGeneration = "124", "790"
+		csvDate, metadataDate = "2026-10-03T00:00:00Z", "2026-10-03T00:00:00Z"
 	}
 	csvBody := []byte(csvDate + ",npm/" + id + "\n")
 	csvMD5 := md5.Sum(csvBody)
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.URL.Path, "/v1/vulns/") {
-			if mode == "matching" {
+			if matchingMode {
 				for _, item := range records {
 					if r.URL.Path == "/v1/vulns/"+strings.TrimSuffix(item.name, ".json") {
 						io.WriteString(w, item.body)
@@ -172,7 +180,7 @@ func fullSourceFixture(t *testing.T, mode string) (func(context.Context, *Budget
 	})
 	var client *http.Client
 	var close func()
-	if mode == "matching" {
+	if matchingMode {
 		// Authored fixture: dispatch in memory, without sockets, DNS or TLS.
 		client = &http.Client{Transport: matchingFixtureTransport{handler}}
 		close = func() {}

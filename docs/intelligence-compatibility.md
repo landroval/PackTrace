@@ -3,7 +3,7 @@
 The #9 lifecycle, integrated by PR#102, implements owned filesystem snapshots,
 explicit preparation, offline transport and scan observations. It is not a
 release qualification, publisher signature verifier or security verdict. The
-bounded matching slice belongs to [#6](increments/issue-6-offline-matching.md);
+usable matching increment belongs to [#6](increments/issue-6-usable-advisory-scan.md);
 general policy belongs to #8. Native qualification limits remain explicit and
 macOS remains paused.
 
@@ -77,11 +77,15 @@ contract; historical supplied-input schemas remain unchanged. The report exposes
 snapshot identity, closed source/freshness labels, counts and gaps—not private
 paths, targets, raw advisories, source credentials or local HMAC material.
 Readonly storage-occupation observations are `null`/unknown, not fabricated zero.
-Selecting advisory checks adds schema **1.3** with bounded locked-npm matching,
-explicit pinned `npmOrigins` correspondence and the documented OpenSSF metadata
-profile. Advisory counts remain separate from drift findings; unknown categories,
-corrections and installed applicability keep required coverage incomplete. See
-the [matching contract](increments/issue-6-offline-matching.md).
+Selecting advisory checks adds schema **1.4** with grouped bounded npm matching,
+explicit pinned exact `npmOrigins` or optional public `npmRegistry` correspondence,
+and documented OSV-delivered OpenSSF/GitHub category profiles. Installed decisions
+require their own native manifest evidence and qualified selected-lock agreement.
+The new registry grant must explicitly authorize installed association; old exact
+rules remain locked-only. Optional local detail is explicit, never the default.
+Advisory counts remain observation-level matches separate from drift findings;
+unknown categories, corrections and correspondence keep coverage incomplete. See
+the [usable matching contract](increments/issue-6-usable-advisory-scan.md).
 
 Intel command output uses its separate schema **1.0**. Successful bounded
 maintenance/preparation is not successful complete project security coverage.

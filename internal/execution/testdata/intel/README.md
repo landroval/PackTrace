@@ -29,7 +29,7 @@ All three records affect only `left-pad` version `1.0.0`, with no broad range:
   applicability must remain indeterminate.
 
 Each contains nonempty `database_specific.malicious-packages-origins` with dummy
-`ossf/package-analysis` source, a lowercase synthetic 64-hex SHA256, and UTC
+`packtrace-fixture` source, a lowercase synthetic 64-hex SHA256, and UTC
 import/modified timestamps. This is inert source-context test metadata, not real
 malware, downloaded intelligence, or registry/publisher authentication. Import
 alone is unqualified: operator-designated use requires the independently selected
@@ -48,3 +48,30 @@ opt-in via `PACKTRACE_MATCHING_FIXTURE_NEW_OUTPUT` pointing at a **new** output
 path; the generator uses exclusive creation and refuses every existing file,
 including this checked-in fixture. Use the approved cached Go SDK with local
 GOTOOLCHAIN and disabled GOPROXY/GOSUMDB; no SDK/download is needed.
+
+## Inert representative-project and correction snapshots
+
+`full.bundle` and `corrected.bundle` are reproducible authored transports from
+`TestFullMatchingFixtureReproducible`. They contain503 records for500 package
+identities: malicious/OpenSSF source paths, vulnerability/GitHub-reviewed source
+paths and strict npm ECOSYSTEM ranges, plus withdrawal/unknown-correction/source
+controls. These records and source locations are invented test claims, not real
+advisories or downloaded data. No package code is embedded or executed. The real
+preparation, source licensing, immutable indexing/sealing and export pipeline is
+used with an in-memory transport and fixed standard-library test clock.
+
+- `full.bundle`:1328640 bytes, generation
+  `54da5521f1cce480bb34e8930e3167393d000948f1fa2da28b94ce65a945cefd`,
+  SHA256 `f520b12b829709f7440a63d581b97341464a265a8428bf2f4b6df6b7fb31b18c`.
+- `corrected.bundle`:1330176 bytes, generation
+  `a7f46531e25952da50287d31d5170565eb48434728fc978533f3c15ef5609ef7`,
+  SHA256 `bbfd8436214a4331f0cdee9e38779d3b86c685f3271b5ccfa0b048b32f13eaa1`.
+
+The second snapshot changes original conditions and withdraws a previously active
+record without rewriting the historical generation. Normal tests regenerate and
+compare both exact byte streams. `PACKTRACE_FULL_FIXTURES_NEW_DIRECTORY` permits
+exclusive creation in a caller-owned new output directory; existing files are
+never overwritten. No local key/MAC is included. Source designation, explicit
+pinned namespace policy and actual observation qualification remain independent
+of fixture import. These checks do not qualify a live feed, every project,
+publisher authentication or a native platform.

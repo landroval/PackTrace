@@ -49,6 +49,18 @@ func versionConditionProblem(kind OSVVersionProblemKind, vi, ri, ei int) OSVVers
 // Basic shape/digest guards do not authenticate fabricated evidence. Query values must
 // come from ParseSemVer (or be unqualified zero); concurrent/unsafe mutation is excluded.
 func EvaluateOSVVersionConditions(header OSVHeader, affected OSVAffectedProjection, query SemVer) (OSVVersionConditions, error) {
+	return evaluateOSVVersionConditions(header, affected, query, false)
+}
+
+// EvaluateOSVNPMVersionConditions additionally supports npm ECOSYSTEM ranges
+// whose bounds are strict SemVer. Non-npm entries remain unsupported, including
+// explicit versions. It shares the version-only flow and never rewrites evidence;
+// identity, source, activity and correction qualification remain the caller's job.
+func EvaluateOSVNPMVersionConditions(header OSVHeader, affected OSVAffectedProjection, query SemVer) (OSVVersionConditions, error) {
+	return evaluateOSVVersionConditions(header, affected, query, true)
+}
+
+func evaluateOSVVersionConditions(header OSVHeader, affected OSVAffectedProjection, query SemVer, npm bool) (OSVVersionConditions, error) {
 	if err := validateOSVVersionConditionsInput(header, affected); err != nil {
 		return OSVVersionConditions{}, err
 	}
@@ -73,8 +85,10 @@ func EvaluateOSVVersionConditions(header OSVHeader, affected OSVAffectedProjecti
 		d := OSVVersionEntryDecision{Index: entry.Index, State: entry.State, Problems: make([]OSVVersionProblem, 0)}
 		if entry.State != OSVFieldValue {
 			d.Problems = append(d.Problems, versionConditionProblem("affected-uninspectable", -1, -1, -1))
+		} else if npm && (entry.Ecosystem.State != OSVFieldValue || entry.Ecosystem.Value != "npm") {
+			d.Problems = append(d.Problems, versionConditionProblem("ecosystem-outside-profile", -1, -1, -1))
 		} else if !blocked {
-			evaluateOSVVersionEntry(&d, entry, structure.Entries[i], query)
+			evaluateOSVVersionEntry(&d, entry, structure.Entries[i], query, npm)
 		}
 		out.Entries = append(out.Entries, d)
 	}
@@ -170,7 +184,7 @@ func versionConditionTextProblem(err error, prefix string) OSVVersionProblemKind
 	return OSVVersionProblemKind(prefix + "-outside-profile")
 }
 
-func evaluateOSVVersionEntry(d *OSVVersionEntryDecision, e OSVAffectedEntry, s OSVAffectedRangeStructure, q SemVer) {
+func evaluateOSVVersionEntry(d *OSVVersionEntryDecision, e OSVAffectedEntry, s OSVAffectedRangeStructure, q SemVer, npm bool) {
 	d.Support = make([]OSVVersionSupport, 0)
 	usable := false
 	if e.Versions.State == OSVFieldValue {
@@ -194,7 +208,7 @@ func evaluateOSVVersionEntry(d *OSVVersionEntryDecision, e OSVAffectedEntry, s O
 	}
 	if e.Ranges.State == OSVFieldValue {
 		for i, r := range e.Ranges.Entries {
-			match, known, problems := evaluateOSVVersionRange(r, s.Entries[i], q)
+			match, known, problems := evaluateOSVVersionRange(r, s.Entries[i], q, npm)
 			usable = usable || known
 			d.Problems = append(d.Problems, problems...)
 			if match {
@@ -237,14 +251,14 @@ func compareOSVVersionTransitions(a, b osvVersionTransition) int {
 	return n
 }
 
-func evaluateOSVVersionRange(r OSVRange, s OSVRangeStructure, q SemVer) (bool, bool, []OSVVersionProblem) {
+func evaluateOSVVersionRange(r OSVRange, s OSVRangeStructure, q SemVer, npm bool) (bool, bool, []OSVVersionProblem) {
 	problem := func(kind OSVVersionProblemKind) (bool, bool, []OSVVersionProblem) {
 		return false, false, []OSVVersionProblem{versionConditionProblem(kind, -1, r.Index, -1)}
 	}
 	if r.State != OSVFieldValue {
 		return problem("range-structure")
 	}
-	if r.Type.State != OSVFieldValue || r.Type.Value != "SEMVER" {
+	if r.Type.State != OSVFieldValue || (r.Type.Value != "SEMVER" && !(npm && r.Type.Value == "ECOSYSTEM")) {
 		return problem("range-outside-profile")
 	}
 	if !s.Checked || !s.Satisfied {

@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"packtrace/internal/cli"
 	"packtrace/internal/intel"
 	"packtrace/internal/intelstore"
 	"packtrace/internal/nativefs"
@@ -137,6 +138,11 @@ func TestSharedVersionPartialPositiveAndConservativeNegative(t *testing.T) {
 }
 func matchingSnapshot(t *testing.T) (*intelstore.Snapshot, Intelligence) {
 	t.Helper()
+	return matchingSnapshotNamed(t, "matching.bundle")
+}
+
+func matchingSnapshotNamed(t *testing.T, filename string) (*intelstore.Snapshot, Intelligence) {
+	t.Helper()
 	ctx := context.Background()
 	store, e := intelstore.Open(ctx, filepath.Join(t.TempDir(), "state"), intelstore.CreateOwned)
 	if e != nil {
@@ -152,7 +158,7 @@ func matchingSnapshot(t *testing.T) (*intelstore.Snapshot, Intelligence) {
 		t.Fatal(e)
 	}
 	defer root.Close()
-	input, e := root.OpenDistributionInput(ctx, "matching.bundle")
+	input, e := root.OpenDistributionInput(ctx, filename)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -296,7 +302,7 @@ func TestMatchInventoryMissingIdentityAndReadFailureStayVisible(t *testing.T) {
 		}
 	}
 }
-func TestMatchingCancellationEmissionAndObservationCap(t *testing.T) {
+func TestMatchingCancellationEmissionAndActiveNotTotalCap(t *testing.T) {
 	plan := matchingPlan(t)
 	f := newMatchingFixture()
 	info := UnavailableIntelligence()
@@ -317,13 +323,62 @@ func TestMatchingCancellationEmissionAndObservationCap(t *testing.T) {
 	}
 	rows := []AdvisoryDecision{}
 	s, e := MatchInventory(context.Background(), plan, f.inv, nil, info, matchingNow, func(d AdvisoryDecision) error { rows = append(rows, d); return nil })
-	if e != nil || s.Observations != 64 || s.TotalObservations != 65 || !hasMatchingGap(s.Gaps, "observation-limit") {
+	if e != nil || s.Observations != 65 || s.TotalObservations != 65 || s.Work != 65 || hasMatchingGap(s.Gaps, "observation-limit") {
 		t.Fatal(s, e)
 	}
 	if ValidateAdvisorySummary(s, rows, projectinventory.Portable(f.inv)) != nil {
 		t.Fatal("cap closure invalid")
 	}
 }
+func TestAdvisoryCategorySelectionAndClosedProfiles(t *testing.T) {
+	snapshot, info := matchingSnapshot(t)
+	f := newMatchingFixture()
+	plan := matchingPinnedPlan(t, info)
+	var positive AdvisoryDecision
+	_, err := MatchInventory(context.Background(), plan, f.inv, snapshot, info, matchingNow, func(d AdvisoryDecision) error {
+		if d.Outcome == "match" {
+			positive = d
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	public := projectinventory.Portable(f.inv)
+	// Admission tests intentionally vary controlled profile/category declarations;
+	// classifier behavior is independently original-bound, not inferred here.
+	for _, tc := range []struct {
+		category, profile string
+		selected          cli.ArgumentChecks
+	}{
+		{"malicious", "openssf-malicious-v1", cli.ArgumentCheckMalicious},
+		{"malicious", "osv-openssf-malicious-v1", cli.ArgumentCheckMalicious},
+		{"malicious", "osv-github-malware-v1", cli.ArgumentCheckMalicious},
+		{"vulnerability", "osv-github-reviewed-v1", cli.ArgumentCheckVulnerability},
+	} {
+		for _, checks := range []cli.ArgumentChecks{cli.ArgumentCheckMalicious, cli.ArgumentCheckVulnerability, cli.ArgumentCheckMalicious | cli.ArgumentCheckVulnerability} {
+			p := plan
+			p.Checks = checks
+			d := positive
+			d.Category = tc.category
+			d.Profile = tc.profile
+			d.EnforcementEligible = checks&tc.selected != 0
+			if ValidateAdvisoryDecision(p, public, info, d) != nil {
+				t.Fatal("category selection", tc, d)
+			}
+			d.EnforcementEligible = !d.EnforcementEligible
+			if ValidateAdvisoryDecision(p, public, info, d) == nil {
+				t.Fatal("forged category eligibility")
+			}
+		}
+	}
+	d := positive
+	d.Category = "vulnerability"
+	if ValidateAdvisoryDecision(plan, public, info, d) == nil {
+		t.Fatal("cross-category profile")
+	}
+}
+
 func TestAdvisoryParentValidatorsRejectForgery(t *testing.T) {
 	snapshot, info := matchingSnapshot(t)
 	plan := matchingPinnedPlan(t, info)
@@ -365,6 +420,17 @@ func TestAdvisoryParentValidatorsRejectForgery(t *testing.T) {
 		{"count", func(s *AdvisorySummary, r *[]AdvisoryDecision) { s.Decisions++ }},
 		{"observation-count", func(s *AdvisorySummary, r *[]AdvisoryDecision) { s.Observations++ }},
 		{"bytes", func(s *AdvisorySummary, r *[]AdvisoryDecision) { s.BytesRead = maxMatchingBytes + 1 }},
+		{"work-cap", func(s *AdvisorySummary, r *[]AdvisoryDecision) { s.Work = maxMatchingDecisions + 1 }},
+		{"missing-evaluation-work", func(s *AdvisorySummary, r *[]AdvisoryDecision) { s.Work = s.Decisions }},
+		{"installed-count", func(s *AdvisorySummary, r *[]AdvisoryDecision) { s.InstalledObservations++ }},
+		{"total-installed-count", func(s *AdvisorySummary, r *[]AdvisoryDecision) { s.TotalInstalledObservations++ }},
+		{"unread-evaluations", func(s *AdvisorySummary, r *[]AdvisoryDecision) { s.BytesRead = 0 }},
+		{"old-locked-only-claim", func(s *AdvisorySummary, r *[]AdvisoryDecision) {
+			s.Gaps = append(append([]string{}, s.Gaps...), "locked-only")
+		}},
+		{"old-installed-unassessed-claim", func(s *AdvisorySummary, r *[]AdvisoryDecision) {
+			s.Gaps = append(append([]string{}, s.Gaps...), "installed-unassessed")
+		}},
 		{"hidden-truncation", func(s *AdvisorySummary, r *[]AdvisoryDecision) { s.TotalObservations++ }},
 		{"duplicate", func(s *AdvisorySummary, r *[]AdvisoryDecision) {
 			*r = append(*r, (*r)[0])

@@ -49,6 +49,15 @@ func ValidatePublic(p PublicInventory) error {
 		default:
 			return ErrWire
 		}
+		if o.MetadataEvidence != 0 {
+			if o.Class != "installed" || int(o.MetadataEvidence) > len(p.Evidence) {
+				return ErrWire
+			}
+			metadata := p.Evidence[o.MetadataEvidence-1]
+			if metadata.Method != "native-metadata-lease" || metadata.Scope != o.Workspace {
+				return ErrWire
+			}
+		}
 		if o.Class != "locked" && p.Evidence[o.Source-1].Scope != o.Workspace {
 			return ErrWire
 		}

@@ -23,7 +23,7 @@ func TestScanParentRenderingAndSequentialWriterHaveFinalReceipt(t *testing.T) {
 	before := s.scan.snapshot()
 	// Perform actual bounded parent rendering with no child/protocol. Removing
 	// continuous parent observation loses at least two real parent samples.
-	report := integrityscan.Report{}
+	report := integrityscan.Report{SchemaVersion: "1.0", Privacy: "portable"}
 	renders := 0
 	until := time.Now().Add(220 * time.Millisecond)
 	for time.Now().Before(until) {

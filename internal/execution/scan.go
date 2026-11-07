@@ -79,6 +79,16 @@ type scanInventoryClosure struct {
 	Complete  bool                             `json:"complete"`
 }
 
+type scanLocalObservations struct {
+	Sequence     uint32                           `json:"sequence"`
+	Observations []integrityscan.LocalObservation `json:"observations"`
+}
+type scanLocalClosure struct {
+	Batches      uint32 `json:"batches"`
+	Observations int    `json:"observations"`
+	Limited      bool   `json:"limited"`
+}
+
 type scanDone struct {
 	Records int                   `json:"records"`
 	Summary integrityscan.Summary `json:"summary"`
@@ -101,7 +111,7 @@ func RunScan(ctx context.Context, request cli.ScanArgumentRequest) (ScanRun, err
 		return run, errors.New("scan: interrupted")
 	}
 	s.scan = newScanLifecycle(ctx, s.deadline)
-	if request.PolicyPath == "" || request.Privacy != "portable" || request.Output != "-" {
+	if request.PolicyPath == "" || (request.Privacy != "portable" && request.Privacy != "local") || request.Output != "-" {
 		return run, integrityscan.ErrOptions
 	}
 	target, e := filepath.Abs(request.Path)
@@ -245,6 +255,10 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 		advisoryClosed := cfg.Stage != "acquire" || cfg.Plan == nil || cfg.Plan.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) == 0
 		advisoryDecisions := []integrityscan.AdvisoryDecision{}
 		advisorySeen := map[[3]int]bool{}
+		localWanted := !advisoryClosed && integrityscan.PlanPrivacy(*cfg.Plan) == "local"
+		localClosed := !localWanted
+		localBatches := uint32(0)
+		localDetails := integrityscan.LocalDetails{Observations: []integrityscan.LocalObservation{}, Advisories: []integrityscan.LocalAdvisory{}}
 		for {
 			m, e := c.receive()
 			if e == io.EOF {
@@ -316,9 +330,46 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 				}
 				inventoryClosed = true
 				data.inventory = &inventory
+			case "local-observations":
+				var v scanLocalObservations
+				if !started || !inventoryClosed || !localWanted || localClosed || advisoryClosed || expected != 0 || pending != nil || fatal != "" || decode(m.Data, &v) != nil || v.Sequence != localBatches || len(v.Observations) == 0 || len(v.Observations) > 128 || len(localDetails.Observations)+len(v.Observations) > 4096 {
+					return errScanProtocol
+				}
+				for _, observation := range v.Observations {
+					if integrityscan.ValidateLocalObservation(observation, inventory) != nil || len(localDetails.Observations) > 0 && observation.Observation <= localDetails.Observations[len(localDetails.Observations)-1].Observation {
+						return errScanProtocol
+					}
+					localDetails.Observations = append(localDetails.Observations, observation)
+				}
+				localBatches++
+			case "local-closure":
+				var v scanLocalClosure
+				if !started || !inventoryClosed || !localWanted || localClosed || advisoryClosed || expected != 0 || pending != nil || fatal != "" || decode(m.Data, &v) != nil || v.Batches != localBatches || v.Observations != len(localDetails.Observations) {
+					return errScanProtocol
+				}
+				total := 0
+				for _, observation := range inventory.Observations {
+					if (observation.Class == "locked" || observation.Class == "installed") && observation.Kind != "project" {
+						total++
+					}
+				}
+				if v.Observations != min(total, 4096) || v.Limited != (total > 4096) {
+					return errScanProtocol
+				}
+				localDetails.Limited = v.Limited
+				localClosed = true
+			case "matching-advisory":
+				var v integrityscan.LocalAdvisory
+				if !started || !inventoryClosed || !localWanted || !localClosed || advisoryClosed || data.intelligence == nil || data.intelligence.State != "available" || fatal != "" || expected != 0 || pending != nil || decode(m.Data, &v) != nil || v.Advisory != len(localDetails.Advisories)+1 || integrityscan.ValidateLocalAdvisory(v) != nil {
+					return errScanProtocol
+				}
+				localDetails.Advisories = append(localDetails.Advisories, v)
 			case "matching-decision":
 				var v integrityscan.AdvisoryDecision
-				if !started || cfg.Stage != "acquire" || cfg.Plan == nil || data.intelligence == nil || !intelligenceClosed || !inventoryClosed || advisoryClosed || pending != nil || expected != 0 || fatal != "" || decode(m.Data, &v) != nil || len(advisoryDecisions) >= 4096 || v.Sequence != len(advisoryDecisions) || integrityscan.ValidateAdvisoryDecision(*cfg.Plan, inventory, *data.intelligence, v) != nil {
+				if !started || cfg.Stage != "acquire" || cfg.Plan == nil || data.intelligence == nil || !intelligenceClosed || !inventoryClosed || !localClosed || advisoryClosed || pending != nil || expected != 0 || fatal != "" || decode(m.Data, &v) != nil || len(advisoryDecisions) >= 4096 || v.Sequence != len(advisoryDecisions) || integrityscan.ValidateAdvisoryDecision(*cfg.Plan, inventory, *data.intelligence, v) != nil {
+					return errScanProtocol
+				}
+				if localWanted && v.Advisory > len(localDetails.Advisories) {
 					return errScanProtocol
 				}
 				key := [3]int{int(v.Observation), v.Advisory, v.Affected}
@@ -329,10 +380,16 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 				advisoryDecisions = append(advisoryDecisions, v)
 			case "matching-closure":
 				var v integrityscan.AdvisorySummary
-				if !started || cfg.Stage != "acquire" || cfg.Plan == nil || data.intelligence == nil || !intelligenceClosed || !inventoryClosed || advisoryClosed || pending != nil || expected != 0 || fatal != "" || decode(m.Data, &v) != nil || integrityscan.ValidateAdvisorySummary(v, advisoryDecisions, inventory) != nil {
+				if !started || cfg.Stage != "acquire" || cfg.Plan == nil || data.intelligence == nil || !intelligenceClosed || !inventoryClosed || !localClosed || advisoryClosed || pending != nil || expected != 0 || fatal != "" || decode(m.Data, &v) != nil || integrityscan.ValidateAdvisorySummary(v, advisoryDecisions, inventory) != nil {
 					return errScanProtocol
 				}
 				a := &integrityscan.AdvisoryReport{State: "observed", Decisions: advisoryDecisions, Summary: v}
+				if localWanted {
+					if integrityscan.ValidateLocalDetails(localDetails, advisoryDecisions, inventory) != nil {
+						return errScanProtocol
+					}
+					a.Local = &localDetails
+				}
 				for _, d := range advisoryDecisions {
 					if d.EnforcementEligible {
 						a.Findings++
@@ -534,6 +591,10 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 		return 2
 	}
 	if cfg.Stage == "acquire" {
+		privacy := integrityscan.PlanPrivacy(*cfg.Plan)
+		if !one(privacy, "portable", "local") || cfg.Plan.Policy.RequirePortable && privacy == "local" {
+			return 2
+		}
 		if (cfg.Plan.StateDir != "") != (cfg.Intelligence != nil) {
 			return 2
 		}
@@ -622,6 +683,9 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 		}
 		emitInventory := func(r projectinventory.Result) error {
 			p := projectinventory.Portable(r)
+			if cfg.Plan.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) != 0 {
+				p = projectinventory.PortableMatching(r)
+			}
 			batches := uint32(0)
 			if e := projectinventory.WalkBatches(p, func(b projectinventory.InventoryBatch) error {
 				if e := sender.send("inventory-batch", b); e != nil {
@@ -646,9 +710,25 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 			if cfg.Intelligence != nil {
 				now = time.Unix(0, cfg.Intelligence.NowUnixNS)
 			}
-			matched, e := integrityscan.MatchInventory(ctx, *cfg.Plan, r, snapshot, intelligenceInfo, now, func(d integrityscan.AdvisoryDecision) error {
+			var emitLocal func(integrityscan.LocalAdvisory) error
+			if integrityscan.PlanPrivacy(*cfg.Plan) == "local" {
+				local := integrityscan.CollectLocalObservations(r)
+				batches := uint32(0)
+				for from := 0; from < len(local.Observations); from += 128 {
+					end := min(from+128, len(local.Observations))
+					if e := sender.send("local-observations", scanLocalObservations{Sequence: batches, Observations: local.Observations[from:end]}); e != nil {
+						return e
+					}
+					batches++
+				}
+				if e := sender.send("local-closure", scanLocalClosure{Batches: batches, Observations: len(local.Observations), Limited: local.Limited}); e != nil {
+					return e
+				}
+				emitLocal = func(d integrityscan.LocalAdvisory) error { return sender.send("matching-advisory", d) }
+			}
+			matched, e := integrityscan.MatchInventoryWithLocal(ctx, *cfg.Plan, r, snapshot, intelligenceInfo, now, func(d integrityscan.AdvisoryDecision) error {
 				return sender.send("matching-decision", d)
-			})
+			}, emitLocal)
 			if e != nil {
 				return e
 			}

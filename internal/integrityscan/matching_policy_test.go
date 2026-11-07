@@ -71,6 +71,87 @@ func TestNPMOriginsPolicyClosedExactPinned(t *testing.T) {
 		t.Fatal("canonical scoped rule rejected")
 	}
 }
+func TestRegistryGrantPolicyAndPortableRequirement(t *testing.T) {
+	for _, field := range []string{`"npmRegistry":null`, `"requirePortable":null`, `"npmRegistry":true`, `"requirePortable":"true"`} {
+		if _, err := ParsePolicy([]byte(strings.Replace(policyJSON, "{", "{"+field+",", 1))); err == nil {
+			t.Fatal("untyped optional field", field)
+		}
+	}
+	plan := matchingPlan(t)
+	p := plan.Policy
+	p.NPMOrigins = nil
+	p.NPMRegistry = "https://registry.npmjs.org"
+	r := cli.ScanArgumentRequest{PolicyPath: "policy.json", Checks: cli.ArgumentCheckMalicious, Privacy: "local", Output: "-", Manager: "auto"}
+	if _, err := Configure(r, p); err == nil {
+		t.Fatal("registry grant without independent pin")
+	}
+	r.TrustedPolicyDigest = plan.TrustedPolicyDigest
+	if got, err := Configure(r, p); err != nil || got.Privacy != "local" {
+		t.Fatal(got, err)
+	}
+	p.RequirePortable = true
+	if _, err := Configure(r, p); err == nil {
+		t.Fatal("requirePortable admitted local")
+	}
+	r.Privacy = ""
+	if got, err := Configure(r, p); err != nil || got.Privacy != "portable" {
+		t.Fatal("default", got, err)
+	}
+	for _, registry := range []string{"https://registry.npmjs.org/", "http://registry.npmjs.org", "https://registry.npmjs.org:443", "https://user@registry.npmjs.org", "https://registry.npmjs.org?x", "https://registry.npmjs.org#x", "https://registry.npmjs.org.invalid", "https://mirror.invalid"} {
+		p.NPMRegistry = registry
+		if ValidatePolicy(p) == nil {
+			t.Fatal("noncanonical grant", registry)
+		}
+	}
+	p.NPMRegistry = "https://registry.npmjs.org"
+	p.Manager = "bun@1.4.2"
+	if ValidatePolicy(p) == nil {
+		t.Fatal("Bun registry grant")
+	}
+}
+
+func TestRegistryGrantNeverOverridesExactLocationOrClaims(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		change func(*Plan, *matchingFixture)
+		want   string
+	}{
+		{"explicit-registry", func(p *Plan, _ *matchingFixture) { p.Policy.NPMOrigins = nil }, "operator-npm-registry"},
+		{"exact-priority", func(*Plan, *matchingFixture) {}, "operator-npm-rule"},
+		{"exact-mismatch", func(p *Plan, _ *matchingFixture) {
+			p.Policy.NPMOrigins[0].Version = "2.0.0"
+			p.Policy.NPMOrigins[0].Origin = npmTarballOrigin("left-pad", "2.0.0")
+		}, ""},
+		{"private", func(p *Plan, f *matchingFixture) {
+			p.Policy.NPMOrigins = nil
+			f.inv.Model.Observations[0].Origin = "https://private.invalid/pkg.tgz"
+		}, ""},
+		{"query", func(p *Plan, f *matchingFixture) {
+			p.Policy.NPMOrigins = nil
+			f.inv.Model.Observations[0].Origin += "?x"
+		}, ""},
+		{"unpinned", func(p *Plan, _ *matchingFixture) { p.TrustedPolicyDigest = "" }, ""},
+		{"no-grant", func(p *Plan, _ *matchingFixture) { p.Policy.NPMRegistry = ""; p.Policy.NPMOrigins = nil }, ""},
+		{"alias", func(_ *Plan, f *matchingFixture) {
+			f.inv.Model.Observations[0].Requirements = []inventory.DependencyGroup{{State: inventory.FieldValue, Entries: []inventory.DeclaredDependency{{Name: "left-pad", Requirement: "npm:left-pad@1.0.0", State: inventory.FieldValue}}}}
+		}, ""},
+		{"missing-native-evidence", func(_ *Plan, f *matchingFixture) { f.inv.Model.Evidence[0].Complete = false }, ""},
+		{"selected-lock", func(_ *Plan, f *matchingFixture) { f.inv.Selection.File = "npm-shrinkwrap.json" }, ""},
+		{"unstable", func(_ *Plan, f *matchingFixture) { f.inv.Model.Observations[0].Status = "unstable" }, ""},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := matchingPlan(t)
+			p.Policy.NPMRegistry = "https://registry.npmjs.org"
+			f := newMatchingFixture()
+			tc.change(&p, &f)
+			grant := indexedMatchingOrigins(p, f.inv)[1]
+			if grant.Origin != tc.want {
+				t.Fatal(grant)
+			}
+		})
+	}
+}
+
 func TestMatchingRuleDoesNotPromoteUnknownAliasOrOtherEvidence(t *testing.T) {
 	for _, tc := range []struct {
 		name   string

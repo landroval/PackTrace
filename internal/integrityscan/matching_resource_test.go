@@ -32,7 +32,7 @@ func TestMatchingIdentityScopeRetainsReaderLimits(t *testing.T) {
 
 func TestMatchingEvaluationLimitCannotInventZeroWork(t *testing.T) {
 	inventory := projectinventory.Portable(newMatchingFixture().inv)
-	s := AdvisorySummary{TotalObservations: 1, Gaps: []string{"locked-only", "installed-unassessed", "declared-unassessed", "index-completeness", "evaluation-limit"}}
+	s := AdvisorySummary{TotalObservations: 1, Gaps: []string{"declared-unassessed", "index-completeness", "evaluation-limit"}}
 	if ValidateAdvisorySummary(s, []AdvisoryDecision{}, inventory) == nil {
 		t.Fatal("zero-work closure hid every observation")
 	}

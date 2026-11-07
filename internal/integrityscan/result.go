@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -214,10 +215,13 @@ func BuildReportWithInventory(plan Plan, records []Record, summary Summary, reso
 }
 
 func Render(r Report, format string) ([]byte, error) {
+	if !oneOf(r.Privacy, "portable", "local") || r.advisoryPlan != nil && r.Privacy != PlanPrivacy(*r.advisoryPlan) || r.Privacy == "local" && (r.advisoryPlan == nil || PlanPrivacy(*r.advisoryPlan) != "local" || r.advisoryPlan.Policy.RequirePortable) {
+		return nil, errors.New("scan: report-failed")
+	}
 	if !validRenderedAdvisories(r) {
 		return nil, errors.New("scan: report-failed")
 	}
-	if r.Intelligence != nil && ((r.SchemaVersion != "1.2" && r.SchemaVersion != "1.3") || ValidateIntelligence(*r.Intelligence) != nil) {
+	if r.Intelligence != nil && ((r.SchemaVersion != "1.2" && r.SchemaVersion != "1.3" && r.SchemaVersion != "1.4") || ValidateIntelligence(*r.Intelligence) != nil) {
 		return nil, errors.New("scan: report-failed")
 	}
 	if r.Inventory != nil && projectinventory.ValidatePublic(*r.Inventory) != nil {
@@ -229,7 +233,11 @@ func Render(r Report, format string) ([]byte, error) {
 		return append(data, '\n'), e
 	case "terminal":
 		var out strings.Builder
-		fmt.Fprintln(&out, "PackTrace offline integrity — GATED CANDIDATE; not a qualified release")
+		if r.Advisories == nil {
+			fmt.Fprintln(&out, "PackTrace offline integrity — GATED CANDIDATE; not a qualified release")
+		} else {
+			fmt.Fprintln(&out, "PackTrace offline advisory scan — GATED CANDIDATE; not a qualified release")
+		}
 		fmt.Fprintf(&out, "Observed entries: %d; instances: %d; drift findings: %d\n", r.ObservedEntries, r.Instances, r.Findings)
 		if r.Inventory != nil {
 			p := r.Inventory
@@ -252,7 +260,7 @@ func Render(r Report, format string) ([]byte, error) {
 				fmt.Fprintf(&out, "Intelligence gap: %s\n", g)
 			}
 		}
-		renderAdvisories(&out, r.Advisories)
+		renderAdvisories(&out, r.Advisories, r.Inventory)
 		for _, c := range r.Coverage {
 			fmt.Fprintf(&out, "%s: %s (%s)\n", c.Check, c.Outcome, c.Reason)
 		}
@@ -274,19 +282,38 @@ func Render(r Report, format string) ([]byte, error) {
 			Level      string  `json:"level"`
 			Message    message `json:"message"`
 			Properties any     `json:"properties"`
+			Locations  []any   `json:"locations,omitempty"`
 		}
 		results := []result{}
 		for _, d := range r.Comparison.Differences {
 			if d.Kind != integrity.DifferenceUnchanged {
 				label := differenceName(d.Kind)
-				results = append(results, result{"PT-INTEGRITY-" + strings.ToUpper(label), "warning", message{"Observed integrity drift: " + label + "; not evidence of malicious execution"}, d})
+				results = append(results, result{RuleID: "PT-INTEGRITY-" + strings.ToUpper(label), Level: "warning", Message: message{"Observed integrity drift: " + label + "; not evidence of malicious execution"}, Properties: d})
 			}
 		}
 		if a := r.Advisories; a != nil {
+			observations, advisories := localDetailMaps(a.Local)
 			for _, d := range a.Decisions {
-				if d.EnforcementEligible {
-					results = append(results, result{"PT-MALICIOUS-ADVISORY", "warning", message{"Matched malicious-package advisory on locked evidence; not proof of installation or execution"}, d})
+				if !d.EnforcementEligible {
+					continue
 				}
+				class := r.Inventory.Observations[d.Observation-1].Class
+				text := "Matched " + d.Category + " advisory on " + class + " evidence; not proof of execution or content authenticity"
+				entry := result{RuleID: "PT-" + strings.ToUpper(d.Category) + "-ADVISORY", Level: "warning", Properties: d}
+				if a.Local != nil {
+					if observation, ok := observations[d.Observation]; ok {
+						text += fmt.Sprintf("; package=%q version=%q relative-path=%q", observation.Name, observation.Version, observation.Location)
+						if class == "installed" && observation.Location != "" {
+							uri := (&url.URL{Path: observation.Location + "/package.json"}).String()
+							entry.Locations = []any{map[string]any{"physicalLocation": map[string]any{"artifactLocation": map[string]string{"uri": uri, "uriBaseId": "%SRCROOT%"}}}}
+						}
+					}
+					if advisory, ok := advisories[d.Advisory]; ok && advisory.ID != "" {
+						text += fmt.Sprintf("; advisory=%q", advisory.ID)
+					}
+				}
+				entry.Message = message{text}
+				results = append(results, entry)
 			}
 		}
 		notifications := []any{}
@@ -297,6 +324,10 @@ func Render(r Report, format string) ([]byte, error) {
 					Message message `json:"message"`
 				}{"warning", message{c.Check + ": " + c.Reason}})
 			}
+		}
+		toolName := "PackTrace offline integrity candidate"
+		if r.Advisories != nil {
+			toolName = "PackTrace offline advisory scan candidate"
 		}
 		data, e := json.Marshal(struct {
 			Version string `json:"version"`
@@ -311,7 +342,7 @@ func Render(r Report, format string) ([]byte, error) {
 			Driver any `json:"driver"`
 		}{struct {
 			Name string `json:"name"`
-		}{"PackTrace offline integrity candidate"}}, results, []any{struct {
+		}{toolName}}, results, []any{struct {
 			ExecutionSuccessful        bool  `json:"executionSuccessful"`
 			ToolExecutionNotifications []any `json:"toolExecutionNotifications"`
 		}{false, notifications}}, r}}})
