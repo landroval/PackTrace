@@ -26,7 +26,7 @@ func TestAdvisoryReportRetainsIndependentGapsAndRejectsForgedRendering(t *testin
 	r := BuildReportWithAdvisories(plan, nil, Summary{}, Resources{}, false, false, &inventory, &info, &a)
 	a.Decisions[0].Gaps[0] = "PRIVATE-mutated"
 	a.Summary.Gaps[0] = "PRIVATE-mutated"
-	if r.SchemaVersion != "1.5" || r.ExitCode != 3 || r.Findings != 0 || r.Advisories == nil || r.Advisories.State != "observed" {
+	if r.SchemaVersion != "1.6" || r.ExitCode != 3 || r.Findings != 0 || r.Advisories == nil || r.Advisories.State != "observed" {
 		t.Fatal("matching silently disappeared or changed global coverage", r)
 	}
 	for _, format := range []string{"json", "terminal", "sarif"} {
@@ -40,7 +40,7 @@ func TestAdvisoryReportRetainsIndependentGapsAndRejectsForgedRendering(t *testin
 		func(r *Report) { r.Advisories.Decisions[0].EnforcementEligible = true },
 		func(r *Report) { r.Advisories.Findings = 1 },
 		func(r *Report) { r.SchemaVersion = "1.2" },
-		func(r *Report) { r.SchemaVersion = "1.6" },
+		func(r *Report) { r.SchemaVersion = "1.5" },
 		func(r *Report) { r.advisoryPlan = nil },
 	} {
 		copy := r
@@ -80,7 +80,7 @@ func TestAdvisoryReportFirstVersionProblem(t *testing.T) {
 					a.Local = &local
 				}
 				r := BuildReportWithAdvisories(plan, nil, Summary{}, Resources{}, false, false, &inventory, &info, &a)
-				if r.SchemaVersion != "1.5" || r.ExitCode != 3 || r.Advisories.State != "observed" || r.Advisories.Findings != a.Findings || r.Advisories.Decisions[0].FullyEvaluated || r.Advisories.Decisions[0].FirstVersionProblem == &problem {
+				if r.SchemaVersion != "1.6" || r.ExitCode != 3 || r.Advisories.State != "observed" || r.Advisories.Findings != a.Findings || r.Advisories.Decisions[0].FullyEvaluated || r.Advisories.Decisions[0].FirstVersionProblem == &problem {
 					t.Fatal("diagnostic lost, aliased, or changed matching/coverage", r.Advisories)
 				}
 				want := problem
@@ -124,14 +124,14 @@ func TestAdvisoryReportFirstVersionProblem(t *testing.T) {
 							t.Fatal("eligible finding lost structured diagnostic")
 						}
 					}
-					if rendered.SchemaVersion != "1.5" || rendered.Advisories == nil || len(rendered.Advisories.Decisions) != 1 || !reflect.DeepEqual(rendered.Advisories.Decisions[0].FirstVersionProblem, &want) {
+					if rendered.SchemaVersion != "1.6" || rendered.Advisories == nil || len(rendered.Advisories.Decisions) != 1 || !reflect.DeepEqual(rendered.Advisories.Decisions[0].FirstVersionProblem, &want) {
 						t.Fatal("structured report lost diagnostic", format)
 					}
 				}
 				for _, corrupt := range []func(*Report){
 					func(r *Report) { r.SchemaVersion = "1.3" },
 					func(r *Report) { r.SchemaVersion = "1.4" },
-					func(r *Report) { r.SchemaVersion = "1.6" },
+					func(r *Report) { r.SchemaVersion = "1.5" },
 					func(r *Report) { r.Advisories = nil },
 					func(r *Report) { r.advisoryPlan = nil },
 					func(r *Report) { r.Advisories.Decisions[0].FirstVersionProblem.Kind = "PRIVATE\x1b[31m" },

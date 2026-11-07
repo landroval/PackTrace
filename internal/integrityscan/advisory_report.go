@@ -1,6 +1,7 @@
 package integrityscan
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -11,11 +12,62 @@ import (
 // AdvisoryReport keeps advisory findings separate from integrity drift. Its
 // locators refer to the same portable inventory and fixed intelligence generation.
 type AdvisoryReport struct {
-	State     string             `json:"state"`
-	Decisions []AdvisoryDecision `json:"decisions"`
-	Summary   AdvisorySummary    `json:"summary"`
-	Findings  int                `json:"findings"`
-	Local     *LocalDetails      `json:"local,omitempty"`
+	State      string             `json:"state"`
+	Decisions  []AdvisoryDecision `json:"decisions"`
+	Summary    AdvisorySummary    `json:"summary"`
+	Findings   int                `json:"findings"`
+	Candidates int                `json:"candidates"`
+	Local      *LocalDetails      `json:"local,omitempty"`
+
+	candidatesPresent     bool // Retain schema provenance even when the count is zero.
+	candidateFlagsPresent bool // Explicit false is still a new-schema field.
+	legacyCandidates      bool // Rendering historical reports omits the new field.
+}
+
+func (a AdvisoryReport) MarshalJSON() ([]byte, error) {
+	type plain AdvisoryReport
+	var candidates *int
+	if !a.legacyCandidates {
+		candidates = &a.Candidates
+	}
+	return json.Marshal(struct {
+		plain
+		Candidates *int `json:"candidates,omitempty"`
+	}{plain(a), candidates})
+}
+
+func (a *AdvisoryReport) UnmarshalJSON(data []byte) error {
+	type plain AdvisoryReport
+	var decoded struct {
+		plain
+		Candidates json.RawMessage `json:"candidates"`
+	}
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		return err
+	}
+	*a = AdvisoryReport(decoded.plain)
+	if decoded.Candidates != nil {
+		if string(decoded.Candidates) == "null" {
+			return fmt.Errorf("scan: report-failed")
+		}
+		if err := json.Unmarshal(decoded.Candidates, &a.Candidates); err != nil {
+			return err
+		}
+		a.candidatesPresent = true
+	} else {
+		var fields struct {
+			Decisions []struct {
+				Candidate json.RawMessage `json:"candidate"`
+			} `json:"decisions"`
+		}
+		if err := json.Unmarshal(data, &fields); err != nil {
+			return err
+		}
+		for _, d := range fields.Decisions {
+			a.candidateFlagsPresent = a.candidateFlagsPresent || d.Candidate != nil
+		}
+	}
+	return nil
 }
 
 func BuildReportWithAdvisories(plan Plan, records []Record, summary Summary, resources Resources, interrupted, abnormal bool, inventory *projectinventory.PublicInventory, intelligence *Intelligence, advisories *AdvisoryReport) Report {
@@ -25,7 +77,7 @@ func BuildReportWithAdvisories(plan Plan, records []Record, summary Summary, res
 	if plan.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) == 0 {
 		return r
 	}
-	r.SchemaVersion = "1.5"
+	r.SchemaVersion = "1.6"
 	a := AdvisoryReport{State: "unavailable", Decisions: []AdvisoryDecision{}, Summary: AdvisorySummary{Gaps: []string{}}}
 	if advisories != nil && inventory != nil && intelligence != nil && validateAdvisoryReport(plan, *inventory, *intelligence, *advisories) {
 		a = *advisories
@@ -43,6 +95,8 @@ func BuildReportWithAdvisories(plan Plan, records []Record, summary Summary, res
 			a.Local = &local
 		}
 	}
+	a.candidatesPresent = true
+	a.legacyCandidates = false
 	r.Advisories = &a
 	for i := range r.Coverage {
 		c := &r.Coverage[i]
@@ -70,7 +124,7 @@ func validateAdvisoryReport(plan Plan, inventory projectinventory.PublicInventor
 	if PlanPrivacy(plan) == "portable" && a.Local != nil || PlanPrivacy(plan) == "local" && (a.Local == nil || ValidateLocalDetails(*a.Local, a.Decisions, inventory) != nil) {
 		return false
 	}
-	findings := 0
+	findings, candidates := 0, 0
 	seen := map[[3]int]bool{}
 	for i, d := range a.Decisions {
 		if d.Sequence != i || ValidateAdvisoryDecision(plan, inventory, intelligence, d) != nil {
@@ -84,21 +138,36 @@ func validateAdvisoryReport(plan Plan, inventory projectinventory.PublicInventor
 		if d.EnforcementEligible {
 			findings++
 		}
+		if d.Candidate {
+			candidates++
+		}
 	}
-	return findings == a.Findings
+	return findings == a.Findings && candidates == a.Candidates
 }
 
 // Rendering validates the context-free public shape too. Authority validation
 // above additionally uses the parent-selected policy and admitted inventory.
 func validRenderedAdvisories(r Report) bool {
 	if r.Advisories == nil {
-		return !oneOf(r.SchemaVersion, "1.3", "1.4", "1.5")
+		return !oneOf(r.SchemaVersion, "1.3", "1.4", "1.5", "1.6")
 	}
-	if !oneOf(r.SchemaVersion, "1.3", "1.4", "1.5") {
+	if !oneOf(r.SchemaVersion, "1.3", "1.4", "1.5", "1.6") {
 		return false
 	}
 	a := r.Advisories
-	if r.SchemaVersion != "1.5" {
+	if r.SchemaVersion != "1.6" {
+		if a.candidatesPresent || a.candidateFlagsPresent || a.Candidates != 0 || r.advisoryPlan != nil && r.advisoryPlan.Policy.AdvisoryCandidates {
+			return false
+		}
+		for _, d := range a.Decisions {
+			if d.Candidate {
+				return false
+			}
+		}
+	} else if !a.candidatesPresent || a.legacyCandidates {
+		return false
+	}
+	if !oneOf(r.SchemaVersion, "1.5", "1.6") {
 		for _, d := range a.Decisions {
 			if d.FirstVersionProblem != nil {
 				return false
@@ -106,7 +175,7 @@ func validRenderedAdvisories(r Report) bool {
 		}
 	}
 	if a.State == "unavailable" {
-		return a.Local == nil && a.Decisions != nil && len(a.Decisions) == 0 && a.Findings == 0 && a.Summary.Decisions == 0 && a.Summary.Observations == 0 && a.Summary.TotalObservations == 0 && a.Summary.InstalledObservations == 0 && a.Summary.TotalInstalledObservations == 0 && a.Summary.Work == 0 && a.Summary.BytesRead == 0 && a.Summary.Gaps != nil && len(a.Summary.Gaps) == 0
+		return a.Local == nil && a.Decisions != nil && len(a.Decisions) == 0 && a.Findings == 0 && a.Candidates == 0 && a.Summary.Decisions == 0 && a.Summary.Observations == 0 && a.Summary.TotalObservations == 0 && a.Summary.InstalledObservations == 0 && a.Summary.TotalInstalledObservations == 0 && a.Summary.Work == 0 && a.Summary.BytesRead == 0 && a.Summary.Gaps != nil && len(a.Summary.Gaps) == 0
 	}
 	return r.advisoryPlan != nil && r.Inventory != nil && r.Intelligence != nil && validateAdvisoryReport(*r.advisoryPlan, *r.Inventory, *r.Intelligence, *a)
 }
@@ -115,11 +184,14 @@ func renderAdvisories(out *strings.Builder, a *AdvisoryReport, inventory *projec
 	if a == nil {
 		return
 	}
-	fmt.Fprintf(out, "Advisories: %s; locked observations=%d/%d; installed observations=%d/%d; decisions=%d; work=%d; eligible matches=%d; identity bytes read=%d\n", a.State, a.Summary.Observations, a.Summary.TotalObservations, a.Summary.InstalledObservations, a.Summary.TotalInstalledObservations, len(a.Decisions), a.Summary.Work, a.Findings, a.Summary.BytesRead)
-	fmt.Fprintln(out, "Counts are observation-level matches, not distinct incidents; installed correspondence does not authenticate contents")
+	fmt.Fprintf(out, "Advisories: %s; locked observations=%d/%d; installed observations=%d/%d; decisions=%d; work=%d; eligible matches=%d; candidates=%d; identity bytes read=%d\n", a.State, a.Summary.Observations, a.Summary.TotalObservations, a.Summary.InstalledObservations, a.Summary.TotalInstalledObservations, len(a.Decisions), a.Summary.Work, a.Findings, a.Candidates, a.Summary.BytesRead)
+	fmt.Fprintln(out, "Counts are observation-level rows, not distinct incidents; candidates do not confirm origin; installed correspondence does not authenticate contents")
 	observations, advisories := localDetailMaps(a.Local)
 	for _, d := range a.Decisions {
 		fmt.Fprintf(out, "Advisory observation=%d advisory=%d affected=%d: %s; version=%s; fully-evaluated=%t; category=%s; profile=%s; rule=%d; activity=%s; origin=%s; source=%s; enforcement-eligible=%t\n", d.Observation, d.Advisory, d.Affected, d.Outcome, d.VersionOutcome, d.FullyEvaluated, d.Category, d.Profile, d.Rule, d.Activity, d.Origin, d.Source, d.EnforcementEligible)
+		if d.Candidate {
+			fmt.Fprintln(out, "  Candidate only: local version match; origin unconfirmed; not enforcement-eligible")
+		}
 		if a.Local != nil {
 			class := "unknown"
 			if inventory != nil && d.Observation > 0 && int(d.Observation) <= len(inventory.Observations) {

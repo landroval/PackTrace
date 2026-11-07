@@ -394,6 +394,9 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 					if d.EnforcementEligible {
 						a.Findings++
 					}
+					if d.Candidate {
+						a.Candidates++
+					}
 				}
 				data.advisories = a
 				advisoryClosed = true

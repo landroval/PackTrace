@@ -15,7 +15,7 @@ import (
 
 func fullSourceFixture(t *testing.T, mode string) (func(context.Context, *Budget, requestSpec, io.Writer) (responseEvidence, error), func()) {
 	t.Helper()
-	matchingMode := mode == "matching" || mode == "matching-explanation" || mode == "matching-full" || mode == "matching-corrected"
+	matchingMode := mode == "matching" || mode == "matching-explanation" || mode == "matching-aliases" || mode == "matching-full" || mode == "matching-corrected"
 	record := strings.ReplaceAll(ownedOSVRecord, "OWNED-1", "GHSA-2345-6789-cfgh")
 	id := "GHSA-2345-6789-cfgh"
 	if mode == "license" {
@@ -56,6 +56,9 @@ func fullSourceFixture(t *testing.T, mode string) (func(context.Context, *Budget
 		records = matchingSourceRecords()
 	} else if mode == "matching-explanation" {
 		records = explanationSourceRecords()
+		id = strings.TrimSuffix(records[0].name, ".json")
+	} else if mode == "matching-aliases" {
+		records = aliasAcceptanceSourceRecords()
 		id = strings.TrimSuffix(records[0].name, ".json")
 	} else if matchingMode {
 		records = fullMatchingSourceRecords(mode == "matching-corrected")

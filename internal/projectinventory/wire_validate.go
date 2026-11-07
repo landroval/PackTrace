@@ -27,7 +27,25 @@ func ValidatePublic(p PublicInventory) error {
 		if e.ID != uint32(i+1) || e.Scope == 0 || int(e.Scope) > len(p.Scopes) || !allowed(e.Method, evidenceMethods...) || !allowed(e.Status, "complete", "incomplete") {
 			return ErrWire
 		}
+		if e.MetadataEvidence != 0 {
+			if e.Method != "native-input-lease" || e.MetadataEvidence >= e.ID || int(e.MetadataEvidence) > len(p.Evidence) {
+				return ErrWire
+			}
+			metadata := p.Evidence[e.MetadataEvidence-1]
+			if metadata.Method != "native-metadata-lease" || metadata.Scope != e.Scope {
+				return ErrWire
+			}
+		}
 		complete = complete && e.Status == "complete"
+	}
+	if p.Selection.Evidence != 0 {
+		if int(p.Selection.Evidence) > len(p.Evidence) {
+			return ErrWire
+		}
+		e := p.Evidence[p.Selection.Evidence-1]
+		if e.Method != "native-input-lease" || e.Scope != 1 {
+			return ErrWire
+		}
 	}
 	for i, o := range p.Observations {
 		if o.ID != uint32(i+1) || o.Workspace == 0 || int(o.Workspace) > len(p.Scopes) || o.Source == 0 || int(o.Source) > len(p.Evidence) || !allowed(o.Status, "complete", "unreadable", "unstable", "unsupported") {
@@ -54,7 +72,7 @@ func ValidatePublic(p PublicInventory) error {
 				return ErrWire
 			}
 			metadata := p.Evidence[o.MetadataEvidence-1]
-			if metadata.Method != "native-metadata-lease" || metadata.Scope != o.Workspace {
+			if metadata.Method != "native-metadata-lease" || metadata.Scope != o.Workspace || p.Evidence[o.Source-1].MetadataEvidence != 0 && p.Evidence[o.Source-1].MetadataEvidence != o.MetadataEvidence {
 				return ErrWire
 			}
 		}

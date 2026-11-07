@@ -107,7 +107,10 @@ command effects, source/license profiles, limits and qualification gaps, and the
 [usable matching contract](docs/increments/issue-6-usable-advisory-scan.md) for
 both categories, distinct evidence, scale and privacy, plus the
 [first-condition explanation](docs/increments/issue-6-explain-version-conditions.md)
-for a fixed first blocker with numeric source positions (advisory schema1.5). Bounded fixtures and local tests do not qualify an unrestricted
+for a fixed first blocker with numeric source positions. The explicit pinned-policy
+[offline candidate option](docs/increments/issue-6-offline-origin-candidates.md)
+investigates private/unknown origins locally without confirming them or adding
+eligible findings (advisory schema1.6). Bounded fixtures and local tests do not qualify an unrestricted
 feed/category corpus, every native platform, or a release.
 
 ## Scoped installed ownership

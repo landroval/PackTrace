@@ -45,6 +45,7 @@ type AdvisoryDecision struct {
 	Activity            string                  `json:"activity"`
 	Origin              string                  `json:"origin"`
 	Source              string                  `json:"source"`
+	Candidate           bool                    `json:"candidate,omitempty"`
 	EnforcementEligible bool                    `json:"enforcementEligible"`
 	Support             []AdvisorySupport       `json:"support"`
 	Gaps                []string                `json:"gaps"`
@@ -273,7 +274,12 @@ func MatchInventoryWithLocal(ctx context.Context, plan Plan, inventory projectin
 	if plan.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) == 0 || emit == nil || !oneOf(plan.Privacy, "", "portable", "local") || plan.Policy.RequirePortable && plan.Privacy == "local" {
 		return s, ErrAdvisory
 	}
+	// The local lookup grant is independently pinned even when no identity is usable.
+	if plan.Policy.AdvisoryCandidates && !candidateLookupPermission(plan) {
+		return s, ErrAdvisory
+	}
 	origins := indexedMatchingOrigins(plan, inventory)
+	candidates := indexedMatchingCandidates(plan, inventory)
 	groups := map[string][]projectinventory.Observation{}
 	ids := map[[32]byte]int{}
 	counted := map[uint32]bool{}
@@ -326,7 +332,7 @@ func MatchInventoryWithLocal(ctx context.Context, plan Plan, inventory projectin
 		}
 		groups[o.Name] = append(groups[o.Name], o)
 	}
-	// Unqualified observations are still visible; they cannot trigger public lookups.
+	// Unqualified observations require the separate local candidate lookup grant.
 	qualified := map[string][]projectinventory.Observation{}
 	names := []string{}
 	for name := range groups {
@@ -337,7 +343,7 @@ func MatchInventoryWithLocal(ctx context.Context, plan Plan, inventory projectin
 		for _, o := range groups[name] {
 			d := base(o)
 			gap := ""
-			if d.Origin == "unqualified" {
+			if d.Origin == "unqualified" && !candidates[o.ID] {
 				gap = "identity-unqualified"
 			} else if snapshot == nil || ValidateIntelligence(info) != nil || info.State != "available" {
 				gap = "intelligence-unavailable"
@@ -493,13 +499,14 @@ func MatchInventoryWithLocal(ctx context.Context, plan Plan, inventory projectin
 					if scopeGap != "" {
 						d.Gaps = addMatchingGap(d.Gaps, scopeGap)
 					}
-					if d.Profile != "unknown" && d.Source == "qualified" && d.Affected >= 0 {
+					if d.Origin != "unqualified" && d.Profile != "unknown" && d.Source == "qualified" && d.Affected >= 0 {
 						if d.Activity == "withdrawn" {
 							d.Outcome = "no-match"
 						} else if d.Activity == "not-withdrawn" {
 							d.Outcome = d.VersionOutcome
 						}
 					}
+					d.Candidate = activeAdvisoryCandidate(d)
 					d.EnforcementEligible = d.Outcome == "match" && categorySelected(plan, d.Category)
 					if err := send(d); err != nil {
 						return err
@@ -761,6 +768,9 @@ func profileRanges(raw json.RawMessage) bool {
 
 // Public validation can check typed endpoints/evidence, not redacted claim text.
 func publicMatchingEndpoint(inv projectinventory.PublicInventory, o projectinventory.PublicObservation, d AdvisoryDecision) bool {
+	if d.Origin == "unqualified" && (d.Advisory > 0 || d.Candidate) {
+		return d.LockedObservation == 0 && publicCandidateEndpoint(inv, o)
+	}
 	if o.Class == "locked" {
 		return d.LockedObservation == 0
 	}
@@ -854,7 +864,10 @@ func ValidateAdvisoryDecision(plan Plan, inventory projectinventory.PublicInvent
 	if d.Category != "unknown" && d.Source != "qualified" {
 		return ErrAdvisory
 	}
-	if d.Origin == "unqualified" && d.Advisory > 0 {
+	if d.Origin == "unqualified" && (d.Advisory > 0 || d.Candidate) && !candidateLookupPermission(plan) {
+		return ErrAdvisory
+	}
+	if d.Candidate != activeAdvisoryCandidate(d) {
 		return ErrAdvisory
 	}
 	if d.Advisory > 0 && info.State != "available" {

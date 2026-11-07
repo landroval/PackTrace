@@ -221,11 +221,17 @@ func Render(r Report, format string) ([]byte, error) {
 	if !validRenderedAdvisories(r) {
 		return nil, errors.New("scan: report-failed")
 	}
-	if r.Intelligence != nil && (!oneOf(r.SchemaVersion, "1.2", "1.3", "1.4", "1.5") || ValidateIntelligence(*r.Intelligence) != nil) {
+	if r.Intelligence != nil && (!oneOf(r.SchemaVersion, "1.2", "1.3", "1.4", "1.5", "1.6") || ValidateIntelligence(*r.Intelligence) != nil) {
 		return nil, errors.New("scan: report-failed")
 	}
 	if r.Inventory != nil && projectinventory.ValidatePublic(*r.Inventory) != nil {
 		return nil, errors.New("scan: report-failed")
+	}
+	// Historical schemas must not acquire the 1.6 count merely by rendering.
+	if r.Advisories != nil && r.SchemaVersion != "1.6" {
+		a := *r.Advisories
+		a.legacyCandidates = true
+		r.Advisories = &a
 	}
 	switch format {
 	case "json":
