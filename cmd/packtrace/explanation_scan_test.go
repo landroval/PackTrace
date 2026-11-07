@@ -27,7 +27,7 @@ func TestScanExplainsFirstVersionBlockerWithoutChangingVerdict(t *testing.T) {
 					t.Fatal("scan/private values", code, diag.String())
 				}
 				var report integrityscan.Report
-				if e := json.Unmarshal(out.Bytes(), &report); e != nil || report.SchemaVersion != "1.5" || report.Advisories == nil || report.Advisories.State != "observed" {
+				if e := json.Unmarshal(out.Bytes(), &report); e != nil || report.SchemaVersion != "1.6" || report.Advisories == nil || report.Advisories.State != "observed" {
 					t.Fatal("explanation report", e)
 				}
 				observed := 0

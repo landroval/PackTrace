@@ -25,16 +25,18 @@ type PublicScope struct {
 	Status string `json:"status"`
 }
 type PublicEvidence struct {
-	ID     uint32 `json:"id"`
-	Scope  uint32 `json:"scope"`
-	Method string `json:"method"`
-	Status string `json:"status"`
+	ID               uint32 `json:"id"`
+	Scope            uint32 `json:"scope"`
+	Method           string `json:"method"`
+	Status           string `json:"status"`
+	MetadataEvidence uint32 `json:"metadataEvidence,omitempty"`
 }
 type PublicSelection struct {
 	Family   string `json:"family"`
 	State    string `json:"state"`
 	Reason   string `json:"reason"`
 	Explicit bool   `json:"explicit"`
+	Evidence uint32 `json:"evidence,omitempty"`
 }
 type InventoryBatch struct {
 	Sequence     uint32              `json:"sequence"`
@@ -95,12 +97,22 @@ func Portable(r Result) PublicInventory {
 // matching projection. Historical Portable inventories keep their exact shape.
 func PortableMatching(r Result) PublicInventory {
 	p := Portable(r)
+	for _, e := range r.Model.Evidence {
+		if e.Scope == 1 && e.Method == "native-input-lease" && e.Location == r.Selection.File {
+			p.Selection.Evidence = e.ID
+			break
+		}
+	}
 	for i, observation := range r.Model.Observations {
 		if observation.Class != "installed" {
 			continue
 		}
-		if id, e := strconv.ParseUint(observation.Fields["metadata-evidence"], 10, 32); e == nil {
-			p.Observations[i].MetadataEvidence = uint32(id)
+		if id, e := strconv.ParseUint(observation.Fields["metadata-evidence"], 10, 32); e == nil && id > 0 && id <= uint64(len(r.Model.Evidence)) && observation.Source > 0 && int(observation.Source) <= len(r.Model.Evidence) {
+			metadata, manifest := r.Model.Evidence[id-1], r.Model.Evidence[observation.Source-1]
+			if metadata.Location == observation.Location && manifest.Location == observation.Location+"/package.json" && metadata.Scope == observation.Workspace && manifest.Scope == observation.Workspace {
+				p.Observations[i].MetadataEvidence = uint32(id)
+				p.Evidence[observation.Source-1].MetadataEvidence = uint32(id)
+			}
 		}
 	}
 	return p

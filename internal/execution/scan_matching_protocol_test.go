@@ -52,6 +52,10 @@ func matchingFaultFrames(c *channel, cfg scanConfig, mode string) int {
 		d.Source = "qualified"
 	case "matching-bad-eligibility":
 		d.EnforcementEligible = true
+	case "matching-candidate-unsolicited":
+		d.Candidate = true
+	case "matching-assessment-unsolicited":
+		d.Advisory, d.Affected, d.VersionOutcome = 1, 0, "no-match"
 	case "matching-private-gap":
 		d.Gaps = append(d.Gaps, "PRIVATE-untrusted-error")
 	case "matching-wrong-observation":
@@ -103,7 +107,7 @@ func TestMatchingProtocolRequiresExactClosedParentScope(t *testing.T) {
 	// Independent owned streams can share the test runner's existing bounded
 	// parallelism; race-runtime teardown need not serialize fourteen children.
 	t.Parallel()
-	for _, mode := range []string{"matching-valid", "matching-bad-source", "matching-bad-eligibility", "matching-private-gap", "matching-wrong-observation", "matching-bad-sequence", "matching-problem-unbound", "matching-problem-private-kind", "matching-duplicate-decision", "matching-bad-count", "matching-zero-work-limit", "matching-missing-closure", "matching-duplicate-closure", "matching-late-decision", "matching-after-done", "matching-crash-after-closure", "matching-local-valid", "matching-local-unsolicited", "matching-local-missing-closure", "matching-local-absolute", "matching-local-bad-count"} {
+	for _, mode := range []string{"matching-valid", "matching-bad-source", "matching-bad-eligibility", "matching-candidate-unsolicited", "matching-assessment-unsolicited", "matching-private-gap", "matching-wrong-observation", "matching-bad-sequence", "matching-problem-unbound", "matching-problem-private-kind", "matching-duplicate-decision", "matching-bad-count", "matching-zero-work-limit", "matching-missing-closure", "matching-duplicate-closure", "matching-late-decision", "matching-after-done", "matching-crash-after-closure", "matching-local-valid", "matching-local-unsolicited", "matching-local-missing-closure", "matching-local-absolute", "matching-local-bad-count"} {
 		t.Run(mode, func(t *testing.T) {
 			t.Parallel()
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

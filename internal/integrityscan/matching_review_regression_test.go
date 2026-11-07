@@ -51,6 +51,10 @@ func TestInstalledMetadataWitnessCannotUseOtherDirectory(t *testing.T) {
 	}
 	stripped := projectinventory.PortableMatching(fixture.inv)
 	stripped.Observations[1].MetadataEvidence = 0
+	stripped.Selection.Evidence = 0
+	for i := range stripped.Evidence {
+		stripped.Evidence[i].MetadataEvidence = 0
+	}
 	if !reflect.DeepEqual(legacy, stripped) {
 		t.Fatal("unexpected historical shape change")
 	}

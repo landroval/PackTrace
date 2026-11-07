@@ -165,7 +165,7 @@ func TestScanActualOfflineAdvisoryMatching(t *testing.T) {
 						}
 					}
 					a := report.Advisories
-					if report.SchemaVersion != "1.5" || report.ExitCode != 3 || report.Findings != 0 || a == nil || a.State != "observed" || a.Findings != tc.findings || a.Summary.Observations != 1 || a.Summary.TotalObservations != 1 || len(a.Decisions) == 0 {
+					if report.SchemaVersion != "1.6" || report.ExitCode != 3 || report.Findings != 0 || a == nil || a.State != "observed" || a.Findings != tc.findings || a.Summary.Observations != 1 || a.Summary.TotalObservations != 1 || len(a.Decisions) == 0 {
 						t.Fatal("actual matching/independent drift model disagrees", out.String())
 					}
 					negative, withdrawn, unsupported := false, false, false

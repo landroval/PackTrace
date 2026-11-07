@@ -40,6 +40,8 @@ type Policy struct {
 	NPMOrigins             []NPMOriginRule `json:"npmOrigins,omitempty"`
 	NPMRegistry            string          `json:"npmRegistry,omitempty"`
 	RequirePortable        bool            `json:"requirePortable,omitempty"`
+	// AdvisoryCandidates grants local ambiguous-origin lookups, not origin authority.
+	AdvisoryCandidates bool `json:"advisoryCandidates,omitempty"`
 }
 
 // NPMOriginRule authorizes only this exact locked tuple's namespace correspondence.
@@ -81,8 +83,14 @@ func ParsePolicy(data []byte) (Policy, error) {
 	if code != "" {
 		return Policy{}, ErrPolicy
 	}
+	// Do not let encoding/json's case folding introduce alternate grant keys.
+	for key := range fields {
+		if strings.EqualFold(key, "advisoryCandidates") && key != "advisoryCandidates" {
+			return Policy{}, ErrPolicy
+		}
+	}
 	// Optional scope/privacy fields are absent or typed values, never null.
-	for _, key := range []string{"npmRegistry", "requirePortable"} {
+	for _, key := range []string{"npmRegistry", "requirePortable", "advisoryCandidates"} {
 		if raw, ok := fields[key]; ok && bytes.Equal(bytes.TrimSpace(raw), []byte("null")) {
 			return Policy{}, ErrPolicy
 		}
@@ -105,6 +113,9 @@ func ValidatePolicy(p Policy) error {
 	}
 	fail, ok := categories(p.FailOn)
 	if !ok || fail & ^checks != 0 {
+		return ErrPolicy
+	}
+	if p.AdvisoryCandidates && !strings.HasPrefix(p.Manager, "npm@") {
 		return ErrPolicy
 	}
 	if p.NPMRegistry != "" && (p.NPMRegistry != "https://registry.npmjs.org" || !strings.HasPrefix(p.Manager, "npm@")) {
@@ -140,7 +151,7 @@ func Configure(r cli.ScanArgumentRequest, p Policy) (Plan, error) {
 	if r.Privacy == "" {
 		r.Privacy = "portable"
 	}
-	if r.PolicyPath == "" || !oneOf(r.Privacy, "portable", "local") || p.RequirePortable && r.Privacy == "local" || r.Output != "-" || (r.StateDir != "" && !filepath.IsAbs(r.StateDir)) || (r.TrustedSnapshotDigest != "" && !supportedSnapshotPin(r.TrustedSnapshotDigest)) || ((p.MinimumAssurance == "independently-anchored" || len(p.NPMOrigins) != 0 || p.NPMRegistry != "") && r.TrustedPolicyDigest == "") || (r.TrustedPolicyDigest != "" && !supportedPolicyPin(r.TrustedPolicyDigest)) || required & ^r.Checks != 0 || (r.FailOn|fail) & ^r.Checks != 0 {
+	if r.PolicyPath == "" || !oneOf(r.Privacy, "portable", "local") || p.RequirePortable && r.Privacy == "local" || r.Output != "-" || (r.StateDir != "" && !filepath.IsAbs(r.StateDir)) || (r.TrustedSnapshotDigest != "" && !supportedSnapshotPin(r.TrustedSnapshotDigest)) || ((p.MinimumAssurance == "independently-anchored" || len(p.NPMOrigins) != 0 || p.NPMRegistry != "" || p.AdvisoryCandidates) && r.TrustedPolicyDigest == "") || (r.TrustedPolicyDigest != "" && !supportedPolicyPin(r.TrustedPolicyDigest)) || required & ^r.Checks != 0 || (r.FailOn|fail) & ^r.Checks != 0 {
 		return Plan{}, ErrOptions
 	}
 	family := strings.Split(p.Manager, "@")[0]
