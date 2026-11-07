@@ -73,6 +73,7 @@ type lazyOriginal struct {
 	store  *Store
 	ref    ObjectRef
 	reader *objectReader
+	budget *identityReadBudget
 	closed bool
 }
 
@@ -90,8 +91,44 @@ func (r *lazyOriginal) Read(p []byte) (int, error) {
 		}
 		r.reader = reader
 	}
-	return r.reader.Read(p)
+	return r.budget.read(r.reader, p)
 }
+
+// identityReadBudget charges actual object bytes, including reads that fail.
+// At the exact boundary only an already fully consumed object's real EOF check
+// is allowed: nativefs never reads beyond the selected inode's initial size.
+// This preserves objectReader's digest, extra-content and stability validation.
+type identityReadBudget struct {
+	remaining, consumed uint64
+	err                 error
+}
+
+func (b *identityReadBudget) read(r *objectReader, p []byte) (int, error) {
+	if b == nil {
+		return r.Read(p)
+	}
+	if b.remaining == 0 && r.count < r.ref.Bytes {
+		b.err = ErrLimit
+		return 0, ErrLimit
+	}
+	if b.remaining > 0 && uint64(len(p)) > b.remaining {
+		p = p[:b.remaining]
+	}
+	n, err := r.Read(p)
+	b.remaining -= uint64(n)
+	b.consumed += uint64(n)
+	return n, err
+}
+
+type identityIndexReader struct {
+	reader *objectReader
+	budget *identityReadBudget
+}
+
+func (r identityIndexReader) Read(p []byte) (int, error) {
+	return r.budget.read(r.reader, p)
+}
+
 func (r *lazyOriginal) Close() error {
 	if r.closed {
 		return nil
@@ -103,6 +140,28 @@ func (r *lazyOriginal) Close() error {
 	return nil
 }
 func (s *Snapshot) ReadIdentity(ctx context.Context, name string) (intel.SnapshotNPMEvidence, error) {
+	return s.readIdentity(ctx, name, nil)
+}
+
+// ReadIdentityLimited bounds both index passes and all original-object reads.
+// Catalog acquisition is separate. Consumed is returned even on failure.
+func (s *Snapshot) ReadIdentityLimited(ctx context.Context, name string, remaining uint64) (intel.SnapshotNPMEvidence, uint64, error) {
+	if remaining > 8<<30 {
+		return intel.SnapshotNPMEvidence{}, 0, ErrLimit
+	}
+	budget := &identityReadBudget{remaining: remaining}
+	got, err := s.readIdentity(ctx, name, budget)
+	err = errors.Join(err, budget.err)
+	if ctx != nil {
+		err = errors.Join(err, ctx.Err())
+	}
+	if err != nil {
+		got = intel.SnapshotNPMEvidence{}
+	}
+	return got, budget.consumed, err
+}
+
+func (s *Snapshot) readIdentity(ctx context.Context, name string, budget *identityReadBudget) (intel.SnapshotNPMEvidence, error) {
 	if s == nil || ctx == nil {
 		return intel.SnapshotNPMEvidence{}, ErrUnavailable
 	}
@@ -125,7 +184,7 @@ func (s *Snapshot) ReadIdentity(ctx context.Context, name string) (intel.Snapsho
 		if e != nil {
 			return intel.SnapshotNPMEvidence{}, e
 		}
-		got, e := intel.ReadSnapshotNPMIdentityWithCatalog(ctx, s.manifest, name, s.catalog, block, originals)
+		got, e := intel.ReadSnapshotNPMIdentityWithCatalog(ctx, s.manifest, name, s.catalog, identityIndexReader{block, budget}, originals)
 		return got, errors.Join(e, block.Close(), s.pin.lease.Stable(ctx))
 	}
 	preview, e := read(nil)
@@ -140,7 +199,7 @@ func (s *Snapshot) ReadIdentity(ctx context.Context, name string) (intel.Snapsho
 	readers := make([]*lazyOriginal, 0, len(preview.Records))
 	streams := make([]intel.SnapshotOriginalStream, 0, len(preview.Records))
 	for _, record := range preview.Records {
-		reader := &lazyOriginal{ctx: ctx, store: s.store, ref: ObjectRef{record.SHA256, record.Bytes}}
+		reader := &lazyOriginal{ctx: ctx, store: s.store, ref: ObjectRef{record.SHA256, record.Bytes}, budget: budget}
 		readers = append(readers, reader)
 		streams = append(streams, intel.SnapshotOriginalStream{SHA256: record.SHA256, Reader: reader})
 	}

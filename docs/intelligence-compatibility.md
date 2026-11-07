@@ -1,11 +1,11 @@
 # Experimental intelligence lifecycle
 
-The #9 candidate implements owned filesystem snapshots, explicit preparation,
-offline transport and scan observations. It is not a release qualification,
-advisory matching engine, publisher signature verifier or security verdict.
-Issue #9 remains open until its source/native evidence, protected review and
-integration gates are accepted. Matching belongs to #6; general policy belongs
-to #8. macOS remains paused.
+The #9 lifecycle, integrated by PR#102, implements owned filesystem snapshots,
+explicit preparation, offline transport and scan observations. It is not a
+release qualification, publisher signature verifier or security verdict. The
+bounded matching slice belongs to [#6](increments/issue-6-offline-matching.md);
+general policy belongs to #8. Native qualification limits remain explicit and
+macOS remains paused.
 
 ## Commands and side effects
 
@@ -77,7 +77,11 @@ contract; historical supplied-input schemas remain unchanged. The report exposes
 snapshot identity, closed source/freshness labels, counts and gaps—not private
 paths, targets, raw advisories, source credentials or local HMAC material.
 Readonly storage-occupation observations are `null`/unknown, not fabricated zero.
-There is still no advisory applicability or matching result.
+Selecting advisory checks adds schema **1.3** with bounded locked-npm matching,
+explicit pinned `npmOrigins` correspondence and the documented OpenSSF metadata
+profile. Advisory counts remain separate from drift findings; unknown categories,
+corrections and installed applicability keep required coverage incomplete. See
+the [matching contract](increments/issue-6-offline-matching.md).
 
 Intel command output uses its separate schema **1.0**. Successful bounded
 maintenance/preparation is not successful complete project security coverage.

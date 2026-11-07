@@ -31,6 +31,7 @@ type scanIntelligenceOwner struct {
 	target   *nativefs.Root
 	metadata *nativefs.MetadataLease
 	store    *intelstore.Store
+	snapshot *intelstore.Snapshot // Worker reads the same admitted generation through matching.
 	pin      *intelstore.Pin
 	cfg      scanIntelligenceConfig
 	closed   bool
@@ -154,6 +155,9 @@ func (o *scanIntelligenceOwner) close() error {
 	}
 	o.closed = true
 	var e error
+	if o.snapshot != nil {
+		e = errors.Join(e, o.snapshot.Close())
+	}
 	if o.pin != nil {
 		e = errors.Join(e, o.pin.Close())
 	}
@@ -196,7 +200,9 @@ func workerScanIntelligence(ctx context.Context, targetPath string, cfg scanInte
 	if e != nil {
 		return owner, info, nil
 	}
-	defer func() { failure = errors.Join(failure, snapshot.Close()) }()
+	// The inventory callback needs verified originals, not just metadata. The
+	// existing owner closes this reader before its store and original roots.
+	owner.snapshot = snapshot
 	var expected *intelstore.ID
 	if cfg.TrustedDigest != "" {
 		expected = &id

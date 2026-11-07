@@ -27,16 +27,26 @@ var ErrOptions = errors.New("scan: unsupported-or-conflicting-options")
 // Policy is selected explicitly by the operator, never discovered in the target.
 // Its text assertions are provenance, not proof of physical independence.
 type Policy struct {
-	Version                int         `json:"version"`
-	Designation            string      `json:"designation"`
-	Reason                 string      `json:"reason"`
-	Provenance             string      `json:"provenance"`
-	Manager                string      `json:"manager"`
-	RequiredChecks         []string    `json:"requiredChecks"`
-	FailOn                 []string    `json:"failOn"`
-	RequireHardMemoryLimit bool        `json:"requireHardMemoryLimit"`
-	MinimumAssurance       string      `json:"minimumAssurance"`
-	References             []Reference `json:"references"`
+	Version                int             `json:"version"`
+	Designation            string          `json:"designation"`
+	Reason                 string          `json:"reason"`
+	Provenance             string          `json:"provenance"`
+	Manager                string          `json:"manager"`
+	RequiredChecks         []string        `json:"requiredChecks"`
+	FailOn                 []string        `json:"failOn"`
+	RequireHardMemoryLimit bool            `json:"requireHardMemoryLimit"`
+	MinimumAssurance       string          `json:"minimumAssurance"`
+	References             []Reference     `json:"references"`
+	NPMOrigins             []NPMOriginRule `json:"npmOrigins,omitempty"`
+}
+
+// NPMOriginRule authorizes only this exact locked tuple's namespace correspondence.
+// It does not authenticate package bytes or authorize network access.
+type NPMOriginRule struct {
+	Location string `json:"location"`
+	Name     string `json:"name"`
+	Version  string `json:"version"`
+	Origin   string `json:"origin"`
 }
 type Reference struct {
 	Location       string `json:"location"`
@@ -87,6 +97,17 @@ func ValidatePolicy(p Policy) error {
 	if !ok || fail & ^checks != 0 {
 		return ErrPolicy
 	}
+	if len(p.NPMOrigins) > 64 || len(p.NPMOrigins) != 0 && !strings.HasPrefix(p.Manager, "npm@") {
+		return ErrPolicy
+	}
+	origins := map[string]bool{}
+	for _, r := range p.NPMOrigins {
+		_, versionErr := intel.ParseSemVer(r.Version)
+		if !relative(r.Location) || !canonicalNPMName(r.Name) || versionErr != nil || r.Origin != npmTarballOrigin(r.Name, r.Version) || origins[strings.ToLower(r.Location)] {
+			return ErrPolicy
+		}
+		origins[strings.ToLower(r.Location)] = true
+	}
 	seen := map[string]bool{}
 	for _, r := range p.References {
 		key := strings.ToLower(r.Location)
@@ -103,7 +124,7 @@ func Configure(r cli.ScanArgumentRequest, p Policy) (Plan, error) {
 	}
 	required, _ := categories(p.RequiredChecks)
 	fail, _ := categories(p.FailOn)
-	if r.PolicyPath == "" || r.Privacy != "portable" || r.Output != "-" || (r.StateDir != "" && !filepath.IsAbs(r.StateDir)) || (r.TrustedSnapshotDigest != "" && !supportedSnapshotPin(r.TrustedSnapshotDigest)) || (p.MinimumAssurance == "independently-anchored" && r.TrustedPolicyDigest == "") || (r.TrustedPolicyDigest != "" && !supportedPolicyPin(r.TrustedPolicyDigest)) || required & ^r.Checks != 0 || (r.FailOn|fail) & ^r.Checks != 0 {
+	if r.PolicyPath == "" || r.Privacy != "portable" || r.Output != "-" || (r.StateDir != "" && !filepath.IsAbs(r.StateDir)) || (r.TrustedSnapshotDigest != "" && !supportedSnapshotPin(r.TrustedSnapshotDigest)) || ((p.MinimumAssurance == "independently-anchored" || len(p.NPMOrigins) != 0) && r.TrustedPolicyDigest == "") || (r.TrustedPolicyDigest != "" && !supportedPolicyPin(r.TrustedPolicyDigest)) || required & ^r.Checks != 0 || (r.FailOn|fail) & ^r.Checks != 0 {
 		return Plan{}, ErrOptions
 	}
 	family := strings.Split(p.Manager, "@")[0]
@@ -111,6 +132,34 @@ func Configure(r cli.ScanArgumentRequest, p Policy) (Plan, error) {
 		return Plan{}, ErrOptions
 	}
 	return Plan{PolicyFile: filepath.Base(r.PolicyPath), TrustedPolicyDigest: r.TrustedPolicyDigest, StateDir: r.StateDir, TrustedSnapshotDigest: r.TrustedSnapshotDigest, Manager: p.Manager, ExplicitManager: r.Manager != "auto", Checks: r.Checks, FailOn: r.FailOn | fail, Policy: p}, nil
+}
+func canonicalNPMName(name string) bool {
+	if len(name) == 0 || len(name) > 214 {
+		return false
+	}
+	parts := strings.Split(name, "/")
+	if strings.HasPrefix(name, "@") {
+		if len(parts) != 2 {
+			return false
+		}
+		parts[0] = strings.TrimPrefix(parts[0], "@")
+	} else if len(parts) != 1 {
+		return false
+	}
+	for _, p := range parts {
+		if p == "" || p[0] == '.' || p[0] == '_' {
+			return false
+		}
+		for _, c := range p {
+			if !(c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '-' || c == '_' || c == '.' || c == '~') {
+				return false
+			}
+		}
+	}
+	return true
+}
+func npmTarballOrigin(name, version string) string {
+	return "https://registry.npmjs.org/" + name + "/-/" + path.Base(name) + "-" + version + ".tgz"
 }
 func supportedSnapshotPin(value string) bool {
 	_, e := intel.ParseSnapshotDigest(value)

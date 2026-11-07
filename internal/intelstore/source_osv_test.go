@@ -21,7 +21,7 @@ func fullSourceFixture(t *testing.T, mode string) (func(context.Context, *Budget
 		record = ownedOSVRecord
 		id = "OWNED-1"
 	}
-	if mode == "malicious" {
+	if mode == "malicious" || mode == "matching" {
 		id = "MAL-2026-1"
 		record = strings.ReplaceAll(ownedOSVRecord, "OWNED-1", id)
 	}
@@ -51,6 +51,9 @@ func fullSourceFixture(t *testing.T, mode string) (func(context.Context, *Budget
 			records = append(records, archiveRecord{extra + ".json", strings.ReplaceAll(ownedOSVRecord, "OWNED-1", extra), 0})
 		}
 	}
+	if mode == "matching" {
+		records = matchingSourceRecords()
+	}
 	archive := ownedArchive(t, records)
 	digest := md5.Sum(archive)
 	if mode == "checksum" {
@@ -67,10 +70,25 @@ func fullSourceFixture(t *testing.T, mode string) (func(context.Context, *Budget
 	if mode == "same-generation-update" {
 		csvGeneration = "789"
 	}
+	metadataDate := "2026-11-01T00:00:00Z"
+	if mode == "matching" {
+		csvDate, metadataDate = matchingFixtureDate, matchingFixtureDate
+	}
 	csvBody := []byte(csvDate + ",npm/" + id + "\n")
 	csvMD5 := md5.Sum(csvBody)
-	client, close := ownedMappedClient(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.URL.Path, "/v1/vulns/") {
+			if mode == "matching" {
+				for _, item := range records {
+					if r.URL.Path == "/v1/vulns/"+strings.TrimSuffix(item.name, ".json") {
+						io.WriteString(w, item.body)
+						return
+					}
+				}
+				t.Error("non-fixture record request")
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
 			if strings.HasPrefix(mode, "replacement-") && r.URL.Path == "/v1/vulns/GHSA-2345-6789-cfgh" {
 				if mode == "replacement-unresolved" {
 					w.WriteHeader(404)
@@ -132,7 +150,7 @@ func fullSourceFixture(t *testing.T, mode string) (func(context.Context, *Budget
 			if mode == "size" {
 				size++
 			}
-			json.NewEncoder(w).Encode(map[string]any{"kind": "storage#object", "bucket": "osv-vulnerabilities", "name": "npm/all.zip", "generation": generation, "size": fmt.Sprint(size), "contentType": "application/zip", "md5Hash": base64.StdEncoding.EncodeToString(digest[:]), "updated": "2026-11-01T00:00:00Z"})
+			json.NewEncoder(w).Encode(map[string]any{"kind": "storage#object", "bucket": "osv-vulnerabilities", "name": "npm/all.zip", "generation": generation, "size": fmt.Sprint(size), "contentType": "application/zip", "md5Hash": base64.StdEncoding.EncodeToString(digest[:]), "updated": metadataDate})
 			return
 		}
 		if r.URL.Path != "/osv-vulnerabilities/npm/all.zip" || r.URL.Query().Get("generation") != archiveGeneration {
@@ -151,7 +169,16 @@ func fullSourceFixture(t *testing.T, mode string) (func(context.Context, *Budget
 			return
 		}
 		w.Write(archive)
-	}))
+	})
+	var client *http.Client
+	var close func()
+	if mode == "matching" {
+		// Authored fixture: dispatch in memory, without sockets, DNS or TLS.
+		client = &http.Client{Transport: matchingFixtureTransport{handler}}
+		close = func() {}
+	} else {
+		client, close = ownedMappedClient(t, handler)
+	}
 	return func(ctx context.Context, b *Budget, s requestSpec, out io.Writer) (responseEvidence, error) {
 		return fetchUsing(ctx, b, s, out, client)
 	}, close
