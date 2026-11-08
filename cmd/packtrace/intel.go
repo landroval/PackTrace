@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"os/signal"
 	"packtrace/internal/cli"
 	"packtrace/internal/execution"
+	"packtrace/internal/interactive"
 	"time"
 )
 
@@ -18,9 +20,19 @@ func runIntel(request cli.IntelArgumentRequest, out, diagnostic io.Writer) int {
 	return runIntelContext(ctx, request, out, diagnostic)
 }
 func runIntelContext(caller context.Context, request cli.IntelArgumentRequest, out, diagnostic io.Writer) int {
+	wantsUI := request.Format == "terminal-interactive"
+	if wantsUI {
+		request.Format = "terminal"
+		request.Provided &^= cli.ArgumentOptionInteractive
+	}
+	var activity *os.File
+	if wantsUI && interactive.Available(os.Stdin, out) {
+		activity = out.(*os.File)
+	}
+	started := time.Now()
 	work, cancel := context.WithTimeout(caller, 15*time.Minute)
 	defer cancel()
-	run, e := execution.RunIntel(work, request)
+	run, e := execution.RunIntelWithActivity(work, request, activity)
 	conditions := cli.ScanExitConditions{Interrupted: errors.Is(caller.Err(), context.Canceled)}
 	if e != nil || !run.Usable {
 		conditions.ReportPreventingError = true
@@ -63,6 +75,9 @@ func runIntelContext(caller context.Context, request cli.IntelArgumentRequest, o
 		data = append(data, '\n')
 	} else {
 		data = renderIntelTerminal(run.Result)
+		if activity != nil {
+			data = append(data, []byte(fmt.Sprintf("Elapsed: %s (observed; no completion percentage inferred).\n", time.Since(started).Round(time.Millisecond)))...)
+		}
 	}
 	if e != nil || run.WriteOutput(work, out, data) != nil {
 		conditions.ReportPreventingError = true

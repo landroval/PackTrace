@@ -74,7 +74,8 @@ rutas aunque su texto parezca correcto. No las debilites para obtener un resulta
 
 No hay instalador publicado ni binario de release cualificado. Utiliza una copia
 revisada del repositorio y un toolchain ya instalado compatible con `go.mod`
-—Go 1.27.1—. El programa principal solo depende de la biblioteca estándar de Go.
+—Go 1.27.1—. La UI usa bibliotecas Go fijadas e incluidas en `vendor/`; la compilación habitual
+las usa sin descargarlas. Consulta los [avisos de terceros](../THIRD_PARTY_NOTICES.md).
 **No necesitas ejecutar npm ni Bun** para analizar; no los ejecutes contra un
 proyecto sospechoso para prepararlo.
 
@@ -218,6 +219,30 @@ por `setup`; indica el mismo `--state-dir` expresamente. Sin ese argumento, usan
 `os.UserCacheDir()/packtrace`, normalmente `~/.cache/packtrace` en Linux.
 Las rutas deben superar comprobaciones de propiedad, persistencia y separación.
 
+### Orientación durante las esperas
+
+Añade `--interactive` antes del operando final de scan u operaciones de datos, por ejemplo:
+
+```bash
+packtrace intel status --interactive --state-dir /operator/state/intelligence
+```
+
+En una terminal compatible, `scan` anuncia lectura de política/proyecto y después
+inventario, referencias y avisos, antes de abrir el explorador. `intel sync`, import,
+export, status y `cache prune` anuncian la operación realmente seleccionada y sus
+efectos de lectura/escritura/red/borrado; al terminar muestran tiempo transcurrido
+observado. Solo scan abre el explorador: mantenimiento conserva su resultado habitual.
+
+Son **avisos secuenciales de fase**, no telemetría continua, otro proceso de spinner,
+porcentaje completado ni ETA. No se inventa animación durante un worker bloqueante.
+Se conserva el observador de recursos con un hijo activo cada vez y los plazos
+existentes: cinco minutos para scan, quince para mantenimiento. Ctrl+C cancela;
+siguen siendo obligatorias limpieza confirmada y prioridad de códigos de salida.
+Un aviso de espera no prueba éxito. No se añade salida a formatos de máquina ni
+tuberías. El argumento no inicia por sí solo sync, importación o borrado: siguen
+requiriendo comando explícito y fuentes/destinos revisados. Pin/unpin, setup y las
+herramientas de entrada suministrada no admiten este argumento.
+
 ### Qué te dice status
 
 `packtrace intel status --state-dir DIR` lee el almacén seleccionado: sustituye
@@ -325,6 +350,41 @@ amplia no es el procedimiento de recuperación.
 4. **Coverage limitations / Project checks:** ¿qué evidencia del proyecto falta? Después lee **PackTrace validation**: garantías de herramienta, no defectos del proyecto.
 5. **Required coverage / código de salida:** ¿se completó la política seleccionada?
 
+### Explorador interactivo opcional
+
+```bash
+packtrace scan --interactive /ruta/al/proyecto
+```
+
+Este perfil opt-in de terminal Linux muestra una tabla de paquetes, búsqueda por
+nombre acotada, detalles de fuente/condición con desplazamiento, Summary y ayuda
+contextual a partir del mismo informe validado por el padre. No trata un JSON
+guardado como evidencia autoritativa. Teclas: flechas seleccionan; Enter abre
+el detalle; Tab cambia el foco; `/` busca; Enter termina la búsqueda y Esc la
+limpia; `s` muestra Summary; `?` explica teclas y conceptos; `q` cierra y Ctrl+C
+interrumpe. El teclado no accede al portapapeles.
+
+Filtrar solo cambia la vista; siguen disponibles el total, el código original de
+comparación y la cobertura de Summary. Cerrar conserva ese código; interrumpir
+da `130` y un fallo de salida/recursos/restauración puede dar `2`. Los hallazgos
+aceptados no desaparecen. El detalle exclusivo de integridad sigue en verbose:
+este primer explorador se centra en paquetes con avisos y conserva el resumen completo.
+
+Exige entrada/salida en la misma terminal Linux real, con al menos 40 columnas y
+12 filas. Otras plataformas, tuberías/archivos, terminales pequeñas y `TERM=dumb`
+usan el informe plano existente. `NO_COLOR` conserva navegación sin color.
+No se combina con JSON/SARIF ni `--verbose`. Siguen vigentes las restricciones de
+`--output`: la publicación en archivo nunca es interactiva.
+
+El visor usa el ciclo secuencial de salida supervisado. La proyección aprobada por
+el padre y la salida renderizada tienen presupuestos finitos —8 MiB cada una—;
+las fuentes originales se retienen hasta salida/reap confirmados y se restauran
+los ajustes de entrada incluso tras cancelar forzosamente el proceso hijo.
+No se solicitan pantalla alternativa, modo ratón/pegado ni protocolos avanzados
+automáticos de teclado. El plazo original de cinco minutos incluye la visualización:
+no existe pausa ilimitada ni presupuesto renovado. Si se supera el límite de UI,
+se falla en vez de omitir evidencia silenciosamente o ampliar límites.
+
 ### Etiquetas y colores
 
 | Etiqueta | Color en terminal compatible | Significado |
@@ -427,6 +487,7 @@ La ayuda se usa sola: `packtrace scan --help`.
 | `--privacy` | `portable` o `local` permitido por la política |
 | `--format` | `terminal` por defecto, `json`, `sarif` |
 | `--verbose` | Solo terminal, sin valor; incompatible con JSON/SARIF |
+| `--interactive` | Explorador opt-in Linux y avisos de fase; sin valor; incompatible con verbose/JSON/SARIF; salida plana en otros casos |
 | `--output` | Archivo nuevo en un directorio externo existente admitido; restricciones más abajo |
 
 Sin configuración guardada ni política explícita se seleccionan las tres
