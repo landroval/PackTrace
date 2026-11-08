@@ -10,6 +10,7 @@ import (
 type Options struct {
 	Profile         string
 	ExplicitManager bool
+	BunCache        *nativefs.Root // Optional caller-authorized, physically disjoint source.
 }
 
 type Observation struct {

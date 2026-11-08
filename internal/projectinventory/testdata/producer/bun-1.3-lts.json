@@ -1,0 +1,184 @@
+{
+  "format": 1,
+  "profile": "bun@1.3.14",
+  "replayIsNotProducerExecution": true,
+  "installedExecutableSHA256": "9fd36f87e4b90b07632b987a2e4ec81ca15a62c81bf983190cea6d715be2ad74",
+  "captures": [
+    {
+      "entries": [
+        {
+          "path": "bun.lock",
+          "kind": "file",
+          "size": 2064,
+          "links": 1,
+          "object": 1,
+          "data": "{\n  \"lockfileVersion\": 1,\n  \"configVersion\": 1,\n  \"workspaces\": {\n    \"\": {\n      \"name\": \"owned-root\",\n      \"dependencies\": {\n        \"fixture-alias\": \"npm:fixture-common@1.0.0\",\n        \"fixture-common\": \"2.0.0\",\n        \"fixture-parent\": \"1.0.0\",\n        \"fixture-peer\": \"1.0.0\",\n      },\n      \"optionalDependencies\": {\n        \"fixture-platform\": \"1.0.0\",\n      },\n    },\n  },\n  \"packages\": {\n    \"fixture-alias\": [\"fixture-common@1.0.0\", \"http://127.0.0.1:41769/files/fixture-common-1.0.0.tgz\", {}, \"sha512-UpV3jVZqSoBAf4fsTeGs3+K418HmJJrbQx8ofK+oUebXPWYWlBKbrlisMMa0EVKPDwFJgxksZTx+45csVyCROA==\"],\n\n    \"fixture-common\": [\"fixture-common@2.0.0\", \"http://127.0.0.1:41769/files/fixture-common-2.0.0.tgz\", {}, \"sha512-OHJBVs6reDQxuaIBU2tDtoF8eJwq/QINBnOWmUCoxlktCFvUxLN8K9/Tl46+eRyXWe+qoVvsb2JLDc6Liliy2A==\"],\n\n    \"fixture-parent\": [\"fixture-parent@1.0.0\", \"http://127.0.0.1:41769/files/fixture-parent-1.0.0.tgz\", { \"dependencies\": { \"fixture-bundle\": \"1.0.0\", \"fixture-common\": \"1.0.0\" }, \"peerDependencies\": { \"fixture-peer\": \"*\" } }, \"sha512-1Q8n4RrCaLYvQCeRFAceihI6VD8kplR2nd2uKA1r4riipqKw9Kc7TnNigWVEP94L5nrjKDpq5wATgEIMjZDVmQ==\"],\n\n    \"fixture-peer\": [\"fixture-peer@1.0.0\", \"http://127.0.0.1:41769/files/fixture-peer-1.0.0.tgz\", {}, \"sha512-H1gQy6WWS+GIvSJ8KUHrFDU6IVBrKj/8pPcmcTV47LoV3Bfp8ewHtL+kswG5EFeKsNEbn2doNd6X43Wbv8gbKA==\"],\n\n    \"fixture-platform\": [\"fixture-platform@1.0.0\", \"http://127.0.0.1:41769/files/fixture-platform-1.0.0.tgz\", { \"os\": \"darwin\", \"cpu\": \"arm64\" }, \"sha512-csZRvmMoQ81Yz5lCYSGqC1U4lD5bHws0HELftmv4/XTYMBYzrZF1LYnK5N/uwsagDoLJBG1j9zKd8aUbIMWV0w==\"],\n\n    \"fixture-parent/fixture-bundle\": [\"fixture-bundle@1.0.0\", \"http://127.0.0.1:41769/files/fixture-bundle-1.0.0.tgz\", { \"bundled\": true }, \"sha512-RMNEQiWquUr08H3rctbaOioAw/Bed1Eds9w0z4O1dsmHrNbBa1yehwSu+yAwsqY1UDKlInjTzREzvvdjyxgiLw==\"],\n\n    \"fixture-parent/fixture-common\": [\"fixture-common@1.0.0\", \"http://127.0.0.1:41769/files/fixture-common-1.0.0.tgz\", {}, \"sha512-UpV3jVZqSoBAf4fsTeGs3+K418HmJJrbQx8ofK+oUebXPWYWlBKbrlisMMa0EVKPDwFJgxksZTx+45csVyCROA==\"],\n  }\n}\n",
+          "sha256": "b71ea264bc773c3e6f1eb4f6b2947f46fe927a4e4b75c8d3c7e92a58721ca795"
+        },
+        {
+          "path": "node_modules",
+          "kind": "directory"
+        },
+        {
+          "path": "node_modules/fixture-alias",
+          "kind": "directory"
+        },
+        {
+          "path": "node_modules/fixture-alias/index.js",
+          "kind": "file",
+          "size": 50,
+          "links": 1,
+          "object": 13
+        },
+        {
+          "path": "node_modules/fixture-alias/package.json",
+          "kind": "file",
+          "size": 47,
+          "links": 1,
+          "object": 14,
+          "data": "{\"name\": \"fixture-common\", \"version\": \"1.0.0\"}\n",
+          "sha256": "fa0fc24ce9789537489c3526d0cb8c29bc56028b30e4ca89ca8f4dc00f33c8f3"
+        },
+        {
+          "path": "node_modules/fixture-common",
+          "kind": "directory"
+        },
+        {
+          "path": "node_modules/fixture-common/index.js",
+          "kind": "file",
+          "size": 50,
+          "links": 1,
+          "object": 11
+        },
+        {
+          "path": "node_modules/fixture-common/package.json",
+          "kind": "file",
+          "size": 47,
+          "links": 1,
+          "object": 12,
+          "data": "{\"name\": \"fixture-common\", \"version\": \"2.0.0\"}\n",
+          "sha256": "c800d847db65989ea653b239ebf69bdfb22f8efef02141325af8638aea717f32"
+        },
+        {
+          "path": "node_modules/fixture-parent",
+          "kind": "directory"
+        },
+        {
+          "path": "node_modules/fixture-parent/index.js",
+          "kind": "file",
+          "size": 50,
+          "links": 1,
+          "object": 5
+        },
+        {
+          "path": "node_modules/fixture-parent/node_modules",
+          "kind": "directory"
+        },
+        {
+          "path": "node_modules/fixture-parent/node_modules/fixture-bundle",
+          "kind": "directory"
+        },
+        {
+          "path": "node_modules/fixture-parent/node_modules/fixture-bundle/index.js",
+          "kind": "file",
+          "size": 31,
+          "links": 1,
+          "object": 9
+        },
+        {
+          "path": "node_modules/fixture-parent/node_modules/fixture-bundle/package.json",
+          "kind": "file",
+          "size": 46,
+          "links": 1,
+          "object": 10,
+          "data": "{\"name\": \"fixture-bundle\", \"version\": \"1.0.0\"}",
+          "sha256": "286589ccabb88dd5e89cbdaffe86b85cff225ec98c0a76aa52bde953670cb317"
+        },
+        {
+          "path": "node_modules/fixture-parent/node_modules/fixture-common",
+          "kind": "directory"
+        },
+        {
+          "path": "node_modules/fixture-parent/node_modules/fixture-common/index.js",
+          "kind": "file",
+          "size": 50,
+          "links": 1,
+          "object": 7
+        },
+        {
+          "path": "node_modules/fixture-parent/node_modules/fixture-common/package.json",
+          "kind": "file",
+          "size": 47,
+          "links": 1,
+          "object": 8,
+          "data": "{\"name\": \"fixture-common\", \"version\": \"1.0.0\"}\n",
+          "sha256": "fa0fc24ce9789537489c3526d0cb8c29bc56028b30e4ca89ca8f4dc00f33c8f3"
+        },
+        {
+          "path": "node_modules/fixture-parent/package.json",
+          "kind": "file",
+          "size": 278,
+          "links": 1,
+          "object": 6,
+          "data": "{\"bundleDependencies\": [\"fixture-bundle\"], \"dependencies\": {\"fixture-bundle\": \"1.0.0\", \"fixture-common\": \"1.0.0\"}, \"name\": \"fixture-parent\", \"peerDependencies\": {\"fixture-peer\": \"*\"}, \"scripts\": {\"postinstall\": \"echo unexpected > /work/LIFECYCLE_EXECUTED\"}, \"version\": \"1.0.0\"}\n",
+          "sha256": "b95118f5106a3fb4207f7f6c17817a284988b1c798beabd74a7c17ad6668d29a"
+        },
+        {
+          "path": "node_modules/fixture-peer",
+          "kind": "directory"
+        },
+        {
+          "path": "node_modules/fixture-peer/index.js",
+          "kind": "file",
+          "size": 50,
+          "links": 1,
+          "object": 3
+        },
+        {
+          "path": "node_modules/fixture-peer/package.json",
+          "kind": "file",
+          "size": 45,
+          "links": 1,
+          "object": 4,
+          "data": "{\"name\": \"fixture-peer\", \"version\": \"1.0.0\"}\n",
+          "sha256": "b303133757a018ffced74c59d2d78fc7cb4911f1ee5e70ae97225c6917d8b492"
+        },
+        {
+          "path": "package.json",
+          "kind": "file",
+          "size": 256,
+          "links": 1,
+          "object": 2,
+          "data": "{\"dependencies\": {\"fixture-alias\": \"npm:fixture-common@1.0.0\", \"fixture-common\": \"2.0.0\", \"fixture-parent\": \"1.0.0\", \"fixture-peer\": \"1.0.0\"}, \"name\": \"owned-root\", \"optionalDependencies\": {\"fixture-platform\": \"1.0.0\"}, \"private\": true, \"version\": \"1.0.0\"}",
+          "sha256": "cfe4abcba5157ca7315512e1c69afcc803c924788951a574cece6d43158466d4"
+        }
+      ],
+      "contentBytes": 2830,
+      "case": "single",
+      "layout": "hoisted",
+      "backend": "copyfile",
+      "expected": {
+        "versions": {
+          "fixture-common": [
+            "1.0.0",
+            "2.0.0"
+          ],
+          "fixture-parent": [
+            "1.0.0"
+          ],
+          "fixture-bundle": [
+            "1.0.0"
+          ],
+          "fixture-peer": [
+            "1.0.0"
+          ]
+        },
+        "optionalAbsent": [
+          "fixture-platform"
+        ],
+        "minimumCommonOneCopies": 2,
+        "scopes": 1
+      }
+    }
+  ]
+}

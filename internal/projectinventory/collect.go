@@ -34,6 +34,7 @@ type collector struct {
 	manifestRemaining     int64
 	requirementsRemaining int
 	classCounts           map[string]int
+	cache                 *bunCacheIndex
 }
 
 // Collect reads only governing metadata and necessary manifests from a retained
@@ -91,6 +92,13 @@ func Collect(ctx context.Context, root *nativefs.Root, opts Options) (Result, er
 		}
 	}
 	c.selectInputs(opts, rootManifest)
+	if opts.BunCache != nil && c.result.Selection.Family == "bun" && c.result.Selection.State == "usable" {
+		c.cache, e = indexBunCache(ctx, opts.BunCache)
+		if e != nil {
+			c.gap(1, 0, "bun-cache-unavailable")
+			c.cache = nil
+		}
+	}
 	c.collectInstalled()
 	if ctx.Err() != nil {
 		return c.result, ErrCollection
@@ -170,6 +178,9 @@ func (c *collector) read(scope uint32, name string, limit int64, budget *int64) 
 		return nil, id, ErrCollection
 	}
 	f, e := c.root.OpenInput(c.ctx, name, limit)
+	if e != nil && c.cache != nil {
+		f, e = c.cache.open(c.ctx, c.root, name, limit)
+	}
 	if e != nil {
 		return nil, id, ErrCollection
 	}

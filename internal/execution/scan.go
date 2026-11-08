@@ -40,6 +40,7 @@ type ScanRun struct {
 	Usable, Interrupted   bool
 	output                BatchRun
 	fileOutput            *scanFileOutputState
+	bunCache              *scanBunCacheOwner
 }
 
 func (r *ScanRun) WriteOutput(ctx context.Context, out io.Writer, data []byte) error {
@@ -68,6 +69,7 @@ type scanConfig struct {
 	Plan                *integrityscan.Plan     `json:"plan"`
 	Intelligence        *scanIntelligenceConfig `json:"intelligence,omitempty"`
 	FileOutput          *scanFileOutputConfig   `json:"fileOutput,omitempty"`
+	BunCacheBinding     string                  `json:"bunCacheBinding,omitempty"`
 }
 type scanStart struct {
 	Stage string `json:"stage"`
@@ -174,6 +176,23 @@ func RunScan(ctx context.Context, request cli.ScanArgumentRequest) (ScanRun, err
 		}
 		intelligence = &owner.cfg
 	}
+	cacheBinding := ""
+	if plan.Policy.BunCacheDirectory != "" {
+		// The initial additional-source profile supports stdout only; never
+		// publish a file without excluding this actual additional original root.
+		if request.Output != "-" {
+			return run, integrityscan.ErrOptions
+		}
+		var borrowed *nativefs.Root
+		if s.intelligence != nil {
+			borrowed = s.intelligence.target
+		}
+		run.bunCache, e = openScanBunCache(ctx, borrowed, target, plan.Policy.BunCacheDirectory, "")
+		if e != nil {
+			return run, integrityscan.ErrAcquisition
+		}
+		cacheBinding = run.bunCache.binding
+	}
 	if request.Output != "-" {
 		destination, err := filepath.Abs(request.Output)
 		if err != nil {
@@ -187,7 +206,7 @@ func RunScan(ctx context.Context, request cli.ScanArgumentRequest) (ScanRun, err
 			return run, errors.New("scan: output-destination-unavailable")
 		}
 	}
-	_, e = run.scanPhase(ctx, scanConfig{Stage: "acquire", Target: target, PolicyPath: policyPath, PolicyHash: observation.SourceHash, TrustedPolicyDigest: request.TrustedPolicyDigest, Plan: &plan, Intelligence: intelligence, FileOutput: run.fileOutputConfig()})
+	_, e = run.scanPhase(ctx, scanConfig{Stage: "acquire", Target: target, PolicyPath: policyPath, PolicyHash: observation.SourceHash, TrustedPolicyDigest: request.TrustedPolicyDigest, Plan: &plan, Intelligence: intelligence, FileOutput: run.fileOutputConfig(), BunCacheBinding: cacheBinding})
 	run.Interrupted = explicitCancel(ctx)
 	return run, e
 }
@@ -670,13 +689,16 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 	if c.expect("config", &cfg) != nil || cfg.Nonce != cap || !one(cfg.Stage, "policy", "acquire") || !filepath.IsAbs(cfg.Target) {
 		return 2
 	}
-	if cfg.Stage == "policy" && (cfg.Plan != nil || cfg.PolicyHash != "" || cfg.Intelligence != nil || cfg.FileOutput != nil || !filepath.IsAbs(cfg.PolicyPath)) {
+	if cfg.Stage == "policy" && (cfg.Plan != nil || cfg.PolicyHash != "" || cfg.Intelligence != nil || cfg.FileOutput != nil || cfg.BunCacheBinding != "" || !filepath.IsAbs(cfg.PolicyPath)) {
 		return 2
 	}
 	if cfg.Stage == "acquire" && (cfg.Plan == nil || integrityscan.ValidatePlanPolicy(*cfg.Plan) != nil || !scanSourceHash(cfg.PolicyHash) || cfg.TrustedPolicyDigest != cfg.Plan.TrustedPolicyDigest) {
 		return 2
 	}
 	if cfg.Stage == "acquire" {
+		if (cfg.BunCacheBinding != "") != (cfg.Plan.Policy.BunCacheDirectory != "") || cfg.BunCacheBinding != "" && (!intelResultID(cfg.BunCacheBinding) || cfg.FileOutput != nil) {
+			return 2
+		}
 		if cfg.FileOutput != nil {
 			v := cfg.FileOutput
 			if !v.valid() || v.Target != cfg.Target || v.PolicyDirectory != "" && v.PolicyDirectory != filepath.Dir(cfg.PolicyPath) || cfg.Plan.Builtin != (v.PolicyDirectory == "") || !reflect.DeepEqual(v.Intelligence, cfg.Intelligence) {
@@ -850,6 +872,20 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 			}
 			if cfg.FileOutput != nil {
 				summary, e = acquireBoundFileScan(ctx, cfg, intelligenceOwner, emitRecord, emitInventory, emitEvidence)
+			} else if cfg.BunCacheBinding != "" {
+				var borrowed *nativefs.Root
+				if intelligenceOwner != nil {
+					borrowed = intelligenceOwner.target
+				}
+				cache, cacheErr := openScanBunCache(ctx, borrowed, cfg.Target, cfg.Plan.Policy.BunCacheDirectory, cfg.BunCacheBinding)
+				e = cacheErr
+				if e == nil {
+					summary, e = integrityscan.AcquireFromRootWithBunCache(ctx, cache.target, cache.cache, prepared, cfg.PolicyHash, *cfg.Plan, emitRecord, emitInventory, emitEvidence)
+					e = errors.Join(e, cache.check())
+				}
+				if cache != nil {
+					e = errors.Join(e, cache.close())
+				}
 			} else if intelligenceOwner != nil {
 				summary, e = integrityscan.AcquireFromRootWithPolicyEvidence(ctx, intelligenceOwner.target, prepared, cfg.PolicyHash, *cfg.Plan, emitRecord, emitInventory, emitEvidence)
 			} else {

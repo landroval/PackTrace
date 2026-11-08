@@ -16,7 +16,7 @@ preserve evidence and uncertainty without executing the investigated project's c
 | Area | Implemented | Not established by this work |
 | --- | --- | --- |
 | npm lockfiles | Stable npm 10.x/11.x (v2/v3) and 12.x (v3) interpretation, bounded reading, native effective-input selection and declarations/locked/installed evidence | Lockfile v4/patch/extension semantics, unknown formats, runtime resolution or release qualification |
-| Bun text lockfiles | Bounded JSONC evidence, selected workspaces and active in-root hoisted/isolated inventory | External stores, unsafe/hardlinked inputs, unexecuted variants or blanket producer/native qualification |
+| Bun text lockfiles | Bounded JSONC evidence, selected workspaces and active in-root hoisted/isolated inventory | Unapproved aliases/external stores, unexecuted variants or blanket producer/native qualification |
 | Package manifests | Bounded JSON reading and separate dependency declaration groups | Dependency resolution or package-manager execution |
 | Root comparison | Exact textual comparison of explicitly paired manifest and lockfile root requirements | Semantic range equivalence, installation drift, or findings |
 | OSV records | Bounded JSON reading, temporal/identity projections and concrete SemVer/version-condition evaluation | General schema/source/category qualification or complete advisory applicability |
@@ -93,8 +93,28 @@ additional single/workspace fixtures in isolation using the already-installed CL
 with a deliberately invalid shrinkwrap proving that behavior. Lockfile v4, patch
 and manifest-extension semantics remain unsupported and emit an explicit
 `lock-version-unsupported` gap; they cannot produce a successful empty assessment.
-The legacy npm 8.19.4 and exact Bun profiles remain available. Prereleases and
+The legacy npm 8.19.4 and exact Bun 1.4.2 profiles remain available. Prereleases and
 unknown formats remain unsupported.
+
+Bun **1.3.x** accepts bounded text lock v0/v1 and config absent/0/1; `auto`
+selects a unique supported text lock without requiring a producer hint. Binary,
+conflicting and unknown formats remain gaps. Existing installed-manifest reads
+still reject hardlinks by default. An optional **independently pinned** policy
+`bunCacheDirectory` admits an additional physically disjoint, read-only input:
+on Linux, a manifest may be read only through a retained, stable pair consisting
+of its installed name and one cache name, with exactly two links. Third aliases,
+replacement, mutation and missing peers remain refused. The original source roots
+are held through output and confirmed reap. This initial profile supports stdout,
+not `--output FILE`; it never reads cache credentials/config or generic package
+contents and does not authenticate a publisher.
+
+Bun may separately opt into pinned `advisoryCandidates` for local npm-ecosystem
+identity/version investigation. Its package tuples and observed installed
+manifests keep distinct evidence; results retain unqualified origin, are
+**candidates, never enforcement-eligible findings**, and preserve withdrawal,
+unknown-version/source and coverage gaps. There is no implicit public-origin
+rule, download, snapshot preparation or cache discovery. Isolated Bun 1.3.14
+producer fixtures and closed-pair/third-alias controls back this bounded path.
 
 Pinned policies may contain narrow, evidence-bound, expiring exceptions (30-day
 default maximum). Accepted findings remain visible and coverage gaps remain gaps.

@@ -1,5 +1,7 @@
 package inventory
 
+import "packtrace/internal/managerprofile"
+
 // BunInputPresence is caller-qualified presence in one explicit-root view.
 type BunInputPresence uint8
 
@@ -86,12 +88,10 @@ func SelectBunInput(profile string, text, binary BunInputState) (BunInputSelecti
 		State:      BunInputSelectionIndeterminate,
 		Diagnostic: BunInputDiagnosticProfileUnqualified,
 	}
-	switch profile {
-	case "bun@1.3.2", "bun@1.4.2":
-		result.ProfileQualified = true
-	default:
+	if !managerprofile.SupportsBun(profile) {
 		return result, nil
 	}
+	result.ProfileQualified = true
 	if text.Presence == BunInputPresenceUnknown {
 		result.Diagnostic = BunInputDiagnosticTextPresenceUnknown
 		return result, nil

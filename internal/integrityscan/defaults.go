@@ -42,7 +42,7 @@ func ValidatePlanPolicy(p Plan) error {
 		required, _ := categories(p.Policy.RequiredChecks)
 		fail, _ := categories(p.Policy.FailOn)
 		all := cli.ArgumentCheckIntegrity | cli.ArgumentCheckMalicious | cli.ArgumentCheckVulnerability
-		if ValidatePolicy(p.Policy) != nil || p.Manager != p.Policy.Manager || p.Checks & ^all != 0 || required & ^p.Checks != 0 || fail & ^p.FailOn != 0 || p.FailOn & ^p.Checks != 0 || !oneOf(p.Privacy, "", "portable", "local") || p.Policy.RequirePortable && p.Privacy == "local" || (len(p.Policy.Exceptions) != 0 || p.Policy.MaxExceptionDays != 0) && !supportedPolicyPin(p.TrustedPolicyDigest) {
+		if ValidatePolicy(p.Policy) != nil || p.Manager != p.Policy.Manager || p.Checks & ^all != 0 || required & ^p.Checks != 0 || fail & ^p.FailOn != 0 || p.FailOn & ^p.Checks != 0 || !oneOf(p.Privacy, "", "portable", "local") || p.Policy.RequirePortable && p.Privacy == "local" || (p.Policy.BunCacheDirectory != "" || len(p.Policy.Exceptions) != 0 || p.Policy.MaxExceptionDays != 0) && !supportedPolicyPin(p.TrustedPolicyDigest) {
 			return ErrPolicy
 		}
 		return nil
