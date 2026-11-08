@@ -94,6 +94,23 @@ never overwritten. Actual scan tests verify first-reason locators and unchanged
 partial-positive/indeterminate behavior without leaking the canary or granting
 source authority from import alone. Historical fixtures remain byte-identical.
 
+## Readable advisory-context fixture
+
+`readable.bundle` is a separate authored/inert variant of `matching.bundle`,
+created by `TestReadableAdvisoryFixtureReproducible` through the actual fixed-clock
+preparation/index/seal/export path and in-memory transport. It adds a short
+invented summary to each of the three original records. No real advisory, network
+request, target code or local acquisition authority is imported.
+
+Generation: `637c1963489f7c7016b601f95d7617fecb44e61ff4c341ad90eff5b009021837`.
+Transport:120320 bytes; SHA256
+`7ae74f0dfa528ef0e6adeb2bc670a4b02a1b61d56f64d0dcf37dcec6b471a28f`.
+
+The actual CLI tests use it for attributed summaries, exact-version reasons,
+unknown corrections, portable privacy and unchanged matching-byte accounting.
+`PACKTRACE_READABLE_FIXTURE_NEW_OUTPUT` permits exclusive creation of a new
+fixture; existing files are never overwritten. Existing fixtures stay unchanged.
+
 ## Alias non-merging acceptance fixture
 
 `aliases.bundle` is authored by `TestAliasAcceptanceFixtureReproducible` through

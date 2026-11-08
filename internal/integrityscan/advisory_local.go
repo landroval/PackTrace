@@ -17,9 +17,12 @@ type LocalObservation struct {
 	Location    string `json:"location"`
 }
 type LocalAdvisory struct {
-	Advisory int    `json:"advisory"`
-	ID       string `json:"id"`
-	SHA256   string `json:"sha256"`
+	Advisory           int                      `json:"advisory"`
+	ID                 string                   `json:"id"`
+	SHA256             string                   `json:"sha256"`
+	Summary            string                   `json:"summary,omitempty"`
+	Conditions         []LocalAdvisoryCondition `json:"conditions,omitempty"`
+	ExplanationLimited bool                     `json:"explanationLimited,omitempty"`
 }
 type LocalDetails struct {
 	Observations []LocalObservation `json:"observations"`
@@ -39,6 +42,17 @@ func localAdvisoryRecord(record intel.SnapshotOriginalEvidence, index int) Local
 	return LocalAdvisory{Advisory: index, ID: id, SHA256: hex.EncodeToString(record.SHA256[:])}
 }
 func ValidateLocalAdvisory(v LocalAdvisory) error {
+	if !safeAdvisorySummary(v.Summary) || len(v.Conditions) > maxAdvisoryConditions || localExplanationBytes(v) > 8192 {
+		return ErrAdvisory
+	}
+	seen := map[[3]int]bool{}
+	for _, c := range v.Conditions {
+		key := [3]int{c.Affected, c.VersionIndex, c.RangeIndex}
+		if !validLocalCondition(c) || seen[key] {
+			return ErrAdvisory
+		}
+		seen[key] = true
+	}
 	hash, e := hex.DecodeString(v.SHA256)
 	if v.Advisory < 1 || v.Advisory > 4096 || e != nil || len(hash) != 32 || [32]byte(hash) == ([32]byte{}) || hex.EncodeToString(hash) != v.SHA256 || (len(v.ID) > maxLocalAdvisoryIDBytes || v.ID != "" && !localAdvisoryID.MatchString(v.ID)) {
 		return ErrAdvisory
@@ -95,8 +109,10 @@ func ValidateLocalDetails(details LocalDetails, decisions []AdvisoryDecision, in
 		last = v.Observation
 		observations[v.Observation] = true
 	}
+	explanationBytes := 0
 	for i, v := range details.Advisories {
-		if v.Advisory != i+1 || ValidateLocalAdvisory(v) != nil {
+		explanationBytes += localExplanationBytes(v)
+		if explanationBytes > maxLocalExplanationBytes || v.Advisory != i+1 || ValidateLocalAdvisory(v) != nil {
 			return ErrAdvisory
 		}
 	}

@@ -385,6 +385,7 @@ func MatchInventoryWithPolicyEvidence(ctx context.Context, plan Plan, inventory 
 		a, b := sha256.Sum256([]byte("npm\x00"+names[i])), sha256.Sum256([]byte("npm\x00"+names[j]))
 		return hex.EncodeToString(a[:]) < hex.EncodeToString(b[:])
 	})
+	explanationBytes := 0
 	process := func(name string, evidence intel.SnapshotNPMEvidence) error {
 		// Only narrow verified-original receipts survive evaluation; never raw OSV.
 		var originals map[int]LocalAdvisory
@@ -484,7 +485,13 @@ func MatchInventoryWithPolicyEvidence(ctx context.Context, plan Plan, inventory 
 					if ids[record.SHA256] == 0 {
 						ids[record.SHA256] = len(ids) + 1
 						if plan.Privacy == "local" && local != nil {
-							if err := local(localAdvisoryRecord(record, ids[record.SHA256])); err != nil {
+							detail := localAdvisoryExplanation(record, ids[record.SHA256])
+							if n := localExplanationBytes(detail); n > maxLocalExplanationBytes-explanationBytes {
+								detail.Summary, detail.Conditions, detail.ExplanationLimited = "", nil, true
+							} else {
+								explanationBytes += n
+							}
+							if err := local(detail); err != nil {
 								return err
 							}
 						}

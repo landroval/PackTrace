@@ -15,7 +15,7 @@ import (
 
 func fullSourceFixture(t *testing.T, mode string) (func(context.Context, *Budget, requestSpec, io.Writer) (responseEvidence, error), func()) {
 	t.Helper()
-	matchingMode := mode == "matching" || mode == "matching-explanation" || mode == "matching-aliases" || mode == "matching-full" || mode == "matching-corrected"
+	matchingMode := mode == "matching" || mode == "matching-readable" || mode == "matching-explanation" || mode == "matching-aliases" || mode == "matching-full" || mode == "matching-corrected"
 	record := strings.ReplaceAll(ownedOSVRecord, "OWNED-1", "GHSA-2345-6789-cfgh")
 	id := "GHSA-2345-6789-cfgh"
 	if mode == "license" {
@@ -52,7 +52,12 @@ func fullSourceFixture(t *testing.T, mode string) (func(context.Context, *Budget
 			records = append(records, archiveRecord{extra + ".json", strings.ReplaceAll(ownedOSVRecord, "OWNED-1", extra), 0})
 		}
 	}
-	if mode == "matching" {
+	if mode == "matching-readable" {
+		records = matchingSourceRecords()
+		for i := range records {
+			records[i].body = strings.Replace(records[i].body, `"affected":`, `"summary":"Owned advisory: affected package version must be reviewed","affected":`, 1)
+		}
+	} else if mode == "matching" {
 		records = matchingSourceRecords()
 	} else if mode == "matching-explanation" {
 		records = explanationSourceRecords()

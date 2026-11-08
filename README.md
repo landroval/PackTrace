@@ -92,7 +92,32 @@ packtrace scan --format json /path/to/project   # full structured evidence
 ```
 
 `--verbose` is terminal-only. JSON/SARIF retain their full models and schema 1.7;
-accepted findings and coverage gaps are not removed. The compact report has three
+accepted findings and coverage gaps are not removed. Local output additionally
+retains bounded advisory explanations from the **same verified originals already
+read by matching**: a short attributed summary, and source-positioned explicit
+versions or simple `introduced` → `fixed` intervals. No additional source reads,
+downloads or target execution are performed for explanations.
+
+The default shows up to five package/advisory/affected examples (not severity
+ranked); verbose and local JSON retain all captured details. `Why` describes the
+matching condition, while `Next` states what still needs verification. A recorded
+fixed boundary is shown only for one fully evaluated supporting simple interval;
+it is not an upgrade guarantee or proof of applicability. Complex/disjoint ranges,
+`last_affected`, unrelated entries, partial evaluation, missing summaries and
+unknown corrections remain explicitly unknown. Severity is never invented.
+
+Advisory descriptions are untrusted source claims, not instructions or publisher
+authentication. Summary text is bounded to 320 bytes and refused when it contains
+control text, obvious credentials, URLs or host-path selectors. At most eight
+conditions per original and 4 MiB total explanation text/metadata are retained;
+omission is marked without changing findings, eligibility or coverage. All
+fields are optional local-detail additions to operational schema 1.7; portable
+frames/JSON/SARIF remain free of advisory summaries, conditions and identities.
+Existing reports lacking the fields remain valid; a saved JSON artifact cannot
+recreate private render authority. No existing producer or intelligence fixture
+is rewritten; `readable.bundle` is a separately authored deterministic fixture.
+
+The compact report has three
 blocks: **Summary**, **Packages to review**, and **Coverage limitations**, followed
 by a concrete next step. Equivalent generic inventory/freshness markers are folded
 into their specific explanations; independent matching/intelligence scopes and
