@@ -242,7 +242,7 @@ func applyArgumentOption(request *ScanArgumentRequest, option ArgumentOptions, v
 		switch value {
 		case "auto", "npm", "bun", "bun@1.3.2", "bun@1.4.2":
 		default:
-			if !managerprofile.SupportsNPM(value) {
+			if !managerprofile.SupportsNPM(value) && !managerprofile.SupportsBun(value) {
 				return false
 			}
 		}

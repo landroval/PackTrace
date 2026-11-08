@@ -208,11 +208,20 @@ func AcquireFromRootWithPolicyEvidence(ctx context.Context, root *nativefs.Root,
 
 // Admission observes the ACTUAL reference root before any controller/target
 // content read; its closer runs before that reference root is released.
-func AcquireFromRootWithPolicyEvidenceAdmission(ctx context.Context, root *nativefs.Root, prepared, policyHash string, plan Plan, emit func(Record) error, emitInventory func(projectinventory.Result) error, emitEvidence PolicyEvidenceEmitter, admit func(*nativefs.Root) (func() error, error)) (summary Summary, failure error) {
+func AcquireFromRootWithPolicyEvidenceAdmission(ctx context.Context, root *nativefs.Root, prepared, policyHash string, plan Plan, emit func(Record) error, emitInventory func(projectinventory.Result) error, emitEvidence PolicyEvidenceEmitter, admit func(*nativefs.Root) (func() error, error)) (Summary, error) {
+	return acquireFromRoot(ctx, root, nil, prepared, policyHash, plan, emit, emitInventory, emitEvidence, admit)
+}
+
+// Cache admission borrows the actual additional source held by the supervisor.
+func AcquireFromRootWithBunCache(ctx context.Context, root, cache *nativefs.Root, prepared, policyHash string, plan Plan, emit func(Record) error, emitInventory func(projectinventory.Result) error, emitEvidence PolicyEvidenceEmitter) (Summary, error) {
+	return acquireFromRoot(ctx, root, cache, prepared, policyHash, plan, emit, emitInventory, emitEvidence, nil)
+}
+
+func acquireFromRoot(ctx context.Context, root, cache *nativefs.Root, prepared, policyHash string, plan Plan, emit func(Record) error, emitInventory func(projectinventory.Result) error, emitEvidence PolicyEvidenceEmitter, admit func(*nativefs.Root) (func() error, error)) (summary Summary, failure error) {
 	if ctx == nil || ctx.Err() != nil || root == nil {
 		return summary, ErrAcquisition
 	}
-	if ValidatePlanPolicy(plan) != nil || (!plan.Builtin && !filepath.IsAbs(prepared)) {
+	if ValidatePlanPolicy(plan) != nil || (!plan.Builtin && !filepath.IsAbs(prepared)) || (cache != nil) != (plan.Policy.BunCacheDirectory != "") || cache != nil && !supportedPolicyPin(plan.TrustedPolicyDigest) {
 		return summary, ErrPolicy
 	}
 	var refs *nativefs.Root
@@ -252,7 +261,7 @@ func AcquireFromRootWithPolicyEvidenceAdmission(ctx context.Context, root *nativ
 	// the authority exclusion. A hash or child assertion alone cannot admit it.
 	// Discovery is metadata-only. Content is acquired only through a necessary
 	// lock-file selection or a captured package subroot, never root-then-filter.
-	collected, e := projectinventory.Collect(ctx, root, projectinventory.Options{Profile: plan.Manager, ExplicitManager: plan.ExplicitManager})
+	collected, e := projectinventory.Collect(ctx, root, projectinventory.Options{Profile: plan.Manager, ExplicitManager: plan.ExplicitManager, BunCache: cache})
 	if e != nil {
 		return summary, ErrAcquisition
 	}

@@ -904,7 +904,7 @@ func ValidateAdvisoryDecision(plan Plan, inventory projectinventory.PublicInvent
 	if d.Category != "unknown" && d.Source != "qualified" {
 		return ErrAdvisory
 	}
-	if d.Origin == "unqualified" && (d.Advisory > 0 || d.Candidate) && !candidateLookupPermission(plan) {
+	if d.Origin == "unqualified" && (d.Advisory > 0 || d.Candidate) && (!candidateLookupPermission(plan) || inventory.Selection.Family != strings.Split(plan.Manager, "@")[0]) {
 		return ErrAdvisory
 	}
 	if d.Candidate != activeAdvisoryCandidate(d) {

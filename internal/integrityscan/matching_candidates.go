@@ -6,13 +6,14 @@ import (
 
 	"packtrace/internal/intel"
 	lockinventory "packtrace/internal/inventory"
+	"packtrace/internal/managerprofile"
 	"packtrace/internal/projectinventory"
 )
 
 // This grants local index investigation only, never trust in a package's origin.
 func candidateLookupPermission(plan Plan) bool {
 	return plan.Policy.AdvisoryCandidates && ValidatePolicy(plan.Policy) == nil &&
-		plan.Manager == plan.Policy.Manager && strings.HasPrefix(plan.Manager, "npm@") &&
+		plan.Manager == plan.Policy.Manager && (strings.HasPrefix(plan.Manager, "npm@") || managerprofile.SupportsBun(plan.Manager)) &&
 		supportedPolicyPin(plan.TrustedPolicyDigest)
 }
 
@@ -27,7 +28,7 @@ func activeAdvisoryCandidate(d AdvisoryDecision) bool {
 // own endpoint and shares only the existing name/version evaluation templates.
 func indexedMatchingCandidates(plan Plan, inv projectinventory.Result) map[uint32]bool {
 	out := map[uint32]bool{}
-	if !candidateLookupPermission(plan) || inv.Selection.Family != "npm" || inv.Selection.Profile != plan.Manager {
+	if !candidateLookupPermission(plan) || !oneOf(inv.Selection.Family, "npm", "bun") || inv.Selection.Family != strings.Split(plan.Manager, "@")[0] || inv.Selection.Profile != plan.Manager {
 		return out
 	}
 	evidence := map[uint32]projectinventory.Evidence{}
@@ -60,7 +61,11 @@ func indexedMatchingCandidates(plan Plan, inv projectinventory.Result) map[uint3
 		}
 	}
 	for _, o := range inv.Model.Observations {
-		if o.Status != "complete" || !canonicalNPMName(o.Name) || o.Fields["version-state"] != "value" {
+		versionField := "version-state"
+		if inv.Selection.Family == "bun" && o.Class == "locked" {
+			versionField = "resolution-state"
+		}
+		if o.Status != "complete" || !canonicalNPMName(o.Name) || o.Fields[versionField] != "value" {
 			continue
 		}
 		if _, err := intel.ParseSemVer(o.Version); err != nil {
@@ -72,7 +77,14 @@ func indexedMatchingCandidates(plan Plan, inv projectinventory.Result) map[uint3
 		}
 		switch o.Class {
 		case "locked":
-			if inv.Selection.State != "usable" || e.Location != inv.Selection.File || e.Scope != 1 || !oneOf(o.Kind, "url", "package") || !oneOf(o.Fields["name-qualification"], "explicit-claim", "installation-claim") || o.Fields["installation-name"] != o.Name || badSource[0] || badSource[o.Source] || aliases[o.Source][o.Name] {
+			if inv.Selection.State != "usable" || e.Location != inv.Selection.File || e.Scope != 1 || badSource[0] || badSource[o.Source] || aliases[o.Source][o.Name] {
+				continue
+			}
+			if inv.Selection.Family == "bun" {
+				if o.Kind != "package" || o.Fields["name-state"] != "value" || o.Fields["registry-state"] != "value" || o.Fields["tuple-key"] != o.Location {
+					continue
+				}
+			} else if !oneOf(o.Kind, "url", "package") || !oneOf(o.Fields["name-qualification"], "explicit-claim", "installation-claim") || o.Fields["installation-name"] != o.Name {
 				continue
 			}
 			if link, exists := o.Fields["link"]; exists && link != "false" {
@@ -100,7 +112,7 @@ func indexedMatchingCandidates(plan Plan, inv projectinventory.Result) map[uint3
 // The parent checks transmitted structural witnesses, not redacted names or
 // URLs. Base unassessed rows retain their historical endpoint requirements.
 func publicCandidateEndpoint(inv projectinventory.PublicInventory, o projectinventory.PublicObservation) bool {
-	if inv.Selection.Family != "npm" || o.Status != "complete" || o.Source == 0 || int(o.Source) > len(inv.Evidence) {
+	if !oneOf(inv.Selection.Family, "npm", "bun") || o.Status != "complete" || o.Source == 0 || int(o.Source) > len(inv.Evidence) {
 		return false
 	}
 	e := inv.Evidence[o.Source-1]
@@ -117,7 +129,7 @@ func publicCandidateEndpoint(inv projectinventory.PublicInventory, o projectinve
 				return false
 			}
 		}
-		return oneOf(o.Kind, "url", "package") && inv.Selection.State == "usable" && e.Scope == 1
+		return oneOf(o.Kind, "url", "package") && (inv.Selection.Family != "bun" || o.Kind == "package") && inv.Selection.State == "usable" && e.Scope == 1
 	case "installed":
 		if o.Kind != "directory" || e.Scope != o.Workspace || o.MetadataEvidence == 0 || int(o.MetadataEvidence) > len(inv.Evidence) {
 			return false

@@ -253,6 +253,12 @@ func (r *ScanRun) Checkpoint() error {
 			return e
 		}
 	}
+	if r.bunCache != nil {
+		if e := r.bunCache.check(); e != nil {
+			s.scan.noteFault("bun-cache-binding", e)
+			return e
+		}
+	}
 	if r.fileOutput != nil {
 		if e := r.fileOutput.check(); e != nil {
 			s.scan.noteFault("file-output-binding", e)
@@ -285,6 +291,16 @@ func (r *ScanRun) Finish() (ScanReceipt, error) {
 			s.scan.noteFault("file-output-close", closeErr)
 			e = errors.Join(e, closeErr)
 			receipt = s.scan.snapshot()
+		}
+	}
+	if q := r.bunCache; q != nil && receipt.CleanupConfirmed && !s.broken {
+		if !q.closed {
+			cacheErr := errors.Join(q.check(), q.close())
+			if cacheErr != nil {
+				s.scan.noteFault("bun-cache-close", cacheErr)
+				e = errors.Join(e, cacheErr)
+				receipt = s.scan.snapshot()
+			}
 		}
 	}
 	if q := s.intelligence; q != nil && receipt.CleanupConfirmed && !s.broken {

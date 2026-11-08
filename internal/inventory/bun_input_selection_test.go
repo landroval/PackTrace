@@ -123,7 +123,7 @@ func TestSelectBunInputLayouts(t *testing.T) {
 
 func TestSelectBunInputProfiles(t *testing.T) {
 	profiles := []string{
-		"", "auto", "bun", "bun@1.4.3", "bun@1.3.3", "BUN@1.4.2",
+		"", "auto", "bun", "bun@1.4.3", "bun@1.3.03", "BUN@1.4.2",
 		" bun@1.4.2", "bun@1.4.2 ", "bun@1.4.2\n", "bun@1.4.2\x00",
 		"bun@1.04.2", "bun@1.4", "bun@v1.4.2", "bun@1.4.2-rc.1",
 		"bun@1.4.2+build", "npm@11.6.2", "yarn", "pnpm", "ｂｕｎ@1.4.2", "\xff\xfe",
@@ -161,8 +161,10 @@ func TestSelectBunInputSeparation(t *testing.T) {
 		if err != nil {
 			t.Fatal("owned source parse failed")
 		}
-		if len(f.Imports) != 0 {
-			t.Fatal("pure decision gained production imports")
+		for _, im := range f.Imports {
+			if im.Path.Value != `"packtrace/internal/managerprofile"` {
+				t.Fatal("pure decision gained an impure dependency")
+			}
 		}
 		for _, d := range f.Decls {
 			if decl, ok := d.(*ast.GenDecl); ok && decl.Tok == token.VAR {
@@ -177,10 +179,15 @@ func TestSelectBunInputSeparation(t *testing.T) {
 			case *ast.GoStmt, *ast.DeferStmt, *ast.FuncLit:
 				t.Error("asynchronous/deferred/callback behavior added")
 			case *ast.CallExpr:
-				id, ok := node.Fun.(*ast.Ident)
-				if !ok || id.Name != "validBunInputState" {
-					t.Error("unexpected production call/printing/IO")
+				if id, ok := node.Fun.(*ast.Ident); ok && id.Name == "validBunInputState" {
+					return true
 				}
+				if sel, ok := node.Fun.(*ast.SelectorExpr); ok && sel.Sel.Name == "SupportsBun" {
+					if id, ok := sel.X.(*ast.Ident); ok && id.Name == "managerprofile" {
+						return true
+					}
+				}
+				t.Error("unexpected production call/printing/IO")
 			}
 			return true
 		})

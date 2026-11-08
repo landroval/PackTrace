@@ -5,6 +5,23 @@ import (
 	"encoding/binary"
 )
 
+// ObjectKey is a path-free metadata lookup hint, never a content or authority
+// proof. OpenPairedManifest independently admits and retains both originals.
+func (m *MetadataLease) ObjectKey() ([32]byte, error) {
+	if err := m.Stable(); err != nil {
+		return [32]byte{}, err
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.object == nil || m.object.initial.kind() != KindRegular {
+		return [32]byte{}, ErrType
+	}
+	var data [16]byte
+	binary.LittleEndian.PutUint64(data[:8], m.object.initial.dev)
+	binary.LittleEndian.PutUint64(data[8:], m.object.initial.ino)
+	return sha256.Sum256(append([]byte("PackTrace metadata object lookup v1\x00"), data[:]...)), nil
+}
+
 // Fingerprint commits a successful live original/binding observation. It is
 // not a lease, content digest or permission to mutate an ordinary target Root.
 func (m *MetadataLease) Fingerprint() ([32]byte, error) {

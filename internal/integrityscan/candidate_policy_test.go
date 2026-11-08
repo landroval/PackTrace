@@ -51,7 +51,7 @@ func TestAdvisoryCandidatesPolicyManagerBound(t *testing.T) {
 			}
 			p.Manager = manager
 			p.AdvisoryCandidates = true
-			want := oneOf(manager, "npm@8.19.4", "npm@10.9.4", "npm@11.6.2")
+			want := oneOf(manager, "npm@8.19.4", "npm@10.9.4", "npm@11.6.2", "bun@1.3.2", "bun@1.4.2")
 			if err := ValidatePolicy(p); (err == nil) != want {
 				t.Fatalf("manager accepted=%v want=%v: %v", err == nil, want, err)
 			}

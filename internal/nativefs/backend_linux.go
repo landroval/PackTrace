@@ -212,10 +212,22 @@ func (r *nativeRoot) lookupMode(name string, follow, content, input bool) (*obje
 	}
 }
 func (r *nativeRoot) readCaptured(path *os.File, selected stamp) (*os.File, error) {
+	return r.readCapturedLinks(path, selected, false)
+}
+
+// The caller must hold the two original metadata handles for the admitted pair.
+func (r *nativeRoot) readPairedCaptured(path *os.File, selected stamp) (*os.File, error) {
+	if selected.kind() != KindRegular || selected.links != 2 {
+		return nil, ErrPath
+	}
+	return r.readCapturedLinks(path, selected, true)
+}
+
+func (r *nativeRoot) readCapturedLinks(path *os.File, selected stamp, paired bool) (*os.File, error) {
 	if err := r.guard(); err != nil {
 		return nil, err
 	}
-	if selected.kind() == KindRegular && (r.parent != nil || r.external != nil) && selected.links != 1 {
+	if selected.kind() == KindRegular && (r.parent != nil || r.external != nil) && selected.links != 1 && !(paired && selected.links == 2) {
 		return nil, ErrPath
 	}
 	if selected.kind() != KindRegular && selected.kind() != KindDirectory {
@@ -223,7 +235,7 @@ func (r *nativeRoot) readCaptured(path *os.File, selected stamp) (*os.File, erro
 	}
 	// Revalidate the owned non-I/O descriptor itself, never a target pathname.
 	now, err := statNative(path)
-	if err != nil || now.dev != selected.dev || now.ino != selected.ino || now.kind() != selected.kind() {
+	if err != nil || now.dev != selected.dev || now.ino != selected.ino || now.kind() != selected.kind() || paired && now != selected {
 		return nil, ErrUnstable
 	}
 	flags := syscall.O_RDONLY | syscall.O_CLOEXEC | syscall.O_NONBLOCK
@@ -237,7 +249,7 @@ func (r *nativeRoot) readCaptured(path *os.File, selected stamp) (*os.File, erro
 	}
 	read := os.NewFile(uintptr(fd), "native-read")
 	now, err = statNative(read)
-	if err != nil || now.dev != selected.dev || now.ino != selected.ino || now.kind() != selected.kind() {
+	if err != nil || now.dev != selected.dev || now.ino != selected.ino || now.kind() != selected.kind() || paired && now != selected {
 		read.Close()
 		return nil, ErrUnstable
 	}

@@ -91,6 +91,7 @@ type File struct {
 	eof                  bool
 	failed               error
 	input                bool
+	pair                 *MetadataLease // Only the closed two-name manifest constructor can set this.
 }
 type stamp struct {
 	dev, ino                       uint64
@@ -368,6 +369,20 @@ func (r *Root) validateRead(handle *os.File, initial stamp, input bool) error {
 	defer unlock()
 	return n.validateRead(handle, initial, input)
 }
+func (f *File) validateRead() error {
+	if f.pair == nil {
+		return f.root.validateRead(f.handle, f.initial, f.input)
+	}
+	if err := f.pair.Stable(); err != nil {
+		return err
+	}
+	now, err := statNative(f.handle)
+	if err != nil || now != f.initial || now.links != 2 {
+		return ErrUnstable
+	}
+	return f.root.check(f.name, f.initial)
+}
+
 func (f *File) read(p []byte) (int, error) {
 	if f.handle == nil || f.root == nil {
 		return 0, ErrClosed
@@ -385,7 +400,7 @@ func (f *File) read(p []byte) (int, error) {
 	if len(p) == 0 {
 		return 0, nil
 	}
-	if err := f.root.validateRead(f.handle, f.initial, f.input); err != nil {
+	if err := f.validateRead(); err != nil {
 		f.failed = err
 		return 0, err
 	}
@@ -472,7 +487,7 @@ func (f *File) Stable() error {
 			return f.failed
 		}
 	}
-	if err := f.root.validateRead(f.handle, f.initial, f.input); err != nil {
+	if err := f.validateRead(); err != nil {
 		f.failed = err
 		return err
 	}
@@ -498,5 +513,9 @@ func (f *File) Close() error {
 	}
 	err := f.handle.Close()
 	f.handle = nil
+	if f.pair != nil {
+		err = errors.Join(err, f.pair.Close())
+		f.pair = nil
+	}
 	return err
 }

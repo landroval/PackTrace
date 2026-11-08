@@ -33,6 +33,7 @@ type Policy struct {
 	Reason                 string          `json:"reason"`
 	Provenance             string          `json:"provenance"`
 	Manager                string          `json:"manager"`
+	BunCacheDirectory      string          `json:"bunCacheDirectory,omitempty"`
 	RequiredChecks         []string        `json:"requiredChecks"`
 	FailOn                 []string        `json:"failOn"`
 	RequireHardMemoryLimit bool            `json:"requireHardMemoryLimit"`
@@ -102,7 +103,7 @@ func ParsePolicy(data []byte) (Policy, error) {
 	return p, nil
 }
 func canonicalPolicyFields(fields map[string]json.RawMessage) bool {
-	if !canonicalFields(fields, []string{"version", "designation", "reason", "provenance", "manager", "requiredChecks", "failOn", "requireHardMemoryLimit", "minimumAssurance", "references", "npmOrigins", "npmRegistry", "requirePortable", "advisoryCandidates", "exceptions", "maxExceptionDays"}) {
+	if !canonicalFields(fields, []string{"version", "designation", "reason", "provenance", "manager", "bunCacheDirectory", "requiredChecks", "failOn", "requireHardMemoryLimit", "minimumAssurance", "references", "npmOrigins", "npmRegistry", "requirePortable", "advisoryCandidates", "exceptions", "maxExceptionDays"}) {
 		return false
 	}
 	for _, list := range []struct {
@@ -144,7 +145,10 @@ func ValidatePolicy(p Policy) error {
 	if !ok || fail & ^checks != 0 {
 		return ErrPolicy
 	}
-	if p.AdvisoryCandidates && !strings.HasPrefix(p.Manager, "npm@") {
+	if p.BunCacheDirectory != "" && (!managerprofile.SupportsBun(p.Manager) || !filepath.IsAbs(p.BunCacheDirectory) || filepath.Clean(p.BunCacheDirectory) != p.BunCacheDirectory || !text(p.BunCacheDirectory, 4096)) {
+		return ErrPolicy
+	}
+	if p.AdvisoryCandidates && !strings.HasPrefix(p.Manager, "npm@") && !managerprofile.SupportsBun(p.Manager) {
 		return ErrPolicy
 	}
 	if p.NPMRegistry != "" && (p.NPMRegistry != "https://registry.npmjs.org" || !strings.HasPrefix(p.Manager, "npm@")) {
@@ -186,7 +190,7 @@ func configureSource(r cli.ScanArgumentRequest, p Policy, builtin bool) (Plan, e
 	if r.Privacy == "" {
 		r.Privacy = "portable"
 	}
-	if r.PolicyPath == "" || !oneOf(r.Privacy, "portable", "local") || p.RequirePortable && r.Privacy == "local" || r.Output == "" || (r.StateDir != "" && !filepath.IsAbs(r.StateDir)) || (r.TrustedSnapshotDigest != "" && !supportedSnapshotPin(r.TrustedSnapshotDigest)) || ((p.MinimumAssurance == "independently-anchored" || len(p.NPMOrigins) != 0 || p.NPMRegistry != "" || p.AdvisoryCandidates || len(p.Exceptions) != 0 || p.MaxExceptionDays != 0) && r.TrustedPolicyDigest == "") || (r.TrustedPolicyDigest != "" && !supportedPolicyPin(r.TrustedPolicyDigest)) || required & ^r.Checks != 0 || (r.FailOn|fail) & ^r.Checks != 0 || (r.Provided&cli.ArgumentOptionFailOn != 0 && fail & ^r.FailOn != 0) {
+	if r.PolicyPath == "" || !oneOf(r.Privacy, "portable", "local") || p.RequirePortable && r.Privacy == "local" || r.Output == "" || (r.StateDir != "" && !filepath.IsAbs(r.StateDir)) || (r.TrustedSnapshotDigest != "" && !supportedSnapshotPin(r.TrustedSnapshotDigest)) || ((p.MinimumAssurance == "independently-anchored" || p.BunCacheDirectory != "" || len(p.NPMOrigins) != 0 || p.NPMRegistry != "" || p.AdvisoryCandidates || len(p.Exceptions) != 0 || p.MaxExceptionDays != 0) && r.TrustedPolicyDigest == "") || (r.TrustedPolicyDigest != "" && !supportedPolicyPin(r.TrustedPolicyDigest)) || required & ^r.Checks != 0 || (r.FailOn|fail) & ^r.Checks != 0 || (r.Provided&cli.ArgumentOptionFailOn != 0 && fail & ^r.FailOn != 0) {
 		return Plan{}, ErrOptions
 	}
 	family := strings.Split(p.Manager, "@")[0]
@@ -252,7 +256,7 @@ func categories(values []string) (cli.ArgumentChecks, bool) {
 	return result, true
 }
 func profile(s string) bool {
-	return managerprofile.SupportsNPM(s) || oneOf(s, "bun@1.3.2", "bun@1.4.2")
+	return managerprofile.SupportsNPM(s) || managerprofile.SupportsBun(s)
 }
 func oneOf(s string, values ...string) bool {
 	for _, v := range values {
