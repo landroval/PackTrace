@@ -27,7 +27,7 @@ func TestTerminalSummaryPrivacyEvidenceAndVerbose(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			for _, text := range []string{"Status: INCOMPLETE", "eligible match rows: 0", "Candidate rows: 2 | Advisory records: 1", "advisory source check expired", "Required coverage: incomplete", "Comparison exit: 3", "--verbose"} {
+			for _, text := range []string{"[INCOMPLETE] Scan coverage", "eligible match rows: 0", "Candidate rows: 2 | Advisory records: 1", "advisory source check expired", "Required coverage: incomplete", "Comparison exit: 3", "--verbose"} {
 				if !bytes.Contains(summary, []byte(text)) {
 					t.Fatalf("missing %q: %s", text, summary)
 				}

@@ -16,7 +16,7 @@ func TestTerminalLimitsFoldOnlyEquivalentWarnings(t *testing.T) {
 		Coverage:   []Coverage{{Check: "inventory", Required: true, Outcome: "incomplete"}, {Check: "native-qualification", Required: true, Outcome: "incomplete"}},
 	}
 	text := string(renderTerminalSummary(r))
-	for _, label := range []string{"Summary", "Packages to review", "Coverage limitations", "installed manifests unavailable: 1 gap records", "advisory read byte limit reached", "exhaustive advisory coverage unverified", "native qualification"} {
+	for _, label := range []string{"Summary", "Packages to review", "Coverage limitations", "installed manifests unavailable: 1 gap records", "advisory read byte limit reached", "exhaustive advisory coverage unverified", "Platform qualification"} {
 		if !strings.Contains(text, label) {
 			t.Fatal("limitation lost", label, text)
 		}
