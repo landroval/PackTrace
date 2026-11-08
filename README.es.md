@@ -56,7 +56,6 @@ públicos usan Bash; el manual incluye ejemplos de estado de salida en Nushell.
 | Tarea | Comando |
 | --- | --- |
 | Análisis legible | `packtrace scan .` |
-| Explorador interactivo —terminal Linux compatible— | `packtrace scan --interactive .` |
 | Decisiones técnicas completas | `packtrace scan --verbose .` |
 | Evidencia estructurada local, con configuración local guardada | `packtrace scan --format json .` |
 | JSON portátil para revisar antes de compartir | `packtrace scan --privacy portable --format json .` |
@@ -68,25 +67,11 @@ Las opciones van **antes** de la ruta final. El análisis nunca descarga avisos,
 instala dependencias, ejecuta scripts de paquetes ni repara el proyecto.
 Los comandos y las etiquetas de la CLI permanecen en inglés.
 
-## Resultados interactivos y orientación durante la espera
-
-`scan --interactive ROOT` muestra una tabla buscable de paquetes y detalles con
-desplazamiento a partir del mismo resultado validado. Usa flechas para seleccionar,
-Enter para detalles, Tab para enfocar el panel, `/` para buscar, `s` para Summary,
-`?` para ayuda y `q` para cerrar. Cerrar conserva el código de comparación; Ctrl+C
-interrumpe. Filtrar no elimina hallazgos ni exime cobertura. El visor no reconstruye
-autoridad desde JSON guardado, descarga datos ni cambia dependencias.
-
-El primer perfil exige Linux, entrada/salida en la misma terminal real y un mínimo
-de 40 columnas por 12 filas. Tuberías, archivos y terminales dumb/pequeñas/no
-admitidas conservan salida plana. `NO_COLOR` elimina color, no navegación.
-`--interactive` no se combina con `--verbose`, JSON ni SARIF. La visualización
-sigue dentro del plazo original de cinco minutos: no es un visor ilimitado.
-
-Para las esperas añade `--interactive` a `scan`, `intel sync/import/export/status`
-o `cache prune`. Muestra avisos secuenciales de fase y tiempo transcurrido observado,
-no porcentajes inventados ni otro proceso concurrente para animaciones. Las reglas
-de red y borrado no cambian: el argumento no autoriza ni ejecuta una sync/poda por sí solo.
+Las operaciones largas `intel sync`, `intel import` e `intel export` muestran
+un spinner pequeño de una sola línea en terminales Linux compatibles. Es automático:
+no hay modo interactivo ni argumento adicional. Indica actividad, no porcentaje
+ni garantía de éxito. Tuberías, JSON, `NO_COLOR` y terminales pequeñas/no admitidas
+conservan salida plana.
 
 ## Entiende el resultado
 
@@ -177,10 +162,7 @@ mismo `--state-dir` expresamente. Consulta [preparación y mantenimiento](docs/u
 
 ## Desarrollo local
 
-El núcleo de análisis permanece separado de las bibliotecas de terminal. La UI
-opcional usa Bubble Tea/Bubbles/Lip Gloss y paquetes auxiliares fijados, incluidos
-en `vendor/` para compilar y ejecutar CI offline; consulta los
-[avisos de software](THIRD_PARTY_NOTICES.md). Con el toolchain requerido
+El módulo Go principal solo usa la biblioteca estándar. Con el toolchain requerido
 ya instalado, desde este repositorio, no desde el proyecto investigado:
 
 ```bash

@@ -28,6 +28,7 @@ type ScanReceipt struct {
 	Resources                       integrityscan.Resources
 	Roles                           []ScanRoleReceipt
 	MaxSampleGap                    time.Duration
+	ConcurrentSamples               int // actual ticks with both admitted Intel roles live
 	Finished, CleanupConfirmed      bool
 	FirstFault                      ScanFault
 	CallerContext, LifecycleContext string
@@ -45,8 +46,12 @@ type scanLifecycle struct {
 	roles             []ScanRoleReceipt
 	child             *nativeresource.Child
 	active            int
+	progressChild     *nativeresource.Child
+	progressActive    int
+	allowProgress     bool // only explicit Intel preparation; never SCAN or legacy batches
 	last              time.Time
 	maxGap            time.Duration
+	concurrentSamples int
 	finished, cleanup bool
 	finishErr         error
 	started           time.Time
@@ -57,7 +62,7 @@ type scanLifecycle struct {
 
 func newScanLifecycle(ctx context.Context, deadline time.Time) *scanLifecycle {
 	work, cancel := context.WithDeadline(ctx, deadline)
-	m := &scanLifecycle{ctx: work, cancel: cancel, stop: make(chan struct{}), joined: make(chan struct{}), active: -1, cleanup: true, started: time.Now(), caller: ctx}
+	m := &scanLifecycle{ctx: work, cancel: cancel, stop: make(chan struct{}), joined: make(chan struct{}), active: -1, progressActive: -1, cleanup: true, started: time.Now(), caller: ctx}
 	m.tick()
 	go func() {
 		defer close(m.joined)
@@ -102,26 +107,37 @@ func (m *scanLifecycle) tickLocked() {
 		m.resources.SupervisorPeakBytes = max(m.resources.SupervisorPeakBytes, own)
 	}
 	sum := own
-	if m.child != nil {
-		n, live, e := m.child.Sample()
-		r := &m.roles[m.active]
+	liveChildren := 0
+	for _, slot := range []struct {
+		child *nativeresource.Child
+		index int
+	}{{m.child, m.active}, {m.progressChild, m.progressActive}} {
+		if slot.child == nil {
+			continue
+		}
+		n, live, e := slot.child.Sample()
+		r := &m.roles[slot.index]
 		if e != nil || live && n == 0 {
-			m.faultLockedAt("child-resident", e)
+			m.faultLockedRole("child-resident", e, r.Role)
 			m.resources.QueryFailed = true
 		} else if !live {
 			r.ExitObserved = true
 		} else {
+			liveChildren++
 			r.Samples++
 			r.PeakResidentBytes = max(r.PeakResidentBytes, n)
 			m.resources.WorkerSamples++
 			m.resources.WorkerPeakBytes = max(m.resources.WorkerPeakBytes, n)
-			if n > ^uint64(0)-own {
+			if n > ^uint64(0)-sum {
 				m.faultLockedAt("resident-overflow", nil)
 				m.resources.Stopped = true
 			} else {
 				sum += n
 			}
 		}
+	}
+	if liveChildren > 1 {
+		m.concurrentSamples++
 	}
 	m.resources.PeakSampledSumBytes = max(m.resources.PeakSampledSumBytes, sum)
 	if sum > 1<<30 {
@@ -135,20 +151,36 @@ func (m *scanLifecycle) tickLocked() {
 func (m *scanLifecycle) attach(process *os.Process, role string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if process == nil || process.Pid <= 0 || m.child != nil || m.finished || !m.cleanup {
+	if process == nil || process.Pid <= 0 || m.finished {
+		return errReap
+	}
+	progress := role == "intel-progress"
+	if progress {
+		if !m.allowProgress || m.progressActive >= 0 || m.active < 0 || m.child == nil || m.roles[m.active].Role != "intel" {
+			return errReap
+		}
+	} else if m.child != nil || m.progressActive >= 0 || !m.cleanup {
 		return errReap
 	}
 	child, e := nativeresource.PinProcess(process) // BEFORE cmd.Wait: actual unreaped child
 	m.roles = append(m.roles, ScanRoleReceipt{Role: role, PID: process.Pid})
-	m.active = len(m.roles) - 1
+	if progress {
+		m.progressActive = len(m.roles) - 1
+	} else {
+		m.active = len(m.roles) - 1
+	}
 	m.cleanup = false
 	if e != nil {
-		m.faultLockedAt("child-pin", e)
+		m.faultLockedRole("child-pin", e, role)
 		m.resources.QueryFailed = true
 		m.cancel()
 		return errScanResource
 	}
-	m.child = child
+	if progress {
+		m.progressChild = child
+	} else {
+		m.child = child
+	}
 	m.tickLocked()
 	if m.faultLocked() {
 		return errScanResource
@@ -157,12 +189,21 @@ func (m *scanLifecycle) attach(process *os.Process, role string) error {
 }
 
 // Called only AFTER runChild has confirmed Wait and joined control/stderr.
-func (m *scanLifecycle) reaped(confirmed bool) {
+func (m *scanLifecycle) roleIndexLocked(pid int) int {
+	for i := len(m.roles) - 1; i >= 0; i-- {
+		if m.roles[i].PID == pid {
+			return i
+		}
+	}
+	return -1
+}
+func (m *scanLifecycle) reaped(pid int, confirmed bool) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.tickLocked()
-	if m.active >= 0 {
-		r := &m.roles[m.active]
+	index := m.roleIndexLocked(pid)
+	if index >= 0 {
+		r := &m.roles[index]
 		r.Reaped = confirmed
 		if confirmed {
 			r.ExitObserved = true
@@ -174,12 +215,24 @@ func (m *scanLifecycle) reaped(confirmed bool) {
 			m.cancel()
 		}
 	}
-	m.cleanup = confirmed
-	if m.child != nil {
-		_ = m.child.Close()
-		m.child = nil
+	if index == m.active {
+		if m.child != nil {
+			_ = m.child.Close()
+			m.child = nil
+		}
+		m.active = -1
 	}
-	m.active = -1
+	if index == m.progressActive {
+		if m.progressChild != nil {
+			_ = m.progressChild.Close()
+			m.progressChild = nil
+		}
+		m.progressActive = -1
+	}
+	m.cleanup = true
+	for _, r := range m.roles {
+		m.cleanup = m.cleanup && r.Reaped
+	}
 }
 func (m *scanLifecycle) protocolResult(r integrityscan.Resources) {
 	m.mu.Lock()
@@ -199,7 +252,7 @@ func (m *scanLifecycle) snapshot() ScanReceipt {
 	if m.finished {
 		lifecycleContext = m.finalContext
 	}
-	return ScanReceipt{Resources: m.resources, Roles: append([]ScanRoleReceipt(nil), m.roles...), MaxSampleGap: m.maxGap, Finished: m.finished, CleanupConfirmed: m.cleanup, FirstFault: m.firstFault, CallerContext: scanContextStatus(m.caller), LifecycleContext: lifecycleContext}
+	return ScanReceipt{Resources: m.resources, Roles: append([]ScanRoleReceipt(nil), m.roles...), MaxSampleGap: m.maxGap, ConcurrentSamples: m.concurrentSamples, Finished: m.finished, CleanupConfirmed: m.cleanup, FirstFault: m.firstFault, CallerContext: scanContextStatus(m.caller), LifecycleContext: lifecycleContext}
 }
 func (m *scanLifecycle) check() error {
 	r := m.snapshot()
@@ -288,18 +341,18 @@ func (r *ScanRun) Finish() (ScanReceipt, error) {
 	s := r.output.state
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.broken {
+	if s.broken.Load() {
 		s.scan.noteFault("cleanup", errReap)
 	}
 	receipt, e := s.scan.finish()
-	if f := r.fileOutput; f != nil && receipt.CleanupConfirmed && !s.broken {
+	if f := r.fileOutput; f != nil && receipt.CleanupConfirmed && !s.broken.Load() {
 		if closeErr := f.finish(); closeErr != nil {
 			s.scan.noteFault("file-output-close", closeErr)
 			e = errors.Join(e, closeErr)
 			receipt = s.scan.snapshot()
 		}
 	}
-	if q := r.bunCache; q != nil && receipt.CleanupConfirmed && !s.broken {
+	if q := r.bunCache; q != nil && receipt.CleanupConfirmed && !s.broken.Load() {
 		if !q.closed {
 			cacheErr := errors.Join(q.check(), q.close())
 			if cacheErr != nil {
@@ -309,7 +362,7 @@ func (r *ScanRun) Finish() (ScanReceipt, error) {
 			}
 		}
 	}
-	if q := s.intelligence; q != nil && receipt.CleanupConfirmed && !s.broken {
+	if q := s.intelligence; q != nil && receipt.CleanupConfirmed && !s.broken.Load() {
 		if !q.closed {
 			bindingErr := q.check(s.caller)
 			closeErr := q.close()
@@ -321,7 +374,7 @@ func (r *ScanRun) Finish() (ScanReceipt, error) {
 			receipt = s.scan.snapshot()
 		}
 	}
-	if q := r.userSetup; q != nil && receipt.CleanupConfirmed && !s.broken && !q.closed {
+	if q := r.userSetup; q != nil && receipt.CleanupConfirmed && !s.broken.Load() && !q.closed {
 		setupErr := errors.Join(q.check(s.caller), q.close())
 		if setupErr != nil {
 			s.scan.noteFault("user-setup-close", setupErr)
@@ -331,7 +384,7 @@ func (r *ScanRun) Finish() (ScanReceipt, error) {
 	}
 	r.Operational = receipt
 	r.Resources = receipt.Resources
-	if s.broken {
+	if s.broken.Load() {
 		return receipt, errReap
 	}
 	return receipt, e

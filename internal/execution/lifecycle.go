@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -22,7 +23,6 @@ const (
 	launchNonce  = "PACKTRACE_INTERNAL_NONCE"
 	launchHandle = "PACKTRACE_INTERNAL_HANDLE"
 	launchData   = "PACKTRACE_INTERNAL_DATA"
-	launchInput  = "PACKTRACE_INTERNAL_INPUT"
 )
 
 var errReap = errors.New("inspect-batch: reap-unconfirmed")
@@ -30,11 +30,11 @@ var errJoin = errors.New("inspect-batch: cleanup-unconfirmed")
 var errOutput = errors.New("cli: output-failed")
 
 type runState struct {
-	mu           sync.Mutex // one live role, including concurrent WriteOutput calls
-	budget       traffic
+	mu           sync.Mutex // serializes normal roles; Intel may pair a bounded progress writer
+	budget       *traffic
 	deadline     time.Time
 	caller       context.Context
-	broken       bool
+	broken       *atomic.Bool           // shared by the explicitly paired Intel roles
 	scan         *scanLifecycle         // opt-in retained observer; nil for all legacy batch roles
 	preparation  bool                   // only the fixed Intel preparation constructor
 	intelligence *scanIntelligenceOwner // original roots/pin retained to final reap
@@ -45,7 +45,7 @@ func newRunState(ctx context.Context) *runState {
 	if d, ok := ctx.Deadline(); ok && d.Before(deadline) {
 		deadline = d
 	}
-	return &runState{deadline: deadline, caller: ctx}
+	return &runState{deadline: deadline, caller: ctx, budget: &traffic{}, broken: &atomic.Bool{}}
 }
 
 // Only explicit intelligence preparation gets15min; legacy constructors and
@@ -55,7 +55,7 @@ func newIntelRunState(ctx context.Context) *runState {
 	if d, ok := ctx.Deadline(); ok && d.Before(deadline) {
 		deadline = d
 	}
-	return &runState{deadline: deadline, caller: ctx, preparation: true}
+	return &runState{deadline: deadline, caller: ctx, preparation: true, budget: &traffic{}, broken: &atomic.Bool{}}
 }
 func (s *runState) work(ctx context.Context) (context.Context, context.CancelFunc) {
 	work, cancel := context.WithDeadline(s.caller, s.deadline)
@@ -106,14 +106,8 @@ func configureLaunch(cmd *exec.Cmd, role string, files ...*os.File) (string, fun
 	}
 	cap := hex.EncodeToString(nonce[:])
 	cmd.Env = append(reducedEnvironment(), launchRole+"="+role, launchNonce+"="+cap, launchHandle+"="+ids[0])
-	if len(ids) >= 2 {
+	if len(ids) == 2 {
 		cmd.Env = append(cmd.Env, launchData+"="+ids[1])
-	}
-	if len(ids) == 3 && role == "scan-ui" {
-		cmd.Env = append(cmd.Env, launchInput+"="+ids[2])
-	} else if len(ids) > 2 {
-		release()
-		return "", nil, errProtocol
 	}
 	return cap, release, nil
 }
@@ -125,7 +119,7 @@ func launchCapability(role string) (string, []uintptr, error) {
 	switch role {
 	case "parser":
 		arg = WorkerArgument
-	case "writer", "scan-writer", "intel-writer", "scan-ui":
+	case "writer", "scan-writer", "intel-writer", "intel-progress":
 		arg = WriterArgument
 	case "scan":
 		arg = ScanWorkerArgument
@@ -143,17 +137,9 @@ func launchCapability(role string) (string, []uintptr, error) {
 		return "", nil, errProtocol
 	}
 	names := []string{launchHandle}
-	if role == "writer" || role == "scan-writer" || role == "intel-writer" || role == "scan-ui" {
+	if role == "writer" || role == "scan-writer" || role == "intel-writer" || role == "intel-progress" {
 		names = append(names, launchData)
 	} else if os.Getenv(launchData) != "" {
-		return "", nil, errProtocol
-	}
-	if role == "scan-ui" {
-		if runtime.GOOS != "linux" {
-			return "", nil, errProtocol
-		}
-		names = append(names, launchInput)
-	} else if os.Getenv(launchInput) != "" {
 		return "", nil, errProtocol
 	}
 	var ids []uintptr
@@ -268,7 +254,7 @@ func (s *inputSource) bridge(ctx context.Context) func() error {
 // private pipes/finite memory, never an original public stream. Unknown reap
 // prevents any later writer launch. EOF + exchange success alone is insufficient.
 func (s *runState) runChild(ctx context.Context, cmd *exec.Cmd, release func(), exchange func(context.Context, *channel, io.Closer) error) (failure error) {
-	if s.broken {
+	if s.broken.Load() {
 		release()
 		return errReap
 	}
@@ -324,20 +310,20 @@ func (s *runState) runChild(ctx context.Context, cmd *exec.Cmd, release func(), 
 	// cancellation, admission, output or completion.
 	exchangeJoined, exchangeSucceeded, stderrJoined := false, false, false
 	waitReturned := false
+	role := "scan"
+	for _, v := range cmd.Env {
+		if strings.HasPrefix(v, launchRole+"=") {
+			role = strings.TrimPrefix(v, launchRole+"=")
+		}
+	}
 	notice := func(stage string, err error) {
 		if s.scan != nil {
-			s.scan.noteFault(stage, err)
+			s.scan.noteRoleFault(stage, err, role)
 		}
 	}
 	// Pin the actual unreaped direct child before starting ANY Wait. This opt-in
 	// covers startup, exchange, EOF, runtime teardown, kill, and confirmed reap.
 	if s.scan != nil {
-		role := "scan"
-		for _, v := range cmd.Env {
-			if strings.HasPrefix(v, launchRole+"=") {
-				role = strings.TrimPrefix(v, launchRole+"=")
-			}
-		}
 		if e := s.scan.attach(cmd.Process, role); e != nil {
 			failure = e
 			cancel()
@@ -345,8 +331,8 @@ func (s *runState) runChild(ctx context.Context, cmd *exec.Cmd, release func(), 
 		defer func() {
 			notice("child-result", failure)
 			s.scan.mu.Lock()
-			if s.scan.active >= 0 {
-				r := &s.scan.roles[s.scan.active]
+			if index := s.scan.roleIndexLocked(cmd.Process.Pid); index >= 0 {
+				r := &s.scan.roles[index]
 				r.ExchangeJoined, r.ExchangeSucceeded = exchangeJoined, exchangeSucceeded
 				r.WaitReturned, r.StderrJoined = waitReturned, stderrJoined
 				r.ExitCode = -1
@@ -356,7 +342,7 @@ func (s *runState) runChild(ctx context.Context, cmd *exec.Cmd, release func(), 
 				r.CallerContext, r.WorkContext, r.LifecycleContext = scanContextStatus(ctx), scanContextStatus(work), scanContextStatus(s.scan.ctx)
 			}
 			s.scan.mu.Unlock()
-			s.scan.reaped(!s.broken && cmd.ProcessState != nil)
+			s.scan.reaped(cmd.Process.Pid, !s.broken.Load() && cmd.ProcessState != nil)
 		}()
 	}
 	// Check again after Start: os/exec may expose only the CHILD endpoints via Fd.
@@ -399,7 +385,7 @@ func (s *runState) runChild(ctx context.Context, cmd *exec.Cmd, release func(), 
 	// particular, unsupported retained-query backends refuse before target I/O.
 	if failure == nil {
 		go func() {
-			e := exchange(childCtx, newChannel(parentOut, parentIn, &s.budget), parentIn)
+			e := exchange(childCtx, newChannel(parentOut, parentIn, s.budget), parentIn)
 			notice("exchange", e)
 			finished <- e
 		}()
@@ -435,7 +421,7 @@ func (s *runState) runChild(ctx context.Context, cmd *exec.Cmd, release func(), 
 		case waitErr = <-waited:
 			waitReturned = true
 		case <-time.After(2 * time.Second):
-			s.broken = true
+			s.broken.Store(true)
 			failure = errReap
 		}
 	case <-time.After(2 * time.Second):
@@ -445,13 +431,13 @@ func (s *runState) runChild(ctx context.Context, cmd *exec.Cmd, release func(), 
 		case waitErr = <-waited:
 			waitReturned = true
 		case <-time.After(2 * time.Second):
-			s.broken = true
+			s.broken.Store(true)
 			failure = errReap
 		}
 	}
 	notice("wait-exit", waitErr)
 	if !waitReturned || cmd.ProcessState == nil {
-		s.broken = true
+		s.broken.Store(true)
 		failure = errReap
 	}
 	if !haveExchange {
@@ -465,7 +451,7 @@ func (s *runState) runChild(ctx context.Context, cmd *exec.Cmd, release func(), 
 				failure = e
 			}
 		case <-time.After(2 * time.Second):
-			s.broken = true
+			s.broken.Store(true)
 			failure = errJoin
 		}
 	}
@@ -480,7 +466,7 @@ func (s *runState) runChild(ctx context.Context, cmd *exec.Cmd, release func(), 
 			stderrJoined = true
 			stderrErr = errProtocol
 		case <-time.After(2 * time.Second):
-			s.broken = true
+			s.broken.Store(true)
 			failure = errJoin
 		}
 	}
@@ -488,10 +474,10 @@ func (s *runState) runChild(ctx context.Context, cmd *exec.Cmd, release func(), 
 	if failure == nil && waitErr != nil {
 		failure = errors.New("inspect-batch: worker-exit")
 	}
-	if stderrErr != nil && !s.broken {
+	if stderrErr != nil && !s.broken.Load() {
 		failure = stderrErr
 	}
-	if e = s.contextError(ctx); e != nil && !s.broken {
+	if e = s.contextError(ctx); e != nil && !s.broken.Load() {
 		failure = e
 	}
 	return failure

@@ -34,7 +34,7 @@ func DiagnosticText(code string) string {
 	case "cli: missing-root", "cli: invalid-root", "cli: extra-argument":
 		help = "Effect: a required path/identifier is missing or invalid, or an extra operand was supplied.\nNext: check the selected command in packtrace --help. For scans use packtrace scan --help: options precede one project path. Intel import needs FILE; pin/unpin need a generation ID."
 	case "cli: unsupported-option", "cli: repeated-option", "cli: missing-option-value", "cli: invalid-option-value", "cli: enforcement-outside-checks":
-		help = "Next: check packtrace --help and packtrace scan --help for accepted options; do not repeat flags or combine --verbose/--interactive with JSON/SARIF or each other. Policy requirements cannot be weakened by flags."
+		help = "Next: check packtrace --help and packtrace scan --help for accepted options; do not repeat flags or combine --verbose with JSON/SARIF. Policy requirements cannot be weakened by flags."
 	case "scan: invalid-policy", "scan: unsupported-or-conflicting-options":
 		help = "Effect: the selected policy, pin or requested options could not be admitted.\nNext: review the external policy, required checks and privacy with packtrace scan --help. Do not replace the saved pin to approve changed bytes silently."
 	case "scan: user-setup-invalid; run packtrace setup --help":

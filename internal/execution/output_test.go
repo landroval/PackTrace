@@ -143,7 +143,7 @@ func TestWriterRefusesMissingLaunchBeforeIO(t *testing.T) {
 }
 func TestBrokenLifecycleForbidsWriter(t *testing.T) {
 	run := BatchRun{state: newRunState(context.Background())}
-	run.state.broken = true
+	run.state.broken.Store(true)
 	var out bytes.Buffer
 	if e := run.WriteOutput(context.Background(), &out, []byte("never")); !errors.Is(e, errReap) || out.Len() != 0 {
 		t.Fatal("unknown reap became clean", e)

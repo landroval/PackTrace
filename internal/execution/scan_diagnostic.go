@@ -32,7 +32,7 @@ func (r *ScanRun) diagnosticCheckpoint() error {
 	s := r.output.state
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.scan == nil || s.broken {
+	if s.scan == nil || s.broken.Load() {
 		return errScanResource
 	}
 	s.scan.tick()

@@ -97,6 +97,13 @@ func intelFaultDriver(mode string) int {
 			}
 		}
 	}
+	if mode == "progress-wait" {
+		for i := 1; i <= 9; i++ {
+			time.Sleep(100 * time.Millisecond)
+			sample.ElapsedMS = int64(i * 100)
+			c.send("resident", sample)
+		}
+	}
 	if mode == "wrong-sequence" {
 		io.WriteString(os.Stdout, `{"version":1,"seq":999,"job":1,"type":"done","data":{"results":1}}`+"\n")
 		return 0
@@ -250,7 +257,7 @@ func TestIntelFaultChildrenCannotAuthorizeUsableResult(t *testing.T) {
 			}
 			cmd := exec.Command(os.Args[0], "--intel-fault-driver", mode)
 			request := cli.IntelArgumentRequest{Action: cli.ArgumentActionIntelStatus, StateDir: filepath.Join(t.TempDir(), "absent"), Format: "json"}
-			e = run.superviseIntel(ctx, request, cmd, identity)
+			e = run.superviseIntel(ctx, request, cmd, identity, nil)
 			receipt, finish := run.Finish()
 			if mode == "valid" {
 				if e != nil || finish != nil || !run.Usable || cmd.ProcessState == nil || !receipt.CleanupConfirmed {

@@ -63,13 +63,17 @@ func scanContextStatus(ctx context.Context) string {
 	}
 }
 func (m *scanLifecycle) faultLockedAt(stage string, err error) {
+	role := ""
+	if m.active >= 0 {
+		role = m.roles[m.active].Role
+	}
+	m.faultLockedRole(stage, err, role)
+}
+func (m *scanLifecycle) faultLockedRole(stage string, err error, role string) {
 	if m.firstFault.Stage != "" {
 		return
 	}
-	f := ScanFault{Stage: stage, Code: scanErrorCode(err), Elapsed: time.Since(m.started)}
-	if m.active >= 0 {
-		f.Role = m.roles[m.active].Role
-	}
+	f := ScanFault{Stage: stage, Code: scanErrorCode(err), Elapsed: time.Since(m.started), Role: role}
 	var query *nativeresource.QueryFailure
 	if errors.As(err, &query) {
 		f.QueryStage = query.Stage
@@ -78,14 +82,19 @@ func (m *scanLifecycle) faultLockedAt(stage string, err error) {
 	}
 	m.firstFault = f
 }
-func (m *scanLifecycle) noteFault(stage string, err error) {
+func (m *scanLifecycle) noteFault(stage string, err error) { m.noteRoleFault(stage, err, "") }
+func (m *scanLifecycle) noteRoleFault(stage string, err error, role string) {
 	if err == nil {
 		return
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if !m.finished {
-		m.faultLockedAt(stage, err)
+		if role == "" {
+			m.faultLockedAt(stage, err)
+		} else {
+			m.faultLockedRole(stage, err, role)
+		}
 	}
 }
 
