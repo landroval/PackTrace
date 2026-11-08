@@ -42,7 +42,7 @@ func TestTerminalSummaryPrivacyEvidenceAndVerbose(t *testing.T) {
 				t.Fatalf("full evidence lost: %v %s", err, verbose)
 			}
 			if privacy == "local" {
-				if bytes.Count(summary, []byte("left-pad")) != 1 || !bytes.Contains(summary, []byte("ADVISORY RECORDS")) {
+				if bytes.Count(bytes.Split(summary, []byte("Why these matches need review"))[0], []byte("left-pad")) != 1 || !bytes.Contains(summary, []byte("ADVISORY RECORDS")) {
 					t.Fatal("package table did not group repeated original", string(summary))
 				}
 			} else {

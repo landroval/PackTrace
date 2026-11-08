@@ -92,6 +92,9 @@ func BuildReportWithAdvisories(plan Plan, records []Record, summary Summary, res
 			local := *advisories.Local
 			local.Observations = append([]LocalObservation{}, local.Observations...)
 			local.Advisories = append([]LocalAdvisory{}, local.Advisories...)
+			for i := range local.Advisories {
+				local.Advisories[i].Conditions = append([]LocalAdvisoryCondition(nil), local.Advisories[i].Conditions...)
+			}
 			a.Local = &local
 		}
 	}
@@ -202,6 +205,16 @@ func renderAdvisories(out *strings.Builder, a *AdvisoryReport, inventory *projec
 			}
 			if advisory, ok := advisories[d.Advisory]; ok {
 				fmt.Fprintf(out, "  Local advisory: id=%q original-sha256=%s\n", advisory.ID, advisory.SHA256)
+				if d.Candidate || d.EnforcementEligible {
+					if advisory.Summary != "" {
+						fmt.Fprintf(out, "  Advisory says: %s\n", terminalCell(advisory.Summary, maxAdvisorySummary))
+					}
+					reason, next := localMatchReason(d, observations[d.Observation], advisory)
+					fmt.Fprintf(out, "  Why: %s\n  Next: %s\n", reason, next)
+					if advisory.ExplanationLimited {
+						fmt.Fprintln(out, "  Explanation limited; omitted metadata does not establish a fix.")
+					}
+				}
 			}
 		}
 		if p := d.FirstVersionProblem; p != nil {

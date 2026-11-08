@@ -21,7 +21,7 @@ func TestSetupThenOrdinaryScan(t *testing.T) {
 	for _, family := range []string{"npm", "bun"} {
 		t.Run(family, func(t *testing.T) {
 			t.Parallel()
-			target, policy, state, _, snapshot := matchingScanFixture(t, "1.0.0", false)
+			target, policy, state, _, snapshot := matchingScanFixtureBundle(t, "1.0.0", false, "readable.bundle")
 			config := t.TempDir()
 			data, err := os.ReadFile(policy)
 			if err != nil {
@@ -82,6 +82,9 @@ func TestSetupThenOrdinaryScan(t *testing.T) {
 			if !bytes.Contains(terminal, []byte("left-pad")) || !bytes.Contains(terminal, []byte("Candidate only")) || !bytes.Contains(terminal, []byte("[INCOMPLETE] Scan coverage")) || bytes.Contains(terminal, []byte("Advisory observation=")) {
 				t.Fatalf("ordinary terminal scan is not a compact actionable summary: %s", terminal)
 			}
+			if !bytes.Contains(terminal, []byte("Advisory says: Owned advisory")) || !bytes.Contains(terminal, []byte("exact version is listed as affected")) || bytes.Contains(terminal, []byte("fixed boundary")) {
+				t.Fatal("readable original context missing or invented fix", string(terminal))
+			}
 			verbose := invoke(3, "scan", "--verbose", target)
 			if !bytes.Contains(verbose, []byte("Advisory observation=")) || !bytes.Contains(verbose, []byte("Support version=")) {
 				t.Fatal("verbose flag lost the original evidence view", string(verbose))
@@ -95,7 +98,7 @@ func TestSetupThenOrdinaryScan(t *testing.T) {
 				t.Fatalf("saved setup failed to connect real inventory/matching: %s", raw)
 			}
 			portable := invoke(3, "scan", "--privacy", "portable", "--format", "json", target)
-			for _, secret := range []string{"left-pad", target, config, policy, state, snapshot, "sha256-"} {
+			for _, secret := range []string{"left-pad", "Owned advisory", target, config, policy, state, snapshot, "sha256-"} {
 				if bytes.Contains(portable, []byte(secret)) {
 					t.Fatalf("portable override leaked %q", secret)
 				}

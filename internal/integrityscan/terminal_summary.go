@@ -259,6 +259,7 @@ func renderTerminalSummary(r Report) []byte {
 		fmt.Fprintln(&out, "[INFO] None recorded in the inspected scope.")
 	}
 
+	renderTerminalExplanations(&out, r)
 	fmt.Fprintln(&out, "\nCoverage limitations")
 	integrityGaps := map[string]int{}
 	for _, gap := range r.Comparison.Gaps {
