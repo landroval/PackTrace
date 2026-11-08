@@ -22,6 +22,7 @@ const (
 	launchNonce  = "PACKTRACE_INTERNAL_NONCE"
 	launchHandle = "PACKTRACE_INTERNAL_HANDLE"
 	launchData   = "PACKTRACE_INTERNAL_DATA"
+	launchInput  = "PACKTRACE_INTERNAL_INPUT"
 )
 
 var errReap = errors.New("inspect-batch: reap-unconfirmed")
@@ -105,8 +106,14 @@ func configureLaunch(cmd *exec.Cmd, role string, files ...*os.File) (string, fun
 	}
 	cap := hex.EncodeToString(nonce[:])
 	cmd.Env = append(reducedEnvironment(), launchRole+"="+role, launchNonce+"="+cap, launchHandle+"="+ids[0])
-	if len(ids) == 2 {
+	if len(ids) >= 2 {
 		cmd.Env = append(cmd.Env, launchData+"="+ids[1])
+	}
+	if len(ids) == 3 && role == "scan-ui" {
+		cmd.Env = append(cmd.Env, launchInput+"="+ids[2])
+	} else if len(ids) > 2 {
+		release()
+		return "", nil, errProtocol
 	}
 	return cap, release, nil
 }
@@ -118,7 +125,7 @@ func launchCapability(role string) (string, []uintptr, error) {
 	switch role {
 	case "parser":
 		arg = WorkerArgument
-	case "writer", "scan-writer", "intel-writer":
+	case "writer", "scan-writer", "intel-writer", "scan-ui":
 		arg = WriterArgument
 	case "scan":
 		arg = ScanWorkerArgument
@@ -136,9 +143,17 @@ func launchCapability(role string) (string, []uintptr, error) {
 		return "", nil, errProtocol
 	}
 	names := []string{launchHandle}
-	if role == "writer" || role == "scan-writer" || role == "intel-writer" {
+	if role == "writer" || role == "scan-writer" || role == "intel-writer" || role == "scan-ui" {
 		names = append(names, launchData)
 	} else if os.Getenv(launchData) != "" {
+		return "", nil, errProtocol
+	}
+	if role == "scan-ui" {
+		if runtime.GOOS != "linux" {
+			return "", nil, errProtocol
+		}
+		names = append(names, launchInput)
+	} else if os.Getenv(launchInput) != "" {
 		return "", nil, errProtocol
 	}
 	var ids []uintptr

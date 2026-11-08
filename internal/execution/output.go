@@ -186,6 +186,9 @@ func writerTrafficFits(b *traffic, identity string, cfg writerLaunchConfig) erro
 // WriterMain never parses target data or selects rendering/privacy/public exit.
 // Validate the COMPLETE bounded transfer/hash/EOF before touching public output.
 func WriterMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
+	if os.Getenv(launchRole) == "scan-ui" {
+		return interactiveWriterMain(in, out)
+	}
 	role := "writer"
 	if os.Getenv(launchRole) == "scan-writer" {
 		role = "scan-writer"

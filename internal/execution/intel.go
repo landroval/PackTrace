@@ -10,6 +10,7 @@ import (
 	"packtrace/internal/cli"
 	"packtrace/internal/intel"
 	"packtrace/internal/intelstore"
+	"packtrace/internal/interactive"
 	"packtrace/internal/nativefs"
 	"path/filepath"
 	"runtime/debug"
@@ -136,7 +137,10 @@ func normalizeIntelRequest(r cli.IntelArgumentRequest) (cli.IntelArgumentRequest
 	}
 	return r, nil
 }
-func RunIntel(ctx context.Context, request cli.IntelArgumentRequest) (run IntelRun, failure error) {
+func RunIntel(ctx context.Context, request cli.IntelArgumentRequest) (IntelRun, error) {
+	return RunIntelWithActivity(ctx, request, nil)
+}
+func RunIntelWithActivity(ctx context.Context, request cli.IntelArgumentRequest, activity *os.File) (run IntelRun, failure error) {
 	if ctx == nil {
 		return run, errIntelProtocol
 	}
@@ -147,6 +151,28 @@ func RunIntel(ctx context.Context, request cli.IntelArgumentRequest) (run IntelR
 		return run, e
 	}
 	s.scan = newScanLifecycle(ctx, s.deadline)
+	if activity != nil {
+		if request.Format != "terminal" || !interactive.Available(os.Stdin, activity) {
+			return run, errIntelProtocol
+		}
+		label := "Reading local advisory state (read-only)."
+		switch request.Action {
+		case cli.ArgumentActionIntelSync:
+			label = "Downloading/reconciling admitted public data; this writes the store."
+		case cli.ArgumentActionIntelImport:
+			label = "Reading an offline bundle and rebuilding validated local data; this writes the store."
+		case cli.ArgumentActionIntelExport:
+			label = "Exporting the selected local snapshot to the admitted new file."
+		case cli.ArgumentActionCachePrune:
+			label = "Preparing a read-only prune preview."
+			if request.ApplyPreview != "" {
+				label = "Applying the explicitly selected destructive prune preview."
+			}
+		}
+		if e := run.WriteOutput(ctx, activity, []byte("[INFO] "+label+" No percentage is known; wait for the final result. Ctrl+C cancels.\n")); e != nil {
+			return run, e
+		}
+	}
 	cmd, e := childCommand(IntelWorkerArgument)
 	if e != nil {
 		return run, e

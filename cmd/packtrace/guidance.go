@@ -8,6 +8,8 @@ Scan a project (offline)
   Already configured: packtrace scan /path/to/project
   First setup: review an external policy and prepared data, then packtrace setup --help.
   More evidence: packtrace scan --verbose /path/to/project
+  Optional Linux terminal explorer: packtrace scan --interactive /path/to/project
+  Wait notices for data operations: add --interactive before their final operand.
 
 Prepare security advisory data
   intel = security advisory database, not artificial intelligence.
@@ -33,6 +35,13 @@ Finding = selected evidence rules met; candidate = version lead, not confirmed a
 integrity difference = changed bytes, not automatically malware. Zero findings is not safety.
 If something is missing, read Effect/Next guidance; no download, fix or approval is automatic.
 Use --verbose for original technical evidence; JSON/SARIF semantics and exit codes are unchanged.
+
+Interactive mode: --interactive opens a read-only package/detail explorer after scan,
+and shows sequential stage notices plus observed elapsed time for scan/data operations.
+No percentage, background spinner, download or repair is inferred. q closes with the
+original comparison exit; Ctrl+C interrupts. Linux same-terminal input/output only;
+pipes/files/dumb/small/unsupported terminals use plain output. JSON/SARIF and --verbose
+cannot be combined with --interactive. The original operation deadline still applies.
 
 Options and technical boundaries
 `

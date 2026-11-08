@@ -17,6 +17,7 @@ import (
 	"packtrace/internal/integrity"
 	"packtrace/internal/integrityscan"
 	"packtrace/internal/intelstore"
+	"packtrace/internal/interactive"
 	"packtrace/internal/nativefs"
 	"packtrace/internal/projectinventory"
 )
@@ -112,6 +113,12 @@ type residentSample struct {
 // The same state/budget subsequently owns the existing terminable writer role.
 // The caller must Finish after its last output attempt, including error paths.
 func RunScan(ctx context.Context, request cli.ScanArgumentRequest) (ScanRun, error) {
+	return RunScanWithActivity(ctx, request, nil)
+}
+
+// ponytail: sequential stage notices, not a concurrent animation process. Live
+// telemetry needs a separately qualified multi-role observer, not a second writer.
+func RunScanWithActivity(ctx context.Context, request cli.ScanArgumentRequest, activity *os.File) (ScanRun, error) {
 	s := newRunState(ctx)
 	run := ScanRun{output: BatchRun{state: s}}
 	if ctx.Err() != nil {
@@ -119,6 +126,9 @@ func RunScan(ctx context.Context, request cli.ScanArgumentRequest) (ScanRun, err
 		return run, errors.New("scan: interrupted")
 	}
 	s.scan = newScanLifecycle(ctx, s.deadline)
+	if activity != nil && (!interactive.Available(os.Stdin, activity) || request.Output != "-" || request.Format != "terminal") {
+		return run, integrityscan.ErrOptions
+	}
 	if request.Privacy != "portable" && request.Privacy != "local" || request.Output == "" {
 		return run, integrityscan.ErrOptions
 	}
@@ -134,6 +144,11 @@ func RunScan(ctx context.Context, request cli.ScanArgumentRequest) (ScanRun, err
 		// The saved config is an additional original source. Do not publish a
 		// file until that root is included in the writer's exclusion proof.
 		return run, errors.New("scan: saved-setup requires stdout; use --format json without --output")
+	}
+	if activity != nil {
+		if err := run.WriteOutput(ctx, activity, []byte("[INFO] Reading reviewed policy and project evidence. Waiting is stage-based; no percentage is available. Ctrl+C cancels.\n")); err != nil {
+			return run, err
+		}
 	}
 	var policyPath string
 	var observation integrityscan.PolicyObservation
@@ -214,6 +229,11 @@ func RunScan(ctx context.Context, request cli.ScanArgumentRequest) (ScanRun, err
 		}
 		if err := run.prepareFileOutput(ctx, target, policyDirectory, destination); err != nil {
 			return run, errors.New("scan: output-destination-unavailable")
+		}
+	}
+	if activity != nil {
+		if err := run.WriteOutput(ctx, activity, []byte("[INFO] Inspecting inventory, prepared references and local advisory records. No target code or online lookup runs.\n")); err != nil {
+			return run, err
 		}
 	}
 	_, e = run.scanPhase(ctx, scanConfig{Stage: "acquire", Target: target, PolicyPath: policyPath, PolicyHash: observation.SourceHash, TrustedPolicyDigest: request.TrustedPolicyDigest, Plan: &plan, Intelligence: intelligence, FileOutput: run.fileOutputConfig(), BunCacheBinding: cacheBinding})

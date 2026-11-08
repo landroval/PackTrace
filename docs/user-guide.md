@@ -71,7 +71,9 @@ spelling looks correct. Do not weaken those checks to obtain a green result.
 
 There is no published installer or qualified release binary. Use a reviewed
 checkout and an already-installed toolchain compatible with `go.mod` (Go 1.27.1).
-The root application uses only the Go standard library; npm and Bun are **not**
+The terminal UI uses pinned, vendored Go libraries; ordinary builds use `vendor/`
+without downloading them. See [third-party notices](../THIRD_PARTY_NOTICES.md).
+npm and Bun are **not**
 needed to run a scan and must not be run against a suspicious target for preparation.
 
 From the PackTrace checkout, not the target project:
@@ -209,6 +211,30 @@ saved by `setup`; supply the same `--state-dir` explicitly. Otherwise their defa
 is `os.UserCacheDir()/packtrace` (normally `~/.cache/packtrace` on Linux).
 All paths must satisfy ownership, persistence and separation checks.
 
+### Feedback while commands wait
+
+Add `--interactive` before the final operand for scan or data operations, for example:
+
+```bash
+packtrace intel status --interactive --state-dir /operator/state/intelligence
+```
+
+On a compatible terminal, `scan` announces policy/project reading and then inventory,
+reference and advisory evaluation before showing the explorer. `intel sync`, import,
+export, status and `cache prune` announce their actual selected operation and its
+read/write/network/deletion effects, then print observed elapsed time with the final
+result. Only scan opens the package explorer; maintenance keeps its ordinary result.
+
+These are **sequential stage notices**, not continuous telemetry, a spinner process,
+a percent-complete bar or an ETA. No animation is fabricated during a blocking worker.
+The same one-child-at-a-time resource observer and existing deadlines remain active
+(scan five minutes, maintenance fifteen). Ctrl+C cancels; confirmed cleanup and the
+normal exit precedence still apply. A waiting notice is not proof of success.
+No output is added to machine formats or pipes. Adding this flag never starts a sync,
+import or deletion by itself; each operation still requires its explicit command
+and reviewed source/destination. Pin/unpin, setup and supplied-input tools do not
+accept this UI flag.
+
 ### What status tells you
 
 `packtrace intel status --state-dir DIR` reads the selected store; replace `DIR`
@@ -310,6 +336,40 @@ charge data; manual broad deletion is not the recovery procedure.
 4. **Coverage limitations / Project checks:** what project evidence could not be established? Then read **PackTrace validation** for tool assurance, not project defects.
 5. **Required coverage / exit:** was the selected policy completed?
 
+### Optional interactive explorer
+
+```bash
+packtrace scan --interactive /path/to/project
+```
+
+This opt-in Linux terminal profile presents a package table, bounded name search,
+scrollable source/condition details, Summary and contextual help from the same
+parent-validated report. It never loads a saved JSON as authoritative evidence.
+Keys: arrows select; Enter opens package details; Tab switches focus; `/` searches;
+Enter finishes search, Esc clears it; `s` opens Summary; `?` explains keys/semantics;
+`q` closes; Ctrl+C interrupts. Keyboard input does not access the clipboard.
+
+Filtering is presentation-only; the full row count, original comparison exit and
+Summary coverage remain available. Closing keeps that exit; interruption is `130`,
+and output/resource/terminal-restoration failure can still return `2`. Accepted
+findings are not removed. Integrity-only detail remains in the normal verbose view;
+this first explorer focuses on advisory packages, with the full summary always available.
+
+The initial profile requires the same real Linux stdin/stdout terminal, at least
+40 columns and 12 rows. Other platforms, pipes/files, small terminals and `TERM=dumb`
+fall back to the existing plain report. `NO_COLOR` keeps navigation without color.
+Do not combine with JSON/SARIF or `--verbose`. Existing `--output` restrictions still
+apply; file publication is never interactive.
+
+The viewer uses the existing sequential supervised output lifecycle. Parent-approved
+projection and rendered output have finite byte budgets (8 MiB each for this UI),
+original sources stay held through confirmed output/reap, and original terminal
+input settings are restored even after forced child cancellation. No alternate
+screen, mouse/paste mode or automatic enhanced keyboard protocol is requested.
+The original five-minute scan deadline includes viewing; there is no unlimited
+pause or renewed scan budget. Oversized UI projections/output fail rather than
+silently dropping evidence or increasing the operation allowance.
+
 ### Labels and colors
 
 | Label | Color on a capable terminal | Meaning |
@@ -409,6 +469,7 @@ parsing if the path starts with a dash. Repeated flags and unknown options fail.
 | `--privacy` | `portable` or policy-permitted `local` |
 | `--format` | `terminal` (default), `json`, `sarif` |
 | `--verbose` | Terminal only; no value; incompatible with JSON/SARIF |
+| `--interactive` | Opt-in Linux terminal explorer and stage notices; no value; incompatible with verbose/JSON/SARIF; plain fallback otherwise |
 | `--output` | New file in admitted existing outside directory; restrictions below |
 
 Without saved setup or explicit policy: all three checks are selected, enforcement
