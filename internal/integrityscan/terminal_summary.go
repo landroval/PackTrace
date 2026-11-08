@@ -108,22 +108,22 @@ func renderTerminalAdvisoryTable(out *strings.Builder, title string, groups []te
 // This projection neither re-evaluates evidence nor authenticates saved JSON.
 func renderTerminalSummary(r Report) []byte {
 	var out strings.Builder
-	status := "COMPLETE (not a safety verdict)"
+	status := "[OK] Comparison completed (not a safety verdict)"
 	switch r.ExitCode {
 	case 130:
-		status = "INTERRUPTED"
+		status = "[INCOMPLETE] Scan interrupted"
 	case 2:
-		status = "ERROR"
+		status = "[ERROR] Scan error"
 	case 1:
-		status = "FINDINGS (policy enforcement)"
+		status = "[FINDING] Policy findings require attention"
 	default:
 		if RequiredCoverageIncomplete(r) {
-			status = "INCOMPLETE"
+			status = "[INCOMPLETE] Scan coverage"
 		}
 	}
 	fmt.Fprintln(&out, "PackTrace | Offline dependency scan (experimental)")
 	fmt.Fprintln(&out, "\nSummary")
-	fmt.Fprintf(&out, "Status: %s\n", status)
+	fmt.Fprintln(&out, status)
 	classes := map[uint32]string{}
 	if p := r.Inventory; p != nil {
 		usable := 0
@@ -135,8 +135,10 @@ func renderTerminalSummary(r Report) []byte {
 		}
 		fmt.Fprintf(&out, "Inventory: %d declared | %d locked | %d installed observations\n", p.Counts.Declared, p.Counts.Locked, p.Counts.Installed)
 		inventoryCoverage := "incomplete"
-		if p.Complete {
-			inventoryCoverage = "complete"
+		for _, check := range r.Coverage {
+			if check.Check == "inventory" && check.Outcome == "completed" {
+				inventoryCoverage = "complete"
+			}
 		}
 		fmt.Fprintf(&out, "Usable manifest observations: %d/%d | Inventory coverage: %s\n", usable, p.Counts.Installed, inventoryCoverage)
 		conflicts := map[string]int{}
@@ -146,30 +148,42 @@ func renderTerminalSummary(r Report) []byte {
 			}
 		}
 		if len(conflicts) > 0 {
-			terminalList(&out, "Inventory conflicts", terminalCounts(conflicts))
+			terminalList(&out, "[REVIEW] Inventory conflicts", terminalCounts(conflicts))
 		}
 	} else {
 		fmt.Fprintln(&out, "Inventory: unavailable")
 	}
 	if i := r.Intelligence; i != nil {
 		freshness := "incomplete"
-		if i.State == "available" && i.CheckAge == "current" && i.ReconciliationAge == "current" {
-			freshness = "current"
+		for _, check := range r.Coverage {
+			if check.Check == "intelligence-freshness" && check.Outcome == "completed" {
+				freshness = "current"
+			}
 		}
 		fmt.Fprintf(&out, "Intelligence: %s | freshness: %s\n", i.State, freshness)
 	}
 	if a := r.Advisories; a != nil {
-		fmt.Fprintf(&out, "Advisories: %s | eligible match rows: %d\n", a.State, a.Findings)
+		advisoryState := "INFO"
+		if a.Findings > 0 {
+			advisoryState = "FINDING"
+		} else if a.State != "observed" {
+			advisoryState = "INCOMPLETE"
+		}
+		fmt.Fprintf(&out, "[%s] Advisory matching: %s | eligible match rows: %d\n", advisoryState, a.State, a.Findings)
 		originals := map[int]bool{}
 		for _, d := range a.Decisions {
 			if d.Candidate {
 				originals[d.Advisory] = true
 			}
 		}
-		fmt.Fprintf(&out, "Candidate rows: %d | Advisory records: %d (not confirmed findings)\n", a.Candidates, len(originals))
+		candidateState := "INFO"
+		if a.Candidates > 0 {
+			candidateState = "REVIEW"
+		}
+		fmt.Fprintf(&out, "[%s] Candidate rows: %d | Advisory records: %d (not confirmed findings)\n", candidateState, a.Candidates, len(originals))
 
 	} else {
-		fmt.Fprintln(&out, "Advisories: not run (not selected)")
+		fmt.Fprintln(&out, "[NOT RUN] Advisory matching: not selected")
 	}
 	integrityNotRun := false
 	for _, c := range r.Coverage {
@@ -178,9 +192,13 @@ func renderTerminalSummary(r Report) []byte {
 		}
 	}
 	if integrityNotRun && r.Findings == 0 {
-		fmt.Fprintln(&out, "\nIntegrity: not run (not selected)")
+		fmt.Fprintln(&out, "\n[NOT RUN] Integrity comparison: not selected")
 	} else {
-		fmt.Fprintf(&out, "\nIntegrity: %d observed differences\n", r.Findings)
+		state := "INFO"
+		if r.Findings > 0 {
+			state = "FINDING"
+		}
+		fmt.Fprintf(&out, "\n[%s] Integrity: %d observed differences\n", state, r.Findings)
 	}
 	changes := map[string]int{}
 	for _, d := range r.Comparison.Differences {
@@ -221,24 +239,24 @@ func renderTerminalSummary(r Report) []byte {
 			fmt.Fprintln(&out, "File-level differences, including accepted findings: --verbose or --format json.")
 		}
 		if p.MaterialLimited {
-			fmt.Fprintln(&out, "Policy evidence limit reached; acceptance cannot waive coverage.")
+			fmt.Fprintln(&out, "[INCOMPLETE] Policy evidence limit reached; acceptance cannot waive coverage.")
 		}
 	}
 
 	fmt.Fprintln(&out, "\nPackages to review")
 	if a := r.Advisories; a != nil && (a.Findings > 0 || a.Candidates > 0) {
 		if r.Privacy == "local" && a.Local != nil {
-			renderTerminalAdvisoryTable(&out, "Advisory findings", advisoryTerminalGroups(a, classes, false))
-			renderTerminalAdvisoryTable(&out, "Candidate version matches (origin unconfirmed)", advisoryTerminalGroups(a, classes, true))
+			renderTerminalAdvisoryTable(&out, "[FINDING] Advisory findings", advisoryTerminalGroups(a, classes, false))
+			renderTerminalAdvisoryTable(&out, "[REVIEW] Candidate version matches (origin unconfirmed)", advisoryTerminalGroups(a, classes, true))
 		} else {
-			fmt.Fprintln(&out, "Package identities hidden by portable privacy; use --privacy local for local review.")
+			fmt.Fprintln(&out, "[INFO] Package identities hidden by portable privacy; use --privacy local for local review.")
 		}
 	} else if r.Findings > 0 {
 		fmt.Fprintln(&out, "Review file-level integrity differences with --verbose.")
 	} else if r.Advisories != nil && r.Advisories.State == "unavailable" {
-		fmt.Fprintln(&out, "No package verdict: advisory analysis unavailable.")
+		fmt.Fprintln(&out, "[INCOMPLETE] No package verdict: advisory analysis unavailable.")
 	} else {
-		fmt.Fprintln(&out, "None recorded in the inspected scope.")
+		fmt.Fprintln(&out, "[INFO] None recorded in the inspected scope.")
 	}
 
 	fmt.Fprintln(&out, "\nCoverage limitations")
@@ -247,7 +265,7 @@ func renderTerminalSummary(r Report) []byte {
 		integrityGaps[string(gap.Code)]++
 	}
 	if len(integrityGaps) > 0 {
-		terminalList(&out, "Integrity gaps", terminalCounts(integrityGaps))
+		terminalList(&out, "[INCOMPLETE] Integrity gaps", terminalCounts(integrityGaps))
 	}
 	if p := r.Inventory; p != nil {
 		gaps := map[string]int{}
@@ -264,7 +282,7 @@ func renderTerminalSummary(r Report) []byte {
 			if code == "installed-manifest-unavailable" {
 				label = "installed manifests unavailable"
 			}
-			fmt.Fprintf(&out, "  - %s: %d gap records\n", terminalCell(label, 72), gaps[code])
+			fmt.Fprintf(&out, "  [INCOMPLETE] %s: %d gap records\n", terminalCell(label, 72), gaps[code])
 		}
 	}
 	if a := r.Advisories; a != nil && len(a.Summary.Gaps) > 0 {
@@ -281,7 +299,7 @@ func renderTerminalSummary(r Report) []byte {
 			limits = append(limits, gap)
 		}
 		if len(limits) > 0 {
-			terminalList(&out, "Matching scope", limits)
+			terminalList(&out, "[INCOMPLETE] Matching scope", limits)
 		}
 	}
 	if i := r.Intelligence; i != nil && len(i.Gaps) > 0 {
@@ -298,45 +316,29 @@ func renderTerminalSummary(r Report) []byte {
 			}
 		}
 		if len(limits) > 0 {
-			terminalList(&out, "Intelligence", limits)
+			terminalList(&out, "[INCOMPLETE] Intelligence", limits)
 		}
 		if lazy && usageUnknown {
-			fmt.Fprintln(&out, "  Scope: selected advisory originals only; storage usage not measured.")
+			fmt.Fprintln(&out, "  [INFO] Scope: selected advisory originals only; storage usage not measured.")
 		} else if usageUnknown {
-			fmt.Fprintln(&out, "  Scope: storage usage not measured.")
+			fmt.Fprintln(&out, "  [INFO] Scope: storage usage not measured.")
 		} else if lazy {
-			fmt.Fprintln(&out, "  Scope: selected advisory originals only.")
+			fmt.Fprintln(&out, "  [INFO] Scope: selected advisory originals only.")
 		}
 	}
 	if a := r.Advisories; a != nil && a.Local != nil && a.Local.Limited {
-		fmt.Fprintln(&out, "  Local presentation limited; missing identities remain opaque.")
+		fmt.Fprintln(&out, "  [INCOMPLETE] Local presentation limited; missing identities remain opaque.")
 	}
-	incomplete, notRun := []string{}, []string{}
-	for _, c := range r.Coverage {
-		if c.Required && c.Outcome != "completed" && c.Outcome != "not-applicable" {
-			incomplete = append(incomplete, c.Check)
-		}
-		if c.Outcome == "not-run" && !c.Required {
-			if c.Check == "integrity" && integrityNotRun && r.Findings == 0 {
-				continue
-			} // Already explicit in Summary.
-			if r.Advisories == nil && (c.Check == "malicious" || c.Check == "vulnerability") {
-				continue
-			}
-			notRun = append(notRun, c.Check)
-		}
-	}
-	if len(incomplete) > 0 {
-		terminalList(&out, "Required checks incomplete", incomplete)
-	}
-	if len(notRun) > 0 {
-		terminalList(&out, "Not run", notRun)
-	}
+	renderTerminalChecks(&out, r)
 	coverage := "complete"
 	if RequiredCoverageIncomplete(r) {
 		coverage = "incomplete"
 	}
-	fmt.Fprintf(&out, "\nRequired coverage: %s\nComparison exit: %d\n", coverage, r.ExitCode)
+	coverageState := "OK"
+	if coverage == "incomplete" {
+		coverageState = "INCOMPLETE"
+	}
+	fmt.Fprintf(&out, "\n[%s] Required coverage: %s\nComparison exit: %d\n", coverageState, coverage, r.ExitCode)
 	if r.Intelligence != nil && r.Intelligence.State == "unavailable" {
 		fmt.Fprintln(&out, "Next: select prepared local data with packtrace setup --help.")
 	} else if r.Intelligence != nil && (r.Intelligence.CheckAge != "current" || r.Intelligence.ReconciliationAge != "current") {
@@ -349,6 +351,7 @@ func renderTerminalSummary(r Report) []byte {
 		fmt.Fprintln(&out, "Candidate only: origin unconfirmed, not enforcement-eligible.")
 	}
 	fmt.Fprintln(&out, "Zero findings is not a safety verdict. Comparison only; final output/cleanup may still fail.")
+	fmt.Fprintln(&out, "Legend: OK = completed check, not a safe project; REVIEW = needs investigation; NOT RUN = not tested.")
 	fmt.Fprintln(&out, "Details: --verbose | Full structured evidence: --format json")
 	return []byte(out.String())
 }

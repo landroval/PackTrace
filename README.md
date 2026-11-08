@@ -100,8 +100,15 @@ all original gap codes remain in verbose/JSON. No missing severity or fix versio
 is inferred.
 
 Compact output uses semantic colors only when stdout is an actual capable terminal:
-cyan/bold headings, amber incomplete coverage/candidates, red recorded findings or
-errors (not a severity rating). It never paints a zero-result scan green. Linux
+blue headings, `[OK]` green for explicitly completed checks, `[FINDING]` red for
+recorded findings, `[REVIEW]` magenta for candidates/conflicts, `[INCOMPLETE]`
+amber for incomplete checks, `[NOT RUN]` light gray for unselected/not-applicable
+work, and `[INFO]` cyan for neutral facts. Errors use red `[ERROR]`.
+A checklist shows each check's state, including successful comparison work and
+local intelligence access. Those green checks do **not** certify package safety:
+zero findings, current-looking metadata and not-applicability never earn `[OK]`.
+Advisory freshness, matching coverage and integrity remain separate obligations;
+comparison completion does not predict final output/cleanup. Linux
 uses a read-only terminal ioctl check; Windows requires already-enabled virtual
 terminal processing without changing console mode. Other platforms stay plain.
 Presence of `NO_COLOR` (even empty), `TERM=dumb`, pipes, redirected files, explicit

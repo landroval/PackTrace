@@ -267,7 +267,7 @@ func Render(r Report, format string) ([]byte, error) {
 		if r.SchemaVersion == "1.7" {
 			data := renderTerminalSummary(r)
 			if format == "terminal-color" {
-				data = colorTerminalSummary(data, r)
+				data = colorTerminalSummary(data)
 			}
 			return data, nil
 		}

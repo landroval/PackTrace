@@ -27,8 +27,13 @@ func TestTerminalColorPreservesValidatedPlainEvidence(t *testing.T) {
 		if !bytes.Contains(color, []byte("\x1b[")) || !bytes.Equal(ansi.ReplaceAll(color, nil), plain) {
 			t.Fatal("color changed labels/evidence")
 		}
-		if bytes.Contains(color, []byte("\x1b[32m")) || bytes.Contains(color, []byte("\x1b[92m")) {
-			t.Fatal("green must not imply a safe verdict")
+		if !bytes.Contains(color, []byte("\x1b[1;32m")) || !bytes.Contains(color, []byte("\x1b[1;35m")) || !bytes.Contains(color, []byte("\x1b[37m")) {
+			t.Fatal("scoped OK/review/not-run states not distinguished")
+		}
+		for _, line := range bytes.Split(color, []byte("\n")) {
+			if bytes.Contains(line, []byte("\x1b[1;32m")) && (!bytes.Contains(line, []byte("[OK]")) || bytes.Contains(line, []byte("eligible match rows")) || bytes.Contains(line, []byte("Candidate rows"))) {
+				t.Fatal("green used for an unsupported safety conclusion", string(line))
+			}
 		}
 		if privacy == "portable" && (bytes.Contains(color, []byte("left-pad")) || bytes.Contains(color, []byte("MAL-2026-1"))) {
 			t.Fatal("color bypassed privacy")

@@ -79,7 +79,7 @@ func TestSetupThenOrdinaryScan(t *testing.T) {
 			invoke(0, "setup", "--policy", policy, "--state-dir", state, "--trusted-snapshot-digest", snapshot)
 			// Actual product command, no policy/state/hash/privacy/check options.
 			terminal := invoke(3, "scan", target)
-			if !bytes.Contains(terminal, []byte("left-pad")) || !bytes.Contains(terminal, []byte("Candidate only")) || !bytes.Contains(terminal, []byte("Status: INCOMPLETE")) || bytes.Contains(terminal, []byte("Advisory observation=")) {
+			if !bytes.Contains(terminal, []byte("left-pad")) || !bytes.Contains(terminal, []byte("Candidate only")) || !bytes.Contains(terminal, []byte("[INCOMPLETE] Scan coverage")) || bytes.Contains(terminal, []byte("Advisory observation=")) {
 				t.Fatalf("ordinary terminal scan is not a compact actionable summary: %s", terminal)
 			}
 			verbose := invoke(3, "scan", "--verbose", target)

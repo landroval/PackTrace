@@ -2,31 +2,29 @@ package integrityscan
 
 import "strings"
 
-// Style only fixed report labels, after escaping/alignment. Removing SGR bytes
-// must recover exactly the validated plain view; color never encodes severity.
-func colorTerminalSummary(data []byte, r Report) []byte {
+// Styles follow explicit state labels, never inferred severity or zero-result
+// counts. Apply only after escaping/alignment; stripping SGR recovers plain text.
+func colorTerminalSummary(data []byte) []byte {
 	var out strings.Builder
-	coverage := false
 	for _, line := range strings.SplitAfter(string(data), "\n") {
 		body := strings.TrimSuffix(line, "\n")
+		label := strings.TrimLeft(body, " ")
 		style := ""
-		if body == "Coverage limitations" {
-			coverage = true
-		}
 		switch {
-		case strings.HasPrefix(body, "PackTrace |"), body == "Summary", body == "Packages to review", body == "Coverage limitations", strings.HasPrefix(body, "PACKAGE "):
-			style = "\x1b[1;36m"
-		case strings.HasPrefix(body, "Status:"):
-			style = "\x1b[1;36m" // Completion is not a green safety verdict.
-			if r.ExitCode == 1 || r.ExitCode == 2 {
-				style = "\x1b[1;31m"
-			} else if r.ExitCode == 130 || RequiredCoverageIncomplete(r) {
-				style = "\x1b[1;33m"
-			}
-		case strings.HasPrefix(body, "Advisory findings"), strings.HasPrefix(body, "Advisories:") && r.Advisories != nil && r.Advisories.Findings > 0, strings.HasPrefix(body, "Integrity:") && r.Findings > 0:
+		case strings.HasPrefix(label, "[OK]"):
+			style = "\x1b[1;32m"
+		case strings.HasPrefix(label, "[FINDING]"), strings.HasPrefix(label, "[ERROR]"):
 			style = "\x1b[1;31m"
-		case strings.HasPrefix(body, "Candidate version matches"), coverage && strings.HasPrefix(body, "  "), strings.HasPrefix(body, "Required coverage: incomplete"), strings.HasPrefix(body, "Intelligence:") && r.Intelligence != nil && (r.Intelligence.State != "available" || r.Intelligence.CheckAge != "current" || r.Intelligence.ReconciliationAge != "current"):
-			style = "\x1b[33m"
+		case strings.HasPrefix(label, "[REVIEW]"):
+			style = "\x1b[1;35m"
+		case strings.HasPrefix(label, "[INCOMPLETE]"):
+			style = "\x1b[1;33m"
+		case strings.HasPrefix(label, "[NOT RUN]"):
+			style = "\x1b[37m" // Light gray, not low-contrast dim text.
+		case strings.HasPrefix(label, "[INFO]"):
+			style = "\x1b[36m"
+		case strings.HasPrefix(body, "PackTrace |"), body == "Summary", body == "Packages to review", body == "Coverage limitations", body == "Check status", strings.HasPrefix(body, "PACKAGE "):
+			style = "\x1b[1;34m"
 		}
 		if style != "" {
 			out.WriteString(style)
