@@ -253,6 +253,12 @@ func (r *ScanRun) Checkpoint() error {
 			return e
 		}
 	}
+	if r.userSetup != nil {
+		if e := r.userSetup.check(s.caller); e != nil {
+			s.scan.noteFault("user-setup-binding", e)
+			return e
+		}
+	}
 	if r.bunCache != nil {
 		if e := r.bunCache.check(); e != nil {
 			s.scan.noteFault("bun-cache-binding", e)
@@ -312,6 +318,14 @@ func (r *ScanRun) Finish() (ScanReceipt, error) {
 		if q.closeErr != nil {
 			s.scan.noteFault("intelligence-close", q.closeErr)
 			e = errors.Join(e, q.closeErr)
+			receipt = s.scan.snapshot()
+		}
+	}
+	if q := r.userSetup; q != nil && receipt.CleanupConfirmed && !s.broken && !q.closed {
+		setupErr := errors.Join(q.check(s.caller), q.close())
+		if setupErr != nil {
+			s.scan.noteFault("user-setup-close", setupErr)
+			e = errors.Join(e, setupErr)
 			receipt = s.scan.snapshot()
 		}
 	}
