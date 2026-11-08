@@ -26,6 +26,12 @@ for downloads, deletion, target access or native qualification.
 
 ## 1. Purpose and boundaries
 
+Start with `packtrace --help` if you do not know a command. It presents **Scan a
+project (offline)**, **Prepare security advisory data**, and **Understand a result**
+before the advanced tools. `packtrace scan --help` explains the result concepts
+before technical options. Existing commands, flags and trust rules are unchanged;
+there is no automatic wizard, network action or repair.
+
 PackTrace investigates dependency evidence. It does not run the project, install
 packages, execute lifecycle/build/test scripts, repair dependencies, quarantine
 files, inspect target registry credentials, or certify that a machine is clean.
@@ -42,6 +48,20 @@ Three questions are different:
 The result keeps **declared** dependency intent, **locked** resolutions and
 **observed installed** evidence separate. A lockfile entry does not prove installation;
 an installed manifest does not authenticate the contents or publisher.
+
+### Plain-language glossary
+
+| Term | What it means here |
+| --- | --- |
+| `intel` / intelligence | The local security advisory database; not artificial intelligence |
+| Advisory | A source's report about a malicious package or vulnerability; not proof of application impact |
+| Snapshot / generation | One fixed version of prepared local advisory data |
+| Origin | Where a dependency is recorded as coming from; a claim is not publisher authentication |
+| Candidate | An identity/version lead with unconfirmed origin/applicability; not a confirmed vulnerability |
+| Finding | Evidence met the selected rules; not proof that code executed |
+| Coverage | Which required checks were established, and which remain incomplete |
+| Policy / enforcement | External reviewed rules choosing required checks and which unaccepted findings fail the run |
+| Reference / integrity | A prepared comparison baseline / comparing files against it; equal bytes are not a safety verdict |
 
 Run as an ordinary user. Keep policy, intelligence, references and reports outside
 the target. Physical containment/ownership checks can refuse paths even when their
@@ -189,6 +209,24 @@ saved by `setup`; supply the same `--state-dir` explicitly. Otherwise their defa
 is `os.UserCacheDir()/packtrace` (normally `~/.cache/packtrace` on Linux).
 All paths must satisfy ownership, persistence and separation checks.
 
+### What status tells you
+
+`packtrace intel status --state-dir DIR` reads the selected store; replace `DIR`
+with your reviewed store path, not the project root. Terminal output calls it
+**Security advisory database (intel)** and explains the record count, independent
+24-hour source check and seven-day full reconciliation, source designation and
+unresolved evidence. Advisory records are not installed packages or confirmed
+vulnerabilities. Current dates do not resolve unknown identities or establish
+complete investigation coverage.
+
+If data is unavailable, the output explains that advisory checks lack usable local
+data, **not** that no threats exist. If dates are expired it shows an explicit sync
+suggestion and its network/disk effects. Expired full reconciliation needs `--full`;
+an unknown source designation instead needs review, not a guessed trust pin.
+Suggestions never execute automatically. Updates cannot fix unreadable manifests,
+unknown dependency origins or PackTrace qualification gaps. Existing scan snapshot
+pins stay in force until a separately reviewed generation selection.
+
 ### Online preparation — explicit network and disk work
 
 If you authorize acquiring public OSV npm intelligence:
@@ -269,7 +307,7 @@ charge data; manual broad deletion is not the recovery procedure.
 2. **Packages to review:** which names/versions have findings or candidates?
 3. **Why these matches need review:** what the original advisory says, the
    condition that matched, and what remains to verify.
-4. **Coverage limitations / Check status:** what could not be established?
+4. **Coverage limitations / Project checks:** what project evidence could not be established? Then read **PackTrace validation** for tool assurance, not project defects.
 5. **Required coverage / exit:** was the selected policy completed?
 
 ### Labels and colors
@@ -341,6 +379,11 @@ not separate accusations against every dependency.
 project defect. `Resource/final-lifecycle evidence` and comparison-stage snapshots
 must not be read as proof of an out-of-memory event or completed final cleanup.
 A green comparison-work check is explicitly scoped before final output/cleanup.
+The default view groups these separately under **Project checks (evidence used for
+this investigation)** and **PackTrace validation (tool assurance, not project
+defects)**; no obligation is hidden or waived. Both groups can keep required
+coverage incomplete and exit `3`. Related inventory/freshness limitations are not
+additional findings or independent accusations against packages.
 Refreshing intelligence cannot fix unsupported hardlinks, unknown origins,
 unselected integrity checks or product qualification gaps.
 
@@ -508,6 +551,14 @@ There is no guarantee this experimental binary will produce exit `0` on a real
 project while qualification/coverage gates remain incomplete.
 
 ## 10. Troubleshooting
+
+Frequent errors keep their fixed diagnostic code on the first line, followed by
+**Effect** (what could not be done) and/or **Next** (a scoped step). Human guidance
+does not change exit codes, add private paths, approve new pins or bypass the
+observed diagnostic writer. Machine JSON/SARIF on stdout is unchanged; error
+explanations stay on the diagnostic stream. Unknown errors receive no guessed
+remedy. `DIR` in suggested maintenance commands is a placeholder; scan setup does
+not supply defaults to maintenance commands.
 
 | Symptom | Meaning and safe next step |
 | --- | --- |

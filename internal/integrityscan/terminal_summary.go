@@ -7,6 +7,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"packtrace/internal/cli"
 	"packtrace/internal/integrity"
 )
 
@@ -122,6 +123,7 @@ func renderTerminalSummary(r Report) []byte {
 		}
 	}
 	fmt.Fprintln(&out, "PackTrace | Offline dependency scan (experimental)")
+	fmt.Fprintln(&out, "Purpose: review dependency evidence without executing or repairing the project.")
 	fmt.Fprintln(&out, "\nSummary")
 	fmt.Fprintln(&out, status)
 	classes := map[uint32]string{}
@@ -160,7 +162,7 @@ func renderTerminalSummary(r Report) []byte {
 				freshness = "current"
 			}
 		}
-		fmt.Fprintf(&out, "Intelligence: %s | freshness: %s\n", i.State, freshness)
+		fmt.Fprintf(&out, "Security advisory database (intel): %s | freshness: %s\n", i.State, freshness)
 	}
 	if a := r.Advisories; a != nil {
 		advisoryState := "INFO"
@@ -181,6 +183,12 @@ func renderTerminalSummary(r Report) []byte {
 			candidateState = "REVIEW"
 		}
 		fmt.Fprintf(&out, "[%s] Candidate rows: %d | Advisory records: %d (not confirmed findings)\n", candidateState, a.Candidates, len(originals))
+		if a.Candidates > 0 {
+			fmt.Fprintln(&out, "Meaning: candidate = identity/version lead; verify package origin and whether affected functionality is used.")
+		}
+		if a.Findings > 0 {
+			fmt.Fprintln(&out, "Meaning: finding = selected evidence rules met; not proof that vulnerable or malicious code executed.")
+		}
 
 	} else {
 		fmt.Fprintln(&out, "[NOT RUN] Advisory matching: not selected")
@@ -261,6 +269,7 @@ func renderTerminalSummary(r Report) []byte {
 
 	renderTerminalExplanations(&out, r)
 	fmt.Fprintln(&out, "\nCoverage limitations")
+	fmt.Fprintln(&out, "Project analysis: missing or uncertain evidence, not additional findings.")
 	integrityGaps := map[string]int{}
 	for _, gap := range r.Comparison.Gaps {
 		integrityGaps[string(gap.Code)]++
@@ -284,6 +293,9 @@ func renderTerminalSummary(r Report) []byte {
 				label = "installed manifests unavailable"
 			}
 			fmt.Fprintf(&out, "  [INCOMPLETE] %s: %d gap records\n", terminalCell(label, 72), gaps[code])
+			if code == "installed-manifest-unavailable" {
+				fmt.Fprintln(&out, "    Effect: some installed versions could not be checked from their own manifests; files may be missing, unreadable, unstable or inadmissibly linked.")
+			}
 		}
 	}
 	if a := r.Advisories; a != nil && len(a.Summary.Gaps) > 0 {
@@ -340,12 +352,24 @@ func renderTerminalSummary(r Report) []byte {
 		coverageState = "INCOMPLETE"
 	}
 	fmt.Fprintf(&out, "\n[%s] Required coverage: %s\nComparison exit: %d\n", coverageState, coverage, r.ExitCode)
-	if r.Intelligence != nil && r.Intelligence.State == "unavailable" {
-		fmt.Fprintln(&out, "Next: select prepared local data with packtrace setup --help.")
-	} else if r.Intelligence != nil && (r.Intelligence.CheckAge != "current" || r.Intelligence.ReconciliationAge != "current") {
-		fmt.Fprintln(&out, "Next: intelligence needs an explicitly authorized refresh before drawing conclusions.")
-	} else if r.Findings > 0 || r.Advisories != nil && (r.Advisories.Findings > 0 || r.Advisories.Candidates > 0) {
-		fmt.Fprintln(&out, "Next: review the records with --verbose before changing dependencies.")
+	if i := r.Intelligence; i != nil {
+		if next := cli.AdvisoryDatabaseNext(i.State, i.CheckAge, i.ReconciliationAge); next != "" {
+			fmt.Fprintln(&out, next)
+		}
+	}
+	if r.Inventory != nil {
+		for _, g := range r.Inventory.Gaps {
+			if g.Code == "installed-manifest-unavailable" {
+				fmt.Fprintln(&out, "Next (inventory): inspect --verbose for the refused evidence. Do not reinstall packages, copy manifests or remove links to bypass the read-only boundary.")
+				break
+			}
+		}
+	}
+	if r.Findings > 0 {
+		fmt.Fprintln(&out, "Next (integrity): review changed/missing/added files and reference/patch context with --verbose; differences are not automatically malware.")
+	}
+	if r.Advisories != nil && (r.Advisories.Findings > 0 || r.Advisories.Candidates > 0) {
+		fmt.Fprintln(&out, "Next (packages): review advisory conditions with --verbose, verify origin and application use, then review any dependency change separately.")
 	}
 	fmt.Fprintln(&out, "\nNote: display groups are not incidents or severity rankings; manifests do not authenticate contents/runtime.")
 	if r.Advisories != nil && r.Advisories.Candidates > 0 {

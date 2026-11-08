@@ -17,6 +17,10 @@ PackTrace is a read-only, offline investigation CLI. It helps answer:
 
 ## Start here
 
+Not sure which command you need? `packtrace --help` starts with **Scan a project
+(offline)**, **Prepare security advisory data**, and **Understand a result**.
+The advanced command list comes afterwards; no wizard or automatic preparation runs.
+
 **Already configured?** This is the normal command:
 
 ```bash
@@ -62,6 +66,12 @@ installs dependencies, runs package scripts, or repairs the target.
 
 ## Understand the result
 
+The CLI now explains concepts and missing evidence, not just technical states:
+**Effect** describes what a limitation means; **Next** gives a scoped action.
+Common errors keep their original diagnostic code on the first line. Suggested
+commands do not run automatically; `DIR` in guidance is a placeholder for the same
+reviewed external store, not a project path.
+
 - **Finding:** evidence met the selected finding rules. It is not proof that code executed.
 - **Candidate / `[REVIEW]`:** an identity/version match worth investigating;
   origin or applicability remains unconfirmed. It is **not** a confirmed vulnerability
@@ -79,7 +89,9 @@ boundary is not a guarantee that upgrading to that version resolves every issue.
 
 **Read project limitations separately from tool assurance.** Unreadable manifests
 or expired intelligence limit investigation of the project. Platform qualification
-and pending final-lifecycle evidence concern PackTrace itself. Several incomplete
+and pending final-lifecycle evidence concern PackTrace itself. The default report
+now separates **Project checks** from **PackTrace validation (tool assurance, not
+project defects)**. Both remain part of required coverage and exit selection. Several incomplete
 lines can describe the same missing evidence, not independent dependency failures.
 
 A count such as “23 advisory records” is not severity 23, 23 incidents, or 23
@@ -122,6 +134,11 @@ Precedence: interruption → operation/output failure → incomplete coverage �
 finding → success. Report-only mode does **not** turn incomplete coverage into `0`.
 
 ## Experimental intelligence lifecycle
+
+**Intel means the security advisory database, not AI:** locally stored reports of
+malicious packages and vulnerabilities. `intel status` explains record counts,
+source-check/reconciliation ages and unresolved evidence; these are not counts of
+installed packages or confirmed vulnerabilities. Current dates alone are not complete coverage.
 
 Scanning is offline. Preparing intelligence is a separate operator action:
 `intel sync` is online; import/export, status, retention pins and prune operate on

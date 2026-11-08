@@ -3,6 +3,8 @@ package execution
 import (
 	"context"
 	"io"
+
+	"packtrace/internal/cli"
 )
 
 // A failed destination/source binding must not suppress its own fixed diagnostic.
@@ -15,7 +17,7 @@ func (r *ScanRun) WriteDiagnostic(ctx context.Context, out io.Writer, code strin
 	if err := r.diagnosticCheckpoint(); err != nil {
 		return err
 	}
-	err := r.output.WriteOutput(ctx, out, []byte(code+"\n"))
+	err := r.output.WriteOutput(ctx, out, []byte(cli.DiagnosticText(code)))
 	r.NoteFailure("diagnostic", err)
 	if observed := r.diagnosticCheckpoint(); observed != nil {
 		return observed

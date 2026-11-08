@@ -52,11 +52,27 @@ func terminalCheckName(name string) string {
 
 func renderTerminalChecks(out *strings.Builder, r Report) {
 	fmt.Fprintln(out, "\nCheck status")
-	for _, check := range r.Coverage {
-		state, detail := terminalCheckState(check)
-		if check.Check == "execution" && state == "OK" {
-			detail = "completed before final output/cleanup"
+	for _, tool := range []bool{false, true} {
+		heading := false
+		for _, check := range r.Coverage {
+			isTool := check.Check == "native-qualification" || check.Check == "resident-observation" || check.Check == "execution"
+			if isTool != tool {
+				continue
+			}
+			if !heading {
+				if tool {
+					fmt.Fprintln(out, "PackTrace validation (tool assurance, not project defects)")
+					fmt.Fprintln(out, "  Missing platform/resource evidence can keep required coverage incomplete; it does not prove a package failure or out-of-memory event.")
+				} else {
+					fmt.Fprintln(out, "Project checks (evidence used for this investigation)")
+				}
+				heading = true
+			}
+			state, detail := terminalCheckState(check)
+			if check.Check == "execution" && state == "OK" {
+				detail = "completed before final output/cleanup"
+			}
+			fmt.Fprintf(out, "  [%s] %s: %s\n", state, terminalCheckName(check.Check), detail)
 		}
-		fmt.Fprintf(out, "  [%s] %s: %s\n", state, terminalCheckName(check.Check), detail)
 	}
 }

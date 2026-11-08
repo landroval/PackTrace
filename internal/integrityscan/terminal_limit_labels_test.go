@@ -30,7 +30,7 @@ func TestTerminalLimitsFoldOnlyEquivalentWarnings(t *testing.T) {
 	if strings.Count(text, "storage usage not measured") != 1 || strings.Contains(text, "originals lazy") {
 		t.Fatal("technical scope was repeated or lost", text)
 	}
-	if !strings.Contains(text, "Next: intelligence needs an explicitly authorized refresh") {
+	if !strings.Contains(text, "packtrace intel sync --state-dir DIR") || !strings.Contains(text, "cannot fix unreadable manifests") {
 		t.Fatal("no actionable next step")
 	}
 	if len(r.Advisories.Summary.Gaps) != 5 || len(r.Intelligence.Gaps) != 4 {

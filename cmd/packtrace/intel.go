@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"os/signal"
@@ -48,7 +47,7 @@ func runIntelContext(caller context.Context, request cli.IntelArgumentRequest, o
 	}
 	if !run.Usable {
 		if work.Err() == nil {
-			_ = run.WriteOutput(work, diagnostic, []byte("intel: execution-unavailable\n"))
+			_ = run.WriteOutput(work, diagnostic, []byte(cli.DiagnosticText("intel: execution-unavailable")))
 		}
 		return finish()
 	}
@@ -63,16 +62,7 @@ func runIntelContext(caller context.Context, request cli.IntelArgumentRequest, o
 		data, e = json.Marshal(report)
 		data = append(data, '\n')
 	} else {
-		data = []byte(fmt.Sprintf("Intelligence operation: %s\n", run.Result.Outcome))
-		if run.Result.Generation != "" {
-			data = append(data, []byte("Snapshot: "+run.Result.Generation+"\n")...)
-		}
-		if p := run.Result.Preview; p != nil {
-			data = append(data, []byte(fmt.Sprintf("Prune preview: %x\nCandidates: %d; bytes: %d; generations: %d\nHistorical reproducibility may be lost; no deletion performed.\n", p.Token, p.Candidates, p.Bytes, p.Generations))...)
-		}
-		if p := run.Result.Prune; p != nil {
-			data = append(data, []byte(fmt.Sprintf("Removed files: %d; bytes: %d; partial: %t\n", p.RemovedFiles, p.RemovedBytes, p.Partial))...)
-		}
+		data = renderIntelTerminal(run.Result)
 	}
 	if e != nil || run.WriteOutput(work, out, data) != nil {
 		conditions.ReportPreventingError = true

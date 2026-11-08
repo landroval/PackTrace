@@ -10,6 +10,8 @@ import (
 )
 
 const setupHelp = `packtrace setup --policy FILE [--state-dir DIR] [--privacy local|portable]
+Goal: save your reviewed scan rules and source locations for packtrace scan ROOT.
+Policy = external JSON selecting required checks and finding enforcement, not a project script.
 Register an explicitly selected external policy once for this OS user.
 Policy bytes are designated by this command; their SHA-256 pin is stored internally.
 Later scans verify the saved pin, never automatically approve changed policy bytes.

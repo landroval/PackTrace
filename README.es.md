@@ -18,6 +18,11 @@ Ayuda a responder:
 
 ## Empieza aquí
 
+Si no sabes qué comando necesitas, `packtrace --help` empieza por tareas:
+**Scan a project (offline)** —analizar—, **Prepare security advisory data**
+—preparar avisos— y **Understand a result** —interpretar—. La lista avanzada viene
+después. No se inicia un asistente ni una preparación automática.
+
 **¿Ya está configurado?** El comando habitual es:
 
 ```bash
@@ -64,6 +69,12 @@ Los comandos y las etiquetas de la CLI permanecen en inglés.
 
 ## Entiende el resultado
 
+La CLI explica conceptos y evidencia ausente, no solo estados técnicos:
+**Effect** indica qué consecuencia tiene una limitación; **Next**, una acción acotada.
+Los errores frecuentes mantienen su código original en la primera línea.
+Los comandos sugeridos no se ejecutan solos. `DIR` es un marcador que debes
+sustituir por el mismo almacén externo revisado, no por la ruta del proyecto.
+
 - **Finding / hallazgo:** la evidencia cumple las reglas seleccionadas. No demuestra ejecución de código.
 - **Candidate / `[REVIEW]`:** coincidencia de identidad y versión que merece revisión;
   su origen o aplicabilidad siguen sin confirmar. **No** es una vulnerabilidad
@@ -83,7 +94,10 @@ versión resuelva todos los problemas.
 **Separa las limitaciones del proyecto de las garantías de la herramienta.**
 Manifiestos ilegibles o inteligencia caducada limitan el análisis del proyecto.
 La cualificación de plataforma y la evidencia pendiente del ciclo final pertenecen
-a PackTrace. Varias líneas incompletas pueden describir una misma falta de
+a PackTrace. El informe separa **Project checks** —comprobaciones del proyecto— de
+**PackTrace validation (tool assurance, not project defects)** —garantías de la
+herramienta, no defectos del proyecto—. Ambas influyen en cobertura y código de salida.
+Varias líneas incompletas pueden describir una misma falta de
 evidencia, no fallos independientes de dependencias.
 
 «23 advisory records» no significa severidad 23, 23 incidentes ni 23 vulnerabilidades
@@ -127,6 +141,12 @@ Prioridad: interrupción → error operativo/de salida → cobertura incompleta 
 hallazgo exigible → éxito. Report-only **no** convierte una cobertura incompleta en `0`.
 
 ## Preparación de inteligencia
+
+**Intel es la base de avisos de seguridad, no inteligencia artificial:** informes
+locales sobre paquetes maliciosos y vulnerabilidades. `intel status` explica
+cantidades de avisos, vigencia de comprobación/reconciliación y evidencia sin
+resolver; no son cantidades de paquetes instalados ni vulnerabilidades confirmadas.
+Que las fechas sean actuales no significa cobertura completa.
 
 El análisis es offline. Preparar inteligencia es una acción separada del operador:
 `intel sync` usa la red; importación, exportación, estado, retención y poda operan

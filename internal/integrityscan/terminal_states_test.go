@@ -18,6 +18,11 @@ func TestTerminalCheckStatesAreExplicitAndScoped(t *testing.T) {
 			t.Fatalf("missing %q: %s", label, data)
 		}
 	}
+	text := string(data)
+	project, tool := strings.Index(text, "Project checks ("), strings.Index(text, "PackTrace validation (")
+	if project < 0 || tool < project || strings.Index(text, "Platform qualification") < tool || !strings.Contains(text, "not project defects") || !strings.Contains(text, "Meaning: candidate = identity/version lead") {
+		t.Fatal("project limits and tool assurance are confusing", text)
+	}
 	if strings.Contains(string(data), "[OK] Advisory matching") || strings.Contains(string(data), "[FINDING]") {
 		t.Fatal("unknown/candidate promoted to a finding or safe check")
 	}
