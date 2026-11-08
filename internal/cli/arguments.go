@@ -22,6 +22,8 @@ const (
 	ArgumentActionIntelPin
 	ArgumentActionIntelUnpin
 	ArgumentActionCachePrune
+	ArgumentActionSetup
+	ArgumentActionSetupHelp
 )
 
 // ArgumentChecks is requested category membership, not qualified coverage.
@@ -65,6 +67,7 @@ type Invocation struct {
 	Action ArgumentAction
 	Scan   ScanArgumentRequest
 	Intel  IntelArgumentRequest
+	Setup  SetupArgumentRequest
 }
 
 type ArgumentErrorCode uint8
@@ -136,6 +139,8 @@ func ParseArgs(args []string) (Invocation, error) {
 			action = ArgumentActionVersion
 		}
 		return Invocation{Action: action}, nil
+	case "setup":
+		return parseSetupArgs(args)
 	case "intel", "cache":
 		return parseIntelArgs(args)
 	case "scan":

@@ -66,12 +66,54 @@ in [design decisions, section 2](docs/design-decisions.md#2-native-targets-and-i
 that is not whole-product release or native Windows 11 x64-hardware qualification.
 macOS is deferred, not completed. No safety gate is waived by choosing a target.
 
+## Configure once, then scan
+
+The binary supports an explicit **per-user setup**, not a wrapper or a project
+script. Register your selected external policy and prepared local intelligence
+once (replace the example paths with your operator-selected sources):
+
+```sh
+packtrace setup --policy /operator/policy.json --state-dir /prepared/intelligence
+packtrace scan /path/to/project
+```
+
+`setup` records the selected policy's SHA-256 pin internally. Ordinary scans
+reuse those exact approved bytes; changing the policy does **not** silently
+reapprove it. Relative references remain relative to the policy's original
+directory. The optional setup `--trusted-snapshot-digest` fixes a generation;
+without it, the existing local current-generation selection applies. Pins do not
+authenticate publishers or installed content.
+
+Saved scan defaults are **local details**, the policy's required checks and the
+selected state directory. Explicit scan `--privacy portable`, `--checks` and
+`--state-dir` override defaults subject to the policy; an explicit `--policy`
+selects a standalone policy without merging saved settings. Setup applies to
+scans, not the separate `intel`/`cache` preparation commands.
+
+Configuration is a bounded, strictly parsed data file at the OS user-config
+location (`$XDG_CONFIG_HOME/packtrace/setup.json`, normally
+`~/.config/packtrace/setup.json` on Linux). Its private owned directory and actual
+physical separation from the target are verified **before reading any config
+bytes**. The original config file/root stay held through output and confirmed
+reap. Target/cwd lookalikes are ignored. Symlink/hardlink config files, malformed,
+copied-root, mutated or missing configuration in an existing setup directory fail
+closed. Explicit
+`--privacy portable` still excludes names, paths and authority pins.
+
+Initial limits: one active policy/manager profile, exclusive setup (no overwrite),
+and stdout output only for saved setup. `--format json`/`sarif` work on stdout;
+file publication with an additional config source remains refused. Explicit
+policy file-output behavior is unchanged. `setup --help` describes the boundary.
+Neither setup nor scan downloads, initializes or renews intelligence. Missing or
+stale data and partial inventory still produce honest incomplete coverage.
+
 ## Effective policy and reviewed exceptions
 
-`scan` accepts optional explicit `--policy FILE`; otherwise it uses conservative
-compiled defaults: all checks, no finding enforcement, portable output and no
-reference/origin/candidate/exception grants. No project/user policy or `.npmrc`
-credentials are discovered. Supported `packageManager` hints select only
+`scan` accepts optional explicit `--policy FILE` or reuses explicitly registered
+user setup. Without either it uses conservative compiled defaults: all checks,
+no finding enforcement, portable output and no reference/origin/candidate/exception
+grants. No project policy, executable configuration or `.npmrc` credentials
+are discovered. Supported `packageManager` hints select only
 interpretation, never trusted authority. Unknown scope stays incomplete.
 
 npm stable **10.x, 11.x and 12.x** versions share one compatibility check, rather than
@@ -162,7 +204,8 @@ Observed-installed decisions require their own manifest evidence and unambiguous
 qualified lock correspondence; they are not copied from a lock entry. Grouped
 lookup covers more than64 total observations under the existing byte/time caps.
 Use explicit `--privacy local` for permitted names, advisory IDs and relative
-paths; portable remains the default, and policy can require it. Unknown
+paths, or register that preference once with `setup`. Portable remains the default
+without saved setup, and policy can require it. Unknown
 categories/corrections/correspondence remain incomplete; matches do not prove
 execution or content authenticity.
 Raw advisories, private paths and source key/MAC stay private.

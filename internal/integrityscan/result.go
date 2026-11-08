@@ -291,6 +291,9 @@ func Render(r Report, format string) ([]byte, error) {
 			for _, g := range i.Gaps {
 				fmt.Fprintf(&out, "Intelligence gap: %s\n", g)
 			}
+			if i.State == "unavailable" {
+				fmt.Fprintln(&out, "Next: select prepared local sources once with packtrace setup --policy FILE [--state-dir DIR]. See packtrace setup --help. Scan never downloads or prepares missing data.")
+			}
 		}
 		renderAdvisories(&out, r.Advisories, r.Inventory)
 		renderPolicy(&out, r.Policy)

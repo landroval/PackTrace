@@ -41,6 +41,7 @@ type ScanRun struct {
 	output                BatchRun
 	fileOutput            *scanFileOutputState
 	bunCache              *scanBunCacheOwner
+	userSetup             *scanSetupOwner
 }
 
 func (r *ScanRun) WriteOutput(ctx context.Context, out io.Writer, data []byte) error {
@@ -124,6 +125,15 @@ func RunScan(ctx context.Context, request cli.ScanArgumentRequest) (ScanRun, err
 	target, e := filepath.Abs(request.Path)
 	if e != nil {
 		return run, integrityscan.ErrOptions
+	}
+	run.userSetup, request, e = loadScanSetup(ctx, target, request)
+	if e != nil {
+		return run, e
+	}
+	if run.userSetup != nil && request.Output != "-" {
+		// The saved config is an additional original source. Do not publish a
+		// file until that root is included in the writer's exclusion proof.
+		return run, errors.New("scan: saved-setup requires stdout; use --format json without --output")
 	}
 	var policyPath string
 	var observation integrityscan.PolicyObservation

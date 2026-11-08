@@ -46,6 +46,8 @@ func publicScanDiagnostic(code string) bool {
 		return true
 	}
 	switch code {
+	case "scan: user-setup-invalid; run packtrace setup --help", "scan: saved-setup requires stdout; use --format json without --output":
+		return true
 	case "scan: unavailable", "scan: unsupported-or-conflicting-options", "scan: worker-unavailable", "scan: worker-protocol", "scan: intelligence-binding-unavailable", "scan: cleanup-unconfirmed", "scan: worker-incomplete", "scan: interrupted", "scan: deadline", "scan: output-destination-unavailable", "scan: report-failed", "cli: output-failed":
 		return true
 	}

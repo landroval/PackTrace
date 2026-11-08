@@ -23,6 +23,25 @@ func TestMain(m *testing.M) {
 	if len(os.Args) > 1 && (os.Args[1] == execution.WorkerArgument || os.Args[1] == execution.WriterArgument || os.Args[1] == execution.ScanWorkerArgument || os.Args[1] == execution.IntelWorkerArgument) {
 		main()
 	}
+	// Ordinary tests must not inherit a developer's persisted user grants.
+	// Actual CLI helper children retain their explicitly supplied test config.
+	if runtime.GOOS == "linux" {
+		child := false
+		for _, arg := range os.Args {
+			child = child || arg == "--"
+		}
+		if !child {
+			config, err := os.MkdirTemp("", "packtrace-test-config-")
+			if err != nil || os.Setenv("XDG_CONFIG_HOME", config) != nil {
+				os.Exit(2)
+			}
+			code := m.Run()
+			if os.RemoveAll(config) != nil {
+				os.Exit(2)
+			}
+			os.Exit(code)
+		}
+	}
 	os.Exit(m.Run())
 }
 

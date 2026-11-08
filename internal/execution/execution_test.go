@@ -68,6 +68,18 @@ func TestMain(m *testing.M) {
 		}
 		os.Exit(WorkerMain(os.Stdin, os.Stdout, os.Stderr))
 	}
+	if runtime.GOOS == "linux" {
+		// Per-user setup must not make authored tests depend on host grants.
+		config, err := os.MkdirTemp("", "packtrace-test-config-")
+		if err != nil || os.Setenv("XDG_CONFIG_HOME", config) != nil {
+			os.Exit(2)
+		}
+		code := m.Run()
+		if os.RemoveAll(config) != nil {
+			os.Exit(2)
+		}
+		os.Exit(code)
+	}
 	os.Exit(m.Run())
 }
 
