@@ -92,7 +92,24 @@ packtrace scan --format json /path/to/project   # full structured evidence
 ```
 
 `--verbose` is terminal-only. JSON/SARIF retain their full models and schema 1.7;
-accepted findings and coverage gaps are not removed. Tables show at most 20
+accepted findings and coverage gaps are not removed. The compact report has three
+blocks: **Summary**, **Packages to review**, and **Coverage limitations**, followed
+by a concrete next step. Equivalent generic inventory/freshness markers are folded
+into their specific explanations; independent matching/intelligence scopes and
+all original gap codes remain in verbose/JSON. No missing severity or fix version
+is inferred.
+
+Compact output uses semantic colors only when stdout is an actual capable terminal:
+cyan/bold headings, amber incomplete coverage/candidates, red recorded findings or
+errors (not a severity rating). It never paints a zero-result scan green. Linux
+uses a read-only terminal ioctl check; Windows requires already-enabled virtual
+terminal processing without changing console mode. Other platforms stay plain.
+Presence of `NO_COLOR` (even empty), `TERM=dumb`, pipes, redirected files, explicit
+file publication, JSON/SARIF and verbose output disable color. ANSI is added only
+after escaping and column alignment; removing it recovers the exact plain text.
+Labels remain fully meaningful without color and important text is not dimmed.
+
+Tables show at most 20
 package/version groups per section, with explicit overflow notices and clipped
 long cells marked `...`; verbose/JSON preserve every original and physical
 observation. Historical report schemas keep their original terminal rendering.
