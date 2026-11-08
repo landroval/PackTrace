@@ -64,7 +64,7 @@ func TestUsableShrinkwrapWinsAndUnknownProfileAbstains(t *testing.T) {
 	if e != nil || got.Selection.State != "usable" || got.Selection.File != "npm-shrinkwrap.json" {
 		t.Fatal("qualified precedence lost", got, e)
 	}
-	got, e = Collect(context.Background(), r, Options{Profile: "npm@12.1.0"})
+	got, e = Collect(context.Background(), r, Options{Profile: "npm@13.1.0"})
 	if e != nil || got.Selection.State != "indeterminate" || got.Selection.Reason != "profile-unqualified" || got.Model.Counts().Declared != 1 {
 		t.Fatal("unknown profile gained support", got, e)
 	}

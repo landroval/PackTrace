@@ -33,7 +33,7 @@ func builtinSelectionOptions(opts Options, manifest *inventory.ManifestDocument,
 		return opts
 	}
 	var hint string
-	if json.Unmarshal(raw, &hint) != nil || hint == managerprofile.NPMRange || !SupportedSelectionProfile(hint) {
+	if json.Unmarshal(raw, &hint) != nil || hint == managerprofile.NPMRange || hint == managerprofile.NPM12Range || !SupportedSelectionProfile(hint) {
 		return opts
 	}
 	if requested != "auto" && !strings.HasPrefix(hint, requested+"@") {
@@ -227,17 +227,21 @@ func (c *collector) inspectNPM(name string) inventory.NPMInputUsability {
 		return inventory.NPMInputUsabilityUnreadable
 	}
 	doc, e := inventory.ParseNPMLock(data)
+	if e == nil && managerprofile.IsNPM12(c.result.Selection.Profile) && strings.TrimSpace(string(doc.Fields["lockfileVersion"])) != "3" {
+		e = &inventory.ParseError{Code: "unsupported-version"}
+	}
 	if e == nil {
 		e = c.projectNPM(doc, id)
 	}
 	if e == nil {
 		return inventory.NPMInputUsabilityUsable
 	}
-	c.gap(1, id, "lock-invalid")
 	var pe *inventory.ParseError
 	if errors.As(e, &pe) && pe.Code == "unsupported-version" {
+		c.gap(1, id, "lock-version-unsupported")
 		return inventory.NPMInputUsabilityUnsupported
 	}
+	c.gap(1, id, "lock-invalid")
 	return inventory.NPMInputUsabilityInvalid
 }
 func (c *collector) inspectBun(name string) inventory.BunInputUsability {
