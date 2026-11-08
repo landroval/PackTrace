@@ -80,7 +80,7 @@ func runScanContextObserved(ctx context.Context, request cli.ScanArgumentRequest
 	conditions.RequiredCoverageIncomplete = comparison.RequiredCoverageIncomplete
 	conditions.EnforcedUnacceptedFindings = comparison.EnforcedUnacceptedFindings
 	conditions.ReportPreventingError = conditions.ReportPreventingError || comparison.ReportPreventingError
-	data, renderErr := integrityscan.Render(report, request.Format)
+	data, renderErr := integrityscan.Render(report, scanTerminalFormat(request.Format, request.Output, out))
 	if renderErr != nil {
 		run.NoteFailure("render", renderErr)
 		return fail("scan: report-failed")

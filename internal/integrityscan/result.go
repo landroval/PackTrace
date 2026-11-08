@@ -263,9 +263,13 @@ func Render(r Report, format string) ([]byte, error) {
 	case "json":
 		data, e := json.MarshalIndent(r, "", "  ")
 		return append(data, '\n'), e
-	case "terminal":
+	case "terminal", "terminal-color":
 		if r.SchemaVersion == "1.7" {
-			return renderTerminalSummary(r), nil
+			data := renderTerminalSummary(r)
+			if format == "terminal-color" {
+				data = colorTerminalSummary(data, r)
+			}
+			return data, nil
 		}
 		fallthrough // Historical reports retain their existing terminal view.
 	case "terminal-verbose":

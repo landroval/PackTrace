@@ -96,7 +96,7 @@ func renderTerminalAdvisoryTable(out *strings.Builder, title string, groups []te
 		} else if g.installed {
 			evidence = "manifest only"
 		}
-		fmt.Fprintf(table, "%s\t%s\t%d\t%s\n", terminalCell(g.pkg.name, 32), terminalCell(g.pkg.version, 18), len(g.originals), evidence)
+		fmt.Fprintf(table, "%s\t%s\t%16d\t%s\n", terminalCell(g.pkg.name, 32), terminalCell(g.pkg.version, 18), len(g.originals), evidence)
 	}
 	_ = table.Flush() // strings.Builder does not fail.
 	if len(groups) > maxTerminalGroups {
@@ -122,6 +122,7 @@ func renderTerminalSummary(r Report) []byte {
 		}
 	}
 	fmt.Fprintln(&out, "PackTrace | Offline dependency scan (experimental)")
+	fmt.Fprintln(&out, "\nSummary")
 	fmt.Fprintf(&out, "Status: %s\n", status)
 	classes := map[uint32]string{}
 	if p := r.Inventory; p != nil {
@@ -151,7 +152,11 @@ func renderTerminalSummary(r Report) []byte {
 		fmt.Fprintln(&out, "Inventory: unavailable")
 	}
 	if i := r.Intelligence; i != nil {
-		fmt.Fprintf(&out, "Intelligence: %s | source check: %s | reconciliation: %s\n", i.State, i.CheckAge, i.ReconciliationAge)
+		freshness := "incomplete"
+		if i.State == "available" && i.CheckAge == "current" && i.ReconciliationAge == "current" {
+			freshness = "current"
+		}
+		fmt.Fprintf(&out, "Intelligence: %s | freshness: %s\n", i.State, freshness)
 	}
 	if a := r.Advisories; a != nil {
 		fmt.Fprintf(&out, "Advisories: %s | eligible match rows: %d\n", a.State, a.Findings)
@@ -162,19 +167,7 @@ func renderTerminalSummary(r Report) []byte {
 			}
 		}
 		fmt.Fprintf(&out, "Candidate rows: %d | Advisory records: %d (not confirmed findings)\n", a.Candidates, len(originals))
-		if a.Findings > 0 || a.Candidates > 0 {
-			if r.Privacy == "local" && a.Local != nil {
-				renderTerminalAdvisoryTable(&out, "Advisory findings", advisoryTerminalGroups(a, classes, false))
-				renderTerminalAdvisoryTable(&out, "Candidate version matches (origin unconfirmed)", advisoryTerminalGroups(a, classes, true))
-			} else {
-				fmt.Fprintln(&out, "Package identities hidden by portable privacy; use --privacy local for local review.")
-			}
-			fmt.Fprintln(&out, "Counts are not distinct incidents or a severity ranking; grouping is display-only.")
-			if a.Candidates > 0 {
-				fmt.Fprintln(&out, "Candidate only: origin unconfirmed, not enforcement-eligible.")
-			}
-			fmt.Fprintln(&out, "Manifest evidence does not authenticate installed contents or runtime use.")
-		}
+
 	} else {
 		fmt.Fprintln(&out, "Advisories: not run (not selected)")
 	}
@@ -232,7 +225,23 @@ func renderTerminalSummary(r Report) []byte {
 		}
 	}
 
-	fmt.Fprintln(&out, "\nCoverage and limitations")
+	fmt.Fprintln(&out, "\nPackages to review")
+	if a := r.Advisories; a != nil && (a.Findings > 0 || a.Candidates > 0) {
+		if r.Privacy == "local" && a.Local != nil {
+			renderTerminalAdvisoryTable(&out, "Advisory findings", advisoryTerminalGroups(a, classes, false))
+			renderTerminalAdvisoryTable(&out, "Candidate version matches (origin unconfirmed)", advisoryTerminalGroups(a, classes, true))
+		} else {
+			fmt.Fprintln(&out, "Package identities hidden by portable privacy; use --privacy local for local review.")
+		}
+	} else if r.Findings > 0 {
+		fmt.Fprintln(&out, "Review file-level integrity differences with --verbose.")
+	} else if r.Advisories != nil && r.Advisories.State == "unavailable" {
+		fmt.Fprintln(&out, "No package verdict: advisory analysis unavailable.")
+	} else {
+		fmt.Fprintln(&out, "None recorded in the inspected scope.")
+	}
+
+	fmt.Fprintln(&out, "\nCoverage limitations")
 	integrityGaps := map[string]int{}
 	for _, gap := range r.Comparison.Gaps {
 		integrityGaps[string(gap.Code)]++
@@ -255,16 +264,48 @@ func renderTerminalSummary(r Report) []byte {
 			if code == "installed-manifest-unavailable" {
 				label = "installed manifests unavailable"
 			}
-			fmt.Fprintf(&out, "  %s: %d gap records\n", terminalCell(label, 72), gaps[code])
+			fmt.Fprintf(&out, "  - %s: %d gap records\n", terminalCell(label, 72), gaps[code])
 		}
 	}
 	if a := r.Advisories; a != nil && len(a.Summary.Gaps) > 0 {
-		terminalList(&out, "Matching limits", a.Summary.Gaps)
+		limits := []string{}
+		for _, gap := range a.Summary.Gaps {
+			// These two summary flags describe the same already-displayed
+			// inventory and freshness evidence, not additional independent gaps.
+			if gap == "inventory-incomplete" && r.Inventory != nil && !r.Inventory.Complete && len(r.Inventory.Gaps) > 0 {
+				continue
+			}
+			if gap == "source-stale" && r.Intelligence != nil && (r.Intelligence.CheckAge != "current" || r.Intelligence.ReconciliationAge != "current") {
+				continue
+			}
+			limits = append(limits, gap)
+		}
+		if len(limits) > 0 {
+			terminalList(&out, "Matching scope", limits)
+		}
 	}
 	if i := r.Intelligence; i != nil && len(i.Gaps) > 0 {
-		terminalList(&out, "Intelligence limits", i.Gaps)
-		if i.State == "unavailable" {
-			fmt.Fprintln(&out, "  Next: packtrace setup --help (select prepared local data; no automatic download).")
+		limits := []string{}
+		lazy, usageUnknown := false, false
+		for _, gap := range i.Gaps {
+			switch gap {
+			case "advisory-originals-lazy":
+				lazy = true
+			case "storage-usage-not-observed":
+				usageUnknown = true
+			default:
+				limits = append(limits, gap)
+			}
+		}
+		if len(limits) > 0 {
+			terminalList(&out, "Intelligence", limits)
+		}
+		if lazy && usageUnknown {
+			fmt.Fprintln(&out, "  Scope: selected advisory originals only; storage usage not measured.")
+		} else if usageUnknown {
+			fmt.Fprintln(&out, "  Scope: storage usage not measured.")
+		} else if lazy {
+			fmt.Fprintln(&out, "  Scope: selected advisory originals only.")
 		}
 	}
 	if a := r.Advisories; a != nil && a.Local != nil && a.Local.Limited {
@@ -276,6 +317,12 @@ func renderTerminalSummary(r Report) []byte {
 			incomplete = append(incomplete, c.Check)
 		}
 		if c.Outcome == "not-run" && !c.Required {
+			if c.Check == "integrity" && integrityNotRun && r.Findings == 0 {
+				continue
+			} // Already explicit in Summary.
+			if r.Advisories == nil && (c.Check == "malicious" || c.Check == "vulnerability") {
+				continue
+			}
 			notRun = append(notRun, c.Check)
 		}
 	}
@@ -290,7 +337,18 @@ func renderTerminalSummary(r Report) []byte {
 		coverage = "incomplete"
 	}
 	fmt.Fprintf(&out, "\nRequired coverage: %s\nComparison exit: %d\n", coverage, r.ExitCode)
-	fmt.Fprintln(&out, "Zero findings is not a clean bill of health. Output/final cleanup can still fail.")
+	if r.Intelligence != nil && r.Intelligence.State == "unavailable" {
+		fmt.Fprintln(&out, "Next: select prepared local data with packtrace setup --help.")
+	} else if r.Intelligence != nil && (r.Intelligence.CheckAge != "current" || r.Intelligence.ReconciliationAge != "current") {
+		fmt.Fprintln(&out, "Next: intelligence needs an explicitly authorized refresh before drawing conclusions.")
+	} else if r.Findings > 0 || r.Advisories != nil && (r.Advisories.Findings > 0 || r.Advisories.Candidates > 0) {
+		fmt.Fprintln(&out, "Next: review the records with --verbose before changing dependencies.")
+	}
+	fmt.Fprintln(&out, "\nNote: display groups are not incidents or severity rankings; manifests do not authenticate contents/runtime.")
+	if r.Advisories != nil && r.Advisories.Candidates > 0 {
+		fmt.Fprintln(&out, "Candidate only: origin unconfirmed, not enforcement-eligible.")
+	}
+	fmt.Fprintln(&out, "Zero findings is not a safety verdict. Comparison only; final output/cleanup may still fail.")
 	fmt.Fprintln(&out, "Details: --verbose | Full structured evidence: --format json")
 	return []byte(out.String())
 }
@@ -309,7 +367,7 @@ func terminalList(out *strings.Builder, label string, values []string) {
 	prefix := "  " + label + ": "
 	line := prefix
 	for i, value := range values {
-		part := terminalCell(strings.ReplaceAll(value, "-", " "), 72)
+		part := terminalCell(terminalLimitLabel(value), 72)
 		if len(line)+len(part)+2 > 100 && line != prefix {
 			fmt.Fprintln(out, line)
 			line = "    "
