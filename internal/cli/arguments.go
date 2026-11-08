@@ -51,6 +51,7 @@ const (
 	ArgumentOptionTrustedSnapshotDigest
 	ArgumentOptionApplyPreview
 	ArgumentOptionFull
+	ArgumentOptionVerbose
 )
 
 // ScanArgumentRequest is unvalidated policy/path/output request data.
@@ -155,7 +156,7 @@ func ParseArgs(args []string) (Invocation, error) {
 	}
 
 	request := ScanArgumentRequest{Manager: "auto", Checks: ArgumentCheckMalicious | ArgumentCheckVulnerability | ArgumentCheckIntegrity, Format: "terminal", Privacy: "portable", Output: "-"}
-	failOnIndex := -1
+	failOnIndex, verboseIndex := -1, -1
 	i := 1
 	for i < len(args) {
 		token := args[i]
@@ -175,6 +176,15 @@ func ParseArgs(args []string) (Invocation, error) {
 			return argumentFailure(ArgumentErrorOptionRepeated, i, option)
 		}
 		optionIndex, valueIndex := i, i
+		if option == ArgumentOptionVerbose {
+			if attached {
+				return argumentFailure(ArgumentErrorOptionValueInvalid, i, option)
+			}
+			request.Provided |= option
+			verboseIndex = i
+			i++
+			continue
+		}
 		if !attached {
 			i++
 			if i == len(args) || strings.HasPrefix(args[i], "--") {
@@ -201,6 +211,12 @@ func ParseArgs(args []string) (Invocation, error) {
 		return argumentFailure(ArgumentErrorExtraArgument, i+1, 0)
 	}
 	request.Path = args[i]
+	if verboseIndex >= 0 {
+		if request.Format != "terminal" {
+			return argumentFailure(ArgumentErrorOptionValueInvalid, verboseIndex, ArgumentOptionVerbose)
+		}
+		request.Format = "terminal-verbose"
+	}
 	if request.FailOn&^request.Checks != 0 {
 		return argumentFailure(ArgumentErrorEnforcementOutsideChecks, failOnIndex, ArgumentOptionFailOn)
 	}
@@ -219,6 +235,8 @@ func argumentOption(name string) ArgumentOptions {
 		return ArgumentOptionChecks
 	case "--fail-on":
 		return ArgumentOptionFailOn
+	case "--verbose":
+		return ArgumentOptionVerbose
 	case "--format":
 		return ArgumentOptionFormat
 	case "--privacy":

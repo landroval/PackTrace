@@ -166,8 +166,11 @@ func TestPolicyReportAcceptedAlertsAndAllCategories(t *testing.T) {
 		if r.Policy == nil || len(r.Policy.Findings) != 3 || r.Policy.EnforcedUnaccepted != 2 || !r.Policy.Findings[1].Accepted || r.Policy.Findings[1].Enforced || r.Advisories.Findings != 2 || !r.Advisories.Decisions[0].EnforcementEligible || r.ExitCode != 3 || !ReportConditions(r).EnforcedUnacceptedFindings {
 			t.Fatalf("%s lost acceptance/category/coverage: policy=%+v advisories=%+v", privacy, r.Policy, r.Advisories)
 		}
-		for _, format := range []string{"terminal", "json", "sarif"} {
+		for _, format := range []string{"terminal", "terminal-verbose", "json", "sarif"} {
 			data, err := Render(r, format)
+			if format == "terminal" && (!bytes.Contains(data, []byte("accepted findings: 1")) || !bytes.Contains(data, []byte("enforced/unaccepted: 2")) || privacy == "local" && !bytes.Contains(data, []byte("Advisory findings")) || bytes.Contains(data, []byte("Candidate only:"))) {
+				t.Fatal("compact view lost accepted findings or mislabeled findings as candidates", string(data))
+			}
 			if err != nil || bytes.Contains(data, []byte("PRIVATE")) || bytes.Contains(data, []byte("registry.npmjs.org")) {
 				t.Fatal(privacy, format, err, string(data))
 			}
