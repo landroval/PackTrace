@@ -6,12 +6,14 @@ import (
 	"strings"
 
 	"packtrace/internal/inventory"
+	"packtrace/internal/managerprofile"
 )
 
 // builtinSelectionOptions resolves only unresolved built-in requests. The hint
 // selects an interpretation, not an authenticated producer or policy grant.
+// A missing hint can use the npm range only with qualified npm input presence.
 // Concrete external-policy profiles are deliberately unaffected.
-func builtinSelectionOptions(opts Options, manifest *inventory.ManifestDocument) Options {
+func builtinSelectionOptions(opts Options, manifest *inventory.ManifestDocument, inferNPM bool) Options {
 	if opts.Profile != "auto" && opts.Profile != "npm" && opts.Profile != "bun" {
 		return opts
 	}
@@ -23,8 +25,15 @@ func builtinSelectionOptions(opts Options, manifest *inventory.ManifestDocument)
 	if manifest == nil {
 		return opts
 	}
+	raw, present := manifest.Fields["packageManager"]
+	if !present {
+		if inferNPM && (requested == "auto" || requested == "npm") {
+			opts.Profile = managerprofile.NPMRange
+		}
+		return opts
+	}
 	var hint string
-	if json.Unmarshal(manifest.Fields["packageManager"], &hint) != nil || !SupportedSelectionProfile(hint) {
+	if json.Unmarshal(raw, &hint) != nil || hint == managerprofile.NPMRange || !SupportedSelectionProfile(hint) {
 		return opts
 	}
 	if requested != "auto" && !strings.HasPrefix(hint, requested+"@") {
@@ -34,7 +43,7 @@ func builtinSelectionOptions(opts Options, manifest *inventory.ManifestDocument)
 	return opts
 }
 
-// SupportedSelectionProfile reports the exact interpretation anchors supported
+// SupportedSelectionProfile reports the bounded interpretations supported
 // by the existing input selectors. It grants no producer/source authority.
 func SupportedSelectionProfile(profile string) bool {
 	npm, ne := inventory.SelectNPMInput(profile, inventory.NPMInputState{}, inventory.NPMInputState{})
@@ -42,13 +51,17 @@ func SupportedSelectionProfile(profile string) bool {
 	return ne == nil && npm.ProfileQualified || be == nil && bun.ProfileQualified
 }
 
-func (c *collector) selectInputs(opts Options) {
+func (c *collector) selectInputs(opts Options, manifest *inventory.ManifestDocument) {
 	s := &c.result.Selection
-	s.Profile = opts.Profile
 	n1, n2 := c.npmState("npm-shrinkwrap.json"), c.npmState("package-lock.json")
 	b1, b2 := c.bunState("bun.lock"), c.bunState("bun.lockb")
 	npmPresent := n1.Presence == inventory.NPMInputPresencePresent || n2.Presence == inventory.NPMInputPresencePresent
 	bunPresent := b1.Presence == inventory.BunInputPresencePresent || b2.Presence == inventory.BunInputPresencePresent
+	// A versionless auto request cannot establish competing npm lock precedence:
+	// npm 12 ignores shrinkwrap, unlike the supported npm 10/11 interpretation.
+	inferNPM := npmPresent && (opts.Profile == "npm" || b1.Presence == inventory.BunInputPresenceAbsent && b2.Presence == inventory.BunInputPresenceAbsent && !(n1.Presence == inventory.NPMInputPresencePresent && n2.Presence == inventory.NPMInputPresencePresent))
+	opts = builtinSelectionOptions(opts, manifest, inferNPM)
+	s.Profile = opts.Profile
 	conflict := npmPresent && bunPresent
 	if conflict && !opts.ExplicitManager {
 		s.Reason = "manager-conflict"

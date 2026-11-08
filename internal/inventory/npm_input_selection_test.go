@@ -57,7 +57,7 @@ func TestSelectNPMInputReference(t *testing.T) {
 		{"C25", "npm", NPMInputState{2, 1}, NPMInputState{2, 1}, false, 0, 3, 2},
 		{"C26", "auto", NPMInputState{1, 0}, NPMInputState{2, 1}, false, 0, 3, 2},
 		{"C27", "npm@12.1.0", NPMInputState{2, 1}, NPMInputState{2, 1}, false, 0, 3, 2},
-		{"C28", "npm@11.6.3", NPMInputState{2, 1}, NPMInputState{2, 1}, false, 0, 3, 2},
+		{"C28", "npm@11.6.3", NPMInputState{2, 1}, NPMInputState{2, 1}, true, 1, 1, 1},
 		{"C29", "NPM@11.6.2", NPMInputState{2, 1}, NPMInputState{2, 1}, false, 0, 3, 2},
 		{"C30", " npm@11.6.2", NPMInputState{2, 1}, NPMInputState{2, 1}, false, 0, 3, 2},
 		{"C31", "bun@1.4.2", NPMInputState{1, 0}, NPMInputState{2, 1}, false, 0, 3, 2},
@@ -188,7 +188,7 @@ func TestSelectNPMInputPrecedence(t *testing.T) {
 
 func TestSelectNPMInputProfiles(t *testing.T) {
 	profiles := []string{
-		"", "auto", "npm", "npm@12.1.0", "npm@11.6.3", "NPM@11.6.2",
+		"", "auto", "npm", "npm@12.1.0", "npm@9.6.3", "NPM@11.6.2",
 		" npm@11.6.2", "npm@11.6.2 ", "npm@11.6.2\n", "npm@11.6.2\x00",
 		"npm@11.6.02", "npm@11.6", "npm@v11.6.2", "npm@11.6.2-rc.1",
 		"npm@11.6.2+build", "bun@1.4.2", "yarn", "pnpm", "ｎｐｍ@11.6.2", "\xff\xfe",
@@ -287,8 +287,10 @@ func TestSelectNPMInputSeparation(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if len(f.Imports) != 0 {
-			t.Fatal("pure decision must have no production imports")
+		for _, im := range f.Imports {
+			if im.Path.Value != `"packtrace/internal/managerprofile"` {
+				t.Fatal("decision imports something other than the pure profile check")
+			}
 		}
 		for _, d := range f.Decls {
 			if decl, ok := d.(*ast.GenDecl); ok && decl.Tok == token.VAR {
@@ -300,10 +302,15 @@ func TestSelectNPMInputSeparation(t *testing.T) {
 		}
 		ast.Inspect(f, func(n ast.Node) bool {
 			if call, ok := n.(*ast.CallExpr); ok {
-				id, ok := call.Fun.(*ast.Ident)
-				if !ok || id.Name != "validNPMInputState" {
-					t.Error("unexpected production call/printing/IO")
+				if id, ok := call.Fun.(*ast.Ident); ok && id.Name == "validNPMInputState" {
+					return true
 				}
+				if sel, ok := call.Fun.(*ast.SelectorExpr); ok && sel.Sel.Name == "SupportsNPM" {
+					if id, ok := sel.X.(*ast.Ident); ok && id.Name == "managerprofile" {
+						return true
+					}
+				}
+				t.Error("unexpected production call/printing/IO")
 			}
 			return true
 		})

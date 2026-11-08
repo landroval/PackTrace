@@ -20,7 +20,7 @@ func TestDroppedAliasRequirementKeepsLimitWitness(t *testing.T) {
 	c := collector{ctx: context.Background(), root: root, metadata: snap, entries: entries, blocked: map[string]bool{}, manifestRemaining: maxManifestTotal, requirementsRemaining: 1, classCounts: map[string]int{}}
 	c.result.Model.Scopes = []Scope{{ID: 1, Kind: "project"}}
 	c.collectManifest(1, "package.json")
-	c.selectInputs(Options{Profile: "npm@10.9.4"})
+	c.selectInputs(Options{Profile: "npm@10.9.4"}, nil)
 	found, limited, droppedRoot := false, false, false
 	for _, o := range c.result.Model.Observations {
 		droppedRoot = droppedRoot || o.Class == "locked" && o.Kind == "project" && len(o.Requirements) == 0

@@ -1,6 +1,10 @@
 package cli
 
-import "strings"
+import (
+	"strings"
+
+	"packtrace/internal/managerprofile"
+)
 
 // ArgumentAction is a requested action, not execution or scan completion.
 type ArgumentAction uint8
@@ -236,11 +240,13 @@ func applyArgumentOption(request *ScanArgumentRequest, option ArgumentOptions, v
 	switch option {
 	case ArgumentOptionManager:
 		switch value {
-		case "auto", "npm", "bun", "npm@8.19.4", "npm@10.9.4", "npm@11.6.2", "bun@1.3.2", "bun@1.4.2":
-			request.Manager = value
+		case "auto", "npm", "bun", "bun@1.3.2", "bun@1.4.2":
 		default:
-			return false
+			if !managerprofile.SupportsNPM(value) {
+				return false
+			}
 		}
+		request.Manager = value
 	case ArgumentOptionChecks:
 		set, ok := parseArgumentChecks(value, false)
 		if !ok {

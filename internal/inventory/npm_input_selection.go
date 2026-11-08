@@ -1,5 +1,7 @@
 package inventory
 
+import "packtrace/internal/managerprofile"
+
 // NPMInputPresence records caller-qualified presence in the explicit-root view.
 type NPMInputPresence uint8
 
@@ -84,12 +86,10 @@ func SelectNPMInput(profile string, shrinkwrap, packageLock NPMInputState) (NPMI
 		State:      NPMInputSelectionIndeterminate,
 		Diagnostic: NPMInputDiagnosticProfileUnqualified,
 	}
-	switch profile {
-	case "npm@8.19.4", "npm@10.9.4", "npm@11.6.2":
-		result.ProfileQualified = true
-	default:
+	if !managerprofile.SupportsNPM(profile) {
 		return result, nil
 	}
+	result.ProfileQualified = true
 	usability := shrinkwrap.Usability
 	switch shrinkwrap.Presence {
 	case NPMInputPresenceUnknown:
