@@ -18,7 +18,7 @@ func TestScanNPMLTSCompatibility(t *testing.T) {
 		t.Skip("native authored scan")
 	}
 	t.Parallel()
-	for _, profile := range []string{"npm@10.9.9", "npm@11.20.0", "npm@10-11"} {
+	for _, profile := range []string{"npm@10.9.9", "npm@11.20.0", "npm@10-11", "npm@12.2.2", "npm@12.x"} {
 		t.Run(profile, func(t *testing.T) {
 			t.Parallel()
 			parsed, err := cli.ParseArgs([]string{"scan", "--manager=" + profile, "root"})
@@ -72,7 +72,8 @@ func TestScanNPMAutoWithoutProducerHint(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	report, raw := runPolicyAcceptanceJSON(t, "--format", "json", target)
+	// Own the absent state parent instead of depending on the user's live cache.
+	report, raw := runPolicyAcceptanceJSON(t, "--state-dir", filepath.Join(t.TempDir(), "state"), "--format", "json", target)
 	if report.Inventory == nil || report.Inventory.Selection.State != "usable" || report.Inventory.Selection.Family != "npm" || report.Inventory.Counts.Locked == 0 || report.Policy.Source != "built-in" || report.Advisories == nil || report.Advisories.Summary.BytesRead != 0 || report.Advisories.Findings != 0 {
 		t.Fatalf("auto failed or format inference created advisory authority: %s", raw)
 	}

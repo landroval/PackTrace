@@ -9,7 +9,7 @@ import (
 )
 
 func TestBuiltinSelectionExactHints(t *testing.T) {
-	for _, hint := range []string{"npm@8.19.4", "npm@10.9.4", "npm@11.6.2", "npm@10.9.9", "npm@11.20.0", "bun@1.3.2", "bun@1.4.2"} {
+	for _, hint := range []string{"npm@8.19.4", "npm@10.9.4", "npm@11.6.2", "npm@10.9.9", "npm@11.20.0", "npm@12.2.2", "bun@1.3.2", "bun@1.4.2"} {
 		t.Run(hint, func(t *testing.T) {
 			encoded, _ := json.Marshal(hint)
 			doc, e := inventory.ParseManifest([]byte(`{"packageManager":` + string(encoded) + `}`))
@@ -27,7 +27,7 @@ func TestBuiltinSelectionExactHints(t *testing.T) {
 }
 
 func TestBuiltinSelectionHintAbstentionAndConcreteIsolation(t *testing.T) {
-	for _, raw := range []string{`null`, `42`, `{}`, `[]`, `"npm"`, `"npm@10"`, `"npm@10.9.4+sha512.abc"`, `"npm@12.0.0"`, `"npm@10-11"`, `"bun@1.4.3"`, `" npm@10.9.4"`, `"npm@10.9.4 "`, `"yarn@4.0.0"`, `"npm@10.9.4\nbun@1.4.2"`} {
+	for _, raw := range []string{`null`, `42`, `{}`, `[]`, `"npm"`, `"npm@10"`, `"npm@10.9.4+sha512.abc"`, `"npm@13.0.0"`, `"npm@12.x"`, `"npm@10-11"`, `"bun@1.4.3"`, `" npm@10.9.4"`, `"npm@10.9.4 "`, `"yarn@4.0.0"`, `"npm@10.9.4\nbun@1.4.2"`} {
 		t.Run(raw, func(t *testing.T) {
 			doc, e := inventory.ParseManifest([]byte(`{"packageManager":` + raw + `}`))
 			if e != nil {
@@ -73,7 +73,7 @@ func TestBuiltinCollectionSelectionAndRetainedEvidence(t *testing.T) {
 		{name: "missing-hint-broken-shrinkwrap", request: "npm", manifest: `{}`, npm: emptyNPMLock, shrinkwrap: `{`, profile: "npm@10-11", state: "unusable", reason: "candidate-unusable", file: "npm-shrinkwrap.json", explicit: true},
 		{name: "missing-hint-unknown-format", request: "auto", manifest: `{}`, npm: `{"lockfileVersion":99,"packages":{}}`, profile: "npm@10-11", state: "unusable", reason: "candidate-unusable", file: "package-lock.json"},
 		{name: "missing-hint-no-lock", request: "auto", manifest: `{}`, profile: "auto", state: "indeterminate", reason: "profile-unqualified"},
-		{name: "unsupported-hint", request: "auto", manifest: `{"packageManager":"npm@12.0.0"}`, npm: emptyNPMLock, profile: "auto", state: "indeterminate", reason: "profile-unqualified"},
+		{name: "unsupported-hint", request: "auto", manifest: `{"packageManager":"npm@13.0.0"}`, npm: emptyNPMLock, profile: "auto", state: "indeterminate", reason: "profile-unqualified"},
 		{name: "family-mismatch", request: "npm", manifest: `{"packageManager":"bun@1.4.2"}`, npm: emptyNPMLock, profile: "npm", state: "indeterminate", reason: "profile-unqualified"},
 		{name: "invalid-manifest", request: "auto", manifest: `{"packageManager":"npm@10.9.4","packageManager":"bun@1.4.2"}`, npm: emptyNPMLock, profile: "auto", state: "indeterminate", reason: "profile-unqualified"},
 		{name: "mixed-auto-even-explicit", request: "auto", manifest: `{"packageManager":"npm@10.9.4"}`, npm: emptyNPMLock, bun: bunLock, profile: "npm@10.9.4", state: "indeterminate", reason: "manager-conflict", explicit: true},

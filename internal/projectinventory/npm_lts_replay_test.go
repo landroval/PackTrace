@@ -18,15 +18,19 @@ func TestNPMLTSProducerReplay(t *testing.T) {
 	}
 	data, err := os.ReadFile("testdata/producer/npm-lts.json")
 	sum := sha256.Sum256(data)
-	if err != nil || hex.EncodeToString(sum[:]) != "5560e9f27738c6deb71fdbc27776fca42354448c306d91c4fade11b4dc35c9bc" {
+	if err != nil || hex.EncodeToString(sum[:]) != "e367e4370f29d18df3fa8a56e5fa89e4f19b395abd4f5439308462e68dd89b00" {
 		t.Fatal("captured producer evidence changed", err)
 	}
 	var docs []producerDocument
-	if json.Unmarshal(data, &docs) != nil || len(docs) != 2 || docs[0].Profile != "npm@10.9.9" || docs[1].Profile != "npm@11.20.0" {
+	if json.Unmarshal(data, &docs) != nil || len(docs) != 3 || docs[0].Profile != "npm@10.9.9" || docs[1].Profile != "npm@11.20.0" || docs[2].Profile != "npm@12.2.2" {
 		t.Fatal("producer identities")
 	}
 	for _, doc := range docs {
-		if doc.Format != 1 || !doc.Replay || len(doc.Captures) != 3 {
+		expectedCases := 3
+		if doc.Profile == "npm@12.2.2" {
+			expectedCases = 2
+		}
+		if doc.Format != 1 || !doc.Replay || len(doc.Captures) != expectedCases {
 			t.Fatal("capture provenance")
 		}
 		for _, capture := range doc.Captures {

@@ -11,7 +11,7 @@ func TestNPMLTSProfiles(t *testing.T) {
 			}
 		})
 	}
-	for _, profile := range []string{"npm@9.9.9", "npm@12.2.2", "npm@010.0.0", "npm@10.00.0", "npm@11.2.03", "npm@11.20", "npm@11.20.0-rc.1", "npm@11.20.0+build", "npm@11.4294967296.0", "npm@11.20.0\n", "npm@11.+1.0"} {
+	for _, profile := range []string{"npm@9.9.9", "npm@13.2.2", "npm@010.0.0", "npm@10.00.0", "npm@11.2.03", "npm@11.20", "npm@11.20.0-rc.1", "npm@11.20.0+build", "npm@11.4294967296.0", "npm@11.20.0\n", "npm@11.+1.0"} {
 		got, err := SelectNPMInput(profile, NPMInputState{}, NPMInputState{})
 		if err != nil || got.ProfileQualified {
 			t.Fatalf("unsupported interpretation qualified: %q, %+v, %v", profile, got, err)

@@ -56,7 +56,7 @@ func TestSelectNPMInputReference(t *testing.T) {
 		{"C24", "", NPMInputState{0, 0}, NPMInputState{0, 0}, false, 0, 3, 2},
 		{"C25", "npm", NPMInputState{2, 1}, NPMInputState{2, 1}, false, 0, 3, 2},
 		{"C26", "auto", NPMInputState{1, 0}, NPMInputState{2, 1}, false, 0, 3, 2},
-		{"C27", "npm@12.1.0", NPMInputState{2, 1}, NPMInputState{2, 1}, false, 0, 3, 2},
+		{"C27", "npm@13.1.0", NPMInputState{2, 1}, NPMInputState{2, 1}, false, 0, 3, 2},
 		{"C28", "npm@11.6.3", NPMInputState{2, 1}, NPMInputState{2, 1}, true, 1, 1, 1},
 		{"C29", "NPM@11.6.2", NPMInputState{2, 1}, NPMInputState{2, 1}, false, 0, 3, 2},
 		{"C30", " npm@11.6.2", NPMInputState{2, 1}, NPMInputState{2, 1}, false, 0, 3, 2},
@@ -188,7 +188,7 @@ func TestSelectNPMInputPrecedence(t *testing.T) {
 
 func TestSelectNPMInputProfiles(t *testing.T) {
 	profiles := []string{
-		"", "auto", "npm", "npm@12.1.0", "npm@9.6.3", "NPM@11.6.2",
+		"", "auto", "npm", "npm@13.1.0", "npm@9.6.3", "NPM@11.6.2",
 		" npm@11.6.2", "npm@11.6.2 ", "npm@11.6.2\n", "npm@11.6.2\x00",
 		"npm@11.6.02", "npm@11.6", "npm@v11.6.2", "npm@11.6.2-rc.1",
 		"npm@11.6.2+build", "bun@1.4.2", "yarn", "pnpm", "ｎｐｍ@11.6.2", "\xff\xfe",
@@ -305,7 +305,7 @@ func TestSelectNPMInputSeparation(t *testing.T) {
 				if id, ok := call.Fun.(*ast.Ident); ok && id.Name == "validNPMInputState" {
 					return true
 				}
-				if sel, ok := call.Fun.(*ast.SelectorExpr); ok && sel.Sel.Name == "SupportsNPM" {
+				if sel, ok := call.Fun.(*ast.SelectorExpr); ok && (sel.Sel.Name == "SupportsNPM" || sel.Sel.Name == "IsNPM12") {
 					if id, ok := sel.X.(*ast.Ident); ok && id.Name == "managerprofile" {
 						return true
 					}

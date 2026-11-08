@@ -15,7 +15,7 @@ preserve evidence and uncertainty without executing the investigated project's c
 
 | Area | Implemented | Not established by this work |
 | --- | --- | --- |
-| npm lockfiles | Stable npm 10.x/11.x interpretation, bounded v2/v3 reading, native effective-input selection and declarations/locked/installed evidence | npm 12 semantics, unknown formats, runtime resolution or release qualification |
+| npm lockfiles | Stable npm 10.x/11.x (v2/v3) and 12.x (v3) interpretation, bounded reading, native effective-input selection and declarations/locked/installed evidence | Lockfile v4/patch/extension semantics, unknown formats, runtime resolution or release qualification |
 | Bun text lockfiles | Bounded JSONC evidence, selected workspaces and active in-root hoisted/isolated inventory | External stores, unsafe/hardlinked inputs, unexecuted variants or blanket producer/native qualification |
 | Package manifests | Bounded JSON reading and separate dependency declaration groups | Dependency resolution or package-manager execution |
 | Root comparison | Exact textual comparison of explicitly paired manifest and lockfile root requirements | Semantic range equivalence, installation drift, or findings |
@@ -74,7 +74,7 @@ reference/origin/candidate/exception grants. No project/user policy or `.npmrc`
 credentials are discovered. Supported `packageManager` hints select only
 interpretation, never trusted authority. Unknown scope stays incomplete.
 
-npm stable **10.x and 11.x** versions share one compatibility check, rather than
+npm stable **10.x, 11.x and 12.x** versions share one compatibility check, rather than
 requiring an exact tested patch release. `auto` accepts a sole npm root lockfile
 without `packageManager`; its `npm@10-11` profile identifies the interpretation,
 not a detected producer version. Known unsupported/malformed hints remain gaps.
@@ -86,8 +86,15 @@ this does not grant advisory origins, source trust or coverage.
 New isolated Linux producer evidence covers npm **10.9.9 and 11.20.0** with single,
 shrinkwrap and workspace cases, including aliases, nested copies and optional
 absence. Captured data replay is kept alongside the earlier fixtures; it is not
-execution of every release/platform. The legacy npm 8.19.4 and exact Bun profiles
-remain available. npm 12, prereleases and unknown formats remain unsupported.
+execution of every release/platform. npm **12.x supports lockfile v3 only**:
+`--manager npm@12.x` (or a concrete stable version/hint) ignores shrinkwrap,
+including malformed shrinkwrap, and never falls back to it. npm 12.2.2 generated
+additional single/workspace fixtures in isolation using the already-installed CLI,
+with a deliberately invalid shrinkwrap proving that behavior. Lockfile v4, patch
+and manifest-extension semantics remain unsupported and emit an explicit
+`lock-version-unsupported` gap; they cannot produce a successful empty assessment.
+The legacy npm 8.19.4 and exact Bun profiles remain available. Prereleases and
+unknown formats remain unsupported.
 
 Pinned policies may contain narrow, evidence-bound, expiring exceptions (30-day
 default maximum). Accepted findings remain visible and coverage gaps remain gaps.

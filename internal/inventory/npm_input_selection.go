@@ -91,7 +91,12 @@ func SelectNPMInput(profile string, shrinkwrap, packageLock NPMInputState) (NPMI
 	}
 	result.ProfileQualified = true
 	usability := shrinkwrap.Usability
-	switch shrinkwrap.Presence {
+	presence := shrinkwrap.Presence
+	if managerprofile.IsNPM12(profile) {
+		// Retain the observed shrinkwrap state, but npm 12 never selects it.
+		presence = NPMInputPresenceAbsent
+	}
+	switch presence {
 	case NPMInputPresenceUnknown:
 		result.Diagnostic = NPMInputDiagnosticShrinkwrapPresenceUnknown
 		return result, nil
