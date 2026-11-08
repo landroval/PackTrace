@@ -7,6 +7,15 @@ usable matching increment belongs to [#6](increments/issue-6-usable-advisory-sca
 general policy belongs to #8. Native qualification limits remain explicit and
 macOS remains paused.
 
+For current daily use see the [user manual](user-guide.md) / [manual en español](user-guide.es.md).
+Current operational scan output is schema **1.7**; the 1.1/1.2/1.6 descriptions and
+per-increment test counts below retain historical scope, not the current top-level
+schema. With no saved setup, privacy remains portable. Explicit per-user `setup`
+can save local output; scan flags/policy still control it. Local output now includes
+bounded summaries/conditions from the same already-read advisory originals, never
+additional live lookups or publisher authentication. Saved scan defaults do not
+apply to the maintenance commands below: pass the intended `--state-dir` explicitly.
+
 ## Commands and side effects
 
 ```text
@@ -82,7 +91,8 @@ explicit pinned exact `npmOrigins` or optional public `npmRegistry` corresponden
 and documented OSV-delivered OpenSSF/GitHub category profiles. Installed decisions
 require their own native manifest evidence and qualified selected-lock agreement.
 The new registry grant must explicitly authorize installed association; old exact
-rules remain locked-only. Optional local detail is explicit, never the default.
+rules remain locked-only. At this historical increment, optional local detail required an explicit scan flag;
+the later per-user setup behavior is described above.
 Advisory counts remain observation-level matches separate from drift findings;
 unknown categories, corrections and correspondence keep coverage incomplete. See
 the [usable matching contract](increments/issue-6-usable-advisory-scan.md) and

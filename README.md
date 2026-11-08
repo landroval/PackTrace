@@ -1,472 +1,157 @@
 # PackTrace
 
-A Go project building a **read-only, offline-first CLI for investigating JavaScript
-project dependencies**: known malicious-package advisories, vulnerabilities, and
-installed-file integrity drift.
+**Investigate JavaScript dependencies without running the project.**
 
-> **Development status:** PackTrace contains experimental CLI commands, internal
-> readers and evidence projections, including a native integrity-scan candidate.
-> There is no installable release or production-qualified platform support yet.
+[Español](README.es.md) · [Complete user manual](docs/user-guide.md) · [Manual en español](docs/user-guide.es.md)
 
-## What exists today
+PackTrace is a read-only, offline investigation CLI. It helps answer:
 
-The production module uses only the Go standard library. Its internal packages
-preserve evidence and uncertainty without executing the investigated project's code.
+1. **Which dependency needs attention?** Package and observed version.
+2. **Why?** A malicious-package advisory, vulnerability advisory, or installed-file difference.
+3. **What supports that result?** Separate lockfile, installed-manifest, advisory and reference evidence.
+4. **What should I verify next?** Applicability, missing evidence, or a correction boundary recorded by the advisory.
 
-| Area | Implemented | Not established by this work |
-| --- | --- | --- |
-| npm lockfiles | Stable npm 10.x/11.x (v2/v3) and 12.x (v3) interpretation, bounded reading, native effective-input selection and declarations/locked/installed evidence | Lockfile v4/patch/extension semantics, unknown formats, runtime resolution or release qualification |
-| Bun text lockfiles | Bounded JSONC evidence, selected workspaces and active in-root hoisted/isolated inventory | Unapproved aliases/external stores, unexecuted variants or blanket producer/native qualification |
-| Package manifests | Bounded JSON reading and separate dependency declaration groups | Dependency resolution or package-manager execution |
-| Root comparison | Exact textual comparison of explicitly paired manifest and lockfile root requirements | Semantic range equivalence, installation drift, or findings |
-| OSV records | Bounded JSON reading, temporal/identity projections and concrete SemVer/version-condition evaluation | General schema/source/category qualification or complete advisory applicability |
-| Intelligence lifecycle and bounded matching | Owned immutable storage, explicit preparation/transport, fixed-generation scan; pinned exact npm rules and documented OpenSSF matching profile | Complete matching/category coverage, unrestricted platform qualification or publisher authentication |
-| Shared validation | Strict JSON object validation, duplicate-key/Unicode checks and bounded nesting | Native filesystem containment or a hard process-memory cap |
+> **Experimental software, not a qualified release.** There are no published
+> installation packages or production-qualified platform guarantees. macOS remains
+> deferred. Zero findings never means that a project or machine is safe.
 
-The readers retain raw fields and source digests. Projections distinguish missing,
-null, invalid and usable evidence; nested OSV projections also distinguish children
-that could not be inspected. Array positions, duplicates and unfamiliar event fields
-are retained rather than silently normalized away.
+## Start here
 
-These are internal APIs, not a supported public Go SDK. See the
-[increment specifications and verification records](docs/increments/) for exact
-contracts, limits and tests.
+**Already configured?** This is the normal command:
 
-## Intended investigation flow
-
-The experimental native scan keeps **declared**, **locked**, and **observed installed**
-evidence separate. Its common terminal, additive scan JSON **1.1** (**1.2** with
-selected intelligence), and SARIF model
-exports privacy-safe IDs/classes/relations/counts/gaps, not private names, paths,
-requirements, origins or digests. Historical stdin command schemas remain unchanged.
-
-The pilot targets npm and modern text `bun.lock`, single projects and workspaces,
-and native Linux, macOS and Windows qualification. Those are targets, not current
-compatibility claims. Native bounded inventory now observes root/member manifests,
-effective inputs, physical copies and active contained links, including extra
-packages absent from a lockfile. Five pinned producers generated owned inert
-fixtures on Linux; replay is not execution of those producers on other platforms.
-Advisory matching is bounded to documented npm profiles; the intelligence lifecycle is described
-[below](#experimental-intelligence-lifecycle). The native integrity candidate now compares
-explicitly mapped installed scopes against validated prepared archives and emits
-portable terminal/JSON/SARIF results; this is not complete product coverage.
-
-## Windows desktop target
-
-The intended desktop target is **Windows 11 x64**, not Windows Server-only.
-Server 2022 is a CI regression baseline; passing there does not establish Windows
-11 desktop qualification. The Windows candidate uses the same x64 implementation
-with local NTFS and conservative supported-path boundaries.
-
-Windows 11 on ARM can run this x64 code under emulation, but that is not native
-x64-hardware validation. See [PR #96](https://github.com/landroval/PackTrace/pull/96)
-for source-bound corpus results, failed attempts, observer/cleanup checks and
-limitations. The initial #7 delivery uses the explicitly accepted combined evidence
-in [design decisions, section 2](docs/design-decisions.md#2-native-targets-and-initial-delivery-acceptance);
-that is not whole-product release or native Windows 11 x64-hardware qualification.
-macOS is deferred, not completed. No safety gate is waived by choosing a target.
-
-## Configure once, then scan
-
-The binary supports an explicit **per-user setup**, not a wrapper or a project
-script. Register your selected external policy and prepared local intelligence
-once (replace the example paths with your operator-selected sources):
-
-```sh
-packtrace setup --policy /operator/policy.json --state-dir /prepared/intelligence
+```bash
 packtrace scan /path/to/project
 ```
 
-Operational scans show a compact English summary by default: comparison status,
-inventory counts, grouped package tables for advisory findings/candidates, policy
-acceptance/enforcement and explicit incomplete coverage. Repeated locked/installed
-rows are grouped **for display only**; advisory-record counts are not distinct
-incidents, severity rankings, origin authentication or runtime applicability.
-Manifest evidence remains distinct from locked evidence. Zero findings is not a
-safety verdict. Portable privacy keeps package identities hidden.
+**First time?** Build the binary, prepare or obtain an intelligence store, and
+register an external policy once. Follow the [first-run walkthrough](docs/user-guide.md#3-first-run-walkthrough).
+`setup` is not an installer, policy wizard, or data downloader. Once those external
+sources have been prepared and reviewed:
 
-```sh
-packtrace scan /path/to/project                 # readable summary
-packtrace scan --verbose /path/to/project       # every technical decision/relation
-packtrace scan --format json /path/to/project   # full structured evidence
+```bash
+packtrace setup --policy /operator/config/policy.json --state-dir /operator/state/intelligence
+packtrace scan /path/to/project
 ```
 
-`--verbose` is terminal-only. JSON/SARIF retain their full models and schema 1.7;
-accepted findings and coverage gaps are not removed. Local output additionally
-retains bounded advisory explanations from the **same verified originals already
-read by matching**: a short attributed summary, and source-positioned explicit
-versions or simple `introduced` → `fixed` intervals. No additional source reads,
-downloads or target execution are performed for explanations.
+From an existing checkout **outside the project you intend to investigate**, using
+an already-installed Go toolchain compatible with `go.mod` (currently Go 1.27.1):
 
-The default shows up to five package/advisory/affected examples (not severity
-ranked); verbose and local JSON retain all captured details. `Why` describes the
-matching condition, while `Next` states what still needs verification. A recorded
-fixed boundary is shown only for one fully evaluated supporting simple interval;
-it is not an upgrade guarantee or proof of applicability. Complex/disjoint ranges,
-`last_affected`, unrelated entries, partial evaluation, missing summaries and
-unknown corrections remain explicitly unknown. Severity is never invented.
+```bash
+GOTOOLCHAIN=local GOPROXY=off GOSUMDB=off GOWORK=off go build -o ./packtrace ./cmd/packtrace
+./packtrace --help
+```
 
-Advisory descriptions are untrusted source claims, not instructions or publisher
-authentication. Summary text is bounded to 320 bytes and refused when it contains
-control text, obvious credentials, URLs or host-path selectors. At most eight
-conditions per original and 4 MiB total explanation text/metadata are retained;
-omission is marked without changing findings, eligibility or coverage. All
-fields are optional local-detail additions to operational schema 1.7; portable
-frames/JSON/SARIF remain free of advisory summaries, conditions and identities.
-Existing reports lacking the fields remain valid; a saved JSON artifact cannot
-recreate private render authority. No existing producer or intelligence fixture
-is rewritten; `readable.bundle` is a separately authored deterministic fixture.
+Move/install that binary into a directory on your `PATH` according to your OS.
+Do not install it as a dependency of the investigated JavaScript project. Public
+examples use Bash; the manual includes Nushell exit-status examples.
 
-The compact report has three
-blocks: **Summary**, **Packages to review**, and **Coverage limitations**, followed
-by a concrete next step. Equivalent generic inventory/freshness markers are folded
-into their specific explanations; independent matching/intelligence scopes and
-all original gap codes remain in verbose/JSON. No missing severity or fix version
-is inferred.
+## Daily commands
 
-Compact output uses semantic colors only when stdout is an actual capable terminal:
-blue headings, `[OK]` green for explicitly completed checks, `[FINDING]` red for
-recorded findings, `[REVIEW]` magenta for candidates/conflicts, `[INCOMPLETE]`
-amber for incomplete checks, `[NOT RUN]` light gray for unselected/not-applicable
-work, and `[INFO]` cyan for neutral facts. Errors use red `[ERROR]`.
-A checklist shows each check's state, including successful comparison work and
-local intelligence access. Those green checks do **not** certify package safety:
-zero findings, current-looking metadata and not-applicability never earn `[OK]`.
-Advisory freshness, matching coverage and integrity remain separate obligations;
-comparison completion does not predict final output/cleanup. Linux
-uses a read-only terminal ioctl check; Windows requires already-enabled virtual
-terminal processing without changing console mode. Other platforms stay plain.
-Presence of `NO_COLOR` (even empty), `TERM=dumb`, pipes, redirected files, explicit
-file publication, JSON/SARIF and verbose output disable color. ANSI is added only
-after escaping and column alignment; removing it recovers the exact plain text.
-Labels remain fully meaningful without color and important text is not dimmed.
+| Task | Command |
+| --- | --- |
+| Readable scan | `packtrace scan .` |
+| Full technical decisions | `packtrace scan --verbose .` |
+| Structured local evidence, with saved local setup | `packtrace scan --format json .` |
+| Portable JSON for review before sharing | `packtrace scan --privacy portable --format json .` |
+| SARIF | `packtrace scan --format sarif .` |
+| Scan options | `packtrace scan --help` |
+| One-time setup options | `packtrace setup --help` |
 
-Tables show at most 20
-package/version groups per section, with explicit overflow notices and clipped
-long cells marked `...`; verbose/JSON preserve every original and physical
-observation. Historical report schemas keep their original terminal rendering.
+Options go **before** the final project path. A scan never downloads advisory data,
+installs dependencies, runs package scripts, or repairs the target.
 
-`setup` records the selected policy's SHA-256 pin internally. Ordinary scans
-reuse those exact approved bytes; changing the policy does **not** silently
-reapprove it. Relative references remain relative to the policy's original
-directory. The optional setup `--trusted-snapshot-digest` fixes a generation;
-without it, the existing local current-generation selection applies. Pins do not
-authenticate publishers or installed content.
+## Understand the result
 
-Saved scan defaults are **local details**, the policy's required checks and the
-selected state directory. Explicit scan `--privacy portable`, `--checks` and
-`--state-dir` override defaults subject to the policy; an explicit `--policy`
-selects a standalone policy without merging saved settings. Setup applies to
-scans, not the separate `intel`/`cache` preparation commands.
+- **Finding:** evidence met the selected finding rules. It is not proof that code executed.
+- **Candidate / `[REVIEW]`:** an identity/version match worth investigating;
+  origin or applicability remains unconfirmed. It is **not** a confirmed vulnerability
+  or an enforcement-eligible finding.
+- **`[INCOMPLETE]`:** something needed for the check is missing or not established.
+  It does not mean another package is malicious.
+- **`[NOT RUN]`:** that optional check was not performed. It did not pass.
+- **`[OK]`:** that specific check completed, not “the project is safe.”
 
-Configuration is a bounded, strictly parsed data file at the OS user-config
-location (`$XDG_CONFIG_HOME/packtrace/setup.json`, normally
-`~/.config/packtrace/setup.json` on Linux). Its private owned directory and actual
-physical separation from the target are verified **before reading any config
-bytes**. The original config file/root stay held through output and confirmed
-reap. Target/cwd lookalikes are ignored. Symlink/hardlink config files, malformed,
-copied-root, mutated or missing configuration in an existing setup directory fail
-closed. Explicit
-`--privacy portable` still excludes names, paths and authority pins.
+The default shows grouped package tables and up to five attributed advisory
+examples with **Advisory says**, **Why**, and **Next**. These examples are not a
+severity ranking; `--verbose` and local JSON retain all captured details.
+Unknown descriptions, severity, and fixes remain unknown. A recorded `fixed`
+boundary is not a guarantee that upgrading to that version resolves every issue.
 
-Initial limits: one active policy/manager profile, exclusive setup (no overwrite),
-and stdout output only for saved setup. `--format json`/`sarif` work on stdout;
-file publication with an additional config source remains refused. Explicit
-policy file-output behavior is unchanged. `setup --help` describes the boundary.
-Neither setup nor scan downloads, initializes or renews intelligence. Missing or
-stale data and partial inventory still produce honest incomplete coverage.
+**Read project limitations separately from tool assurance.** Unreadable manifests
+or expired intelligence limit investigation of the project. Platform qualification
+and pending final-lifecycle evidence concern PackTrace itself. Several incomplete
+lines can describe the same missing evidence, not independent dependency failures.
 
-## Effective policy and reviewed exceptions
+A count such as “23 advisory records” is not severity 23, 23 incidents, or 23
+confirmed vulnerabilities. See [reading a report](docs/user-guide.md#5-read-the-report-without-confusing-counts-with-risk).
 
-`scan` accepts optional explicit `--policy FILE` or reuses explicitly registered
-user setup. Without either it uses conservative compiled defaults: all checks,
-no finding enforcement, portable output and no reference/origin/candidate/exception
-grants. No project policy, executable configuration or `.npmrc` credentials
-are discovered. Supported `packageManager` hints select only
-interpretation, never trusted authority. Unknown scope stays incomplete.
+## What is supported?
 
-npm stable **10.x, 11.x and 12.x** versions share one compatibility check, rather than
-requiring an exact tested patch release. `auto` accepts a sole npm root lockfile
-without `packageManager`; its `npm@10-11` profile identifies the interpretation,
-not a detected producer version. Known unsupported/malformed hints remain gaps.
-With competing npm lockfiles and no hint, choose `--manager npm` explicitly:
-shrinkwrap precedence is valid for npm 10/11, but not npm 12. Mixed npm/Bun roots
-also require explicit selection. Actual lockfile v2/v3 structure remains checked;
-this does not grant advisory origins, source trust or coverage.
+| Input | Current bounded interpretation |
+| --- | --- |
+| npm 10.x / 11.x | Stable versions, lockfile v2/v3; shrinkwrap precedence |
+| npm 12.x | Stable versions, lockfile v3 only; shrinkwrap ignored, no fallback |
+| Bun 1.3.x | Text `bun.lock` v0/v1; config absent/0/1 |
+| Older explicit profiles | npm 8.19.4; Bun 1.4.2 |
+| Workspaces | Explicit relative members and bounded one-level patterns; ambiguous ownership remains a gap |
 
-New isolated Linux producer evidence covers npm **10.9.9 and 11.20.0** with single,
-shrinkwrap and workspace cases, including aliases, nested copies and optional
-absence. Captured data replay is kept alongside the earlier fixtures; it is not
-execution of every release/platform. npm **12.x supports lockfile v3 only**:
-`--manager npm@12.x` (or a concrete stable version/hint) ignores shrinkwrap,
-including malformed shrinkwrap, and never falls back to it. npm 12.2.2 generated
-additional single/workspace fixtures in isolation using the already-installed CLI,
-with a deliberately invalid shrinkwrap proving that behavior. Lockfile v4, patch
-and manifest-extension semantics remain unsupported and emit an explicit
-`lock-version-unsupported` gap; they cannot produce a successful empty assessment.
-The legacy npm 8.19.4 and exact Bun 1.4.2 profiles remain available. Prereleases and
-unknown formats remain unsupported.
+This is format interpretation, **not** a guarantee for every producer, layout,
+filesystem or platform. Binary Bun locks, npm lockfile v4, prerelease/unknown
+producer hints, unsafe links and unsupported layouts remain explicit gaps.
+The optional Linux Bun-cache profile admits only a verified **exactly two-name**
+manifest hardlink pair; three or more names stay unreadable.
 
-Bun **1.3.x** accepts bounded text lock v0/v1 and config absent/0/1; `auto`
-selects a unique supported text lock without requiring a producer hint. Binary,
-conflicting and unknown formats remain gaps. Existing installed-manifest reads
-still reject hardlinks by default. An optional **independently pinned** policy
-`bunCacheDirectory` admits an additional physically disjoint, read-only input:
-on Linux, a manifest may be read only through a retained, stable pair consisting
-of its installed name and one cache name, with exactly two links. Third aliases,
-replacement, mutation and missing peers remain refused. The original source roots
-are held through output and confirmed reap. This initial profile supports stdout,
-not `--output FILE`; it never reads cache credentials/config or generic package
-contents and does not authenticate a publisher.
+[Inventory evidence](docs/inventory-compatibility.md) · [Intelligence evidence](docs/intelligence-compatibility.md) · [Release gates](docs/pre-1.0-features.md)
 
-Bun may separately opt into pinned `advisoryCandidates` for local npm-ecosystem
-identity/version investigation. Its package tuples and observed installed
-manifests keep distinct evidence; results retain unqualified origin, are
-**candidates, never enforcement-eligible findings**, and preserve withdrawal,
-unknown-version/source and coverage gaps. There is no implicit public-origin
-rule, download, snapshot preparation or cache discovery. Isolated Bun 1.3.14
-producer fixtures and closed-pair/third-alias controls back this bounded path.
+## Privacy and exit codes
 
-Pinned policies may contain narrow, evidence-bound, expiring exceptions (30-day
-default maximum). Accepted findings remain visible and coverage gaps remain gaps.
-Explicit weakening flags fail rather than silently erasing policy requirements.
-Operational schema1.7 records effective policy and derives coverage/enforcement
-conditions for every selected category. Local review evidence includes safe
-fingerprints; portable output remains opaque.
+Without setup, output defaults to **portable** and no origin/candidate/reference
+grants. An explicitly registered setup defaults to **local** detail unless chosen
+otherwise; a policy can require portable output. Local output is not upload
+permission. Review reports before sharing them.
 
-Explicit file output is bounded to an existing report directory physically
-disjoint from project, state and references, never overwrites, and fails closed
-where native publication is unavailable. Its observed writer and original-root
-admission are distinct from caller-managed shell redirection. See the
-[issue 8 contract and verification boundary](docs/increments/issue-8-trusted-policy-and-exceptions.md).
-These capabilities do not remove genuine native/index/freshness/ownership gaps:
-a real bounded scan may still correctly return3, not a safety verdict.
+| Exit | Meaning |
+| --- | --- |
+| `0` | Completed under the selected policy; not a safety verdict |
+| `1` | An unaccepted finding met the enforcement policy |
+| `2` | Arguments, policy, operation, report or output failed |
+| `3` | Required coverage is incomplete; a useful partial report may exist |
+| `130` | Interrupted |
 
-## Operator-pinned prepared policies
-
-The experimental scan accepts `--trusted-policy-digest SRI` as a separate explicit
-operator trust designation for exact external policy bytes. A single canonical
-SHA-256, SHA-384 or SHA-512 SRI is supported. This pin is required when the policy
-requests `independently-anchored`; merely naming an external policy or supplying a
-new continuity hash is insufficient. Both native policy reads check the pin before
-target content, and baseline/lockfile conflicts remain gaps.
-
-This can complete only the explicit reference-authority scope. It does not
-authenticate a publisher, establish benignness, authorize network access or waive
-remaining native/producer/ownership/reporting gates. Unpinned behavior and exit
-selection are preserved; the candidate can still return incomplete coverage.
+Precedence: interruption → operation/output failure → incomplete coverage → enforced
+finding → success. Report-only mode does **not** turn incomplete coverage into `0`.
 
 ## Experimental intelligence lifecycle
 
-The #9 candidate provides separate `intel sync [--full]`, `intel import/export`,
-`intel status`, retention pins and explicit `cache prune` preview/apply commands.
-Only sync goes online; it accepts no target project/package list. Missing or
-corrupt state is never initialized, repaired or downloaded by a scan.
-
-A selected scan holds the original external generation through public output and
-confirmed child reap. A locally authenticated acquisition and an independently
-pinned offline import have distinct authority; neither is publisher approval or
-automatic advisory eligibility. Selecting advisory checks now produces bounded
-npm matching with explicit pinned `npmOrigins` rules or the optional public
-`npmRegistry` grant, and documented OSV-delivered OpenSSF/GitHub type profiles.
-Observed-installed decisions require their own manifest evidence and unambiguous
-qualified lock correspondence; they are not copied from a lock entry. Grouped
-lookup covers more than64 total observations under the existing byte/time caps.
-Use explicit `--privacy local` for permitted names, advisory IDs and relative
-paths, or register that preference once with `setup`. Portable remains the default
-without saved setup, and policy can require it. Unknown
-categories/corrections/correspondence remain incomplete; matches do not prove
-execution or content authenticity.
-Raw advisories, private paths and source key/MAC stay private.
-
-See [intelligence compatibility](docs/intelligence-compatibility.md) for exact
-command effects, source/license profiles, limits and qualification gaps, and the
-[usable matching contract](docs/increments/issue-6-usable-advisory-scan.md) for
-both categories, distinct evidence, scale and privacy, plus the
-[first-condition explanation](docs/increments/issue-6-explain-version-conditions.md)
-for a fixed first blocker with numeric source positions. The explicit pinned-policy
-[offline candidate option](docs/increments/issue-6-offline-origin-candidates.md)
-investigates private/unknown origins locally without confirming them or adding
-eligible findings (advisory schema1.6). Bounded fixtures and local tests do not qualify an unrestricted
-feed/category corpus, every native platform, or a release.
-
-## Scoped installed ownership
-
-For npm, the containing archive's bundled subtree is compared only when a literal
-`inBundle: true` lock record and validated published paths agree. A separately
-mapped nested instance keeps its own reference; ambiguous/unpublished nested
-subtrees are not content-read and remain gaps. No Bun bundle marker is inferred.
-Implicit published directories are not falsely counted as additions. Patch and
-generated-content context never erases drift or executes a transformation.
-These are bounded comparison rules, not whole-producer or release qualification.
-
-## Inventory candidate boundaries
-
-The current inventory candidate targets npm **8.19.4 / 10.9.4 / 11.6.2** and Bun
-**1.3.2 / 1.4.2**, not every release in their major families. It preserves unknown
-identity, conflicting claims and unsupported ownership rather than inferring
-installation or resolution. Workspaces cover explicit relative paths and one-level
-`packages/*` / `apps/*`; ambiguous/escaping ownership remains incomplete.
-
-Only necessary manifests and selected inputs are content-read. A proven active
-Bun link can admit its own store container while the original leases remain alive;
-unreferenced store data is not activated. Outside-root targets and hardlinked or
-symlinked manifests remain gaps. Bun 1.3.2 local `git+file` generation failed twice
-and is explicitly unqualified, not substituted with a different release.
-
-The checked-in corpus contains only owned inert data/recipes, not producer binaries
-or caches. Its generation and native replay scopes are distinguished in
-[inventory compatibility](docs/inventory-compatibility.md). The new candidate still
-awaits its exact-source public native campaign and protected integration; local
-race/vet/crossbuild results do not establish those gates. macOS remains paused.
-
-## Safety and interpretation
-
-- Scanning is designed to be offline. Intelligence synchronization and public-artifact
-  preparation require separate, explicit authorization; package identities must not
-  be silently submitted to remote services.
-- Never execute target code or package managers, install target dependencies, or
-  modify the investigated tree to make it scannable.
-- Missing, inaccessible, malformed or unsupported evidence must remain visible as
-  uncertainty or a coverage gap, not a negative finding.
-- Package presence does not prove execution. Matching reference bytes does not prove
-  safety. A successful parse or complete textual comparison is not a security verdict.
-- Native safeguards and producer compatibility require their own evidence. Passing
-  synthetic tests is not proof that an untrusted project can be safely scanned.
-
-The current in-memory components are building blocks for these requirements, not an
-implementation of all of them. Consult the [design decisions](docs/design-decisions.md)
-for the authoritative boundaries.
+Scanning is offline. Preparing intelligence is a separate operator action:
+`intel sync` is online; import/export, status, retention pins and prune operate on
+local state. Neither `scan` nor `setup` initializes or refreshes it. Saved scan
+settings do not apply to these maintenance commands: pass the same `--state-dir`
+explicitly. See [data preparation and maintenance](docs/user-guide.md#4-prepare-and-maintain-intelligence).
 
 ## Local development
 
-### Requirements
+The root Go module uses only the standard library. With the required toolchain
+already installed, run from this repository (not an investigated target):
 
-- An already-installed Go toolchain compatible with the `go 1.27.1` directive in
-  [go.mod](go.mod).
-- Nushell for the commands below.
-- [Jujutsu (`jj`)](https://www.jj-vcs.dev/) for the project's scoped commit workflow.
-  It is not required merely to run Go tests.
-
-Recorded development verification used `go1.27.1-X:nodwarf5 linux/amd64`; this is
-not official-toolchain or native release qualification. Toolchain acquisition is a
-separate setup step, not something the commands below perform automatically.
-
-### Run the root module's checks
-
-From the repository root, in Nushell:
-
-```nu
-with-env { GOTOOLCHAIN: local, GOPROXY: off, GOWORK: off, CGO_ENABLED: "0" } {
-    go version
-    go test -count=1 ./...
-    if $env.LAST_EXIT_CODE != 0 { error make { msg: "Go tests failed" } }
-    go vet ./...
-    if $env.LAST_EXIT_CODE != 0 { error make { msg: "go vet failed" } }
-}
+```bash
+export GOTOOLCHAIN=local GOPROXY=off GOSUMDB=off GOWORK=off GOENV=off GOTELEMETRY=off
+export GOMAXPROCS=2
+go test -p=1 -parallel=4 -count=1 -timeout=180s ./...
+go vet ./...
 ```
 
-These checks use synthetic inputs plus owned pinned-producer data replay and the
-local toolchain; they never install/run producers or target dependencies. The root module has no
-external dependencies. The environment settings are not a network sandbox, and these
-commands do **not** run or qualify the separate modules under `probes/`.
+Check each command's exit status. These environment settings are not a network
+sandbox. Root tests use owned fixtures; separate `probes/` modules, producer
+execution, live targets, downloads and native qualification are separate scopes.
 
-There is intentionally no `packtrace scan` quick-start yet. Do not treat a successful
-`go test` or library build as a working scanner.
+## Contributing and technical documentation
 
-## Experimental supplied reference digest
+- [English manual](docs/user-guide.md) / [Manual en español](docs/user-guide.es.md): first run, all commands, policies, reports and troubleshooting.
+- [Design decisions](docs/design-decisions.md) and [development guidelines](docs/development-guidelines.md): engineering and security contracts.
+- [GitHub collaboration](docs/github-collaboration.md): ownership, scoped `jj` changes and PR review.
+- [Increment records](docs/increments/) and [shared ledger](.pi/README.md): historical evidence, not current execution permission.
+- [Advisory data licenses and attribution](internal/intelstore/licenses/README.md): upstream data notices, not a blanket license for all advisory publishers.
 
-Pipe exact raw bytes to `packtrace check-reference-digest --integrity SRI` (terminal
-by default; `--format json` for portable JSON). For example, in Nushell:
-
-```nu
-^printf '%s' abc | packtrace check-reference-digest --integrity 'sha256-ungWv48Bz+pBQUDeXa4iI7ADYaOWF3qctBD/YfIAFa0=' --format json
-```
-
-The command reads stdin only, never a path. `--max-bytes N` accepts decimal
-0–536870912, default 536870912 (512 MiB). Canonical single-token SHA-256/384/512
-claims can match or mismatch; unsupported or multiple tokens report unknown without
-reading. All usable reports exit `3`; invalid arguments, check and output failures
-exit `2`. Equality is not publisher assurance, archive validity, coverage or security.
-
-## Experimental npm root comparison
-
-Pipe supplied JSON metadata to `packtrace compare-npm-root --format json` (or omit
-`--format` for terminal output):
-
-```nu
-'{"manifest":{"dependencies":{"example":"^1"}},"lockfile":{"lockfileVersion":3,"packages":{"":{"dependencies":{"example":"1.x"}}}}}' | packtrace compare-npm-root --format json
-```
-
-The report counts textual declaration differences, not semantic equivalence,
-installed state, security or a target scan. It never opens a project. npm lock
-versions 2 and 3 are supported; a missing root remains incomplete. Usable
-metadata exits `3`; invalid input, arguments or output failures exit `2`.
-
-## Experimental Bun root comparison
-
-With a locally built binary, `packtrace compare-bun-root --format json` compares
-supplied root declarations without opening a project (terminal output is the
-default). Send exactly a
-manifest object and the original text `bun.lock` string on stdin, for example:
-
-```json
-{"manifest":{"dependencies":{"example":"^1"}},"lockfile_text":"{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"dependencies\":{\"example\":\"1.x\"}}},\"packages\":{}}"}
-```
-
-The portable report contains fixed group/state labels and counts of equal,
-manifest-only, lock-only, text-changed and indeterminate requirements. This example
-has one textual change; it does not evaluate whether the two ranges are equivalent.
-Names, requirement strings, paths and hashes are not exported. A missing root or
-uninspectable group remains incomplete; zero counts do not establish safety.
-
-Input is bounded to 1 MiB, with the existing manifest/workspace projection limits.
-`--help` does not read stdin. Usable metadata summaries exit `3`, even when their
-textual comparison is complete; argument, read, parse, limit and output failures
-exit `2`. This is not a scanner or a producer/native compatibility qualification.
-
-## Repository map
-
-```text
-internal/inventory/  npm lockfile and manifest evidence; root requirement comparison
-internal/projectinventory/  Native evidence-separated inventory and portable closures
-internal/intel/      OSV record reading and evidence projections
-internal/intelstore/ Owned immutable intelligence preparation, readers and retention
-internal/jsoninput/  Shared strict JSON validation
-probes/              Isolated evaluation work, separate from production dependencies
-docs/               Design, compatibility evidence and increment contracts
-.pi/                 Shared task ledger and contributor guide
-```
-
-## Contributing
-
-Use the [GitHub collaboration guide](docs/github-collaboration.md) for the live
-issue queue, shared Project, ownership rules and `gh`/`jj` examples. Task creation
-and assignment do not replace implementation approvals.
-
-1. Read the [current design decisions](docs/design-decisions.md) and
-   [development guidelines](docs/development-guidelines.md).
-2. Use the [shared ledger guide](.pi/README.md) to find historical work and the active
-   backlog. Coordinate scope before parallel work; a closed task is not automatically
-   a completed product capability.
-3. Choose a small, useful increment. Review its written specification, then its plan
-   and execution authorization. Unrelated global design questions need not block it.
-4. Add focused tests, observe the relevant failure, implement the approved scope, and
-   rerun root tests and vet. Record what was and was not verified.
-5. Use small scoped `jj` commits. Review task-ledger updates separately from unrelated
-   code; do not commit credentials, private SSH keys, session state or investigated data.
-
-Downloads, new dependencies, real target inputs, native probes/runners and publication
-retain separate approval boundaries. No probe or network workflow is authorized merely
-because its code or documentation is present in the repository.
-
-## Further reading
-
-- [Design decisions](docs/design-decisions.md) — current authority; supersedes earlier
-  global-design gates and selective SCALIBR-reuse proposals.
-- [Pre-1.0 checklist](docs/pre-1.0-features.md) — capabilities and qualification still required.
-- [Development roadmap](docs/development-roadmap.md) — broader delivery context; read
-  alongside the superseding design decisions.
-- [Inventory compatibility](docs/inventory-compatibility.md) and
-  [evaluation results](docs/inventory-evaluation-results.md) — targets, limitations and evidence.
-- [Native safety probe plan](docs/native-safety-probe.md) — separate feasibility and safety gates.
+No automatic remediation, target code execution, credential discovery, host safety
+verdict, or production qualification is implied by a successful scan or merged PR.

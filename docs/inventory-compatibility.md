@@ -1,10 +1,19 @@
 # Inventory compatibility and SCALIBR evaluation
 
-**Current status:** issue #5's separately approved native inventory implementation
-and bounded producer preparation are now a candidate. Exact-source public native
-acceptance and protected integration are pending; no release is qualified.
+**Current reading guide:** the [user manual](user-guide.md) / [manual en español](user-guide.es.md)
+describe the current CLI. Issue #5's bounded inventory work was integrated; that
+does not qualify a release. Later compatibility successors interpret stable npm
+10/11 v2/v3, npm 12 v3 (no shrinkwrap fallback), and bounded Bun 1.3.x text inputs.
+Additional inert producer data records npm 10.9.9, 11.20.0, 12.2.2 and Bun 1.3.14;
+these do not qualify every release/layout/platform. The optional Linux Bun-cache
+profile admits only a verified, retained exactly-two-name manifest hardlink pair;
+generic hardlink refusal remains unchanged. Current operational scan schema is 1.7.
 
-## Current owned-producer candidate evidence
+The exact artifact counts, schemas, pending gates and versions below describe the
+**historical increment at its recorded source**, not a current blanket support
+matrix. Keep failed/unqualified cases visible; no new native campaign is implied.
+
+## Historical owned-producer candidate evidence
 
 The production adapter is PackTrace-owned and stdlib-only; SCALIBR was not adopted.
 `internal/projectinventory` separates declarations, locked claims, installed slots,
