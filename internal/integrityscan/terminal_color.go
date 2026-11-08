@@ -23,7 +23,7 @@ func colorTerminalSummary(data []byte) []byte {
 			style = "\x1b[37m" // Light gray, not low-contrast dim text.
 		case strings.HasPrefix(label, "[INFO]"):
 			style = "\x1b[36m"
-		case strings.HasPrefix(body, "PackTrace |"), body == "Summary", body == "Packages to review", body == "Coverage limitations", body == "Check status", strings.HasPrefix(body, "PACKAGE "):
+		case strings.HasPrefix(body, "PackTrace |"), body == "Summary", body == "Packages to review", body == "Coverage limitations", body == "Check status", strings.HasPrefix(body, "Project checks ("), strings.HasPrefix(body, "PackTrace validation ("), strings.HasPrefix(body, "PACKAGE "):
 			style = "\x1b[1;34m"
 		}
 		if style != "" {

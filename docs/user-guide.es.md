@@ -26,6 +26,13 @@ proyectos reales ni campañas de cualificación nativa.
 
 ## 1. Propósito y límites
 
+Si no conoces un comando, empieza por `packtrace --help`: presenta **Scan a project
+(offline)** —analizar—, **Prepare security advisory data** —preparar avisos— y
+**Understand a result** —interpretar— antes de las herramientas avanzadas.
+`packtrace scan --help` explica los conceptos del resultado antes de las opciones
+técnicas. Los comandos, argumentos y controles de confianza no cambian; no hay
+asistente automático, acceso de red ni reparación automática.
+
 PackTrace investiga evidencia de dependencias. No ejecuta el proyecto, instala
 paquetes, ejecuta scripts de instalación/compilación/pruebas, repara dependencias,
 pone archivos en cuarentena, busca credenciales de registros del proyecto ni
@@ -44,6 +51,20 @@ El resultado mantiene separados **declared** —intención del manifiesto—,
 **locked** —resoluciones del lockfile— y **observed installed** —observaciones
 físicas—. Una entrada del lockfile no demuestra instalación; un manifiesto
 instalado no autentica ni el contenido ni al editor.
+
+### Glosario sencillo
+
+| Término | Significado en PackTrace |
+| --- | --- |
+| `intel` / inteligencia | Base local de avisos de seguridad; no inteligencia artificial |
+| Advisory / aviso | Informe de una fuente sobre un paquete malicioso o una vulnerabilidad; no prueba impacto en la aplicación |
+| Snapshot / generación | Una versión fija de la base local preparada |
+| Origin / origen | Procedencia registrada de una dependencia; declararla no autentica al editor |
+| Candidate / candidato | Pista de identidad/versión con origen o aplicabilidad no confirmados; no vulnerabilidad confirmada |
+| Finding / hallazgo | La evidencia cumple las reglas seleccionadas; no demuestra ejecución |
+| Coverage / cobertura | Qué comprobaciones requeridas se establecieron y cuáles faltan |
+| Policy / enforcement | Reglas externas revisadas que eligen comprobaciones y qué hallazgos no aceptados hacen fallar la ejecución |
+| Reference / integrity | Referencia preparada de comparación / comparación de archivos; bytes iguales no certifican seguridad |
 
 Usa una cuenta normal. Mantén política, inteligencia, referencias e informes fuera
 del proyecto. Las comprobaciones de propiedad y separación física pueden rechazar
@@ -197,6 +218,25 @@ por `setup`; indica el mismo `--state-dir` expresamente. Sin ese argumento, usan
 `os.UserCacheDir()/packtrace`, normalmente `~/.cache/packtrace` en Linux.
 Las rutas deben superar comprobaciones de propiedad, persistencia y separación.
 
+### Qué te dice status
+
+`packtrace intel status --state-dir DIR` lee el almacén seleccionado: sustituye
+`DIR` por la ruta revisada del almacén, no por la raíz del proyecto. La terminal
+lo llama **Security advisory database (intel)** y explica la cantidad de avisos,
+la comprobación de fuente de 24 horas y la reconciliación completa de siete días
+—independientes—, la designación de fuente y la evidencia sin resolver. Los avisos
+no son paquetes instalados ni vulnerabilidades confirmadas. Las fechas actuales
+no resuelven identidades desconocidas ni establecen cobertura completa.
+
+Si faltan datos, explica que no hay base local utilizable para comprobar avisos,
+**no** que no existan amenazas. Si caducan fechas, sugiere una sync explícita con
+sus efectos sobre red y disco. Una reconciliación completa caducada requiere
+`--full`; una designación de fuente desconocida requiere revisión, no inventar
+un pin. Las sugerencias nunca se ejecutan solas. Actualizar no arregla manifiestos
+ilegibles, orígenes desconocidos ni cualificación pendiente de PackTrace. Los pins
+de snapshot del análisis siguen vigentes hasta una selección de generación revisada
+por separado.
+
 ### Preparación online: trabajo explícito de red y disco
 
 Si autorizas obtener inteligencia pública de npm a través de OSV:
@@ -282,7 +322,7 @@ amplia no es el procedimiento de recuperación.
 2. **Packages to review:** ¿qué paquetes/versiones tienen hallazgos o candidatos?
 3. **Why these matches need review:** ¿qué dice el original, qué condición
    coincide y qué hay que verificar?
-4. **Coverage limitations / Check status:** ¿qué no pudo establecerse?
+4. **Coverage limitations / Project checks:** ¿qué evidencia del proyecto falta? Después lee **PackTrace validation**: garantías de herramienta, no defectos del proyecto.
 5. **Required coverage / código de salida:** ¿se completó la política seleccionada?
 
 ### Etiquetas y colores
@@ -356,7 +396,12 @@ no acusaciones independientes contra cada dependencia.
 no un defecto del proyecto. `Resource/final-lifecycle evidence` y los snapshots de
 comparación no demuestran un agotamiento de memoria ni una limpieza final terminada.
 La comprobación verde de trabajo de comparación se limita explícitamente a la
-etapa anterior a salida y limpieza. Actualizar inteligencia no resuelve enlaces
+etapa anterior a salida y limpieza. La vista habitual los agrupa por separado en
+**Project checks (evidence used for this investigation)** y **PackTrace validation
+(tool assurance, not project defects)**. No oculta ni exime obligaciones: ambos
+grupos pueden dejar cobertura incompleta y salida `3`. Limitaciones relacionadas
+de inventario o vigencia no son hallazgos adicionales ni acusaciones independientes.
+Actualizar inteligencia no resuelve enlaces
 no admitidos, orígenes desconocidos, integridad no seleccionada ni cualificación
 del producto pendiente.
 
@@ -526,6 +571,14 @@ No se garantiza código `0` en un proyecto real mientras haya limitaciones de
 cobertura o cualificación pendientes en este binario experimental.
 
 ## 10. Solución de problemas
+
+Los errores frecuentes mantienen su código fijo en la primera línea y añaden
+**Effect** —qué no pudo hacerse— y/o **Next** —un paso acotado—. La orientación no
+cambia códigos de salida, añade rutas privadas, aprueba pins nuevos ni evita el
+escritor de diagnósticos observado. El JSON/SARIF de stdout no cambia; las
+explicaciones de error van al canal de diagnósticos. Los errores desconocidos no
+reciben soluciones inventadas. `DIR` es un marcador en comandos sugeridos: setup
+no aporta valores guardados a las operaciones de mantenimiento.
 
 | Síntoma | Significado y siguiente paso seguro |
 | --- | --- |
