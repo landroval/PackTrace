@@ -223,7 +223,7 @@ func TestScanOperationalGapsRefuseNextWriter(t *testing.T) {
 			case "threshold":
 				s.scan.resources.Stopped = true
 			case "cleanup-unknown":
-				s.broken = true
+				s.broken.Store(true)
 			case "deadline":
 				s.deadline = time.Now().Add(-time.Second)
 			}

@@ -10,7 +10,6 @@ import (
 	"packtrace/internal/cli"
 	"packtrace/internal/intel"
 	"packtrace/internal/intelstore"
-	"packtrace/internal/interactive"
 	"packtrace/internal/nativefs"
 	"path/filepath"
 	"runtime/debug"
@@ -138,9 +137,9 @@ func normalizeIntelRequest(r cli.IntelArgumentRequest) (cli.IntelArgumentRequest
 	return r, nil
 }
 func RunIntel(ctx context.Context, request cli.IntelArgumentRequest) (IntelRun, error) {
-	return RunIntelWithActivity(ctx, request, nil)
+	return RunIntelWithProgress(ctx, request, nil)
 }
-func RunIntelWithActivity(ctx context.Context, request cli.IntelArgumentRequest, activity *os.File) (run IntelRun, failure error) {
+func RunIntelWithProgress(ctx context.Context, request cli.IntelArgumentRequest, progress *os.File) (run IntelRun, failure error) {
 	if ctx == nil {
 		return run, errIntelProtocol
 	}
@@ -150,29 +149,13 @@ func RunIntelWithActivity(ctx context.Context, request cli.IntelArgumentRequest,
 	if e != nil {
 		return run, e
 	}
-	s.scan = newScanLifecycle(ctx, s.deadline)
-	if activity != nil {
-		if request.Format != "terminal" || !interactive.Available(os.Stdin, activity) {
-			return run, errIntelProtocol
-		}
-		label := "Reading local advisory state (read-only)."
-		switch request.Action {
-		case cli.ArgumentActionIntelSync:
-			label = "Downloading/reconciling admitted public data; this writes the store."
-		case cli.ArgumentActionIntelImport:
-			label = "Reading an offline bundle and rebuilding validated local data; this writes the store."
-		case cli.ArgumentActionIntelExport:
-			label = "Exporting the selected local snapshot to the admitted new file."
-		case cli.ArgumentActionCachePrune:
-			label = "Preparing a read-only prune preview."
-			if request.ApplyPreview != "" {
-				label = "Applying the explicitly selected destructive prune preview."
-			}
-		}
-		if e := run.WriteOutput(ctx, activity, []byte("[INFO] "+label+" No percentage is known; wait for the final result. Ctrl+C cancels.\n")); e != nil {
-			return run, e
-		}
+	if progress != nil && (request.Format != "terminal" || len(progressFrames(request.Action)) == 0) {
+		return run, errIntelProtocol
 	}
+	s.scan = newScanLifecycle(ctx, s.deadline)
+	s.scan.mu.Lock()
+	s.scan.allowProgress = progress != nil
+	s.scan.mu.Unlock()
 	cmd, e := childCommand(IntelWorkerArgument)
 	if e != nil {
 		return run, e
@@ -181,11 +164,11 @@ func RunIntelWithActivity(ctx context.Context, request cli.IntelArgumentRequest,
 	if e != nil {
 		return run, e
 	}
-	e = run.superviseIntel(ctx, request, cmd, identity)
+	e = run.superviseIntel(ctx, request, cmd, identity, progress)
 	run.Interrupted = explicitCancel(ctx)
 	return run, e
 }
-func (run *IntelRun) superviseIntel(ctx context.Context, request cli.IntelArgumentRequest, cmd *exec.Cmd, identity string) error {
+func (run *IntelRun) superviseIntel(ctx context.Context, request cli.IntelArgumentRequest, cmd *exec.Cmd, identity string, progressOut *os.File) error {
 	s := run.lifecycle.output.state
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -206,6 +189,13 @@ func (run *IntelRun) superviseIntel(ctx context.Context, request cli.IntelArgume
 	var result IntelResult
 	received := false
 	failure := s.runChild(phase, cmd, release, func(_ context.Context, c *channel, input io.Closer) error {
+		var progress *intelProgress
+		defer func() {
+			if progress != nil {
+				progress.cancel()
+				_ = progress.finish()
+			}
+		}()
 		var h hello
 		if c.expect("hello", &h) != nil || h.Build != identity {
 			return errIntelProtocol
@@ -237,6 +227,13 @@ func (run *IntelRun) superviseIntel(ctx context.Context, request cli.IntelArgume
 					return errIntelProtocol
 				}
 				started = true
+				if progressOut != nil {
+					var e error
+					progress, e = startIntelProgress(phase, s, progressOut, request.Action, cancel)
+					if e != nil {
+						return e
+					}
+				}
 			case "resident":
 				var v residentSample
 				if !started || decode(message.Data, &v) != nil {
@@ -259,13 +256,20 @@ func (run *IntelRun) superviseIntel(ctx context.Context, request cli.IntelArgume
 				// Child self telemetry ends at semantic closure; the retained
 				// external observer still covers runtime teardown and actual reap.
 				stop()
+				if progress != nil {
+					e := progress.finish()
+					progress = nil
+					if e != nil {
+						return e
+					}
+				}
 			default:
 				return errIntelProtocol
 			}
 		}
 	})
 	s.scan.protocolResult(monitor.result())
-	if s.broken {
+	if s.broken.Load() {
 		return errReap
 	}
 	if e := s.scan.check(); e != nil {

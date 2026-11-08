@@ -54,7 +54,6 @@ examples use Bash; the manual includes Nushell exit-status examples.
 | Task | Command |
 | --- | --- |
 | Readable scan | `packtrace scan .` |
-| Interactive result explorer (compatible Linux terminal) | `packtrace scan --interactive .` |
 | Full technical decisions | `packtrace scan --verbose .` |
 | Structured local evidence, with saved local setup | `packtrace scan --format json .` |
 | Portable JSON for review before sharing | `packtrace scan --privacy portable --format json .` |
@@ -65,25 +64,10 @@ examples use Bash; the manual includes Nushell exit-status examples.
 Options go **before** the final project path. A scan never downloads advisory data,
 installs dependencies, runs package scripts, or repairs the target.
 
-## Optional interactive results and waiting feedback
-
-`scan --interactive ROOT` shows a searchable package table and scrollable details
-from the same validated result. Use arrows to select, Enter for details, Tab to
-focus the detail pane, `/` to search, `s` for Summary, `?` for help and `q` to close.
-Closing retains the comparison exit; Ctrl+C interrupts. Filters never remove
-findings or waive coverage. No saved JSON authority, downloads or dependency changes
-are introduced by the viewer.
-
-The first UI profile requires Linux, the same real input/output terminal and at
-least 40 columns by 12 rows. Pipes, files, dumb/small/unsupported terminals keep
-plain output. `NO_COLOR` removes color, not navigation. `--interactive` cannot be
-combined with `--verbose`, JSON or SARIF. Viewing remains inside the original
-five-minute scan deadline; it is not an unlimited report browser.
-
-For waits, add `--interactive` to `scan` or `intel sync/import/export/status` and
-`cache prune`. The terminal shows sequential stage notices and observed elapsed
-time, not a fake percentage or a concurrent animation process. Network/deletion
-rules remain unchanged: adding the flag does not authorize or run a sync/prune.
+Long `intel sync`, `intel import` and `intel export` operations automatically show
+a small single-line spinner on compatible Linux terminals. There is no interactive
+mode or extra flag. It shows activity, not a percentage or a promise of success.
+Pipes, JSON, `NO_COLOR` and unsupported/narrow terminals stay plain.
 
 ## Understand the result
 
@@ -169,10 +153,7 @@ explicitly. See [data preparation and maintenance](docs/user-guide.md#4-prepare-
 
 ## Local development
 
-The analysis core remains separate from terminal libraries. The optional UI uses
-pinned Bubble Tea/Bubbles/Lip Gloss and supporting packages, checked into `vendor/`
-for offline builds/CI; see [software notices](THIRD_PARTY_NOTICES.md).
-With the required toolchain
+The root Go module uses only the standard library. With the required toolchain
 already installed, run from this repository (not an investigated target):
 
 ```bash

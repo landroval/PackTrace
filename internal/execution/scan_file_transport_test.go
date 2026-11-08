@@ -341,7 +341,7 @@ func testScanFileBlocked(t *testing.T, mode string) {
 func TestScanFileTransportFinishKeepsUncertainOriginals(t *testing.T) {
 	t.Parallel()
 	r, _, _ := fileTransportFixture(t, false)
-	r.output.state.broken = true
+	r.output.state.broken.Store(true)
 	r.output.state.scan.mu.Lock()
 	r.output.state.scan.cleanup = false
 	r.output.state.scan.mu.Unlock()
@@ -350,7 +350,7 @@ func TestScanFileTransportFinishKeepsUncertainOriginals(t *testing.T) {
 		t.Fatal("uncertain live originals released", e)
 	}
 	// Fixture has no actual child: release only for test-owned teardown.
-	r.output.state.broken = false
+	r.output.state.broken.Store(false)
 	if e := r.fileOutput.finish(); e != nil {
 		t.Fatal(e)
 	}

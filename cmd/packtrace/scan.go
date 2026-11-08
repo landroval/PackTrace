@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"os/signal"
@@ -13,7 +12,6 @@ import (
 	"packtrace/internal/cli"
 	"packtrace/internal/execution"
 	"packtrace/internal/integrityscan"
-	"packtrace/internal/interactive"
 )
 
 // An observer receives caller-owned completion evidence only after Finish.
@@ -32,21 +30,11 @@ func runScanContext(ctx context.Context, request cli.ScanArgumentRequest, out, d
 	return runScanContextObserved(ctx, request, out, diagnostic, nil)
 }
 func runScanContextObserved(ctx context.Context, request cli.ScanArgumentRequest, out, diagnostic io.Writer, observed scanObserver) (exit int) {
-	wantsUI := request.Format == "terminal-interactive"
-	if wantsUI {
-		request.Format = "terminal"
-		request.Provided &^= cli.ArgumentOptionInteractive
-	}
-	var activity *os.File
-	if wantsUI && request.Output == "-" && interactive.Available(os.Stdin, out) {
-		activity = out.(*os.File)
-	}
-	started := time.Now()
 	work, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 	old := debug.SetMemoryLimit(128 << 20)
 	defer debug.SetMemoryLimit(old)
-	run, err := execution.RunScanWithActivity(work, request, activity)
+	run, err := execution.RunScan(work, request)
 	run.NoteFailure("run", err)
 	interrupted := errors.Is(ctx.Err(), context.Canceled)
 	conditions := cli.ScanExitConditions{Interrupted: interrupted, ReportPreventingError: !run.Usable || !reportableScanFailure(err)}
@@ -92,22 +80,6 @@ func runScanContextObserved(ctx context.Context, request cli.ScanArgumentRequest
 	conditions.RequiredCoverageIncomplete = comparison.RequiredCoverageIncomplete
 	conditions.EnforcedUnacceptedFindings = comparison.EnforcedUnacceptedFindings
 	conditions.ReportPreventingError = conditions.ReportPreventingError || comparison.ReportPreventingError
-	if activity != nil {
-		view, e := integrityscan.BuildInteractiveView(report)
-		if e != nil {
-			return fail("scan: report-failed")
-		}
-		view.Summary = fmt.Sprintf("Analysis elapsed: %s. Viewer remains inside the same five-minute operation deadline.\n\n", time.Since(started).Round(time.Millisecond)) + view.Summary
-		interrupted, e := run.WriteInteractive(work, os.Stdin, activity, view, scanTerminalFormat("terminal", "-", out) == "terminal-color")
-		conditions.Interrupted = conditions.Interrupted || interrupted
-		if e != nil {
-			return fail("cli: output-failed")
-		}
-		if e = run.Checkpoint(); e != nil {
-			return fail("scan: resident-observation-failed")
-		}
-		return selectExit()
-	}
 	data, renderErr := integrityscan.Render(report, scanTerminalFormat(request.Format, request.Output, out))
 	if renderErr != nil {
 		run.NoteFailure("render", renderErr)

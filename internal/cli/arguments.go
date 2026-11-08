@@ -52,7 +52,6 @@ const (
 	ArgumentOptionApplyPreview
 	ArgumentOptionFull
 	ArgumentOptionVerbose
-	ArgumentOptionInteractive
 )
 
 // ScanArgumentRequest is unvalidated policy/path/output request data.
@@ -157,7 +156,7 @@ func ParseArgs(args []string) (Invocation, error) {
 	}
 
 	request := ScanArgumentRequest{Manager: "auto", Checks: ArgumentCheckMalicious | ArgumentCheckVulnerability | ArgumentCheckIntegrity, Format: "terminal", Privacy: "portable", Output: "-"}
-	failOnIndex, verboseIndex, interactiveIndex := -1, -1, -1
+	failOnIndex, verboseIndex := -1, -1
 	i := 1
 	for i < len(args) {
 		token := args[i]
@@ -177,16 +176,12 @@ func ParseArgs(args []string) (Invocation, error) {
 			return argumentFailure(ArgumentErrorOptionRepeated, i, option)
 		}
 		optionIndex, valueIndex := i, i
-		if option == ArgumentOptionVerbose || option == ArgumentOptionInteractive {
+		if option == ArgumentOptionVerbose {
 			if attached {
 				return argumentFailure(ArgumentErrorOptionValueInvalid, i, option)
 			}
 			request.Provided |= option
-			if option == ArgumentOptionVerbose {
-				verboseIndex = i
-			} else {
-				interactiveIndex = i
-			}
+			verboseIndex = i
 			i++
 			continue
 		}
@@ -216,12 +211,6 @@ func ParseArgs(args []string) (Invocation, error) {
 		return argumentFailure(ArgumentErrorExtraArgument, i+1, 0)
 	}
 	request.Path = args[i]
-	if interactiveIndex >= 0 {
-		if request.Format != "terminal" || verboseIndex >= 0 {
-			return argumentFailure(ArgumentErrorOptionValueInvalid, interactiveIndex, ArgumentOptionInteractive)
-		}
-		request.Format = "terminal-interactive"
-	}
 	if verboseIndex >= 0 {
 		if request.Format != "terminal" {
 			return argumentFailure(ArgumentErrorOptionValueInvalid, verboseIndex, ArgumentOptionVerbose)
@@ -248,8 +237,6 @@ func argumentOption(name string) ArgumentOptions {
 		return ArgumentOptionFailOn
 	case "--verbose":
 		return ArgumentOptionVerbose
-	case "--interactive":
-		return ArgumentOptionInteractive
 	case "--format":
 		return ArgumentOptionFormat
 	case "--privacy":

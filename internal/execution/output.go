@@ -31,7 +31,7 @@ func (r *BatchRun) writeOutput(ctx context.Context, out io.Writer, data []byte, 
 	if e := s.contextError(ctx); e != nil {
 		return e
 	}
-	if s.broken {
+	if s.broken.Load() {
 		return errReap
 	}
 	if len(data) > maxTraffic {
@@ -108,7 +108,7 @@ func (r *BatchRun) writeOutput(ctx context.Context, out io.Writer, data []byte, 
 	cfg := writerLaunchConfig{Nonce: cap, Size: len(data), SHA256: hex.EncodeToString(sum[:]), File: fileConfig}
 	// Preflight all fixed writer traffic before launch. Both directions and every
 	// LF are still charged by the actual channel; no rendered length from worker.
-	if e = writerTrafficFits(&s.budget, identity, cfg); e != nil {
+	if e = writerTrafficFits(s.budget, identity, cfg); e != nil {
 		release()
 		return e
 	}
@@ -153,7 +153,7 @@ func (r *BatchRun) writeOutput(ctx context.Context, out io.Writer, data []byte, 
 		r.Interrupted = true
 	}
 	if e != nil {
-		if s.broken || s.contextError(ctx) != nil || e == errLimit {
+		if s.broken.Load() || s.contextError(ctx) != nil || e == errLimit {
 			return e
 		}
 		return errOutput
@@ -186,8 +186,8 @@ func writerTrafficFits(b *traffic, identity string, cfg writerLaunchConfig) erro
 // WriterMain never parses target data or selects rendering/privacy/public exit.
 // Validate the COMPLETE bounded transfer/hash/EOF before touching public output.
 func WriterMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
-	if os.Getenv(launchRole) == "scan-ui" {
-		return interactiveWriterMain(in, out)
+	if os.Getenv(launchRole) == "intel-progress" {
+		return progressWriterMain(in, out)
 	}
 	role := "writer"
 	if os.Getenv(launchRole) == "scan-writer" {

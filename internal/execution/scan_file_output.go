@@ -32,7 +32,7 @@ func (r *ScanRun) prepareFileOutput(ctx context.Context, target, policyDirectory
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.scan == nil || s.broken || r.fileOutput != nil {
+	if s.scan == nil || s.broken.Load() || r.fileOutput != nil {
 		return errOutput
 	}
 	f := &scanFileOutputState{cfg: scanFileOutputConfig{Target: target, PolicyDirectory: policyDirectory, Destination: destination}}
@@ -162,7 +162,7 @@ func (r *ScanRun) WriteReportOutput(ctx context.Context, out io.Writer, data []b
 	s := r.output.state
 	s.mu.Lock()
 	if e == nil {
-		if s.broken || s.scan == nil || !s.scan.snapshot().CleanupConfirmed {
+		if s.broken.Load() || s.scan == nil || !s.scan.snapshot().CleanupConfirmed {
 			e = errReap
 		} else {
 			f.mu.Lock()

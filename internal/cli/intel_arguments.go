@@ -52,7 +52,7 @@ func parseIntelArgs(args []string) (Invocation, error) {
 	request.Action = action
 	allowed := ArgumentOptionStateDir
 	if action != ArgumentActionIntelPin && action != ArgumentActionIntelUnpin {
-		allowed |= ArgumentOptionFormat | ArgumentOptionInteractive
+		allowed |= ArgumentOptionFormat
 	}
 	switch action {
 	case ArgumentActionIntelSync:
@@ -91,13 +91,6 @@ func parseIntelArgs(args []string) (Invocation, error) {
 			return argumentFailure(ArgumentErrorOptionRepeated, i, option)
 		}
 		request.Provided |= option
-		if option == ArgumentOptionInteractive {
-			if attached {
-				return argumentFailure(ArgumentErrorOptionValueInvalid, i, option)
-			}
-			i++
-			continue
-		}
 		if option == ArgumentOptionFull {
 			if attached {
 				return argumentFailure(ArgumentErrorOptionValueInvalid, i, option)
@@ -167,12 +160,6 @@ func parseIntelArgs(args []string) (Invocation, error) {
 	}
 	if action == ArgumentActionIntelExport && request.Output == "" {
 		return argumentFailure(ArgumentErrorOptionMissingValue, -1, ArgumentOptionOutput)
-	}
-	if request.Provided&ArgumentOptionInteractive != 0 {
-		if request.Format != "terminal" {
-			return argumentFailure(ArgumentErrorOptionValueInvalid, -1, ArgumentOptionInteractive)
-		}
-		request.Format = "terminal-interactive"
 	}
 	return Invocation{Action: action, Intel: request}, nil
 }
