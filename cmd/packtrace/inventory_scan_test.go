@@ -72,7 +72,7 @@ func TestActualScanInventoryIsCommonAndPrivateAcrossFormats(t *testing.T) {
 					t.Fatalf("actual inventory output/reap/privacy %s %s: %v %v %s", mode, format, e, cmd.ProcessState, diag.String())
 				}
 				if format == "terminal" {
-					want := fmt.Sprintf("Inventory: declared=1 locked=%d installed=%d", locked, installed)
+					want := fmt.Sprintf("Inventory: 1 declared | %d locked | %d installed observations", locked, installed)
 					if !strings.Contains(out.String(), want) {
 						t.Fatal("terminal inventory omitted", out.String())
 					}

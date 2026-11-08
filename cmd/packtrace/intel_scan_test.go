@@ -170,7 +170,11 @@ func TestScanPreparedSnapshotIsOfflinePrivateAndNotMatching(t *testing.T) {
 		t.Run(format, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
-			cmd := exec.CommandContext(ctx, os.Args[0], "-test.run=^TestSupervisedCLIProcess$", "--", "scan", "--policy", policy, "--checks", "integrity,malicious,vulnerability", "--state-dir", state, "--trusted-snapshot-digest", "sha256-"+base64.StdEncoding.EncodeToString(id[:]), "--format", format, root)
+			args := []string{"-test.run=^TestSupervisedCLIProcess$", "--", "scan", "--policy", policy, "--checks", "integrity,malicious,vulnerability", "--state-dir", state, "--trusted-snapshot-digest", "sha256-" + base64.StdEncoding.EncodeToString(id[:]), "--format", format}
+			if format == "terminal" {
+				args = append(args, "--verbose")
+			} // This test checks exact source identity/technical scope.
+			cmd := exec.CommandContext(ctx, os.Args[0], append(args, root)...)
 			receipt := retainScanReceipt(t, cmd)
 			var out, diag bytes.Buffer
 			cmd.Stdout, cmd.Stderr = &out, &diag

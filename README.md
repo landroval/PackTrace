@@ -77,6 +77,26 @@ packtrace setup --policy /operator/policy.json --state-dir /prepared/intelligenc
 packtrace scan /path/to/project
 ```
 
+Operational scans show a compact English summary by default: comparison status,
+inventory counts, grouped package tables for advisory findings/candidates, policy
+acceptance/enforcement and explicit incomplete coverage. Repeated locked/installed
+rows are grouped **for display only**; advisory-record counts are not distinct
+incidents, severity rankings, origin authentication or runtime applicability.
+Manifest evidence remains distinct from locked evidence. Zero findings is not a
+safety verdict. Portable privacy keeps package identities hidden.
+
+```sh
+packtrace scan /path/to/project                 # readable summary
+packtrace scan --verbose /path/to/project       # every technical decision/relation
+packtrace scan --format json /path/to/project   # full structured evidence
+```
+
+`--verbose` is terminal-only. JSON/SARIF retain their full models and schema 1.7;
+accepted findings and coverage gaps are not removed. Tables show at most 20
+package/version groups per section, with explicit overflow notices and clipped
+long cells marked `...`; verbose/JSON preserve every original and physical
+observation. Historical report schemas keep their original terminal rendering.
+
 `setup` records the selected policy's SHA-256 pin internally. Ordinary scans
 reuse those exact approved bytes; changing the policy does **not** silently
 reapprove it. Relative references remain relative to the policy's original

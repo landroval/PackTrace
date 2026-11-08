@@ -119,6 +119,9 @@ func TestScanActualOfflineAdvisoryMatching(t *testing.T) {
 					if tc.snapshotPin {
 						args = append(args, "--trusted-snapshot-digest", snapshotPin)
 					}
+					if format == "terminal" {
+						args = append(args, "--verbose") // This assertion checks per-record evidence, not the compact default.
+					}
 					args = append(args, target)
 					cmd := exec.CommandContext(ctx, os.Args[0], args...)
 					receipt := retainScanReceipt(t, cmd)

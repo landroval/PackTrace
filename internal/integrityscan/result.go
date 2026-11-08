@@ -264,6 +264,11 @@ func Render(r Report, format string) ([]byte, error) {
 		data, e := json.MarshalIndent(r, "", "  ")
 		return append(data, '\n'), e
 	case "terminal":
+		if r.SchemaVersion == "1.7" {
+			return renderTerminalSummary(r), nil
+		}
+		fallthrough // Historical reports retain their existing terminal view.
+	case "terminal-verbose":
 		var out strings.Builder
 		if r.Advisories == nil {
 			fmt.Fprintln(&out, "PackTrace offline integrity — GATED CANDIDATE; not a qualified release")
