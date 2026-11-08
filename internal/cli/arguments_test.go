@@ -355,7 +355,7 @@ func TestParseArgsSeparation(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, im := range f.Imports {
-		if im.Path.Value != `"strings"` {
+		if im.Path.Value != `"strings"` && im.Path.Value != `"packtrace/internal/managerprofile"` {
 			t.Fatal("production import crosses pure parser scope")
 		}
 	}

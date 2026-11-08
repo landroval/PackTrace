@@ -59,7 +59,7 @@ func TestLockedAndDeclaredRequirementBudgetsAreShared(t *testing.T) {
 	c := collector{ctx: context.Background(), root: r, metadata: snap, entries: entries, blocked: map[string]bool{}, manifestRemaining: maxManifestTotal, requirementsRemaining: 1, classCounts: map[string]int{}}
 	c.result.Model.Scopes = []Scope{{ID: 1, Kind: "project"}}
 	c.collectManifest(1, "package.json")
-	c.selectInputs(Options{Profile: "npm@10.9.4"})
+	c.selectInputs(Options{Profile: "npm@10.9.4"}, nil)
 	limited := false
 	for _, g := range c.result.Model.Gaps {
 		limited = limited || strings.Contains(g.Code, "requirement-limit")

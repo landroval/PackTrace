@@ -17,6 +17,7 @@ import (
 	"packtrace/internal/cli"
 	"packtrace/internal/intel"
 	"packtrace/internal/jsoninput"
+	"packtrace/internal/managerprofile"
 )
 
 const MaxPolicyBytes = 256 << 10
@@ -251,7 +252,7 @@ func categories(values []string) (cli.ArgumentChecks, bool) {
 	return result, true
 }
 func profile(s string) bool {
-	return oneOf(s, "npm@8.19.4", "npm@10.9.4", "npm@11.6.2", "bun@1.3.2", "bun@1.4.2")
+	return managerprofile.SupportsNPM(s) || oneOf(s, "bun@1.3.2", "bun@1.4.2")
 }
 func oneOf(s string, values ...string) bool {
 	for _, v := range values {
