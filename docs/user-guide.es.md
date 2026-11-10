@@ -72,9 +72,15 @@ rutas aunque su texto parezca correcto. No las debilites para obtener un resulta
 
 ## 2. Compilación y requisitos
 
-No hay instalador publicado ni binario de release cualificado. Utiliza una copia
-revisada del repositorio y un toolchain ya instalado compatible con `go.mod`
-—Go 1.27.1—. El programa principal solo depende de la biblioteca estándar de Go.
+La [prerelease v0.1.0-alpha.1](https://github.com/landroval/PackTrace/releases/tag/v0.1.0-alpha.1)
+ofrece archivos experimentales para Linux amd64 y Windows amd64. Linux se prueba
+con fixtures propios; Windows **solo se compila de forma cruzada, sin prueba de
+ejecución de este release**. Ninguno está cualificado para producción. Consulta
+[verificación, metadatos de compilación sin firma y limitaciones](releases/v0.1.0-alpha.1.md)
+antes de ejecutar un archivo. No hay instalador ni descarga/configuración automática.
+
+También puedes usar una copia revisada del repositorio y un toolchain ya instalado
+compatible con `go.mod` —Go 1.27.1—. El programa principal solo depende de la biblioteca estándar de Go.
 **No necesitas ejecutar npm ni Bun** para analizar; no los ejecutes contra un
 proyecto sospechoso para prepararlo.
 

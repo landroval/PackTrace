@@ -58,6 +58,17 @@ func TestRunDemoScenarios(t *testing.T) {
 	}
 }
 
+func TestPrereleaseVersionDoesNotReadInputs(t *testing.T) {
+	var out, diagnostic bytes.Buffer
+	if exit := runInput([]string{"--version"}, forbiddenReader{}, &out, &diagnostic); exit != 0 || diagnostic.Len() != 0 || out.String() != "packtrace 0.1.0-alpha.1 (experimental; not production-qualified)\n" {
+		t.Fatal("prerelease identity", exit, out.String(), diagnostic.String())
+	}
+	out.Reset()
+	if exit := runInput([]string{"--help"}, forbiddenReader{}, &out, &diagnostic); exit != 0 || !strings.Contains(out.String(), "PackTrace "+appVersion+" — experimental") {
+		t.Fatal("help release identity", exit, out.String())
+	}
+}
+
 func TestRunControlAndInvalidArguments(t *testing.T) {
 	for _, tc := range []struct {
 		name   string

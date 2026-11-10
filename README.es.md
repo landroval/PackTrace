@@ -12,9 +12,12 @@ Ayuda a responder:
 3. **¿Qué evidencia existe?** Lockfile, manifiesto instalado, aviso y referencia se mantienen separados.
 4. **¿Qué revisar después?** Aplicabilidad, evidencia ausente o un límite de corrección registrado por el aviso.
 
-> **Software experimental, no una versión cualificada para producción.** No hay
-> paquetes de instalación publicados ni garantías generales de plataforma. macOS
-> sigue aplazado. Cero hallazgos nunca significa que el proyecto o el equipo sean seguros.
+> **v0.1.0-alpha.1 — prerelease experimental, no cualificada para producción.**
+> [Descargas](https://github.com/landroval/PackTrace/releases/tag/v0.1.0-alpha.1) ·
+> [Notas y verificación](docs/releases/v0.1.0-alpha.1.md).
+> Linux amd64 se prueba con fixtures propios; Windows amd64 solo se compila de forma
+> cruzada, sin prueba de ejecución de este release. macOS sigue aplazado. Cero
+> hallazgos nunca significa que un proyecto o equipo esté limpio.
 
 ## Empieza aquí
 

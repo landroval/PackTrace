@@ -11,9 +11,12 @@ PackTrace is a read-only, offline investigation CLI. It helps answer:
 3. **What supports that result?** Separate lockfile, installed-manifest, advisory and reference evidence.
 4. **What should I verify next?** Applicability, missing evidence, or a correction boundary recorded by the advisory.
 
-> **Experimental software, not a qualified release.** There are no published
-> installation packages or production-qualified platform guarantees. macOS remains
-> deferred. Zero findings never means that a project or machine is safe.
+> **v0.1.0-alpha.1 — experimental prerelease, not production-qualified.**
+> [Downloads](https://github.com/landroval/PackTrace/releases/tag/v0.1.0-alpha.1) ·
+> [Release notes and verification](docs/releases/v0.1.0-alpha.1.md).
+> Linux amd64 is exercised on owned fixtures; Windows amd64 is cross-compiled only,
+> not runtime-tested for this release. macOS remains deferred. Zero findings never
+> means that a project or machine is safe.
 
 ## Start here
 
