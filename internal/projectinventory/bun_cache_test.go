@@ -40,7 +40,7 @@ func TestBunPairedCacheInventory(t *testing.T) {
 				t.Fatal("implicit cache admission", err)
 			}
 			got, err := Collect(context.Background(), root, Options{Profile: "auto", BunCache: cache})
-			if err != nil || got.Selection.Profile != "bun@1.3.x" || got.Selection.State != "usable" || ValidatePublic(PortableMatching(got)) != nil {
+			if err != nil || got.Selection.Profile != "bun@1.2-1.4" || got.Selection.State != "usable" || ValidatePublic(PortableMatching(got)) != nil {
 				t.Fatal("Bun source/closure invalid", got, err)
 			}
 			installedOK := false

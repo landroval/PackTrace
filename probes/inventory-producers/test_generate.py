@@ -22,6 +22,15 @@ class GenerationTests(unittest.TestCase):
         with self.assertRaises(generate.Rejected):
             generate.install_arguments('npm', '10.9.4', 'https://registry.npmjs.org', 'hoisted', 'copyfile')
 
+    def test_old_producers_do_not_receive_newer_linker_options(self):
+        old_npm = generate.install_arguments('npm', '7.24.2', generate.REGISTRY, 'hoisted', 'copyfile')
+        self.assertNotIn('--install-links', old_npm)
+        old_bun = generate.install_arguments('bun', '1.2.23', generate.REGISTRY, 'hoisted', 'copyfile')
+        self.assertNotIn('--linker', old_bun)
+        self.assertIn('--ignore-scripts', old_bun)
+        with self.assertRaises(generate.Rejected):
+            generate.install_arguments('bun', '1.2.23', generate.REGISTRY, 'isolated', 'copyfile')
+
     def test_owned_pack_has_only_inert_fixture_data(self):
         manifest = {'name': 'fixture-owned', 'version': '1.0.0'}
         data = generate.package_archive(manifest)

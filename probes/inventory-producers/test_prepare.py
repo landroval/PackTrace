@@ -1,10 +1,12 @@
 import base64
 import hashlib
 import io
+import json
 from pathlib import Path
 import tarfile
 import tempfile
 import unittest
+from unittest import mock
 import zipfile
 
 import prepare
@@ -42,6 +44,31 @@ class PreparationTests(unittest.TestCase):
         self.assertFalse(prepare.allowed_redirect('bun', 'http://release-assets.githubusercontent.com/owned'))
         self.assertFalse(prepare.allowed_redirect('bun', 'https://evil.invalid/tool'))
         self.assertFalse(prepare.allowed_redirect('npm', 'https://github.com/owned'))
+
+    def test_new_exact_anchors_still_require_matching_official_sources(self):
+        for kind, version in [('npm', '7.24.2'), ('npm', '9.9.4'), ('bun', '1.2.23')]:
+            s = self.source(b'owned', kind)
+            s['version'] = version
+            s['url'] = (f'https://registry.npmjs.org/npm/-/npm-{version}.tgz' if kind == 'npm' else f'https://github.com/oven-sh/bun/releases/download/bun-v{version}/bun-linux-x64.zip')
+            prepare.check_source(s)
+            s['version'] += '-canary'
+            with self.assertRaises(prepare.Rejected):
+                prepare.check_source(s)
+
+    def test_explicit_subset_is_allowed_but_duplicates_refuse_before_acquisition(self):
+        source = self.source(b'owned')
+        for sources, valid in [([source], True), ([source, source], False), ([], False)]:
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp); manifest = root / 'sources.json'
+                manifest.write_text(json.dumps(sources))
+                with mock.patch('sys.argv', ['prepare.py', str(manifest), str(root / 'output')]), mock.patch.object(prepare, 'prepare_one') as acquire:
+                    if valid:
+                        prepare.main()
+                        self.assertEqual(acquire.call_count, 1)
+                    else:
+                        with self.assertRaises(prepare.Rejected):
+                            prepare.main()
+                        acquire.assert_not_called()
 
     def test_bytes_and_digest_must_match_before_extraction(self):
         data = self.tar([('package/LICENSE', tarfile.REGTYPE, b'The Artistic License 2.0')])

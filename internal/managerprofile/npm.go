@@ -6,24 +6,27 @@ import (
 	"strings"
 )
 
-// NPMRange selects the bounded npm 10/11 lockfile interpretation without
+// NPMRange selects the bounded npm 7-11 lockfile interpretation without
 // asserting which producer wrote the input. Actual formats are validated later.
-const NPMRange = "npm@10-11"
+const NPMRange = "npm@7-11"
+
+// NPMLegacyRange remains accepted for existing explicitly pinned policies.
+const NPMLegacyRange = "npm@10-11"
 
 // NPM12Range selects npm 12 semantics without asserting a concrete producer.
 const NPM12Range = "npm@12.x"
 
-// SupportsNPM admits stable npm 10.x/11.x/12.x interpretations and the legacy
-// npm 8 anchor. It grants neither producer authentication nor origin authority.
+// SupportsNPM admits stable npm 7.x-12.x interpretations, not producer
+// authentication or origin authority. Actual lock formats are validated later.
 func SupportsNPM(profile string) bool {
-	if profile == NPMRange || profile == NPM12Range || profile == "npm@8.19.4" {
+	if profile == NPMRange || profile == NPMLegacyRange || profile == NPM12Range {
 		return true
 	}
 	if len(profile) > 38 || !strings.HasPrefix(profile, "npm@") {
 		return false
 	}
 	parts := strings.Split(profile[4:], ".")
-	if len(parts) != 3 || parts[0] != "10" && parts[0] != "11" && parts[0] != "12" {
+	if len(parts) != 3 || parts[0] != "7" && parts[0] != "8" && parts[0] != "9" && parts[0] != "10" && parts[0] != "11" && parts[0] != "12" {
 		return false
 	}
 	for _, part := range parts[1:] {

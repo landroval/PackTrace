@@ -123,7 +123,7 @@ func TestSelectBunInputLayouts(t *testing.T) {
 
 func TestSelectBunInputProfiles(t *testing.T) {
 	profiles := []string{
-		"", "auto", "bun", "bun@1.4.3", "bun@1.3.03", "BUN@1.4.2",
+		"", "auto", "bun", "bun@1.5.0", "bun@1.3.03", "BUN@1.4.2",
 		" bun@1.4.2", "bun@1.4.2 ", "bun@1.4.2\n", "bun@1.4.2\x00",
 		"bun@1.04.2", "bun@1.4", "bun@v1.4.2", "bun@1.4.2-rc.1",
 		"bun@1.4.2+build", "npm@11.6.2", "yarn", "pnpm", "ｂｕｎ@1.4.2", "\xff\xfe",

@@ -110,7 +110,7 @@ State must be on a supported persistent filesystem, outside the investigated pro
 
 Save the following JSON as `/operator/config/policy.json`, in a private directory
 outside the project. This is a **report-only candidate-investigation example** for
-Bun 1.3.x. It explicitly allows local identity/version lookups with unknown origins;
+Bun 1.2.x–1.4.x text inputs. It explicitly allows local identity/version lookups with unknown origins;
 it does not authenticate origins or grant network access.
 
 ```json
@@ -119,7 +119,7 @@ it does not authenticate origins or grant network access.
   "designation": "user-designated",
   "reason": "Investigate recorded dependency identities and versions offline",
   "provenance": "Operator-reviewed external report-only policy",
-  "manager": "bun@1.3.x",
+  "manager": "bun@1.2-1.4",
   "requiredChecks": ["malicious", "vulnerability"],
   "failOn": [],
   "requireHardMemoryLimit": false,
@@ -129,7 +129,8 @@ it does not authenticate origins or grant network access.
 }
 ```
 
-For npm, use `"manager": "npm@10-11"` or `"npm@12.x"` as appropriate. Select the
+For npm, use `"manager": "npm@7-11"` or `"npm@12.x"` as appropriate. Existing
+`npm@10-11` and Bun minor-family policies remain accepted and are not rewritten. Select the
 actual supported interpretation; do not misdeclare the manager to bypass a refusal.
 This example intentionally omits integrity references and public-origin grants.
 Do not use it to claim a complete integrity assessment or confirmed vulnerabilities.
@@ -421,7 +422,7 @@ parsing if the path starts with a dash. Repeated flags and unknown options fail.
 
 | Option | Values / behavior |
 | --- | --- |
-| `--manager` | `auto`, `npm`, `npm@10-11`, `npm@12.x`, `npm@VERSION`, `bun`, `bun@1.3.x`, `bun@VERSION`; only admitted stable profiles |
+| `--manager` | `auto`, `npm`, `npm@7-11`, legacy `npm@10-11`, `npm@12.x`, `npm@VERSION`, `bun`, `bun@1.2-1.4`, `bun@1.2.x`, `bun@1.3.x`, `bun@1.4.x`, `bun@VERSION`; admitted stable profiles only |
 | `--checks` | Nonempty comma-separated subset of `malicious,vulnerability,integrity`; no spaces or repeats |
 | `--fail-on` | `none` or selected categories; cannot weaken required policy enforcement |
 | `--policy` | Explicit external version-1 JSON policy; bypasses saved setup |
@@ -441,10 +442,21 @@ a fully configured advisory/integrity investigation.
 Manager selection interprets formats, never authenticates a producer or origin.
 `auto` accepts an unambiguous supported root without requiring a producer hint.
 Competing npm lockfiles without a hint need explicit npm selection; mixed npm/Bun
-or unsupported hints stay gaps. npm 10/11 use shrinkwrap precedence and v2/v3;
-npm 12 ignores shrinkwrap, never falls back to it, and admits v3 only. Bun 1.3.x
-admits text lock v0/v1 with config absent/0/1. Binary locks, npm v4, unsupported
-extensions/prereleases and unsafe/ambiguous ownership remain incomplete.
+or unsupported hints stay gaps. npm 7–11 use shrinkwrap precedence and v2/v3;
+npm 12 ignores shrinkwrap, never falls back to it, and admits v3 only. Bun 1.2.x
+and 1.3.x admit text lock v0/v1; Bun 1.4.x admits bounded v0–v3; all require config
+absent/0/1. The versionless Bun family interpretation can inspect all admitted text
+formats without naming the producer. Range aliases are not valid concrete
+`packageManager` hints. Binary locks, npm v1/v4, unsupported extensions/prereleases
+and unsafe/ambiguous ownership remain incomplete. Unknown complex Bun metadata is
+not made supported merely by recognizing its version.
+
+New inert producer fixtures cover npm 7.24.2, 8.19.4, 9.9.4 and Bun 1.2.23, 1.4.2
+on Linux/amd64 with Node v26.13.0 where applicable. Single projects, workspaces,
+shrinkwrap, aliases, optional absence, multiple physical copies and hardlink refusal
+are replayed without changing links. Bun 1.2 uses its hoisted layout, not the newer
+isolated linker; its actual local Git commit request failed and stays unqualified.
+The separately captured non-Git source subset does not erase that failure.
 
 ## 7. Policies, references and exceptions
 
@@ -645,8 +657,8 @@ example, `packtrace inspect --help`; help is available per supplied-input comman
 
 ## 12. Limits and technical references
 
-Current interpretation covers stable npm 10/11 v2/v3, npm 12 v3, bounded Bun 1.3.x
-text formats and the explicitly retained older profiles. It does not qualify every
+Current interpretation covers stable npm 7–11 v2/v3, npm 12 v3 and bounded Bun
+1.2.x–1.4.x text formats, with explicit minor-family limits and legacy profiles. It does not qualify every
 producer patch, layout, operating system, filesystem, external store or runtime.
 Installed evidence is not a complete runtime-resolution or dependency-reachability graph.
 

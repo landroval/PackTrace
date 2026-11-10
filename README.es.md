@@ -113,10 +113,11 @@ confirmadas. Consulta [cómo leer el informe](docs/user-guide.es.md#5-lee-el-inf
 
 | Entrada | Interpretación acotada actual |
 | --- | --- |
-| npm 10.x / 11.x | Versiones estables, lockfile v2/v3; prioridad de shrinkwrap |
+| npm 7.x–11.x | Versiones estables, lockfile v2/v3; prioridad de shrinkwrap; `npm@7-11` |
 | npm 12.x | Versiones estables, solo lockfile v3; ignora shrinkwrap y no recurre a él |
-| Bun 1.3.x | `bun.lock` de texto v0/v1; configuración ausente/0/1 |
-| Perfiles anteriores explícitos | npm 8.19.4; Bun 1.4.2 |
+| Bun 1.2.x / 1.3.x | `bun.lock` de texto v0/v1; configuración ausente/0/1 |
+| Bun 1.4.x | Texto acotado v0–v3; configuración ausente/0/1 |
+| Perfiles de familia/anteriores | `bun@1.2-1.4`, `bun@1.2.x`, `bun@1.3.x`, `bun@1.4.x`; se conserva `npm@10-11` |
 | Workspaces | Miembros relativos explícitos y patrones acotados de un nivel; la propiedad ambigua sigue siendo una limitación |
 
 Se interpreta el formato: **no** se garantiza cada productor, distribución,
@@ -125,6 +126,9 @@ versiones preliminares o desconocidas, enlaces inseguros y distribuciones no
 admitidas generan limitaciones explícitas. El perfil opcional de caché Bun en
 Linux solo admite un par verificado de **exactamente dos nombres** para el
 hardlink del manifiesto; tres o más siguen siendo ilegibles.
+Los nuevos productores de prueba incluyen npm 7.24.2/8.19.4/9.9.4 y Bun 1.2.23/1.4.2.
+El caso de Git local de Bun 1.2.23 sigue sin cualificarse. No se amplían ni renuevan
+silenciosamente las políticas guardadas: un perfil anterior más estrecho conserva sus límites.
 
 [Evidencia de inventario](docs/inventory-compatibility.md) · [Evidencia de inteligencia](docs/intelligence-compatibility.md) · [Requisitos de publicación](docs/pre-1.0-features.md)
 

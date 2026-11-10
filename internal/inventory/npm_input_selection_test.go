@@ -188,7 +188,7 @@ func TestSelectNPMInputPrecedence(t *testing.T) {
 
 func TestSelectNPMInputProfiles(t *testing.T) {
 	profiles := []string{
-		"", "auto", "npm", "npm@13.1.0", "npm@9.6.3", "NPM@11.6.2",
+		"", "auto", "npm", "npm@13.1.0", "npm@6.14.18", "NPM@11.6.2",
 		" npm@11.6.2", "npm@11.6.2 ", "npm@11.6.2\n", "npm@11.6.2\x00",
 		"npm@11.6.02", "npm@11.6", "npm@v11.6.2", "npm@11.6.2-rc.1",
 		"npm@11.6.2+build", "bun@1.4.2", "yarn", "pnpm", "ｎｐｍ@11.6.2", "\xff\xfe",
