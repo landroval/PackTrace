@@ -69,8 +69,15 @@ spelling looks correct. Do not weaken those checks to obtain a green result.
 
 ## 2. Build and prerequisites
 
-There is no published installer or qualified release binary. Use a reviewed
-checkout and an already-installed toolchain compatible with `go.mod` (Go 1.27.1).
+The [v0.1.0-alpha.1 prerelease](https://github.com/landroval/PackTrace/releases/tag/v0.1.0-alpha.1)
+provides experimental Linux amd64 and Windows amd64 archives. Linux is exercised
+on owned fixtures; Windows is **cross-compiled only, not runtime-tested for this
+release**. Neither is production-qualified. See [verification, unsigned build
+metadata and limitations](releases/v0.1.0-alpha.1.md) before running an archive.
+There is no installer or automatic configuration/data download.
+
+Alternatively use a reviewed checkout and an already-installed toolchain
+compatible with `go.mod` (Go 1.27.1).
 The root application uses only the Go standard library; npm and Bun are **not**
 needed to run a scan and must not be run against a suspicious target for preparation.
 
