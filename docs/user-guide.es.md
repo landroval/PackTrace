@@ -114,7 +114,7 @@ El almacén debe estar en un sistema de archivos persistente admitido y fuera de
 
 Guarda este JSON como `/operator/config/policy.json`, dentro de una carpeta privada
 externa al proyecto. Es un **ejemplo report-only de investigación de candidatos**
-para Bun 1.3.x. Permite explícitamente búsquedas locales de identidad y versión
+para entradas de texto Bun 1.2.x–1.4.x. Permite explícitamente búsquedas locales de identidad y versión
 con origen desconocido; no autentica ese origen ni autoriza la red.
 
 ```json
@@ -123,7 +123,7 @@ con origen desconocido; no autentica ese origen ni autoriza la red.
   "designation": "user-designated",
   "reason": "Investigate recorded dependency identities and versions offline",
   "provenance": "Operator-reviewed external report-only policy",
-  "manager": "bun@1.3.x",
+  "manager": "bun@1.2-1.4",
   "requiredChecks": ["malicious", "vulnerability"],
   "failOn": [],
   "requireHardMemoryLimit": false,
@@ -133,7 +133,9 @@ con origen desconocido; no autentica ese origen ni autoriza la red.
 }
 ```
 
-Para npm utiliza `"manager": "npm@10-11"` o `"npm@12.x"`, según corresponda.
+Para npm utiliza `"manager": "npm@7-11"` o `"npm@12.x"`, según corresponda.
+Se conservan `npm@10-11` y los perfiles Bun por familia menor; no se reescriben
+las políticas existentes.
 Selecciona la interpretación realmente adecuada; no declares otro gestor para
 eludir un rechazo. El ejemplo omite deliberadamente referencias de integridad y
 permisos de origen público. No permite afirmar que se completó la integridad ni
@@ -440,7 +442,7 @@ La ayuda se usa sola: `packtrace scan --help`.
 
 | Opción | Valores y comportamiento |
 | --- | --- |
-| `--manager` | `auto`, `npm`, `npm@10-11`, `npm@12.x`, `npm@VERSION`, `bun`, `bun@1.3.x`, `bun@VERSION`; solo perfiles estables admitidos |
+| `--manager` | `auto`, `npm`, `npm@7-11`, antiguo `npm@10-11`, `npm@12.x`, `npm@VERSION`, `bun`, `bun@1.2-1.4`, `bun@1.2.x`, `bun@1.3.x`, `bun@1.4.x`, `bun@VERSION`; solo perfiles estables admitidos |
 | `--checks` | Subconjunto no vacío de `malicious,vulnerability,integrity`, separado por comas, sin espacios ni repetidos |
 | `--fail-on` | `none` o categorías seleccionadas; no debilita enforcement de la política |
 | `--policy` | Política JSON externa versión 1; evita la configuración guardada |
@@ -460,10 +462,22 @@ supone una investigación de avisos e integridad completamente configurada.
 Seleccionar gestor interpreta formatos: no autentica al productor ni al origen.
 `auto` acepta una raíz admitida sin ambigüedad, sin exigir pista de productor.
 Varios locks npm sin pista requieren selección npm explícita. Mezclas npm/Bun o
-pistas no admitidas siguen siendo limitaciones. npm 10/11 usa prioridad de
+pistas no admitidas siguen siendo limitaciones. npm 7–11 usa prioridad de
 shrinkwrap y v2/v3; npm 12 ignora shrinkwrap, no recurre a él y solo admite v3.
-Bun 1.3.x admite texto v0/v1 con configuración ausente/0/1. Locks binarios, npm v4,
-extensiones/preliminares no admitidas y propiedad insegura o ambigua dejan cobertura incompleta.
+Bun 1.2.x y 1.3.x admiten texto v0/v1; Bun 1.4.x admite v0–v3 acotados, siempre
+con configuración ausente/0/1. La interpretación Bun sin versión concreta puede
+leer los formatos admitidos sin identificar al productor. Los alias de rango no
+son pistas concretas válidas en `packageManager`. Locks binarios, npm v1/v4,
+extensiones/preliminares no admitidas y propiedad insegura o ambigua dejan cobertura
+incompleta. Reconocer la versión no convierte metadatos Bun complejos desconocidos
+en funciones admitidas.
+
+Los nuevos fixtures inertes usan npm 7.24.2, 8.19.4, 9.9.4 y Bun 1.2.23, 1.4.2 en
+Linux/amd64, con Node v26.13.0 cuando corresponde. Se repiten proyectos simples,
+workspaces, shrinkwrap, alias, ausencia opcional, copias físicas y rechazo de
+hardlinks sin modificar los enlaces originales. Bun 1.2 usa distribución hoisted,
+no el linker aislado posterior; su petición real de commit Git local falló y sigue
+sin cualificarse. El subconjunto separado de fuentes no Git no borra ese fallo.
 
 ## 7. Políticas, referencias y excepciones
 
@@ -668,8 +682,8 @@ ejemplo `packtrace inspect --help`, para su envelope exacto.
 
 ## 12. Límites y referencias técnicas
 
-Se interpretan npm estables 10/11 v2/v3, npm 12 v3, formatos de texto Bun 1.3.x
-acotados y los perfiles anteriores retenidos explícitamente. No se cualifica
+Se interpretan npm estables 7–11 v2/v3, npm 12 v3 y formatos de texto Bun
+1.2.x–1.4.x acotados, con límites explícitos por familia menor y perfiles anteriores. No se cualifica
 cada parche de productor, distribución, sistema operativo, sistema de archivos,
 almacén externo ni runtime. La evidencia instalada no constituye un grafo completo
 de resolución en ejecución o accesibilidad de dependencias.

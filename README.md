@@ -106,10 +106,11 @@ confirmed vulnerabilities. See [reading a report](docs/user-guide.md#5-read-the-
 
 | Input | Current bounded interpretation |
 | --- | --- |
-| npm 10.x / 11.x | Stable versions, lockfile v2/v3; shrinkwrap precedence |
+| npm 7.x–11.x | Stable versions, lockfile v2/v3; shrinkwrap precedence; `npm@7-11` |
 | npm 12.x | Stable versions, lockfile v3 only; shrinkwrap ignored, no fallback |
-| Bun 1.3.x | Text `bun.lock` v0/v1; config absent/0/1 |
-| Older explicit profiles | npm 8.19.4; Bun 1.4.2 |
+| Bun 1.2.x / 1.3.x | Text `bun.lock` v0/v1; config absent/0/1 |
+| Bun 1.4.x | Bounded text v0–v3; config absent/0/1 |
+| Family/legacy profiles | `bun@1.2-1.4`, `bun@1.2.x`, `bun@1.3.x`, `bun@1.4.x`; `npm@10-11` remains accepted |
 | Workspaces | Explicit relative members and bounded one-level patterns; ambiguous ownership remains a gap |
 
 This is format interpretation, **not** a guarantee for every producer, layout,
@@ -117,6 +118,9 @@ filesystem or platform. Binary Bun locks, npm lockfile v4, prerelease/unknown
 producer hints, unsafe links and unsupported layouts remain explicit gaps.
 The optional Linux Bun-cache profile admits only a verified **exactly two-name**
 manifest hardlink pair; three or more names stay unreadable.
+New owned producer anchors include npm 7.24.2/8.19.4/9.9.4 and Bun 1.2.23/1.4.2.
+Bun 1.2.23's local Git producer case remains unqualified. Saved policies are not
+silently widened or repinned; a narrower existing profile keeps its limits.
 
 [Inventory evidence](docs/inventory-compatibility.md) · [Intelligence evidence](docs/intelligence-compatibility.md) · [Release gates](docs/pre-1.0-features.md)
 

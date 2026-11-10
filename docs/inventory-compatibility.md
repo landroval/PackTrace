@@ -3,8 +3,9 @@
 **Current reading guide:** the [user manual](user-guide.md) / [manual en español](user-guide.es.md)
 describe the current CLI. Issue #5's bounded inventory work was integrated; that
 does not qualify a release. Later compatibility successors interpret stable npm
-10/11 v2/v3, npm 12 v3 (no shrinkwrap fallback), and bounded Bun 1.3.x text inputs.
-Additional inert producer data records npm 10.9.9, 11.20.0, 12.2.2 and Bun 1.3.14;
+7–11 v2/v3, npm 12 v3 (no shrinkwrap fallback), and bounded Bun 1.2.x–1.4.x text inputs.
+Inert producer data includes npm 7.24.2, 8.19.4, 9.9.4, 10.9.9, 11.20.0, 12.2.2
+and Bun 1.2.23, 1.3.14, 1.4.2;
 these do not qualify every release/layout/platform. The optional Linux Bun-cache
 profile admits only a verified, retained exactly-two-name manifest hardlink pair;
 generic hardlink refusal remains unchanged. Current operational scan schema is 1.7.
@@ -12,6 +13,53 @@ generic hardlink refusal remains unchanged. Current operational scan schema is 1
 The exact artifact counts, schemas, pending gates and versions below describe the
 **historical increment at its recorded source**, not a current blanket support
 matrix. Keep failed/unqualified cases visible; no new native campaign is implied.
+
+## Current expanded range evidence
+
+`internal/managerprofile` admits stable concrete npm 7.x–12.x and Bun
+1.2.x–1.4.x. Built-in versionless selection uses `npm@7-11` or `bun@1.2-1.4`
+only for unambiguous supported input presence; it does not identify the producer.
+Legacy `npm@10-11` and explicit Bun minor-family profiles remain valid without
+rewriting or reapproving persisted policies. Range aliases are not concrete
+`packageManager` hints. npm 12 stays separate: only v3, ignore shrinkwrap with no
+fallback. Bun 1.2/1.3 stay at text v0/v1; 1.4 and the generic family interpretation
+can inspect bounded v0–v3. Config remains absent/0/1. No new grammar, external
+store authority, hardlink admission or complex override support is inferred.
+
+Five exact producer anchors ran on Linux/amd64 with verified Node v26.13.0,
+read-only re-extracted tools, scripts disabled, a private rootless network/PID
+namespace, owned loopback registry, positive/negative isolation controls, a
+512 MiB scratch ceiling, bounded output and confirmed wait/group cleanup.
+The 29 npm/Bun invocations include a preserved failed Git request; the authorized
+64-call ceiling was not exhausted. Three pinned tool acquisitions plus metadata
+used 45,566,820 response bytes under a 64 MiB allowance; npm 8.19.4 and Bun 1.4.2
+archives were reused and verified again, not downloaded again. This is producer
+fixture evidence, not new native release/platform qualification.
+
+| Producer | Actual captured format | Owned cases / limit |
+| --- | --- | --- |
+| npm 7.24.2 | v2 | Single, shrinkwrap, workspaces, local/tarball/URL/Git declarations |
+| npm 8.19.4 | v2 | Same; explicit legacy profile remains accepted |
+| npm 9.9.4 | v3 | Same; v2/v3 interpretation does not authenticate a producer |
+| Bun 1.2.23 | text v1 | Hoisted single/workspaces, hardlink refusal, non-Git source subset |
+| Bun 1.4.2 | text v2 | Hoisted/isolated, nested/peer/bundled inventory, sources, hardlink refusal |
+
+Bun 1.2.23 could not resolve the explicitly requested owned local Git commit
+(actual producer exit 1). That case remains **unqualified**; it was not retried
+or rewritten into success. A separately named non-Git source subset was captured.
+Bun 1.3.2's older Git refusals also remain unqualified. Binary `bun.lockb`, npm
+v1/v4, future majors/minors, prereleases, unknown complex metadata and unsafe
+physical layouts stay explicit gaps/refusals.
+
+The appended recipe corpus
+[`manager-ranges.json`](../internal/projectinventory/testdata/producer/manager-ranges.json)
+contains 21 captures, 165887 bytes, SHA-256
+`72942dd085bdc3cb2f4bb0373e427204f957329b19f94f7fb1e15b62ecbddb22`.
+`TestExpandedManagerProducerReplay` preserves original link targets/multiplicity
+and checks exact, family and automatic profiles, identities, scopes, physical
+copies, optional absence and public matching closure. Replay elsewhere is not
+executing those producers elsewhere. Existing historical corpora below remain
+unchanged. Digests designate bytes, not publisher authentication.
 
 ## Historical owned-producer candidate evidence
 

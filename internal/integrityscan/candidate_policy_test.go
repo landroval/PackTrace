@@ -43,7 +43,7 @@ func TestAdvisoryCandidatesPolicyStrictOptionalBool(t *testing.T) {
 }
 
 func TestAdvisoryCandidatesPolicyManagerBound(t *testing.T) {
-	for _, manager := range []string{"npm@8.19.4", "npm@10.9.4", "npm@11.6.2", "bun@1.3.2", "bun@1.4.2", "npm@99.0.0", "npm", "auto"} {
+	for _, manager := range []string{"npm@7.24.2", "npm@7-11", "npm@9.9.4", "bun@1.2.x", "bun@1.4.x", "bun@1.2-1.4", "npm@8.19.4", "npm@10.9.4", "npm@11.6.2", "bun@1.3.2", "bun@1.4.2", "npm@99.0.0", "npm", "auto"} {
 		t.Run(manager, func(t *testing.T) {
 			p, err := ParsePolicy([]byte(policyJSON))
 			if err != nil {
@@ -51,7 +51,7 @@ func TestAdvisoryCandidatesPolicyManagerBound(t *testing.T) {
 			}
 			p.Manager = manager
 			p.AdvisoryCandidates = true
-			want := oneOf(manager, "npm@8.19.4", "npm@10.9.4", "npm@11.6.2", "bun@1.3.2", "bun@1.4.2")
+			want := oneOf(manager, "npm@7.24.2", "npm@7-11", "npm@9.9.4", "bun@1.2.x", "bun@1.4.x", "bun@1.2-1.4", "npm@8.19.4", "npm@10.9.4", "npm@11.6.2", "bun@1.3.2", "bun@1.4.2")
 			if err := ValidatePolicy(p); (err == nil) != want {
 				t.Fatalf("manager accepted=%v want=%v: %v", err == nil, want, err)
 			}

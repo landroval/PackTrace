@@ -99,8 +99,11 @@ def install_arguments(kind, version, registry, layout, backend):
     require(registry == REGISTRY, 'registry-not-owned')
     require(kind in ('npm', 'bun') and layout in ('hoisted', 'isolated') and backend in ('copyfile', 'hardlink'), 'producer-options')
     if kind == 'npm':
-        return ['/usr/bin/node', '/tools/package/bin/npm-cli.js', 'install', '--ignore-scripts', '--no-audit', '--no-fund', '--install-links', '--registry', registry, '--userconfig', '/work/config/user', '--globalconfig', '/work/config/global', '--cache', '/work/cache/npm']
-    return ['/tools/bun-linux-x64/bun', 'install', '--ignore-scripts', '--no-progress', '--linker', layout, '--backend', backend, '--registry', registry]
+        links = [] if version == '7.24.2' else ['--install-links']
+        return ['/usr/bin/node', '/tools/package/bin/npm-cli.js', 'install', '--ignore-scripts', '--no-audit', '--no-fund'] + links + ['--registry', registry, '--userconfig', '/work/config/user', '--globalconfig', '/work/config/global', '--cache', '/work/cache/npm']
+    require(version != '1.2.23' or layout == 'hoisted', 'producer-layout-unsupported')
+    linker = [] if version == '1.2.23' else ['--linker', layout]
+    return ['/tools/bun-linux-x64/bun', 'install', '--ignore-scripts', '--no-progress'] + linker + ['--backend', backend, '--registry', registry]
 
 
 def package_archive(manifest, extra=None):
@@ -258,7 +261,7 @@ def fixture_registry():
 
 def inside():
     control = json.loads(Path('/control/prepared.json').read_text())
-    source = control['source']; planned = selected_cases(source['kind'], control.get('cases')); budget = RunBudget(limit=call_allowance(source['kind'], planned)); result = {'producer': source['kind'] + '@' + source['version'], 'status': 'failed', 'captures': []}
+    source = control['source']; planned = selected_cases(source['kind'], control.get('cases')); require(source['version'] != '1.2.23' or 'isolated-single' not in planned, 'producer-layout-unsupported'); budget = RunBudget(limit=call_allowance(source['kind'], planned)); result = {'producer': source['kind'] + '@' + source['version'], 'status': 'failed', 'captures': []}
     server, thread = None, None
     try:
         for name in ('home', 'tmp', 'cache', 'config', 'projects'):
@@ -287,9 +290,10 @@ def inside():
         result['helperReceipts'] = helpers.receipts
         expectations = case_expectations()
         cases = selected_cases(source['kind'], control.get('cases'))
-        omit_git_file = source['kind'] == 'bun' and source['version'] == '1.3.2'
+        omit_git_file = source['kind'] == 'bun' and source['version'] in ('1.2.23', '1.3.2')
         if omit_git_file:
-            result['unqualifiedProducerCases'] = [{'case': 'sources/git+file', 'qualified': False, 'reason': 'prior actual Bun 1.3.2 requests failed both HEAD and explicit commit; not retried or inferred'}]
+            reason = ('prior actual Bun 1.3.2 requests failed both HEAD and explicit commit; not retried or inferred' if source['version'] == '1.3.2' else 'prior actual Bun 1.2.23 request could not resolve the explicit owned Git commit; Git case remains unqualified, this subset omits Git')
+            result['unqualifiedProducerCases'] = [{'case': 'sources/git+file', 'qualified': False, 'reason': reason}]
             expectations['sources']['declaredKeys'].remove('fixture-git')
         for case in cases:
             project = Path('/work/projects', case); project.mkdir()
@@ -301,7 +305,7 @@ def inside():
             else:
                 manifest = source_manifest(git_commit, include_git=not omit_git_file)
             (project / 'package.json').write_text(json.dumps(manifest, sort_keys=True))
-            layout = 'isolated' if source['kind'] == 'bun' and case in ('workspaces','isolated-single') else 'hoisted'
+            layout = 'isolated' if source['kind'] == 'bun' and source['version'] != '1.2.23' and case in ('workspaces','isolated-single') else 'hoisted'
             backend = 'hardlink' if case == 'hardlink' else 'copyfile'
             args = install_arguments(source['kind'], source['version'], REGISTRY, layout, backend)
             run_owned(args, project, env, budget)

@@ -35,7 +35,7 @@ func builtinSelectionOptions(opts Options, manifest *inventory.ManifestDocument,
 		return opts
 	}
 	var hint string
-	if json.Unmarshal(raw, &hint) != nil || hint == managerprofile.NPMRange || hint == managerprofile.NPM12Range || hint == managerprofile.BunRange || !SupportedSelectionProfile(hint) {
+	if json.Unmarshal(raw, &hint) != nil || hint == managerprofile.NPMRange || hint == managerprofile.NPMLegacyRange || hint == managerprofile.NPM12Range || hint == managerprofile.BunRange || strings.HasSuffix(hint, ".x") || !SupportedSelectionProfile(hint) {
 		return opts
 	}
 	if requested != "auto" && !strings.HasPrefix(hint, requested+"@") {
@@ -60,7 +60,7 @@ func (c *collector) selectInputs(opts Options, manifest *inventory.ManifestDocum
 	npmPresent := n1.Presence == inventory.NPMInputPresencePresent || n2.Presence == inventory.NPMInputPresencePresent
 	bunPresent := b1.Presence == inventory.BunInputPresencePresent || b2.Presence == inventory.BunInputPresencePresent
 	// A versionless auto request cannot establish competing npm lock precedence:
-	// npm 12 ignores shrinkwrap, unlike the supported npm 10/11 interpretation.
+	// npm 12 ignores shrinkwrap, unlike the supported npm 7-11 interpretation.
 	inferNPM := npmPresent && (opts.Profile == "npm" || b1.Presence == inventory.BunInputPresenceAbsent && b2.Presence == inventory.BunInputPresenceAbsent && !(n1.Presence == inventory.NPMInputPresencePresent && n2.Presence == inventory.NPMInputPresencePresent))
 	inferBun := b1.Presence == inventory.BunInputPresencePresent && b2.Presence == inventory.BunInputPresenceAbsent && (opts.Profile == "bun" || n1.Presence == inventory.NPMInputPresenceAbsent && n2.Presence == inventory.NPMInputPresenceAbsent)
 	opts = builtinSelectionOptions(opts, manifest, inferNPM, inferBun)
@@ -263,12 +263,10 @@ func (c *collector) inspectBun(name string) inventory.BunInputUsability {
 		}
 		return inventory.BunInputUsabilityInvalid
 	}
-	if c.result.Selection.Profile != "bun@1.4.2" {
-		var version int
-		if json.Unmarshal(doc.Fields["lockfileVersion"], &version) != nil || version < 0 || version > 1 {
-			c.gap(1, id, "lock-version-unsupported")
-			return inventory.BunInputUsabilityUnsupported
-		}
+	var version int
+	if json.Unmarshal(doc.Fields["lockfileVersion"], &version) != nil || version < 0 || version > managerprofile.BunTextVersionMax(c.result.Selection.Profile) {
+		c.gap(1, id, "lock-version-unsupported")
+		return inventory.BunInputUsabilityUnsupported
 	}
 	if raw, ok := doc.Fields["configVersion"]; ok {
 		var v int

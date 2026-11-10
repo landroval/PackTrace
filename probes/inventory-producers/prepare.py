@@ -18,7 +18,7 @@ import zipfile
 
 MAX_COMPRESSED = 512 << 20
 MAX_EXTRACTED = 2 << 30
-VERSIONS = {'npm': {'8.19.4', '10.9.4', '11.6.2'}, 'bun': {'1.3.2', '1.4.2'}}
+VERSIONS = {'npm': {'7.24.2', '8.19.4', '9.9.4', '10.9.4', '11.6.2'}, 'bun': {'1.2.23', '1.3.2', '1.4.2'}}
 
 
 class Rejected(Exception):
@@ -58,7 +58,7 @@ def check_source(s):
     require(isinstance(runtime, dict) and re.fullmatch(r'v\d+\.\d+\.\d+', runtime.get('version', '')) and
             re.fullmatch('[0-9a-f]{64}', runtime.get('sha256', '')), 'runtime-missing')
     major, minor, _ = map(int, runtime['version'][1:].split('.'))
-    minimum = {'8.19.4': (16, 0), '10.9.4': (20, 5), '11.6.2': (22, 9)}
+    minimum = {'7.24.2': (16, 0), '8.19.4': (16, 0), '9.9.4': (18, 0), '10.9.4': (20, 5), '11.6.2': (22, 9)}
     if kind == 'npm':
         require((major, minor) >= minimum[version], 'runtime-unqualified')
 
@@ -224,7 +224,10 @@ def main():
     parser.add_argument('sources', type=Path); parser.add_argument('destination', type=Path)
     args = parser.parse_args()
     sources = json.loads(args.sources.read_text())
-    require(isinstance(sources, list) and len(sources) == 5 and {(s.get('kind'), s.get('version')) for s in sources} == {(k, v) for k, vs in VERSIONS.items() for v in vs}, 'source-set')
+    require(isinstance(sources, list) and 0 < len(sources) <= sum(map(len, VERSIONS.values())) and all(isinstance(s, dict) for s in sources), 'source-set')
+    for source in sources:
+        check_source(source)
+    require(len({(s['kind'], s['version']) for s in sources}) == len(sources), 'source-set')
     args.destination.mkdir(mode=0o700, exist_ok=False)
     budget = Budget()
     for source in sources:
