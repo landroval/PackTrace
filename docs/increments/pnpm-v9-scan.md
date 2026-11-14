@@ -61,6 +61,8 @@ type PNPMImporterRecord struct {
     Location string
     Requirements []DependencyGroup // locked claims, never manifest declarations
     References []PNPMDependencyReference
+    Unsupported bool
+    Problem string // fixed code for unsupported importer semantics
 }
 type PNPMLockedRecord struct {
     PackageKey, SnapshotKey string
@@ -74,6 +76,7 @@ type PNPMLockProjection struct {
     SourceSHA256 [32]byte
     Importers []PNPMImporterRecord
     Records []PNPMLockedRecord
+    Unsupported bool // root features outside this first subset
 }
 ```
 
@@ -85,7 +88,9 @@ observations; importer specifiers are only locked claims.
 
 New parser ceilings are **1 MiB raw bytes, depth 64, 100,000 nodes, 64 KiB per
 scalar, 20,000 total importer/package/snapshot records and 20,000 aggregate
-requirements/references**, without increasing the collector's existing limits.
+requirements/references**, plus **8 MiB of aggregate projected string bytes**
+including metadata repeated across snapshot contexts, without increasing the
+collector's existing limits.
 The raw-byte ceiling is checked before the maintained decoder runs. Node decode
 must not expand aliases; its own recursion/alias protections are reviewed, and
 untrusted production parsing remains inside the existing supervised worker.
@@ -102,8 +107,12 @@ well formed. Preserve unknown fields as uninterpreted source evidence, not
 qualified semantics. Unsafe/unsupported identity or resolution forms remain
 explicit unsupported records. Snapshot/package joins require validated bounded
 keys; unmatched snapshots and metadata-only package records stay visible.
-Records are deterministic and snapshot contexts remain distinct. No locked key
-can authorize native access or stand in for an installed location.
+Records are deterministic and snapshot contexts remain distinct. Unsupported
+importer references, explicit source IDs and root patch/unknown feature claims
+produce explicit unsupported signals and coverage gaps; they are not silently
+converted into ordinary registry claims. Parent validation requires all three
+mandatory installed/reconciliation/workspace limitations. No locked key can
+authorize native access or stand in for an installed location.
 
 ## Implementation order and ownership
 

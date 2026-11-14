@@ -18,7 +18,7 @@ func policyEvidenceNeeded(plan Plan) bool {
 // leases. A complete lease is insufficient without qualified input semantics.
 func BuildProjectEvidence(result projectinventory.Result) (ProjectEvidence, bool) {
 	s := result.Selection
-	if s.State != "usable" || !profile(s.Profile) || !oneOf(s.File, "package-lock.json", "npm-shrinkwrap.json", "bun.lock") || (strings.HasPrefix(s.Profile, "npm@") != (s.Family == "npm")) || (strings.HasPrefix(s.Profile, "npm@") != (s.File != "bun.lock")) || !oneOf(s.Family, "npm", "bun") {
+	if s.State != "usable" || !profileLockPair(s.Profile, s.File) || strings.Split(s.Profile, "@")[0] != s.Family {
 		return ProjectEvidence{}, false
 	}
 	root := false

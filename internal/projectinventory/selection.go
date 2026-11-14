@@ -14,7 +14,7 @@ import (
 // A missing hint can use the npm range only with qualified npm input presence.
 // Concrete external-policy profiles are deliberately unaffected.
 func builtinSelectionOptions(opts Options, manifest *inventory.ManifestDocument, inferNPM, inferBun bool) Options {
-	if opts.Profile != "auto" && opts.Profile != "npm" && opts.Profile != "bun" {
+	if opts.Profile != "auto" && opts.Profile != "npm" && opts.Profile != "bun" && opts.Profile != "pnpm" {
 		return opts
 	}
 	requested := opts.Profile
@@ -35,7 +35,11 @@ func builtinSelectionOptions(opts Options, manifest *inventory.ManifestDocument,
 		return opts
 	}
 	var hint string
-	if json.Unmarshal(raw, &hint) != nil || hint == managerprofile.NPMRange || hint == managerprofile.NPMLegacyRange || hint == managerprofile.NPM12Range || hint == managerprofile.BunRange || strings.HasSuffix(hint, ".x") || !SupportedSelectionProfile(hint) {
+	if json.Unmarshal(raw, &hint) == nil && managerprofile.PNPMHint(hint) && (requested == "auto" || requested == "pnpm") {
+		opts.Profile = managerprofile.PNPMFormat9
+		return opts
+	}
+	if json.Unmarshal(raw, &hint) != nil || hint == managerprofile.NPMRange || hint == managerprofile.NPMLegacyRange || hint == managerprofile.NPM12Range || hint == managerprofile.BunRange || hint == managerprofile.PNPMFormat9 || strings.HasSuffix(hint, ".x") || !SupportedSelectionProfile(hint) {
 		return opts
 	}
 	if requested != "auto" && !strings.HasPrefix(hint, requested+"@") {
@@ -50,28 +54,57 @@ func builtinSelectionOptions(opts Options, manifest *inventory.ManifestDocument,
 func SupportedSelectionProfile(profile string) bool {
 	npm, ne := inventory.SelectNPMInput(profile, inventory.NPMInputState{}, inventory.NPMInputState{})
 	bun, be := inventory.SelectBunInput(profile, inventory.BunInputState{}, inventory.BunInputState{})
-	return ne == nil && npm.ProfileQualified || be == nil && bun.ProfileQualified
+	return ne == nil && npm.ProfileQualified || be == nil && bun.ProfileQualified || managerprofile.SupportsPNPM(profile)
 }
 
 func (c *collector) selectInputs(opts Options, manifest *inventory.ManifestDocument) {
 	s := &c.result.Selection
+	if opts.Profile == "auto" {
+		opts.ExplicitManager = false
+	}
 	n1, n2 := c.npmState("npm-shrinkwrap.json"), c.npmState("package-lock.json")
 	b1, b2 := c.bunState("bun.lock"), c.bunState("bun.lockb")
+	pp, pu := c.presence("pnpm-lock.yaml")
 	npmPresent := n1.Presence == inventory.NPMInputPresencePresent || n2.Presence == inventory.NPMInputPresencePresent
 	bunPresent := b1.Presence == inventory.BunInputPresencePresent || b2.Presence == inventory.BunInputPresencePresent
 	// A versionless auto request cannot establish competing npm lock precedence:
 	// npm 12 ignores shrinkwrap, unlike the supported npm 7-11 interpretation.
 	inferNPM := npmPresent && (opts.Profile == "npm" || b1.Presence == inventory.BunInputPresenceAbsent && b2.Presence == inventory.BunInputPresenceAbsent && !(n1.Presence == inventory.NPMInputPresencePresent && n2.Presence == inventory.NPMInputPresencePresent))
 	inferBun := b1.Presence == inventory.BunInputPresencePresent && b2.Presence == inventory.BunInputPresenceAbsent && (opts.Profile == "bun" || n1.Presence == inventory.NPMInputPresenceAbsent && n2.Presence == inventory.NPMInputPresenceAbsent)
+	inferNPM = inferNPM && (opts.Profile == "npm" || pp == "absent")
+	inferBun = inferBun && (opts.Profile == "bun" || pp == "absent")
+	if opts.Profile == "pnpm" || opts.Profile == "auto" {
+		hinted := false
+		if manifest != nil {
+			_, hinted = manifest.Fields["packageManager"]
+		}
+		if !hinted && (opts.Profile == "pnpm" || pp == "present" && n1.Presence == inventory.NPMInputPresenceAbsent && n2.Presence == inventory.NPMInputPresenceAbsent && b1.Presence == inventory.BunInputPresenceAbsent && b2.Presence == inventory.BunInputPresenceAbsent) {
+			opts.Profile = managerprofile.PNPMFormat9
+		}
+	}
 	opts = builtinSelectionOptions(opts, manifest, inferNPM, inferBun)
 	s.Profile = opts.Profile
-	conflict := npmPresent && bunPresent
+	conflict := npmPresent && bunPresent || pp != "absent" && (npmPresent || bunPresent) || pp == "present" && (n1.Presence == inventory.NPMInputPresenceUnknown || n2.Presence == inventory.NPMInputPresenceUnknown || b1.Presence == inventory.BunInputPresenceUnknown || b2.Presence == inventory.BunInputPresenceUnknown)
 	if conflict && !opts.ExplicitManager {
 		s.Reason = "manager-conflict"
 		c.gap(1, 0, "selection-indeterminate")
 		return
 	}
 	switch {
+	case managerprofile.SupportsPNPM(opts.Profile):
+		s.Family = "pnpm"
+		s.Reason = "no-root-lock"
+		s.State = "absent"
+		if pp != "absent" {
+			s.State, s.Reason = "indeterminate", "usability-unqualified"
+			if pp == "present" {
+				s.File = "pnpm-lock.yaml"
+				s.State, s.Reason = "unusable", "candidate-unusable"
+				if pu == "unqualified" && c.inspectPNPM() {
+					s.State, s.Reason = "usable", "none"
+				}
+			}
+		}
 	case strings.HasPrefix(opts.Profile, "npm@"):
 		s.Family = "npm"
 		chosen, e := inventory.SelectNPMInput(opts.Profile, n1, n2)

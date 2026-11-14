@@ -498,8 +498,9 @@ packtrace scan --manager pnpm --format json /ruta/al/proyecto-pnpm
 
 `pnpm` selecciona la interpretación acotada `pnpm@lockfile-9`, no una versión del
 productor. Se exige formato exactamente `9.0`; el YAML original tiene límites de
-1 MiB, profundidad 64, 100 000 nodos, escalares de 64 KiB y 20 000
-registros/requisitos agregados. Se rechazan anchors, alias YAML, claves de mezcla,
+1 MiB, profundidad 64, 100 000 nodos, escalares de 64 KiB, 20 000
+registros/requisitos agregados y 8 MiB de texto proyectado, incluidos los metadatos
+repetidos entre snapshots. Se rechazan anchors, alias YAML, claves de mezcla,
 tags explícitos, claves duplicadas/no textuales, documentos adicionales y versiones
 no admitidas en vez de expandirlas o convertirlas implícitamente.
 

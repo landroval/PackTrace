@@ -972,6 +972,9 @@ func ValidateAdvisoryDecision(plan Plan, inventory projectinventory.PublicInvent
 }
 
 func ValidateAdvisorySummary(s AdvisorySummary, decisions []AdvisoryDecision, inventory projectinventory.PublicInventory) error {
+	if inventory.Selection.Family == "pnpm" && s.BytesRead != 0 {
+		return ErrAdvisory
+	}
 	if projectinventory.ValidatePublic(inventory) != nil || s.Decisions != len(decisions) || s.Decisions > maxMatchingDecisions || s.Work < s.Decisions || s.Work > maxMatchingDecisions || s.Observations < 0 || s.InstalledObservations < 0 || s.Observations+s.InstalledObservations > maxMatchingDecisions || s.TotalObservations < 0 || s.TotalInstalledObservations < 0 || s.BytesRead > maxMatchingBytes || !matchingGapShape(s.Gaps) {
 		return ErrAdvisory
 	}

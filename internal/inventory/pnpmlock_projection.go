@@ -9,6 +9,10 @@ import (
 	"packtrace/internal/intel"
 )
 
+// Bound repeated output strings as well as input nodes: many snapshot contexts
+// can inherit the same long metadata and amplify serialization without aliases.
+const maxPNPMProjectionBytes = 8 << 20
+
 // PNPMDependencyReference is a lockfile claim, never a manifest declaration.
 type PNPMDependencyReference struct {
 	Group, InstallationName string
@@ -19,6 +23,8 @@ type PNPMImporterRecord struct {
 	Location     string // Opaque evidence, never authority for filesystem access.
 	Requirements []DependencyGroup
 	References   []PNPMDependencyReference
+	Unsupported  bool
+	Problem      string // Fixed code; source remains in the original document.
 }
 
 type PNPMLockedRecord struct {
@@ -34,6 +40,7 @@ type PNPMLockProjection struct {
 	SourceSHA256 [32]byte
 	Importers    []PNPMImporterRecord
 	Records      []PNPMLockedRecord
+	Unsupported  bool // Root-level semantics outside this first format subset.
 }
 
 // ProjectPNPMLock projects owned, successfully parsed nodes. Output allocations
@@ -42,7 +49,7 @@ func ProjectPNPMLock(doc PNPMLockDocument) (PNPMLockProjection, error) {
 	if !doc.valid || doc.root == nil || doc.SHA256 != doc.digest {
 		return PNPMLockProjection{}, pnpmError("invalid-shape")
 	}
-	p := PNPMLockProjection{SourceSHA256: doc.digest, Importers: []PNPMImporterRecord{}, Records: []PNPMLockedRecord{}}
+	p := PNPMLockProjection{SourceSHA256: doc.digest, Importers: []PNPMImporterRecord{}, Records: []PNPMLockedRecord{}, Unsupported: pnpmRootUnsupported(doc.root)}
 	importers := pnpmLookup(doc.root, "importers")
 	packages := pnpmLookup(doc.root, "packages")
 	snapshots := pnpmLookup(doc.root, "snapshots")
@@ -83,12 +90,26 @@ func ProjectPNPMLock(doc PNPMLockDocument) (PNPMLockProjection, error) {
 		if err != nil {
 			return PNPMLockProjection{}, err
 		}
-		p.Importers = append(p.Importers, PNPMImporterRecord{Location: entry.key, Requirements: groups, References: refs})
+		importer := PNPMImporterRecord{Location: entry.key, Requirements: groups, References: refs}
+		for _, ref := range refs {
+			// Importer peer entries carry resolved versions, unlike package peer ranges.
+			importer.Unsupported = importer.Unsupported || !pnpmSupportedReference(ref.InstallationName, ref.Reference.Value)
+			for _, prefix := range []string{"workspace:", "link:", "file:", "git:", "git+", "http:", "https:", "patch:", "catalog:"} {
+				importer.Unsupported = importer.Unsupported || strings.HasPrefix(ref.Specifier.Value, prefix)
+			}
+		}
+		if importer.Unsupported {
+			importer.Problem = "unsupported-importer-reference"
+		}
+		p.Importers = append(p.Importers, importer)
 	}
 	outputRemaining := remaining
 	metadata := map[string]PNPMLockedRecord{}
 	for _, entry := range pnpmEntries(packages) {
 		r := PNPMLockedRecord{PackageKey: entry.key, Kind: "unknown"}
+		if p.Unsupported {
+			pnpmUnsupported(&r, "unsupported-lock-feature")
+		}
 		name, version, ok := pnpmIdentity(entry.key)
 		if ok {
 			r.Name = pnpmString(name)
@@ -104,6 +125,9 @@ func ProjectPNPMLock(doc PNPMLockDocument) (PNPMLockProjection, error) {
 		}
 		if err = pnpmMetadataShape(entry.value); err != nil {
 			return PNPMLockProjection{}, err
+		}
+		if pnpmLookup(entry.value, "id") != nil {
+			pnpmUnsupported(&r, "unsupported-source-id")
 		}
 		for _, claim := range []struct{ key, value string }{{"name", name}, {"version", version}} {
 			if n := pnpmLookup(entry.value, claim.key); n != nil && (!ok || n.Value != claim.value) {
@@ -162,7 +186,7 @@ func ProjectPNPMLock(doc PNPMLockDocument) (PNPMLockProjection, error) {
 		if err = pnpmMetadataShape(entry.value); err != nil {
 			return PNPMLockProjection{}, err
 		}
-		for _, key := range []string{"resolution", "patched", "patchHash"} {
+		for _, key := range []string{"resolution", "patched", "patchHash", "id"} {
 			if pnpmLookup(entry.value, key) != nil {
 				pnpmUnsupported(&r, "unsupported-snapshot-metadata")
 			}
@@ -202,7 +226,77 @@ func ProjectPNPMLock(doc PNPMLockDocument) (PNPMLockProjection, error) {
 		}
 		return strings.Compare(a.SnapshotKey, b.SnapshotKey)
 	})
+	if err := pnpmProjectionBudget(p); err != nil {
+		return PNPMLockProjection{}, err
+	}
 	return p, nil
+}
+
+func pnpmRootUnsupported(root *yaml.Node) bool {
+	for _, entry := range pnpmEntries(root) {
+		switch entry.key {
+		case "lockfileVersion", "settings", "importers", "packages", "snapshots":
+		default:
+			return true
+		}
+	}
+	settings := pnpmLookup(root, "settings")
+	if settings != nil && settings.Kind != yaml.MappingNode {
+		return true // The structural pass below rejects this shape.
+	}
+	for _, entry := range pnpmEntries(settings) {
+		if entry.key != "autoInstallPeers" && entry.key != "excludeLinksFromLockfile" {
+			return true
+		}
+	}
+	return false
+}
+
+func pnpmProjectionBudget(p PNPMLockProjection) error {
+	remaining := maxPNPMProjectionBytes
+	charge := func(values ...string) error {
+		for _, value := range values {
+			if err := pnpmCharge(&remaining, len(value)); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	requirements := func(groups []DependencyGroup) error {
+		for _, group := range groups {
+			if err := charge(group.Name); err != nil {
+				return err
+			}
+			for _, entry := range group.Entries {
+				if err := charge(entry.Name, entry.Requirement); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+	for _, importer := range p.Importers {
+		if err := charge(importer.Location, importer.Problem); err != nil {
+			return err
+		}
+		if err := requirements(importer.Requirements); err != nil {
+			return err
+		}
+		for _, ref := range importer.References {
+			if err := charge(ref.Group, ref.InstallationName, ref.Specifier.Value, ref.Reference.Value); err != nil {
+				return err
+			}
+		}
+	}
+	for _, record := range p.Records {
+		if err := charge(record.PackageKey, record.SnapshotKey, record.Name.Value, record.Version.Value, record.Integrity.Value, record.Tarball.Value, record.Kind, record.Problem); err != nil {
+			return err
+		}
+		if err := requirements(record.Requirements); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 type pnpmEntry struct {
@@ -370,14 +464,18 @@ func pnpmCheckReferences(r *PNPMLockedRecord) {
 			continue
 		} // Uninterpreted ranges, not resolved edges.
 		for _, entry := range g.Entries {
-			ref := strings.TrimPrefix(entry.Requirement, "npm:")
-			_, direct := pnpmSnapshotBase(entry.Name + "@" + ref)
-			_, alias := pnpmSnapshotBase(ref)
-			if !pnpmName(entry.Name) || !direct && !alias {
+			if !pnpmSupportedReference(entry.Name, entry.Requirement) {
 				pnpmUnsupported(r, "unsupported-reference")
 			}
 		}
 	}
+}
+
+func pnpmSupportedReference(name, reference string) bool {
+	ref := strings.TrimPrefix(reference, "npm:")
+	_, direct := pnpmSnapshotBase(name + "@" + ref)
+	_, alias := pnpmSnapshotBase(ref)
+	return pnpmName(name) && (direct || alias)
 }
 
 func pnpmIdentity(key string) (string, string, bool) {

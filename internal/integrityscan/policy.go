@@ -256,7 +256,7 @@ func categories(values []string) (cli.ArgumentChecks, bool) {
 	return result, true
 }
 func profile(s string) bool {
-	return managerprofile.SupportsNPM(s) || managerprofile.SupportsBun(s)
+	return managerprofile.SupportsNPM(s) || managerprofile.SupportsBun(s) || managerprofile.SupportsPNPM(s)
 }
 func oneOf(s string, values ...string) bool {
 	for _, v := range values {

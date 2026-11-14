@@ -3,6 +3,7 @@ package projectinventory
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"io"
 	"strings"
@@ -84,7 +85,28 @@ func Collect(ctx context.Context, root *nativefs.Root, opts Options) (Result, er
 		c.result.Model.Scopes[0].Status = "complete"
 	}
 	rootManifest := c.collectManifest(1, "package.json")
-	c.collectWorkspaces(rootManifest)
+	pnpmPresence, _ := c.presence("pnpm-lock.yaml")
+	selectionOpts := builtinSelectionOptions(opts, rootManifest, false, false)
+	pnpmScope := strings.HasPrefix(selectionOpts.Profile, "pnpm") || opts.Profile == "auto" && pnpmPresence != "absent"
+	if opts.Profile == "auto" && rootManifest != nil {
+		var hint string
+		if json.Unmarshal(rootManifest.Fields["packageManager"], &hint) == nil && strings.HasPrefix(hint, "pnpm@") {
+			pnpmScope = true
+		}
+	}
+	if pnpmScope {
+		// Preserve mandatory gaps even if malformed manifest declarations filled the budget.
+		priorGaps := c.result.Model.Gaps
+		c.result.Model.Gaps = nil
+		c.gap(1, 0, "pnpm-installed-unsupported")
+		c.gap(1, 0, "pnpm-reconciliation-unsupported")
+		c.gap(1, 0, "pnpm-workspaces-unsupported")
+		for _, g := range priorGaps {
+			c.gap(g.Scope, g.Evidence, g.Code)
+		}
+	} else {
+		c.collectWorkspaces(rootManifest)
+	}
 	c.workspaceScopes = map[string]Scope{}
 	for _, s := range c.result.Model.Scopes {
 		if s.Kind == "workspace" {
@@ -99,12 +121,16 @@ func Collect(ctx context.Context, root *nativefs.Root, opts Options) (Result, er
 			c.cache = nil
 		}
 	}
-	c.collectInstalled()
+	if !pnpmScope {
+		c.collectInstalled()
+	}
 	if ctx.Err() != nil {
 		return c.result, ErrCollection
 	}
 	c.result.Metadata = c.metadata
-	c.result.Model = Reconcile(c.result.Model)
+	if !pnpmScope && c.result.Selection.Family != "pnpm" {
+		c.result.Model = Reconcile(c.result.Model)
+	}
 	for _, g := range c.result.Model.Gaps {
 		for i := range c.result.Model.Scopes {
 			if g.Scope == 0 || c.result.Model.Scopes[i].ID == g.Scope {

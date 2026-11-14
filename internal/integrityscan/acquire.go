@@ -108,6 +108,9 @@ type lockedInputs struct {
 // it never selects or reparses an independent competing root input.
 func lockedFromInventory(r projectinventory.Result) lockedInputs {
 	out := lockedInputs{claims: map[string]integrity.BindingClaim{}, bundled: map[string]bool{}}
+	if r.Selection.Family != "npm" && r.Selection.Family != "bun" {
+		return out
+	}
 	for _, o := range r.Model.Observations {
 		if o.Class != "locked" || o.Location == "" || !relative(o.Location) || o.Source == 0 || int(o.Source) > len(r.Model.Evidence) {
 			continue
@@ -126,7 +129,7 @@ func lockedFromInventory(r projectinventory.Result) lockedInputs {
 			if o.Fields["version-state"] != "value" || o.Fields["origin-state"] != "value" || o.Fields["integrity-state"] != "value" {
 				continue
 			}
-		} else {
+		} else if r.Selection.Family == "bun" {
 			if o.Kind != "package" || o.Fields["name-state"] != "value" || o.Fields["resolution-state"] != "value" || o.Fields["registry-state"] != "value" || o.Fields["integrity-state"] != "value" {
 				continue
 			}
@@ -140,6 +143,10 @@ func lockedFromInventory(r projectinventory.Result) lockedInputs {
 }
 
 func Binding(plan Plan, index int, claim integrity.BindingClaim, policyHash string) integrity.BindingInput {
+	if plan.Manager == "pnpm@lockfile-9" {
+		// FORMAT 9 claims cannot authorize a reference or an installed subroot.
+		return integrity.BindingInput{InstanceID: instanceID(index)}
+	}
 	in := integrity.BindingInput{InstanceID: instanceID(index), Lockfile: claim, SelectedBaseline: integrity.BaselineLockfile, SelectionReason: plan.Policy.Reason, RequiredAssurance: integrity.AssuranceLockfile, Qualification: integrity.QualificationEvidence{ControllerEvidenceID: policyHash, Basis: "native-live-lease; independence-unqualified"}}
 	if plan.TrustedPolicyDigest != "" && supportedPolicyPin(plan.TrustedPolicyDigest) {
 		r := plan.Policy.References[index]

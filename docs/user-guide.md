@@ -478,7 +478,8 @@ packtrace scan --manager pnpm --format json /path/to/pnpm-project
 
 `pnpm` selects the bounded `pnpm@lockfile-9` interpretation, not a producer version.
 The input must be exactly format `9.0`; raw YAML is limited to 1 MiB, depth 64,
-100,000 nodes, 64 KiB scalars and aggregate 20,000 records/requirements. Anchors,
+100,000 nodes, 64 KiB scalars, aggregate 20,000 records/requirements and 8 MiB of
+projected strings (including repeated snapshot metadata). Anchors,
 aliases, merge keys, explicit tags, duplicate/non-string keys, extra documents and
 unsupported versions are refused rather than expanded or coerced.
 

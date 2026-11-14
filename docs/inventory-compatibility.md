@@ -26,7 +26,8 @@ relaxed. Published alpha.1 binaries do **not** contain this development incremen
 
 The [implementation contract](increments/pnpm-v9-scan.md) pins one maintained
 vendored YAML parser, strict node/shape rules, 1 MiB raw input, depth 64, 100,000
-nodes, 64 KiB scalars and aggregate 20,000 record/requirement limits. It preserves
+nodes, 64 KiB scalars, aggregate 20,000 record/requirement limits and 8 MiB of
+projected strings, including metadata repeated across snapshot contexts. It preserves
 original-byte digests, package metadata versus snapshot contexts, privacy and
 existing parent/frozen-evidence validation. It does not claim that the lockfile
 identifies the actual producer or proves installation.
