@@ -79,8 +79,25 @@ func AcceptanceFingerprint(m PolicyMaterial) string {
 	}
 	return policyFingerprint("acceptance", TrackingFingerprint(m), ProjectFingerprint(m.Project), m.SourceSHA256, m.LockSourceSHA256, m.OriginalSHA256, m.Affected, m.Profile, m.PhysicalTarget, m.DirectoryKind, m.LinkSHA256, m.Expected, m.Observed, m.ReferenceSRI, m.ReferenceObservedSRI, m.Assurance, m.ReferenceContext)
 }
+
+// profileLockPair checks explicit family/file combinations, never a non-npm fallback.
+func profileLockPair(profileName, file string) bool {
+	if !profile(profileName) {
+		return false
+	}
+	switch strings.Split(profileName, "@")[0] {
+	case "npm":
+		return oneOf(file, "package-lock.json", "npm-shrinkwrap.json")
+	case "bun":
+		return file == "bun.lock"
+	case "pnpm":
+		return profileName == "pnpm@lockfile-9" && file == "pnpm-lock.yaml"
+	}
+	return false
+}
+
 func projectShape(p ProjectEvidence) bool {
-	return p.Scope == 1 && p.Manifest > 0 && p.Lock > 0 && p.Manifest != p.Lock && hexSHA(p.ManifestSHA256) && hexSHA(p.LockSHA256) && profile(p.Profile) && oneOf(p.LockFile, "package-lock.json", "npm-shrinkwrap.json", "bun.lock") && (strings.HasPrefix(p.Profile, "npm@") == (p.LockFile != "bun.lock"))
+	return p.Scope == 1 && p.Manifest > 0 && p.Lock > 0 && p.Manifest != p.Lock && hexSHA(p.ManifestSHA256) && hexSHA(p.LockSHA256) && profileLockPair(p.Profile, p.LockFile)
 }
 func sideShape(s EvidenceSide) bool {
 	if s.State == "absent" {

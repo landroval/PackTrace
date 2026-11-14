@@ -78,8 +78,11 @@ There is no installer or automatic configuration/data download.
 
 Alternatively use a reviewed checkout and an already-installed toolchain
 compatible with `go.mod` (Go 1.27.1).
-The root application uses only the Go standard library; npm and Bun are **not**
-needed to run a scan and must not be run against a suspicious target for preparation.
+The source application uses the Go standard library and one pinned, vendored YAML
+parser for the partial pnpm increment; see [third-party notices](../THIRD_PARTY_NOTICES.md).
+npm, Bun and pnpm are **not** needed to run a scan and must not be run against a
+suspicious target for preparation. The published alpha.1 archives predate pnpm;
+the pnpm behavior below applies only to a source build containing this increment.
 
 From the PackTrace checkout, not the target project:
 
@@ -429,7 +432,7 @@ parsing if the path starts with a dash. Repeated flags and unknown options fail.
 
 | Option | Values / behavior |
 | --- | --- |
-| `--manager` | `auto`, `npm`, `npm@7-11`, legacy `npm@10-11`, `npm@12.x`, `npm@VERSION`, `bun`, `bun@1.2-1.4`, `bun@1.2.x`, `bun@1.3.x`, `bun@1.4.x`, `bun@VERSION`; admitted stable profiles only |
+| `--manager` | `auto`, `npm`, `npm@7-11`, legacy `npm@10-11`, `npm@12.x`, `npm@VERSION`, `bun`, `bun@1.2-1.4`, `bun@1.2.x`, `bun@1.3.x`, `bun@1.4.x`, `bun@VERSION`, `pnpm`, `pnpm@lockfile-9`; admitted profiles only |
 | `--checks` | Nonempty comma-separated subset of `malicious,vulnerability,integrity`; no spaces or repeats |
 | `--fail-on` | `none` or selected categories; cannot weaken required policy enforcement |
 | `--policy` | Explicit external version-1 JSON policy; bypasses saved setup |
@@ -448,8 +451,8 @@ a fully configured advisory/integrity investigation.
 
 Manager selection interprets formats, never authenticates a producer or origin.
 `auto` accepts an unambiguous supported root without requiring a producer hint.
-Competing npm lockfiles without a hint need explicit npm selection; mixed npm/Bun
-or unsupported hints stay gaps. npm 7–11 use shrinkwrap precedence and v2/v3;
+Competing npm lockfiles without a hint need explicit npm selection; mixed
+npm/Bun/pnpm inputs or unsupported hints stay gaps in automatic selection. npm 7–11 use shrinkwrap precedence and v2/v3;
 npm 12 ignores shrinkwrap, never falls back to it, and admits v3 only. Bun 1.2.x
 and 1.3.x admit text lock v0/v1; Bun 1.4.x admits bounded v0–v3; all require config
 absent/0/1. The versionless Bun family interpretation can inspect all admitted text
@@ -464,6 +467,37 @@ shrinkwrap, aliases, optional absence, multiple physical copies and hardlink ref
 are replayed without changing links. Bun 1.2 uses its hoisted layout, not the newer
 isolated linker; its actual local Git commit request failed and stays unqualified.
 The separately captured non-Git source subset does not erase that failure.
+
+### Partial pnpm format-9 scan
+
+For a reviewed source build containing the pnpm increment:
+
+```bash
+packtrace scan --manager pnpm --format json /path/to/pnpm-project
+```
+
+`pnpm` selects the bounded `pnpm@lockfile-9` interpretation, not a producer version.
+The input must be exactly format `9.0`; raw YAML is limited to 1 MiB, depth 64,
+100,000 nodes, 64 KiB scalars, aggregate 20,000 records/requirements and 8 MiB of
+projected strings (including repeated snapshot metadata). Anchors,
+aliases, merge keys, explicit tags, duplicate/non-string keys, extra documents and
+unsupported versions are refused rather than expanded or coerced.
+
+Only `package.json` produces declared observations. `importers`, `packages` and
+`snapshots` retain lock claims; peer-qualified snapshots stay distinct. No lock
+record proves installation. This slice always has **zero installed observations
+and incomplete installed/reconciliation coverage**, even with `node_modules`
+present. pnpm advisory lookups and integrity bindings are not implemented; zero
+findings therefore do not mean a clean or fully investigated project. Required
+incompleteness normally returns exit **3**, not success.
+
+Non-root importers, pnpm workspace/configuration semantics, catalogs, patches,
+unsupported source forms and shared stores are not newly supported. No
+`pnpm-workspace.yaml`, `.npmrc`, hook, target script or external store is discovered
+or executed. The format-profile alias is not a concrete `packageManager` hint;
+canonical stable pnpm 9/10 hints identify a family only. Actual inert producer
+anchors are 9.15.9 and 10.34.9; they do not qualify every patch/layout/platform.
+Saved policies/pins are unchanged and are not silently upgraded to pnpm.
 
 ## 7. Policies, references and exceptions
 

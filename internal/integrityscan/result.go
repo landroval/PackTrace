@@ -22,6 +22,9 @@ func ValidateRecord(plan Plan, r Record, policyHash string) error {
 	}
 	id := instanceID(r.Index)
 	a := r.Assessment
+	if plan.Manager == "pnpm@lockfile-9" && (r.Lock != (integrity.BindingClaim{}) || r.ObservedEntries != 0 || a.Assurance != integrity.AssuranceUnknown || a.SuppliedComparisonComplete || len(a.Differences) != 0 || len(a.Contexts) != 0 || len(a.Gaps) == 0 || len(r.PolicyWitnesses) != 0 || r.PolicyObservation != 0) {
+		return bad
+	}
 	if a.InstanceID != id || (a.Assurance != integrity.AssuranceUnknown && a.Assurance != integrity.AssuranceLockfile && a.Assurance != integrity.AssuranceIndependent) || len(a.Gaps) > 256 || len(a.Differences) > 200000 || len(a.Contexts) > 1 {
 		return bad
 	}

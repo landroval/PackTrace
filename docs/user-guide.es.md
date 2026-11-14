@@ -80,9 +80,12 @@ ejecución de este release**. Ninguno está cualificado para producción. Consul
 antes de ejecutar un archivo. No hay instalador ni descarga/configuración automática.
 
 También puedes usar una copia revisada del repositorio y un toolchain ya instalado
-compatible con `go.mod` —Go 1.27.1—. El programa principal solo depende de la biblioteca estándar de Go.
-**No necesitas ejecutar npm ni Bun** para analizar; no los ejecutes contra un
-proyecto sospechoso para prepararlo.
+compatible con `go.mod` —Go 1.27.1—. El programa usa la biblioteca estándar y un
+único parser YAML fijado y vendorizado para el incremento parcial de pnpm; consulta
+los [avisos de terceros](../THIRD_PARTY_NOTICES.md).
+**No necesitas ejecutar npm, Bun ni pnpm** para analizar; no los ejecutes contra un
+proyecto sospechoso para prepararlo. Los archivos publicados de alpha.1 son
+anteriores a pnpm; el comportamiento pnpm descrito aquí requiere compilar este incremento.
 
 Desde la copia de PackTrace, no desde el proyecto investigado:
 
@@ -448,7 +451,7 @@ La ayuda se usa sola: `packtrace scan --help`.
 
 | Opción | Valores y comportamiento |
 | --- | --- |
-| `--manager` | `auto`, `npm`, `npm@7-11`, antiguo `npm@10-11`, `npm@12.x`, `npm@VERSION`, `bun`, `bun@1.2-1.4`, `bun@1.2.x`, `bun@1.3.x`, `bun@1.4.x`, `bun@VERSION`; solo perfiles estables admitidos |
+| `--manager` | `auto`, `npm`, `npm@7-11`, antiguo `npm@10-11`, `npm@12.x`, `npm@VERSION`, `bun`, `bun@1.2-1.4`, `bun@1.2.x`, `bun@1.3.x`, `bun@1.4.x`, `bun@VERSION`, `pnpm`, `pnpm@lockfile-9`; solo perfiles admitidos |
 | `--checks` | Subconjunto no vacío de `malicious,vulnerability,integrity`, separado por comas, sin espacios ni repetidos |
 | `--fail-on` | `none` o categorías seleccionadas; no debilita enforcement de la política |
 | `--policy` | Política JSON externa versión 1; evita la configuración guardada |
@@ -467,8 +470,8 @@ supone una investigación de avisos e integridad completamente configurada.
 
 Seleccionar gestor interpreta formatos: no autentica al productor ni al origen.
 `auto` acepta una raíz admitida sin ambigüedad, sin exigir pista de productor.
-Varios locks npm sin pista requieren selección npm explícita. Mezclas npm/Bun o
-pistas no admitidas siguen siendo limitaciones. npm 7–11 usa prioridad de
+Varios locks npm sin pista requieren selección npm explícita. Mezclas npm/Bun/pnpm
+o pistas no admitidas siguen siendo limitaciones en la selección automática. npm 7–11 usa prioridad de
 shrinkwrap y v2/v3; npm 12 ignora shrinkwrap, no recurre a él y solo admite v3.
 Bun 1.2.x y 1.3.x admiten texto v0/v1; Bun 1.4.x admite v0–v3 acotados, siempre
 con configuración ausente/0/1. La interpretación Bun sin versión concreta puede
@@ -484,6 +487,38 @@ workspaces, shrinkwrap, alias, ausencia opcional, copias físicas y rechazo de
 hardlinks sin modificar los enlaces originales. Bun 1.2 usa distribución hoisted,
 no el linker aislado posterior; su petición real de commit Git local falló y sigue
 sin cualificarse. El subconjunto separado de fuentes no Git no borra ese fallo.
+
+### Análisis parcial de pnpm formato 9
+
+En una compilación revisada que contenga este incremento:
+
+```bash
+packtrace scan --manager pnpm --format json /ruta/al/proyecto-pnpm
+```
+
+`pnpm` selecciona la interpretación acotada `pnpm@lockfile-9`, no una versión del
+productor. Se exige formato exactamente `9.0`; el YAML original tiene límites de
+1 MiB, profundidad 64, 100 000 nodos, escalares de 64 KiB, 20 000
+registros/requisitos agregados y 8 MiB de texto proyectado, incluidos los metadatos
+repetidos entre snapshots. Se rechazan anchors, alias YAML, claves de mezcla,
+tags explícitos, claves duplicadas/no textuales, documentos adicionales y versiones
+no admitidas en vez de expandirlas o convertirlas implícitamente.
+
+Solo `package.json` produce declaraciones. `importers`, `packages` y `snapshots`
+conservan afirmaciones del lock; los contextos de peers siguen separados. Ningún
+registro del lock prueba instalación. Este incremento siempre tiene **cero
+observaciones instaladas y cobertura instalada/reconciliación incompleta**, aunque
+exista `node_modules`. No implementa búsquedas de avisos ni vínculos de integridad
+para pnpm: cero hallazgos no significa proyecto limpio o completamente investigado.
+La cobertura requerida incompleta normalmente devuelve **3**, no éxito.
+
+Importers no raíz, semántica de workspace/configuración pnpm, catálogos, parches,
+fuentes no admitidas y almacenes compartidos no quedan soportados. No se descubren
+ni ejecutan `pnpm-workspace.yaml`, `.npmrc`, hooks, scripts del proyecto o almacenes
+externos. El alias de perfil no es una pista concreta válida en `packageManager`;
+las pistas estables canónicas pnpm 9/10 solo identifican familia. Los productores
+inertes reales son 9.15.9 y 10.34.9, sin cualificar todos los parches, distribuciones
+o plataformas. Las políticas y sus pins no se cambian ni amplían automáticamente.
 
 ## 7. Políticas, referencias y excepciones
 

@@ -17,7 +17,7 @@ func configureBuiltin(r cli.ScanArgumentRequest) (Plan, error) {
 		r.Privacy = "portable"
 	}
 	all := cli.ArgumentCheckIntegrity | cli.ArgumentCheckMalicious | cli.ArgumentCheckVulnerability
-	if r.PolicyPath != "" || r.TrustedPolicyDigest != "" || !oneOf(r.Manager, "auto", "npm", "bun") && !profile(r.Manager) || !oneOf(r.Privacy, "portable", "local") || r.Output == "" || r.Checks == 0 || r.Checks & ^all != 0 || r.FailOn & ^r.Checks != 0 || r.StateDir != "" && !filepath.IsAbs(r.StateDir) || r.TrustedSnapshotDigest != "" && !supportedSnapshotPin(r.TrustedSnapshotDigest) {
+	if r.PolicyPath != "" || r.TrustedPolicyDigest != "" || !oneOf(r.Manager, "auto", "npm", "bun", "pnpm") && !profile(r.Manager) || !oneOf(r.Privacy, "portable", "local") || r.Output == "" || r.Checks == 0 || r.Checks & ^all != 0 || r.FailOn & ^r.Checks != 0 || r.StateDir != "" && !filepath.IsAbs(r.StateDir) || r.TrustedSnapshotDigest != "" && !supportedSnapshotPin(r.TrustedSnapshotDigest) {
 		return Plan{}, ErrOptions
 	}
 	p := Policy{Version: 1, Designation: "built-in", Manager: r.Manager, RequiredChecks: []string{}, FailOn: []string{}, MinimumAssurance: "lockfile-consistent", References: []Reference{}}
