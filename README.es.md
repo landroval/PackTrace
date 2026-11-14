@@ -12,9 +12,10 @@ Ayuda a responder:
 3. **¿Qué evidencia existe?** Lockfile, manifiesto instalado, aviso y referencia se mantienen separados.
 4. **¿Qué revisar después?** Aplicabilidad, evidencia ausente o un límite de corrección registrado por el aviso.
 
-> **v0.1.0-alpha.1 — prerelease experimental, no cualificada para producción.**
-> [Descargas](https://github.com/landroval/PackTrace/releases/tag/v0.1.0-alpha.1) ·
-> [Notas y verificación](docs/releases/v0.1.0-alpha.1.md).
+> **v0.2.0-alpha.1 — prerelease experimental, no cualificada para producción.**
+> [Descargas](https://github.com/landroval/PackTrace/releases/tag/v0.2.0-alpha.1) ·
+> [Notas y verificación](docs/releases/v0.2.0-alpha.1.md) ·
+> [Política de versiones](docs/releases/README.md).
 > Linux amd64 se prueba con fixtures propios; Windows amd64 solo se compila de forma
 > cruzada, sin prueba de ejecución de este release. macOS sigue aplazado. Cero
 > hallazgos nunca significa que un proyecto o equipo esté limpio.
@@ -120,7 +121,7 @@ confirmadas. Consulta [cómo leer el informe](docs/user-guide.es.md#5-lee-el-inf
 | npm 12.x | Versiones estables, solo lockfile v3; ignora shrinkwrap y no recurre a él |
 | Bun 1.2.x / 1.3.x | `bun.lock` de texto v0/v1; configuración ausente/0/1 |
 | Bun 1.4.x | Texto acotado v0–v3; configuración ausente/0/1 |
-| pnpm (incremento de desarrollo) | `pnpm-lock.yaml` formato 9.0; `pnpm@lockfile-9`; declaraciones/locked e instalaciones activas acotadas; cobertura incompleta |
+| pnpm (parcial, desde 0.2.0-alpha.1) | `pnpm-lock.yaml` formato 9.0; `pnpm@lockfile-9`; declaraciones/locked e instalaciones activas acotadas; cobertura incompleta |
 | Perfiles de familia/anteriores | `bun@1.2-1.4`, `bun@1.2.x`, `bun@1.3.x`, `bun@1.4.x`; se conserva `npm@10-11` |
 | Workspaces npm/Bun | Miembros relativos explícitos y patrones acotados de un nivel; la propiedad ambigua sigue siendo una limitación. Este incremento no admite workspaces pnpm. |
 
@@ -134,9 +135,9 @@ Los nuevos productores de prueba incluyen npm 7.24.2/8.19.4/9.9.4 y Bun 1.2.23/1
 El caso de Git local de Bun 1.2.23 sigue sin cualificarse. No se amplían ni renuevan
 silenciosamente las políticas guardadas: un perfil anterior más estrecho conserva sus límites.
 
-**pnpm es un incremento parcial de desarrollo; los archivos publicados de alpha.1 no lo incluyen.**
-Con una compilación del código fuente usa `--manager pnpm` o el perfil de formato
-`pnpm@lockfile-9`. Conserva evidencia original del lockfile y contextos de peers
+**pnpm es soporte parcial introducido en v0.2.0-alpha.1; v0.1.0-alpha.1 es anterior.**
+Con este release o una compilación correspondiente usa `--manager pnpm` o el perfil
+de formato `pnpm@lockfile-9`. Conserva evidencia original del lockfile y contextos de peers
 separados, y lee manifiestos de un solo enlace desde ubicaciones instaladas activas
 y contenidas. Los nombres opacos del almacén `.pnpm` no prueban identidad de peers;
 las correspondencias son candidatos indeterminados. Hardlinks genéricos, importers

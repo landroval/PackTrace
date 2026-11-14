@@ -69,11 +69,13 @@ spelling looks correct. Do not weaken those checks to obtain a green result.
 
 ## 2. Build and prerequisites
 
-The [v0.1.0-alpha.1 prerelease](https://github.com/landroval/PackTrace/releases/tag/v0.1.0-alpha.1)
+The [v0.2.0-alpha.1 prerelease](https://github.com/landroval/PackTrace/releases/tag/v0.2.0-alpha.1)
 provides experimental Linux amd64 and Windows amd64 archives. Linux is exercised
 on owned fixtures; Windows is **cross-compiled only, not runtime-tested for this
 release**. Neither is production-qualified. See [verification, unsigned build
-metadata and limitations](releases/v0.1.0-alpha.1.md) before running an archive.
+metadata and limitations](releases/v0.2.0-alpha.1.md) before running an archive.
+The [versioning policy](releases/README.md) distinguishes feature releases, fixes
+and prerelease iterations; report schema 1.7 is independent.
 There is no installer or automatic configuration/data download.
 
 Alternatively use a reviewed checkout and an already-installed toolchain
@@ -81,8 +83,8 @@ compatible with `go.mod` (Go 1.27.1).
 The source application uses the Go standard library and one pinned, vendored YAML
 parser for the partial pnpm increment; see [third-party notices](../THIRD_PARTY_NOTICES.md).
 npm, Bun and pnpm are **not** needed to run a scan and must not be run against a
-suspicious target for preparation. The published alpha.1 archives predate pnpm;
-the pnpm behavior below applies only to a source build containing this increment.
+suspicious target for preparation. The older v0.1.0-alpha.1 archives predate pnpm;
+v0.2.0-alpha.1 introduces the partial pnpm behavior described below.
 
 From the PackTrace checkout, not the target project:
 
@@ -470,7 +472,7 @@ The separately captured non-Git source subset does not erase that failure.
 
 ### Partial pnpm format-9 scan
 
-For a reviewed source build containing the pnpm increment:
+For v0.2.0-alpha.1 or a reviewed source build containing the pnpm increment:
 
 ```bash
 packtrace scan --manager pnpm --format json /path/to/pnpm-project
