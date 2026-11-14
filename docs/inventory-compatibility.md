@@ -17,8 +17,10 @@ matrix. Keep failed/unqualified cases visible; no new native campaign is implied
 ## Development pnpm format-9 increment
 
 The pnpm increment targets original `pnpm-lock.yaml` format **9.0**, selected by
-`pnpm` / `pnpm@lockfile-9`. It adds manifest declarations and locked observations,
-not installed evidence, advisory lookups or integrity bindings. Installed and
+`pnpm` / `pnpm@lockfile-9`. It adds manifest declarations, locked claims and bounded
+active installed observations with stable single-link manifests. Name/version
+correspondences remain indeterminate candidates, never physical lock joins or
+absence claims. No advisory lookup or integrity binding is added. Installed and
 reconciliation coverage stay explicitly incomplete; non-root importers/workspace
 semantics and unsupported sources stay gaps. No `.npmrc`, executable pnpm config,
 hook or external store is discovered or executed. Generic hardlink refusal is not
@@ -34,7 +36,7 @@ identifies the actual producer or proves installation.
 
 Two exact Linux/amd64 producers, **pnpm 9.15.9 and 10.34.9**, were archive-SHA-512
 pinned, safely extracted and run read-only under rootless bwrap with the recorded
-Node v26.13.0 executable. Generation used **eight producer invocations** total:
+Node v26.13.1 executable (the exact version/hash is retained in the corpus). Generation used **eight producer invocations** total:
 each exact version query plus three `--lockfile-only --ignore-scripts` captures.
 Every batch passed scratch/loopback positive controls, exterior read/write/network
 negative controls, the 512 MiB kernel scratch ceiling and confirmed wait/group
@@ -50,6 +52,19 @@ hashes and per-command receipts are retained separately; these producer facts do
 not establish installed-layout support, every pnpm patch, native Windows/macOS
 execution, completed review or release qualification. Runtime/test acceptance
 must be recorded after integrating the code, not inferred from fixture generation.
+
+The separate [installed increment](increments/pnpm-installed.md) retains six
+additional owned installations in the [installed corpus](../internal/projectinventory/testdata/producer/pnpm-installed.json):
+copy, peer-context copy and forced-hardlink cases for each exact producer. The
+76,661-byte corpus has SHA-256
+`953b1d7803bffddaec01e1997f8ea024a07713f5f4bb823df4199fc71748c357`.
+Its new bounded grant consumed eight producer calls and zero acquisition bytes;
+scripts stayed disabled and all isolation/reap controls passed. Active copy and
+peer layouts yield physical observations; forced hardlinks remain negative
+unreadable-manifest evidence, not permission to inspect shared stores. Three
+mandatory pnpm gaps and incomplete coverage remain even when rows are observed.
+These Linux fixture observations do not qualify native Windows/macOS, every
+producer/layout or any release artifact.
 
 ## Current expanded range evidence
 

@@ -113,7 +113,7 @@ confirmed vulnerabilities. See [reading a report](docs/user-guide.md#5-read-the-
 | npm 12.x | Stable versions, lockfile v3 only; shrinkwrap ignored, no fallback |
 | Bun 1.2.x / 1.3.x | Text `bun.lock` v0/v1; config absent/0/1 |
 | Bun 1.4.x | Bounded text v0–v3; config absent/0/1 |
-| pnpm (development increment) | `pnpm-lock.yaml` format 9.0; `pnpm@lockfile-9`; declared/locked observations only, installed coverage incomplete |
+| pnpm (development increment) | `pnpm-lock.yaml` format 9.0; `pnpm@lockfile-9`; declared/locked and bounded active installed observations; coverage incomplete |
 | Family/legacy profiles | `bun@1.2-1.4`, `bun@1.2.x`, `bun@1.3.x`, `bun@1.4.x`; `npm@10-11` remains accepted |
 | npm/Bun workspaces | Explicit relative members and bounded one-level patterns; ambiguous ownership remains a gap. pnpm workspaces are not supported by this increment. |
 
@@ -128,12 +128,16 @@ silently widened or repinned; a narrower existing profile keeps its limits.
 
 **pnpm is a development-only, partial increment; the published alpha.1 archives do not include it.**
 Use `--manager pnpm` or the explicit format profile `pnpm@lockfile-9` with a source
-build. The first slice retains original lockfile evidence and distinct peer contexts,
-not installed packages, advisory matches or integrity bindings. Non-root importers,
-patches and unsupported sources stay explicit gaps. Real format-9 captures come
+build. It retains original lockfile evidence and distinct peer contexts, and reads
+single-link manifests from active contained installation slots. Opaque `.pnpm`
+store names do not prove peer identity; correspondences remain indeterminate
+candidates. Generic hardlinks, non-root importers, patches and unsupported sources
+stay explicit gaps. Installed/reconciliation coverage remains incomplete; no pnpm
+advisory lookup or integrity binding is added. Real format-9 captures come
 from pnpm 9.15.9 and 10.34.9; this is not blanket version/layout qualification.
 No pnpm executable, `.npmrc`, hook or executable target configuration is run/read.
-See the [bounded pnpm plan](docs/increments/pnpm-v9-scan.md).
+See the [reader contract](docs/increments/pnpm-v9-scan.md) and the separate
+[installed increment](docs/increments/pnpm-installed.md).
 
 [Inventory evidence](docs/inventory-compatibility.md) · [Intelligence evidence](docs/intelligence-compatibility.md) · [Release gates](docs/pre-1.0-features.md)
 

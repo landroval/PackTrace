@@ -71,6 +71,9 @@ func Portable(r Result) PublicInventory {
 		p.Scopes = append(p.Scopes, PublicScope{ID: s.ID, Parent: s.Parent, Kind: safeLabel(s.Kind, "project", "workspace"), Status: safeLabel(s.Status, "complete", "incomplete")})
 	}
 	for _, e := range r.Model.Evidence {
+		if r.Selection.Family == "pnpm" && e.Scope == 1 && e.Method == "native-input-lease" && e.Location == r.Selection.File {
+			p.Selection.Evidence = e.ID
+		}
 		status := "incomplete"
 		if e.Complete {
 			status = "complete"
@@ -78,7 +81,19 @@ func Portable(r Result) PublicInventory {
 		p.Evidence = append(p.Evidence, PublicEvidence{ID: e.ID, Scope: e.Scope, Method: safeLabel(e.Method, evidenceMethods...), Status: status})
 	}
 	for _, o := range r.Model.Observations {
-		p.Observations = append(p.Observations, PublicObservation{ID: o.ID, Workspace: o.Workspace, Source: o.Source, Class: safeLabel(o.Class, "declared", "locked", "installed"), Kind: safeLabel(o.Kind, observationKinds...), Status: safeLabel(o.Status, "complete", "unreadable", "unstable", "unsupported")})
+		x := PublicObservation{ID: o.ID, Workspace: o.Workspace, Source: o.Source, Class: safeLabel(o.Class, "declared", "locked", "installed"), Kind: safeLabel(o.Kind, observationKinds...), Status: safeLabel(o.Status, "complete", "unreadable", "unstable", "unsupported")}
+		if r.Selection.Family == "pnpm" && o.Class == "installed" {
+			if id, err := strconv.ParseUint(o.Fields["metadata-evidence"], 10, 32); err == nil && id > 0 && id <= uint64(len(r.Model.Evidence)) && o.Source > 0 && int(o.Source) <= len(r.Model.Evidence) {
+				metadata, manifest := r.Model.Evidence[id-1], r.Model.Evidence[o.Source-1]
+				if metadata.Method == "native-metadata-lease" && metadata.Location == o.Location && metadata.Scope == o.Workspace {
+					x.MetadataEvidence = uint32(id)
+					if manifest.Method == "native-input-lease" && manifest.Scope == o.Workspace && manifest.Location == o.Fields["physical-target"]+"/package.json" {
+						p.Evidence[o.Source-1].MetadataEvidence = uint32(id)
+					}
+				}
+			}
+		}
+		p.Observations = append(p.Observations, x)
 	}
 	for _, x := range r.Model.Relations {
 		x.Kind = safeLabel(x.Kind, "declared-requirement", "locked-correspondence", "candidate-correspondence", "physical-link")

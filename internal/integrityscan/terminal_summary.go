@@ -294,7 +294,7 @@ func renderTerminalSummary(r Report) []byte {
 			}
 			fmt.Fprintf(&out, "  [INCOMPLETE] %s: %d gap records\n", terminalCell(label, 72), gaps[code])
 			if code == "pnpm-installed-unsupported" {
-				fmt.Fprintln(&out, "    Effect: pnpm installed content was not collected; zero installed observations do not establish an empty installation. Advisory lookup and integrity binding are not supported for pnpm.")
+				fmt.Fprintln(&out, "    Effect: Only bounded active pnpm slots with readable single-link manifests can be observed; installed coverage and reconciliation remain partial. Candidate correspondences do not bind peer contexts or authenticate origins. Advisory lookup and integrity binding are not supported for pnpm.")
 			}
 			if code == "installed-manifest-unavailable" {
 				fmt.Fprintln(&out, "    Effect: some installed versions could not be checked from their own manifests; files may be missing, unreadable, unstable or inadmissibly linked.")

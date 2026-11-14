@@ -506,10 +506,16 @@ no admitidas en vez de expandirlas o convertirlas implícitamente.
 
 Solo `package.json` produce declaraciones. `importers`, `packages` y `snapshots`
 conservan afirmaciones del lock; los contextos de peers siguen separados. Ningún
-registro del lock prueba instalación. Este incremento siempre tiene **cero
-observaciones instaladas y cobertura instalada/reconciliación incompleta**, aunque
-exista `node_modules`. No implementa búsquedas de avisos ni vínculos de integridad
-para pnpm: cero hallazgos no significa proyecto limpio o completamente investigado.
+registro del lock prueba instalación. Un lock seleccionado utilizable ahora permite
+**observaciones instaladas acotadas** desde ubicaciones activas y contenidas, con
+manifiestos estables de un solo enlace. Solo se visitan contenedores enlazados
+`.pnpm/<opaco>/node_modules` activados por esas ubicaciones; no se leen almacenes
+huérfanos ni archivos fuente. Los manifiestos hardlinked siguen siendo ilegibles.
+Alias e instancias físicas quedan separados; coincidencias de nombre/versión solo
+producen candidatos indeterminados, no correspondencias únicas de peers ni ausencia.
+Las tres limitaciones instalada/reconciliación/workspaces siguen siendo obligatorias
+y la cobertura permanece incompleta. No implementa búsquedas de avisos ni vínculos
+de integridad para pnpm: cero hallazgos no significa proyecto limpio o investigado.
 La cobertura requerida incompleta normalmente devuelve **3**, no éxito.
 
 Importers no raíz, semántica de workspace/configuración pnpm, catálogos, parches,

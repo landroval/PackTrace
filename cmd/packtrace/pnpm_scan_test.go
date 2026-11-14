@@ -64,7 +64,7 @@ func TestPNPMActualSupervisedScan(t *testing.T) {
 				}
 			}
 			if format == "terminal" {
-				if !bytes.Contains(raw, []byte("0 installed observations")) || !bytes.Contains(raw, []byte("INCOMPLETE")) {
+				if !bytes.Contains(raw, []byte("1 installed observations")) || !bytes.Contains(raw, []byte("INCOMPLETE")) {
 					t.Fatal(string(raw))
 				}
 				continue
@@ -89,7 +89,7 @@ func TestPNPMActualSupervisedScan(t *testing.T) {
 				t.Fatalf("pnpm gained scan authority: %s", raw)
 			}
 			var inv projectinventory.PublicInventory
-			if err != nil || json.Unmarshal(fields["inventory"], &inv) != nil || projectinventory.ValidatePublic(inv) != nil || inv.Complete || inv.Selection.Family != "pnpm" || inv.Counts.Declared != 1 || inv.Counts.Locked < 2 || inv.Counts.Installed != 0 || inv.Counts.Scopes != 1 || len(inv.Relations) != 0 {
+			if err != nil || json.Unmarshal(fields["inventory"], &inv) != nil || projectinventory.ValidatePublic(inv) != nil || inv.Complete || inv.Selection.Family != "pnpm" || inv.Counts.Declared != 1 || inv.Counts.Locked < 2 || inv.Counts.Installed != 1 || inv.Counts.Scopes != 1 || len(inv.Relations) != 0 {
 				t.Fatalf("common pnpm inventory: %s", raw)
 			}
 		}

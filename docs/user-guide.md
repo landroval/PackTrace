@@ -485,10 +485,15 @@ unsupported versions are refused rather than expanded or coerced.
 
 Only `package.json` produces declared observations. `importers`, `packages` and
 `snapshots` retain lock claims; peer-qualified snapshots stay distinct. No lock
-record proves installation. This slice always has **zero installed observations
-and incomplete installed/reconciliation coverage**, even with `node_modules`
-present. pnpm advisory lookups and integrity bindings are not implemented; zero
-findings therefore do not mean a clean or fully investigated project. Required
+record proves installation. A usable selected lock now permits **bounded installed
+observations** from active contained slots with stable single-link manifests.
+Linked `.pnpm/<opaque>/node_modules` containers are visited only through active
+slots; orphan stores and source files are not read. Hardlinked manifests remain
+unreadable. Alias names and physical instances stay distinct; matching name/version
+produces only indeterminate candidates, not unique peer-context or absence claims.
+All three installed/reconciliation/workspace limitations remain mandatory and
+coverage stays incomplete. pnpm advisory lookups and integrity bindings are not
+implemented; zero findings do not mean a clean or fully investigated project. Required
 incompleteness normally returns exit **3**, not success.
 
 Non-root importers, pnpm workspace/configuration semantics, catalogs, patches,

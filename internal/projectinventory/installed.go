@@ -90,7 +90,10 @@ func (c *collector) collectInstalled() {
 				retained := func() bool { return guard() && stable() }
 				walk(activeContainer{physical + "/node_modules", owner, ""}, depth+1, retained)
 				container := slotContainer(physical)
-				if linked && c.result.Selection.Family == "bun" && c.result.Selection.State == "usable" && strings.Contains(container, "node_modules/.bun/") && path.Base(path.Dir(path.Dir(container))) == ".bun" {
+				bunStore := c.result.Selection.Family == "bun" && strings.Contains(container, "node_modules/.bun/") && path.Base(path.Dir(path.Dir(container))) == ".bun"
+				parts := strings.Split(container, "/")
+				pnpmStore := c.result.Selection.Family == "pnpm" && len(parts) == 4 && parts[0] == "node_modules" && parts[1] == ".pnpm" && parts[2] != "" && parts[3] == "node_modules"
+				if linked && c.result.Selection.State == "usable" && (bunStore || pnpmStore) {
 					walk(activeContainer{container, owner, physical}, depth+1, retained)
 				}
 			})
@@ -131,6 +134,7 @@ func (c *collector) observeSlotVisiting(scope uint32, name string, visit func(st
 		return
 	}
 	leases := []*nativefs.MetadataLease{original}
+	descendants := len(c.result.Model.Observations)
 	defer func() {
 		stable := true
 		for i := len(leases) - 1; i >= 0; i-- {
@@ -142,6 +146,20 @@ func (c *collector) observeSlotVisiting(scope uint32, name string, visit func(st
 		if !stable {
 			physicalRoot, linked = "", false
 			o.Status = "unstable"
+			c.result.Model.Evidence[o.Source-1].Complete = false
+			// A late ancestor failure also invalidates observations activated by
+			// that ancestor, even when their own manifest reads were stable.
+			for i := descendants; i < len(c.result.Model.Observations); i++ {
+				child := &c.result.Model.Observations[i]
+				if child.Class != "installed" {
+					continue
+				}
+				child.Status = "unstable"
+				c.result.Model.Evidence[child.Source-1].Complete = false
+				if id, err := strconv.ParseUint(child.Fields["metadata-evidence"], 10, 32); err == nil && id > 0 && id <= uint64(len(c.result.Model.Evidence)) {
+					c.result.Model.Evidence[id-1].Complete = false
+				}
+			}
 			c.gap(scope, mid, "installed-binding-unstable")
 		} else {
 			c.result.Model.Evidence[mid-1].Complete = true
