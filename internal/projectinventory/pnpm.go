@@ -61,7 +61,35 @@ func (c *collector) inspectPNPM() bool {
 		if key == "" {
 			key = r.PackageKey
 		}
-		c.add(Observation{Workspace: 1, Source: source, Class: "locked", Kind: kind, Status: status, Location: key, Name: r.Name.Value, Version: r.Version.Value, Fields: map[string]string{"name-state": fieldState(r.Name.State), "version-state": fieldState(r.Version.State)}, Requirements: requirements})
+		c.add(Observation{Workspace: 1, Source: source, Class: "locked", Kind: kind, Status: status, Location: key, Name: r.Name.Value, Version: r.Version.Value, Fields: map[string]string{"name-state": fieldState(r.Name.State), "version-state": fieldState(r.Version.State), "tuple-key": key}, Requirements: requirements})
 	}
 	return true
+}
+
+// A pnpm tuple location is a logical key, never an installed path. Reuse the
+// bounded reconciler only for supported identities, and keep candidates only:
+// neither absence nor unique/physical/declaration agreement is established.
+func reconcilePNPM(m Model) Model {
+	eligible := m
+	eligible.Observations = nil
+	eligible.Relations = nil
+	for _, o := range m.Observations {
+		if o.Status == "complete" && o.Name != "" && o.Version != "" &&
+			(o.Class == "installed" || o.Class == "locked" && o.Kind == "package") {
+			if o.Class == "installed" {
+				// Candidate matching needs identity only. Do not generate discarded
+				// physical-link edges or charge them against the candidate budget.
+				o.Fields = nil
+			}
+			eligible.Observations = append(eligible.Observations, o)
+		}
+	}
+	reconciled := Reconcile(eligible)
+	m.Gaps = reconciled.Gaps // Preserve aggregate relation-limit accounting.
+	for _, relation := range reconciled.Relations {
+		if relation.Kind == "candidate-correspondence" {
+			m.Relations = append(m.Relations, relation)
+		}
+	}
+	return m
 }

@@ -121,14 +121,17 @@ func Collect(ctx context.Context, root *nativefs.Root, opts Options) (Result, er
 			c.cache = nil
 		}
 	}
-	if !pnpmScope {
+	pnpmInstalled := pnpmScope && c.result.Selection.Family == "pnpm" && c.result.Selection.State == "usable"
+	if !pnpmScope || pnpmInstalled {
 		c.collectInstalled()
 	}
 	if ctx.Err() != nil {
 		return c.result, ErrCollection
 	}
 	c.result.Metadata = c.metadata
-	if !pnpmScope && c.result.Selection.Family != "pnpm" {
+	if pnpmInstalled {
+		c.result.Model = reconcilePNPM(c.result.Model)
+	} else if !pnpmScope && c.result.Selection.Family != "pnpm" {
 		c.result.Model = Reconcile(c.result.Model)
 	}
 	for _, g := range c.result.Model.Gaps {

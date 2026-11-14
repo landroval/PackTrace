@@ -38,7 +38,11 @@ func TestPNPMSelectionAndNoInstalledAuthority(t *testing.T) {
 			}
 			root, _ := ownedProject(t, files)
 			got, err := Collect(context.Background(), root, Options{Profile: tc.profile, ExplicitManager: tc.explicit})
-			if err != nil || got.Selection.State != tc.state || got.Complete || got.Model.Counts().Installed != 0 || got.Model.Counts().Declared != 1 || len(got.Model.Relations) != 0 || len(got.Model.Scopes) != 1 {
+			wantInstalled := 0
+			if tc.state == "usable" {
+				wantInstalled = 1
+			}
+			if err != nil || got.Selection.State != tc.state || got.Complete || got.Model.Counts().Installed != wantInstalled || got.Model.Counts().Declared != 1 || len(got.Model.Relations) != 0 || len(got.Model.Scopes) != 1 {
 				t.Fatalf("pnpm boundary: %+v %v", got, err)
 			}
 			if tc.state == "usable" && (got.Selection.Family != "pnpm" || got.Model.Counts().Locked < 2) {

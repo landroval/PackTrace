@@ -120,7 +120,7 @@ confirmadas. Consulta [cómo leer el informe](docs/user-guide.es.md#5-lee-el-inf
 | npm 12.x | Versiones estables, solo lockfile v3; ignora shrinkwrap y no recurre a él |
 | Bun 1.2.x / 1.3.x | `bun.lock` de texto v0/v1; configuración ausente/0/1 |
 | Bun 1.4.x | Texto acotado v0–v3; configuración ausente/0/1 |
-| pnpm (incremento de desarrollo) | `pnpm-lock.yaml` formato 9.0; `pnpm@lockfile-9`; solo declaraciones y registros locked, cobertura instalada incompleta |
+| pnpm (incremento de desarrollo) | `pnpm-lock.yaml` formato 9.0; `pnpm@lockfile-9`; declaraciones/locked e instalaciones activas acotadas; cobertura incompleta |
 | Perfiles de familia/anteriores | `bun@1.2-1.4`, `bun@1.2.x`, `bun@1.3.x`, `bun@1.4.x`; se conserva `npm@10-11` |
 | Workspaces npm/Bun | Miembros relativos explícitos y patrones acotados de un nivel; la propiedad ambigua sigue siendo una limitación. Este incremento no admite workspaces pnpm. |
 
@@ -137,12 +137,16 @@ silenciosamente las políticas guardadas: un perfil anterior más estrecho conse
 **pnpm es un incremento parcial de desarrollo; los archivos publicados de alpha.1 no lo incluyen.**
 Con una compilación del código fuente usa `--manager pnpm` o el perfil de formato
 `pnpm@lockfile-9`. Conserva evidencia original del lockfile y contextos de peers
-separados, no paquetes instalados, coincidencias de avisos ni vínculos de integridad.
-Importers no raíz, parches y fuentes no admitidas siguen siendo limitaciones
-explícitas. Los locks reales de formato 9 proceden de pnpm 9.15.9 y 10.34.9; esto
+separados, y lee manifiestos de un solo enlace desde ubicaciones instaladas activas
+y contenidas. Los nombres opacos del almacén `.pnpm` no prueban identidad de peers;
+las correspondencias son candidatos indeterminados. Hardlinks genéricos, importers
+no raíz, parches y fuentes no admitidas siguen siendo limitaciones explícitas.
+La cobertura instalada/reconciliación sigue incompleta; no añade búsquedas de avisos
+ni vínculos de integridad para pnpm. Los locks reales de formato 9 proceden de pnpm 9.15.9 y 10.34.9; esto
 no cualifica todas sus versiones o distribuciones. No se ejecuta pnpm ni se leen
 `.npmrc`, hooks o configuración ejecutable del proyecto.
-Consulta el [plan acotado de pnpm](docs/increments/pnpm-v9-scan.md).
+Consulta el [contrato del lector](docs/increments/pnpm-v9-scan.md) y el
+[incremento de instalación separado](docs/increments/pnpm-installed.md).
 
 [Evidencia de inventario](docs/inventory-compatibility.md) · [Evidencia de inteligencia](docs/intelligence-compatibility.md) · [Requisitos de publicación](docs/pre-1.0-features.md)
 

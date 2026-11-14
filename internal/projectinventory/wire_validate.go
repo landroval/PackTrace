@@ -16,7 +16,7 @@ func ValidatePublic(p PublicInventory) error {
 			reconciliationGap = reconciliationGap || g.Code == "pnpm-reconciliation-unsupported"
 			workspaceGap = workspaceGap || g.Code == "pnpm-workspaces-unsupported"
 		}
-		if p.Complete || p.Counts.Installed != 0 || len(p.Relations) != 0 || len(p.Scopes) != 1 || !installedGap || !reconciliationGap || !workspaceGap {
+		if p.Complete || p.Counts.Installed != 0 && p.Selection.State != "usable" || len(p.Scopes) != 1 || !installedGap || !reconciliationGap || !workspaceGap {
 			return ErrWire
 		}
 	}
@@ -54,7 +54,7 @@ func ValidatePublic(p PublicInventory) error {
 			return ErrWire
 		}
 		e := p.Evidence[p.Selection.Evidence-1]
-		if e.Method != "native-input-lease" || e.Scope != 1 {
+		if e.Method != "native-input-lease" || e.Scope != 1 || p.Selection.Family == "pnpm" && e.MetadataEvidence != 0 {
 			return ErrWire
 		}
 	}
@@ -74,6 +74,15 @@ func ValidatePublic(p PublicInventory) error {
 		case "installed":
 			if !allowed(o.Kind, "directory", "link", "slot-file") {
 				return ErrWire
+			}
+			if p.Selection.Family == "pnpm" {
+				if o.MetadataEvidence == 0 || int(o.MetadataEvidence) > len(p.Evidence) {
+					return ErrWire
+				}
+				manifest, metadata := p.Evidence[o.Source-1], p.Evidence[o.MetadataEvidence-1]
+				if o.Status == "complete" && (o.Kind == "slot-file" || manifest.Method != "native-input-lease" || manifest.Status != "complete" || manifest.MetadataEvidence != o.MetadataEvidence || metadata.Status != "complete") {
+					return ErrWire
+				}
 			}
 		default:
 			return ErrWire
@@ -100,6 +109,9 @@ func ValidatePublic(p PublicInventory) error {
 		kind     string
 	}]bool{}
 	for _, r := range p.Relations {
+		if p.Selection.Family == "pnpm" && (r.Kind != "candidate-correspondence" || r.Status != "indeterminate") {
+			return ErrWire
+		}
 		if r.From == 0 || int(r.From) > len(p.Observations) || r.Evidence == 0 || int(r.Evidence) > len(p.Evidence) {
 			return ErrWire
 		}
@@ -143,6 +155,9 @@ func ValidatePublic(p PublicInventory) error {
 			}
 		case "candidate-correspondence":
 			if from.Class != "locked" || to.Class != "installed" || r.Status != "indeterminate" {
+				return ErrWire
+			}
+			if p.Selection.Family == "pnpm" && (p.Selection.Evidence == 0 || from.Source != p.Selection.Evidence || from.Kind != "package" || from.Status != "complete" || to.Status != "complete" || witness.Method != "native-input-lease" || witness.Status != "complete" || p.Evidence[from.Source-1].Method != "native-input-lease" || p.Evidence[from.Source-1].Status != "complete") {
 				return ErrWire
 			}
 		default:
