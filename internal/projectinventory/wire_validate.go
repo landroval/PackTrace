@@ -6,8 +6,18 @@ func ValidatePublic(p PublicInventory) error {
 	if len(p.Scopes) == 0 || len(p.Scopes) > maxRecords+1 || len(p.Evidence) == 0 || len(p.Evidence) > 100000 || len(p.Observations) > 3*maxRecords || len(p.Relations) > maxRecords || len(p.Gaps) > 257 || p.Counts != p.counts() {
 		return ErrWire
 	}
-	if !allowed(p.Selection.Family, "npm", "bun", "unknown") || !allowed(p.Selection.State, "usable", "unusable", "absent", "indeterminate") || !allowed(p.Selection.Reason, selectionReasons...) {
+	if !allowed(p.Selection.Family, "npm", "bun", "pnpm", "unknown") || !allowed(p.Selection.State, "usable", "unusable", "absent", "indeterminate") || !allowed(p.Selection.Reason, selectionReasons...) {
 		return ErrWire
+	}
+	if p.Selection.Family == "pnpm" {
+		installedGap, reconciliationGap := false, false
+		for _, g := range p.Gaps {
+			installedGap = installedGap || g.Code == "pnpm-installed-unsupported"
+			reconciliationGap = reconciliationGap || g.Code == "pnpm-reconciliation-unsupported"
+		}
+		if p.Complete || p.Counts.Installed != 0 || len(p.Relations) != 0 || len(p.Scopes) != 1 || !installedGap || !reconciliationGap {
+			return ErrWire
+		}
 	}
 	complete := len(p.Gaps) == 0 && p.Selection.State == "usable" && p.Selection.Family != "unknown"
 	for i, s := range p.Scopes {

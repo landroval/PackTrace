@@ -263,7 +263,7 @@ func applyArgumentOption(request *ScanArgumentRequest, option ArgumentOptions, v
 	switch option {
 	case ArgumentOptionManager:
 		switch value {
-		case "auto", "npm", "bun", "bun@1.3.2", "bun@1.4.2":
+		case "auto", "npm", "bun", "pnpm", "pnpm@lockfile-9", "bun@1.3.2", "bun@1.4.2":
 		default:
 			if !managerprofile.SupportsNPM(value) && !managerprofile.SupportsBun(value) {
 				return false

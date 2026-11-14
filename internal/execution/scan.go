@@ -527,6 +527,9 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 					if !inventoryClosed || !advisoryClosed || materialWanted && !material.closed || v.Summary.InventoryComplete != inventory.Complete {
 						return errScanProtocol
 					}
+					if inventory.Selection.Family == "pnpm" && (v.Summary.InventoryComplete || v.Summary.AuthorityComplete || v.Summary.ObservedEntries != 0) {
+						return errScanProtocol
+					}
 					want := len(cfg.Plan.Policy.References)
 					if cfg.Plan.Checks&cli.ArgumentCheckIntegrity == 0 {
 						want = 0

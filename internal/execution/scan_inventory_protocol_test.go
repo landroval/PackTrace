@@ -21,17 +21,21 @@ func sendFaultInventory(c *channel, mode string) {
 	}
 	bs := []projectinventory.InventoryBatch{{Scopes: scopes}, {Evidence: []projectinventory.PublicEvidence{{ID: 1, Scope: 1, Method: "native-metadata", Status: "incomplete"}}}}
 	counts := projectinventory.Counters{Scopes: len(scopes), Evidence: 1, Gaps: 1}
-	if mode == "inventory-orphan" || mode == "inventory-class" {
+	if mode == "inventory-orphan" || mode == "inventory-class" || mode == "inventory-pnpm-installed" {
 		o := projectinventory.PublicObservation{ID: 1, Workspace: 1, Source: 1, Class: "installed", Kind: "directory", Status: "unreadable"}
 		if mode == "inventory-orphan" {
 			o.Source = 9999
-		} else {
+		} else if mode == "inventory-class" {
 			o.Class = "PRIVATE-invalid-class"
 		}
 		bs = append(bs, projectinventory.InventoryBatch{Observations: []projectinventory.PublicObservation{o}})
 		counts.Installed = 1
 	}
 	bs = append(bs, projectinventory.InventoryBatch{Gaps: []projectinventory.Gap{{Scope: 1, Evidence: 1, Code: "discovery-incomplete"}}})
+	if mode == "inventory-pnpm-installed" || mode == "inventory-pnpm-complete" {
+		bs = append(bs, projectinventory.InventoryBatch{Gaps: []projectinventory.Gap{{Scope: 1, Code: "pnpm-installed-unsupported"}, {Scope: 1, Code: "pnpm-reconciliation-unsupported"}}})
+		counts.Gaps += 2
+	}
 	for i := range bs {
 		bs[i].Sequence = uint32(i)
 	}
@@ -53,6 +57,10 @@ func sendFaultInventory(c *channel, mode string) {
 		Counts    projectinventory.Counters        `json:"counts"`
 		Complete  bool                             `json:"complete"`
 	}{Batches: uint32(len(bs)), Selection: projectinventory.PublicSelection{Family: "npm", State: "unusable", Reason: "candidate-unusable"}, Counts: counts, Complete: mode == "inventory-forged-completion"}
+	if mode == "inventory-pnpm-installed" || mode == "inventory-pnpm-complete" {
+		closure.Selection.Family = "pnpm"
+		closure.Complete = mode == "inventory-pnpm-complete"
+	}
 	_ = c.send("inventory-closure", closure)
 	if mode == "inventory-double-closure" {
 		_ = c.send("inventory-closure", closure)
@@ -68,7 +76,7 @@ func TestInventoryProtocolCannotAuthorizeForgedClosures(t *testing.T) {
 	}
 	p := integrityscan.Policy{Version: 1, Designation: "user-designated", Reason: "fixture", Provenance: "fixture", Manager: "npm@10.9.4", RequiredChecks: []string{"integrity"}, FailOn: []string{}, MinimumAssurance: "lockfile-consistent", References: []integrityscan.Reference{{Location: "node_modules/p", LockKey: "node_modules/p", Name: "p", Version: "1.0.0", Origin: "fixture:p", Classification: "unknown", ExpectedSRI: "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=", Archive: "p.tgz", Context: "none"}}}
 	plan := integrityscan.Plan{Manager: p.Manager, Policy: p, Checks: 4}
-	for _, mode := range []string{"inventory-duplicate-id", "inventory-orphan", "inventory-class", "inventory-count", "inventory-sequence", "inventory-no-closure", "inventory-double-closure", "inventory-late-batch", "inventory-forged-completion"} {
+	for _, mode := range []string{"inventory-duplicate-id", "inventory-orphan", "inventory-class", "inventory-count", "inventory-sequence", "inventory-no-closure", "inventory-double-closure", "inventory-late-batch", "inventory-forged-completion", "inventory-pnpm-installed", "inventory-pnpm-complete"} {
 		t.Run(mode, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 			defer cancel()
