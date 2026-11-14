@@ -1,0 +1,320 @@
+{
+  "schema": "packtrace.owned-pnpm-v9.v1",
+  "scope": "inert producer bytes; format interpretation evidence, not installed/native qualification",
+  "node": {
+    "sha256": "c48679a6033afe88eee1d417d3d3ca74c7e1f47c8f154ec7c23f88287eeb943c",
+    "version": "v26.13.1"
+  },
+  "producers": [
+    {
+      "version": "9.15.9",
+      "URL": "https://registry.npmjs.org/pnpm/-/pnpm-9.15.9.tgz",
+      "archiveBytes": 4311450,
+      "archiveSHA512": "sha512-aARhQYk8ZvrQHAeSMRKOmvuJ74fiaR1p5NQO7iKJiClf1GghgbrlW1hBjDolO95lpQXsfF+UA+zlzDzTfc8lMQ==",
+      "archiveSHA256": "cf86a7ad764406395d4286a6d09d730711720acc6d93e9dce9ac7ac4dc4a28a7",
+      "packageLicense": "MIT",
+      "licenseSHA256": "e0a867ff513ea7be2a0ddc339ac6a031e459a38668e077b8f0e649544062f9f2",
+      "executableSHA256": "98e6b99a881d64a1cc982c3e60aa260bf02160386b12e74475e06486dc74b090",
+      "runtime": {
+        "sha256": "c48679a6033afe88eee1d417d3d3ca74c7e1f47c8f154ec7c23f88287eeb943c",
+        "version": "v26.13.1"
+      }
+    },
+    {
+      "version": "10.34.9",
+      "URL": "https://registry.npmjs.org/pnpm/-/pnpm-10.34.9.tgz",
+      "archiveBytes": 4895615,
+      "archiveSHA512": "sha512-9JtajqD97bRLs8DB1ldQkqU8KVDZW3rRXfEfF5dId6LeOgHAfpNOmyjOcW5RwJqUlixzBtCb4uHksYqMh2L9Mg==",
+      "archiveSHA256": "7e8a946108e7baab119e51d27c24d6178b46545422643dbc91e34e2f1ee32e0f",
+      "packageLicense": "MIT",
+      "licenseSHA256": "e0a867ff513ea7be2a0ddc339ac6a031e459a38668e077b8f0e649544062f9f2",
+      "executableSHA256": "b276da51dc8ca5b0d3ee3371695b50fc8b3244b281b091c63a3f082a88dadeb9",
+      "runtime": {
+        "sha256": "c48679a6033afe88eee1d417d3d3ca74c7e1f47c8f154ec7c23f88287eeb943c",
+        "version": "v26.13.1"
+      }
+    }
+  ],
+  "generator": {
+    "scriptSHA256": "d8f6be1be6269b06e8379a4ec12fe8f9edcba49690c157149afefa6eedf7abec",
+    "supportSHA256": "377419b02e772d6c46ea29c3ec72bf40c33231270bab749c553662609b944374",
+    "preparationSHA256": "c96089627b018c5d15c44e3272383293bb652676c532681a61cf55cace002142",
+    "prototype": "owned bounded generator reuses the repository namespace/registry/capture helpers; original source and execution receipts retained externally"
+  },
+  "captures": [
+    {
+      "producer": "pnpm@9.15.9",
+      "case": "single",
+      "expected": {
+        "lockedPackageMetadata": 5,
+        "snapshotContexts": 5,
+        "importerLocations": [
+          "."
+        ],
+        "parentPeerContexts": [
+          "fixture-parent@1.0.0(fixture-peer@1.0.0)"
+        ],
+        "workspaceSupported": false,
+        "installedSupported": false
+      },
+      "entries": [
+        {
+          "path": "package.json",
+          "kind": "file",
+          "size": 364,
+          "links": 1,
+          "object": 1,
+          "data": "{\"dependencies\": {\"fixture-alias\": \"npm:fixture-common@1.0.0\", \"fixture-common\": \"2.0.0\", \"fixture-parent\": \"1.0.0\", \"fixture-peer\": \"1.0.0\"}, \"name\": \"owned-root\", \"optionalDependencies\": {\"fixture-platform\": \"1.0.0\"}, \"packageManager\": \"pnpm@9.15.9\", \"private\": true, \"scripts\": {\"postinstall\": \"echo unexpected > /work/LIFECYCLE_EXECUTED\"}, \"version\": \"1.0.0\"}\n",
+          "sha256": "351402a711e37b9436781185a7a9323d1eccd2a7da6b84d09a525f2a5a9d606d"
+        },
+        {
+          "path": "pnpm-lock.yaml",
+          "kind": "file",
+          "size": 2024,
+          "links": 1,
+          "object": 2,
+          "data": "lockfileVersion: '9.0'\n\nsettings:\n  autoInstallPeers: true\n  excludeLinksFromLockfile: false\n\nimporters:\n\n  .:\n    dependencies:\n      fixture-alias:\n        specifier: npm:fixture-common@1.0.0\n        version: fixture-common@1.0.0\n      fixture-common:\n        specifier: 2.0.0\n        version: 2.0.0\n      fixture-parent:\n        specifier: 1.0.0\n        version: 1.0.0(fixture-peer@1.0.0)\n      fixture-peer:\n        specifier: 1.0.0\n        version: 1.0.0\n    optionalDependencies:\n      fixture-platform:\n        specifier: 1.0.0\n        version: 1.0.0\n\npackages:\n\n  fixture-common@1.0.0:\n    resolution: {integrity: sha512-UpV3jVZqSoBAf4fsTeGs3+K418HmJJrbQx8ofK+oUebXPWYWlBKbrlisMMa0EVKPDwFJgxksZTx+45csVyCROA==, tarball: http://127.0.0.1:41769/files/fixture-common-1.0.0.tgz}\n\n  fixture-common@2.0.0:\n    resolution: {integrity: sha512-OHJBVs6reDQxuaIBU2tDtoF8eJwq/QINBnOWmUCoxlktCFvUxLN8K9/Tl46+eRyXWe+qoVvsb2JLDc6Liliy2A==, tarball: http://127.0.0.1:41769/files/fixture-common-2.0.0.tgz}\n\n  fixture-parent@1.0.0:\n    resolution: {integrity: sha512-1Q8n4RrCaLYvQCeRFAceihI6VD8kplR2nd2uKA1r4riipqKw9Kc7TnNigWVEP94L5nrjKDpq5wATgEIMjZDVmQ==, tarball: http://127.0.0.1:41769/files/fixture-parent-1.0.0.tgz}\n    peerDependencies:\n      fixture-peer: '*'\n    bundledDependencies:\n      - fixture-bundle\n\n  fixture-peer@1.0.0:\n    resolution: {integrity: sha512-H1gQy6WWS+GIvSJ8KUHrFDU6IVBrKj/8pPcmcTV47LoV3Bfp8ewHtL+kswG5EFeKsNEbn2doNd6X43Wbv8gbKA==, tarball: http://127.0.0.1:41769/files/fixture-peer-1.0.0.tgz}\n\n  fixture-platform@1.0.0:\n    resolution: {integrity: sha512-csZRvmMoQ81Yz5lCYSGqC1U4lD5bHws0HELftmv4/XTYMBYzrZF1LYnK5N/uwsagDoLJBG1j9zKd8aUbIMWV0w==, tarball: http://127.0.0.1:41769/files/fixture-platform-1.0.0.tgz}\n    cpu: [arm64]\n    os: [darwin]\n\nsnapshots:\n\n  fixture-common@1.0.0: {}\n\n  fixture-common@2.0.0: {}\n\n  fixture-parent@1.0.0(fixture-peer@1.0.0):\n    dependencies:\n      fixture-common: 1.0.0\n      fixture-peer: 1.0.0\n\n  fixture-peer@1.0.0: {}\n\n  fixture-platform@1.0.0:\n    optional: true\n",
+          "sha256": "922e9522b4c296b55aa961df0eaf7859f729f19977033092c4652cbe2da04dcb"
+        }
+      ],
+      "sourceContentBytes": 2388
+    },
+    {
+      "producer": "pnpm@9.15.9",
+      "case": "peer-contexts",
+      "expected": {
+        "lockedPackageMetadata": 6,
+        "snapshotContexts": 7,
+        "importerLocations": [
+          "."
+        ],
+        "parentPeerContexts": [
+          "fixture-parent@1.0.0(fixture-peer@1.0.0)",
+          "fixture-parent@1.0.0(fixture-peer@2.0.0)"
+        ],
+        "workspaceSupported": false,
+        "installedSupported": false
+      },
+      "entries": [
+        {
+          "path": "package.json",
+          "kind": "file",
+          "size": 247,
+          "links": 1,
+          "object": 1,
+          "data": "{\"dependencies\": {\"fixture-consumer-a\": \"1.0.0\", \"fixture-consumer-b\": \"1.0.0\"}, \"name\": \"owned-root\", \"packageManager\": \"pnpm@9.15.9\", \"private\": true, \"scripts\": {\"postinstall\": \"echo unexpected > /work/LIFECYCLE_EXECUTED\"}, \"version\": \"1.0.0\"}\n",
+          "sha256": "0bea8490439cdd62d2b6a7a11c4e9ef2cdf6178aba420a7f355076a11feac2b1"
+        },
+        {
+          "path": "pnpm-lock.yaml",
+          "kind": "file",
+          "size": 2242,
+          "links": 1,
+          "object": 2,
+          "data": "lockfileVersion: '9.0'\n\nsettings:\n  autoInstallPeers: true\n  excludeLinksFromLockfile: false\n\nimporters:\n\n  .:\n    dependencies:\n      fixture-consumer-a:\n        specifier: 1.0.0\n        version: 1.0.0\n      fixture-consumer-b:\n        specifier: 1.0.0\n        version: 1.0.0\n\npackages:\n\n  fixture-common@1.0.0:\n    resolution: {integrity: sha512-UpV3jVZqSoBAf4fsTeGs3+K418HmJJrbQx8ofK+oUebXPWYWlBKbrlisMMa0EVKPDwFJgxksZTx+45csVyCROA==, tarball: http://127.0.0.1:41769/files/fixture-common-1.0.0.tgz}\n\n  fixture-consumer-a@1.0.0:\n    resolution: {integrity: sha512-2Mh7xrrA/dBPsn5BRojrkmQPmCWrrNN1EDac11kz5oaEsdwLdBwWydVWmXKdVhN1cv5Lpx14+LXb+dPPtZRZOA==, tarball: http://127.0.0.1:41769/files/fixture-consumer-a-1.0.0.tgz}\n\n  fixture-consumer-b@1.0.0:\n    resolution: {integrity: sha512-Ysv4e6Z5QuLLPxDaK53WbzQVkyNHjK5+8Znks921EiNIaV6eqMqAO3Ww8MD5OMDCbxc9/p1b3/hCO+1qrf4Rrw==, tarball: http://127.0.0.1:41769/files/fixture-consumer-b-1.0.0.tgz}\n\n  fixture-parent@1.0.0:\n    resolution: {integrity: sha512-1Q8n4RrCaLYvQCeRFAceihI6VD8kplR2nd2uKA1r4riipqKw9Kc7TnNigWVEP94L5nrjKDpq5wATgEIMjZDVmQ==, tarball: http://127.0.0.1:41769/files/fixture-parent-1.0.0.tgz}\n    peerDependencies:\n      fixture-peer: '*'\n    bundledDependencies:\n      - fixture-bundle\n\n  fixture-peer@1.0.0:\n    resolution: {integrity: sha512-H1gQy6WWS+GIvSJ8KUHrFDU6IVBrKj/8pPcmcTV47LoV3Bfp8ewHtL+kswG5EFeKsNEbn2doNd6X43Wbv8gbKA==, tarball: http://127.0.0.1:41769/files/fixture-peer-1.0.0.tgz}\n\n  fixture-peer@2.0.0:\n    resolution: {integrity: sha512-+uwsPc5Fdd1iE3nGLUB4UUjzSmpo2B9MYLssnatqPJRwTMttP5xOyNXcc/SZvcww1n2edanW0E987QQ51RIh5w==, tarball: http://127.0.0.1:41769/files/fixture-peer-2.0.0.tgz}\n\nsnapshots:\n\n  fixture-common@1.0.0: {}\n\n  fixture-consumer-a@1.0.0:\n    dependencies:\n      fixture-parent: 1.0.0(fixture-peer@1.0.0)\n      fixture-peer: 1.0.0\n\n  fixture-consumer-b@1.0.0:\n    dependencies:\n      fixture-parent: 1.0.0(fixture-peer@2.0.0)\n      fixture-peer: 2.0.0\n\n  fixture-parent@1.0.0(fixture-peer@1.0.0):\n    dependencies:\n      fixture-common: 1.0.0\n      fixture-peer: 1.0.0\n\n  fixture-parent@1.0.0(fixture-peer@2.0.0):\n    dependencies:\n      fixture-common: 1.0.0\n      fixture-peer: 2.0.0\n\n  fixture-peer@1.0.0: {}\n\n  fixture-peer@2.0.0: {}\n",
+          "sha256": "e70458f6f9b89848494da3ed04b9ae983daf06d037ff5b9f0f7ab086e8b68351"
+        }
+      ],
+      "sourceContentBytes": 2489
+    },
+    {
+      "producer": "pnpm@9.15.9",
+      "case": "workspaces-unsupported",
+      "expected": {
+        "lockedPackageMetadata": 2,
+        "snapshotContexts": 2,
+        "importerLocations": [
+          ".",
+          "packages/member"
+        ],
+        "parentPeerContexts": [],
+        "workspaceSupported": false,
+        "installedSupported": false
+      },
+      "entries": [
+        {
+          "path": "package.json",
+          "kind": "file",
+          "size": 212,
+          "links": 1,
+          "object": 1,
+          "data": "{\"dependencies\": {\"fixture-common\": \"2.0.0\"}, \"name\": \"owned-root\", \"packageManager\": \"pnpm@9.15.9\", \"private\": true, \"scripts\": {\"postinstall\": \"echo unexpected > /work/LIFECYCLE_EXECUTED\"}, \"version\": \"1.0.0\"}\n",
+          "sha256": "17f79abaa85f84c9ce203b2caac7b9b1278f71f3ad25e617d00c849fe6b9fdc7"
+        },
+        {
+          "path": "packages",
+          "kind": "directory"
+        },
+        {
+          "path": "packages/member",
+          "kind": "directory"
+        },
+        {
+          "path": "packages/member/package.json",
+          "kind": "file",
+          "size": 89,
+          "links": 1,
+          "object": 4,
+          "data": "{\"name\": \"owned-member\", \"version\": \"1.0.0\", \"dependencies\": {\"fixture-common\": \"1.0.0\"}}",
+          "sha256": "77b357cf77eca1aa15378a198504f919aa7e17a3de888aefedec644b4976c804"
+        },
+        {
+          "path": "pnpm-lock.yaml",
+          "kind": "file",
+          "size": 814,
+          "links": 1,
+          "object": 2,
+          "data": "lockfileVersion: '9.0'\n\nsettings:\n  autoInstallPeers: true\n  excludeLinksFromLockfile: false\n\nimporters:\n\n  .:\n    dependencies:\n      fixture-common:\n        specifier: 2.0.0\n        version: 2.0.0\n\n  packages/member:\n    dependencies:\n      fixture-common:\n        specifier: 1.0.0\n        version: 1.0.0\n\npackages:\n\n  fixture-common@1.0.0:\n    resolution: {integrity: sha512-UpV3jVZqSoBAf4fsTeGs3+K418HmJJrbQx8ofK+oUebXPWYWlBKbrlisMMa0EVKPDwFJgxksZTx+45csVyCROA==, tarball: http://127.0.0.1:41769/files/fixture-common-1.0.0.tgz}\n\n  fixture-common@2.0.0:\n    resolution: {integrity: sha512-OHJBVs6reDQxuaIBU2tDtoF8eJwq/QINBnOWmUCoxlktCFvUxLN8K9/Tl46+eRyXWe+qoVvsb2JLDc6Liliy2A==, tarball: http://127.0.0.1:41769/files/fixture-common-2.0.0.tgz}\n\nsnapshots:\n\n  fixture-common@1.0.0: {}\n\n  fixture-common@2.0.0: {}\n",
+          "sha256": "7d19014cadb159c12fa16705f4d5d3edcc0c266cad34f219a7ba8d70cc1f6698"
+        },
+        {
+          "path": "pnpm-workspace.yaml",
+          "kind": "file",
+          "size": 27,
+          "links": 1,
+          "object": 3,
+          "data": "packages:\n  - 'packages/*'\n",
+          "sha256": "477e6c5f8b033a1ecb7f8919ad2726e4328c7893c4ad6228d62471425b22dbe7"
+        }
+      ],
+      "sourceContentBytes": 1142
+    },
+    {
+      "producer": "pnpm@10.34.9",
+      "case": "single",
+      "expected": {
+        "lockedPackageMetadata": 5,
+        "snapshotContexts": 5,
+        "importerLocations": [
+          "."
+        ],
+        "parentPeerContexts": [
+          "fixture-parent@1.0.0(fixture-peer@1.0.0)"
+        ],
+        "workspaceSupported": false,
+        "installedSupported": false
+      },
+      "entries": [
+        {
+          "path": "package.json",
+          "kind": "file",
+          "size": 365,
+          "links": 1,
+          "object": 1,
+          "data": "{\"dependencies\": {\"fixture-alias\": \"npm:fixture-common@1.0.0\", \"fixture-common\": \"2.0.0\", \"fixture-parent\": \"1.0.0\", \"fixture-peer\": \"1.0.0\"}, \"name\": \"owned-root\", \"optionalDependencies\": {\"fixture-platform\": \"1.0.0\"}, \"packageManager\": \"pnpm@10.34.9\", \"private\": true, \"scripts\": {\"postinstall\": \"echo unexpected > /work/LIFECYCLE_EXECUTED\"}, \"version\": \"1.0.0\"}\n",
+          "sha256": "66fccee41d9e9b4cef2512aed8ff20bad47bf88047dfcd1a5de686874f795cda"
+        },
+        {
+          "path": "pnpm-lock.yaml",
+          "kind": "file",
+          "size": 2024,
+          "links": 1,
+          "object": 2,
+          "data": "lockfileVersion: '9.0'\n\nsettings:\n  autoInstallPeers: true\n  excludeLinksFromLockfile: false\n\nimporters:\n\n  .:\n    dependencies:\n      fixture-alias:\n        specifier: npm:fixture-common@1.0.0\n        version: fixture-common@1.0.0\n      fixture-common:\n        specifier: 2.0.0\n        version: 2.0.0\n      fixture-parent:\n        specifier: 1.0.0\n        version: 1.0.0(fixture-peer@1.0.0)\n      fixture-peer:\n        specifier: 1.0.0\n        version: 1.0.0\n    optionalDependencies:\n      fixture-platform:\n        specifier: 1.0.0\n        version: 1.0.0\n\npackages:\n\n  fixture-common@1.0.0:\n    resolution: {integrity: sha512-UpV3jVZqSoBAf4fsTeGs3+K418HmJJrbQx8ofK+oUebXPWYWlBKbrlisMMa0EVKPDwFJgxksZTx+45csVyCROA==, tarball: http://127.0.0.1:41769/files/fixture-common-1.0.0.tgz}\n\n  fixture-common@2.0.0:\n    resolution: {integrity: sha512-OHJBVs6reDQxuaIBU2tDtoF8eJwq/QINBnOWmUCoxlktCFvUxLN8K9/Tl46+eRyXWe+qoVvsb2JLDc6Liliy2A==, tarball: http://127.0.0.1:41769/files/fixture-common-2.0.0.tgz}\n\n  fixture-parent@1.0.0:\n    resolution: {integrity: sha512-1Q8n4RrCaLYvQCeRFAceihI6VD8kplR2nd2uKA1r4riipqKw9Kc7TnNigWVEP94L5nrjKDpq5wATgEIMjZDVmQ==, tarball: http://127.0.0.1:41769/files/fixture-parent-1.0.0.tgz}\n    peerDependencies:\n      fixture-peer: '*'\n    bundledDependencies:\n      - fixture-bundle\n\n  fixture-peer@1.0.0:\n    resolution: {integrity: sha512-H1gQy6WWS+GIvSJ8KUHrFDU6IVBrKj/8pPcmcTV47LoV3Bfp8ewHtL+kswG5EFeKsNEbn2doNd6X43Wbv8gbKA==, tarball: http://127.0.0.1:41769/files/fixture-peer-1.0.0.tgz}\n\n  fixture-platform@1.0.0:\n    resolution: {integrity: sha512-csZRvmMoQ81Yz5lCYSGqC1U4lD5bHws0HELftmv4/XTYMBYzrZF1LYnK5N/uwsagDoLJBG1j9zKd8aUbIMWV0w==, tarball: http://127.0.0.1:41769/files/fixture-platform-1.0.0.tgz}\n    cpu: [arm64]\n    os: [darwin]\n\nsnapshots:\n\n  fixture-common@1.0.0: {}\n\n  fixture-common@2.0.0: {}\n\n  fixture-parent@1.0.0(fixture-peer@1.0.0):\n    dependencies:\n      fixture-common: 1.0.0\n      fixture-peer: 1.0.0\n\n  fixture-peer@1.0.0: {}\n\n  fixture-platform@1.0.0:\n    optional: true\n",
+          "sha256": "922e9522b4c296b55aa961df0eaf7859f729f19977033092c4652cbe2da04dcb"
+        }
+      ],
+      "sourceContentBytes": 2389
+    },
+    {
+      "producer": "pnpm@10.34.9",
+      "case": "peer-contexts",
+      "expected": {
+        "lockedPackageMetadata": 6,
+        "snapshotContexts": 7,
+        "importerLocations": [
+          "."
+        ],
+        "parentPeerContexts": [
+          "fixture-parent@1.0.0(fixture-peer@1.0.0)",
+          "fixture-parent@1.0.0(fixture-peer@2.0.0)"
+        ],
+        "workspaceSupported": false,
+        "installedSupported": false
+      },
+      "entries": [
+        {
+          "path": "package.json",
+          "kind": "file",
+          "size": 248,
+          "links": 1,
+          "object": 1,
+          "data": "{\"dependencies\": {\"fixture-consumer-a\": \"1.0.0\", \"fixture-consumer-b\": \"1.0.0\"}, \"name\": \"owned-root\", \"packageManager\": \"pnpm@10.34.9\", \"private\": true, \"scripts\": {\"postinstall\": \"echo unexpected > /work/LIFECYCLE_EXECUTED\"}, \"version\": \"1.0.0\"}\n",
+          "sha256": "594756e8853c912a5fcb919febbfdb4db67bfcf18635d7d51d1abbe02b24905c"
+        },
+        {
+          "path": "pnpm-lock.yaml",
+          "kind": "file",
+          "size": 2242,
+          "links": 1,
+          "object": 2,
+          "data": "lockfileVersion: '9.0'\n\nsettings:\n  autoInstallPeers: true\n  excludeLinksFromLockfile: false\n\nimporters:\n\n  .:\n    dependencies:\n      fixture-consumer-a:\n        specifier: 1.0.0\n        version: 1.0.0\n      fixture-consumer-b:\n        specifier: 1.0.0\n        version: 1.0.0\n\npackages:\n\n  fixture-common@1.0.0:\n    resolution: {integrity: sha512-UpV3jVZqSoBAf4fsTeGs3+K418HmJJrbQx8ofK+oUebXPWYWlBKbrlisMMa0EVKPDwFJgxksZTx+45csVyCROA==, tarball: http://127.0.0.1:41769/files/fixture-common-1.0.0.tgz}\n\n  fixture-consumer-a@1.0.0:\n    resolution: {integrity: sha512-2Mh7xrrA/dBPsn5BRojrkmQPmCWrrNN1EDac11kz5oaEsdwLdBwWydVWmXKdVhN1cv5Lpx14+LXb+dPPtZRZOA==, tarball: http://127.0.0.1:41769/files/fixture-consumer-a-1.0.0.tgz}\n\n  fixture-consumer-b@1.0.0:\n    resolution: {integrity: sha512-Ysv4e6Z5QuLLPxDaK53WbzQVkyNHjK5+8Znks921EiNIaV6eqMqAO3Ww8MD5OMDCbxc9/p1b3/hCO+1qrf4Rrw==, tarball: http://127.0.0.1:41769/files/fixture-consumer-b-1.0.0.tgz}\n\n  fixture-parent@1.0.0:\n    resolution: {integrity: sha512-1Q8n4RrCaLYvQCeRFAceihI6VD8kplR2nd2uKA1r4riipqKw9Kc7TnNigWVEP94L5nrjKDpq5wATgEIMjZDVmQ==, tarball: http://127.0.0.1:41769/files/fixture-parent-1.0.0.tgz}\n    peerDependencies:\n      fixture-peer: '*'\n    bundledDependencies:\n      - fixture-bundle\n\n  fixture-peer@1.0.0:\n    resolution: {integrity: sha512-H1gQy6WWS+GIvSJ8KUHrFDU6IVBrKj/8pPcmcTV47LoV3Bfp8ewHtL+kswG5EFeKsNEbn2doNd6X43Wbv8gbKA==, tarball: http://127.0.0.1:41769/files/fixture-peer-1.0.0.tgz}\n\n  fixture-peer@2.0.0:\n    resolution: {integrity: sha512-+uwsPc5Fdd1iE3nGLUB4UUjzSmpo2B9MYLssnatqPJRwTMttP5xOyNXcc/SZvcww1n2edanW0E987QQ51RIh5w==, tarball: http://127.0.0.1:41769/files/fixture-peer-2.0.0.tgz}\n\nsnapshots:\n\n  fixture-common@1.0.0: {}\n\n  fixture-consumer-a@1.0.0:\n    dependencies:\n      fixture-parent: 1.0.0(fixture-peer@1.0.0)\n      fixture-peer: 1.0.0\n\n  fixture-consumer-b@1.0.0:\n    dependencies:\n      fixture-parent: 1.0.0(fixture-peer@2.0.0)\n      fixture-peer: 2.0.0\n\n  fixture-parent@1.0.0(fixture-peer@1.0.0):\n    dependencies:\n      fixture-common: 1.0.0\n      fixture-peer: 1.0.0\n\n  fixture-parent@1.0.0(fixture-peer@2.0.0):\n    dependencies:\n      fixture-common: 1.0.0\n      fixture-peer: 2.0.0\n\n  fixture-peer@1.0.0: {}\n\n  fixture-peer@2.0.0: {}\n",
+          "sha256": "e70458f6f9b89848494da3ed04b9ae983daf06d037ff5b9f0f7ab086e8b68351"
+        }
+      ],
+      "sourceContentBytes": 2490
+    },
+    {
+      "producer": "pnpm@10.34.9",
+      "case": "workspaces-unsupported",
+      "expected": {
+        "lockedPackageMetadata": 2,
+        "snapshotContexts": 2,
+        "importerLocations": [
+          ".",
+          "packages/member"
+        ],
+        "parentPeerContexts": [],
+        "workspaceSupported": false,
+        "installedSupported": false
+      },
+      "entries": [
+        {
+          "path": "package.json",
+          "kind": "file",
+          "size": 213,
+          "links": 1,
+          "object": 1,
+          "data": "{\"dependencies\": {\"fixture-common\": \"2.0.0\"}, \"name\": \"owned-root\", \"packageManager\": \"pnpm@10.34.9\", \"private\": true, \"scripts\": {\"postinstall\": \"echo unexpected > /work/LIFECYCLE_EXECUTED\"}, \"version\": \"1.0.0\"}\n",
+          "sha256": "9d75167ee9c0396a1e069420c5efbdc50386e324d3c6fde2dfff06ca91426ddf"
+        },
+        {
+          "path": "packages",
+          "kind": "directory"
+        },
+        {
+          "path": "packages/member",
+          "kind": "directory"
+        },
+        {
+          "path": "packages/member/package.json",
+          "kind": "file",
+          "size": 89,
+          "links": 1,
+          "object": 4,
+          "data": "{\"name\": \"owned-member\", \"version\": \"1.0.0\", \"dependencies\": {\"fixture-common\": \"1.0.0\"}}",
+          "sha256": "77b357cf77eca1aa15378a198504f919aa7e17a3de888aefedec644b4976c804"
+        },
+        {
+          "path": "pnpm-lock.yaml",
+          "kind": "file",
+          "size": 814,
+          "links": 1,
+          "object": 2,
+          "data": "lockfileVersion: '9.0'\n\nsettings:\n  autoInstallPeers: true\n  excludeLinksFromLockfile: false\n\nimporters:\n\n  .:\n    dependencies:\n      fixture-common:\n        specifier: 2.0.0\n        version: 2.0.0\n\n  packages/member:\n    dependencies:\n      fixture-common:\n        specifier: 1.0.0\n        version: 1.0.0\n\npackages:\n\n  fixture-common@1.0.0:\n    resolution: {integrity: sha512-UpV3jVZqSoBAf4fsTeGs3+K418HmJJrbQx8ofK+oUebXPWYWlBKbrlisMMa0EVKPDwFJgxksZTx+45csVyCROA==, tarball: http://127.0.0.1:41769/files/fixture-common-1.0.0.tgz}\n\n  fixture-common@2.0.0:\n    resolution: {integrity: sha512-OHJBVs6reDQxuaIBU2tDtoF8eJwq/QINBnOWmUCoxlktCFvUxLN8K9/Tl46+eRyXWe+qoVvsb2JLDc6Liliy2A==, tarball: http://127.0.0.1:41769/files/fixture-common-2.0.0.tgz}\n\nsnapshots:\n\n  fixture-common@1.0.0: {}\n\n  fixture-common@2.0.0: {}\n",
+          "sha256": "7d19014cadb159c12fa16705f4d5d3edcc0c266cad34f219a7ba8d70cc1f6698"
+        },
+        {
+          "path": "pnpm-workspace.yaml",
+          "kind": "file",
+          "size": 27,
+          "links": 1,
+          "object": 3,
+          "data": "packages:\n  - 'packages/*'\n",
+          "sha256": "477e6c5f8b033a1ecb7f8919ad2726e4328c7893c4ad6228d62471425b22dbe7"
+        }
+      ],
+      "sourceContentBytes": 1143
+    }
+  ]
+}
