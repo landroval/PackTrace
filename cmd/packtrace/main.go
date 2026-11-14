@@ -15,7 +15,7 @@ import (
 	"packtrace/internal/inspect"
 )
 
-const appVersion = "0.1.0-alpha.1"
+const appVersion = "0.2.0-alpha.1"
 
 func main() { os.Exit(runMain(os.Args[1:], os.Stdin, os.Stdout, os.Stderr)) }
 

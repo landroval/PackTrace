@@ -14,7 +14,7 @@ The exact artifact counts, schemas, pending gates and versions below describe th
 **historical increment at its recorded source**, not a current blanket support
 matrix. Keep failed/unqualified cases visible; no new native campaign is implied.
 
-## Development pnpm format-9 increment
+## Bounded pnpm format-9 support (since v0.2.0-alpha.1)
 
 The pnpm increment targets original `pnpm-lock.yaml` format **9.0**, selected by
 `pnpm` / `pnpm@lockfile-9`. It adds manifest declarations, locked claims and bounded
@@ -24,7 +24,8 @@ absence claims. No advisory lookup or integrity binding is added. Installed and
 reconciliation coverage stay explicitly incomplete; non-root importers/workspace
 semantics and unsupported sources stay gaps. No `.npmrc`, executable pnpm config,
 hook or external store is discovered or executed. Generic hardlink refusal is not
-relaxed. Published alpha.1 binaries do **not** contain this development increment.
+relaxed. Experimental v0.2.0-alpha.1 introduces this partial support;
+v0.1.0-alpha.1 binaries predate it.
 
 The [implementation contract](increments/pnpm-v9-scan.md) pins one maintained
 vendored YAML parser, strict node/shape rules, 1 MiB raw input, depth 64, 100,000

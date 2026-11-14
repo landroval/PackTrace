@@ -11,9 +11,10 @@ PackTrace is a read-only, offline investigation CLI. It helps answer:
 3. **What supports that result?** Separate lockfile, installed-manifest, advisory and reference evidence.
 4. **What should I verify next?** Applicability, missing evidence, or a correction boundary recorded by the advisory.
 
-> **v0.1.0-alpha.1 — experimental prerelease, not production-qualified.**
-> [Downloads](https://github.com/landroval/PackTrace/releases/tag/v0.1.0-alpha.1) ·
-> [Release notes and verification](docs/releases/v0.1.0-alpha.1.md).
+> **v0.2.0-alpha.1 — experimental prerelease, not production-qualified.**
+> [Downloads](https://github.com/landroval/PackTrace/releases/tag/v0.2.0-alpha.1) ·
+> [Release notes and verification](docs/releases/v0.2.0-alpha.1.md) ·
+> [Versioning policy](docs/releases/README.md).
 > Linux amd64 is exercised on owned fixtures; Windows amd64 is cross-compiled only,
 > not runtime-tested for this release. macOS remains deferred. Zero findings never
 > means that a project or machine is safe.
@@ -113,7 +114,7 @@ confirmed vulnerabilities. See [reading a report](docs/user-guide.md#5-read-the-
 | npm 12.x | Stable versions, lockfile v3 only; shrinkwrap ignored, no fallback |
 | Bun 1.2.x / 1.3.x | Text `bun.lock` v0/v1; config absent/0/1 |
 | Bun 1.4.x | Bounded text v0–v3; config absent/0/1 |
-| pnpm (development increment) | `pnpm-lock.yaml` format 9.0; `pnpm@lockfile-9`; declared/locked and bounded active installed observations; coverage incomplete |
+| pnpm (partial, since 0.2.0-alpha.1) | `pnpm-lock.yaml` format 9.0; `pnpm@lockfile-9`; declared/locked and bounded active installed observations; coverage incomplete |
 | Family/legacy profiles | `bun@1.2-1.4`, `bun@1.2.x`, `bun@1.3.x`, `bun@1.4.x`; `npm@10-11` remains accepted |
 | npm/Bun workspaces | Explicit relative members and bounded one-level patterns; ambiguous ownership remains a gap. pnpm workspaces are not supported by this increment. |
 
@@ -126,9 +127,9 @@ New owned producer anchors include npm 7.24.2/8.19.4/9.9.4 and Bun 1.2.23/1.4.2.
 Bun 1.2.23's local Git producer case remains unqualified. Saved policies are not
 silently widened or repinned; a narrower existing profile keeps its limits.
 
-**pnpm is a development-only, partial increment; the published alpha.1 archives do not include it.**
-Use `--manager pnpm` or the explicit format profile `pnpm@lockfile-9` with a source
-build. It retains original lockfile evidence and distinct peer contexts, and reads
+**pnpm is partial support introduced in v0.2.0-alpha.1; v0.1.0-alpha.1 predates it.**
+Use `--manager pnpm` or the explicit format profile `pnpm@lockfile-9` with this
+release or a corresponding source build. It retains original lockfile evidence and distinct peer contexts, and reads
 single-link manifests from active contained installation slots. Opaque `.pnpm`
 store names do not prove peer identity; correspondences remain indeterminate
 candidates. Generic hardlinks, non-root importers, patches and unsupported sources

@@ -72,20 +72,21 @@ rutas aunque su texto parezca correcto. No las debilites para obtener un resulta
 
 ## 2. Compilación y requisitos
 
-La [prerelease v0.1.0-alpha.1](https://github.com/landroval/PackTrace/releases/tag/v0.1.0-alpha.1)
+La [prerelease v0.2.0-alpha.1](https://github.com/landroval/PackTrace/releases/tag/v0.2.0-alpha.1)
 ofrece archivos experimentales para Linux amd64 y Windows amd64. Linux se prueba
 con fixtures propios; Windows **solo se compila de forma cruzada, sin prueba de
 ejecución de este release**. Ninguno está cualificado para producción. Consulta
-[verificación, metadatos de compilación sin firma y limitaciones](releases/v0.1.0-alpha.1.md)
-antes de ejecutar un archivo. No hay instalador ni descarga/configuración automática.
+[verificación, metadatos de compilación sin firma y limitaciones](releases/v0.2.0-alpha.1.md)
+antes de ejecutar un archivo. La [política de versiones](releases/README.md) distingue
+funciones nuevas, correcciones e iteraciones preliminares; el esquema 1.7 es independiente. No hay instalador ni descarga/configuración automática.
 
 También puedes usar una copia revisada del repositorio y un toolchain ya instalado
 compatible con `go.mod` —Go 1.27.1—. El programa usa la biblioteca estándar y un
 único parser YAML fijado y vendorizado para el incremento parcial de pnpm; consulta
 los [avisos de terceros](../THIRD_PARTY_NOTICES.md).
 **No necesitas ejecutar npm, Bun ni pnpm** para analizar; no los ejecutes contra un
-proyecto sospechoso para prepararlo. Los archivos publicados de alpha.1 son
-anteriores a pnpm; el comportamiento pnpm descrito aquí requiere compilar este incremento.
+proyecto sospechoso para prepararlo. Los archivos antiguos de v0.1.0-alpha.1 son
+anteriores a pnpm; v0.2.0-alpha.1 introduce el comportamiento parcial descrito aquí.
 
 Desde la copia de PackTrace, no desde el proyecto investigado:
 
@@ -490,7 +491,7 @@ sin cualificarse. El subconjunto separado de fuentes no Git no borra ese fallo.
 
 ### Análisis parcial de pnpm formato 9
 
-En una compilación revisada que contenga este incremento:
+En v0.2.0-alpha.1 o una compilación revisada que contenga este incremento:
 
 ```bash
 packtrace scan --manager pnpm --format json /ruta/al/proyecto-pnpm
