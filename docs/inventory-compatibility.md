@@ -14,6 +14,42 @@ The exact artifact counts, schemas, pending gates and versions below describe th
 **historical increment at its recorded source**, not a current blanket support
 matrix. Keep failed/unqualified cases visible; no new native campaign is implied.
 
+## Development pnpm format-9 increment
+
+The pnpm increment targets original `pnpm-lock.yaml` format **9.0**, selected by
+`pnpm` / `pnpm@lockfile-9`. It adds manifest declarations and locked observations,
+not installed evidence, advisory lookups or integrity bindings. Installed and
+reconciliation coverage stay explicitly incomplete; non-root importers/workspace
+semantics and unsupported sources stay gaps. No `.npmrc`, executable pnpm config,
+hook or external store is discovered or executed. Generic hardlink refusal is not
+relaxed. Published alpha.1 binaries do **not** contain this development increment.
+
+The [implementation contract](increments/pnpm-v9-scan.md) pins one maintained
+vendored YAML parser, strict node/shape rules, 1 MiB raw input, depth 64, 100,000
+nodes, 64 KiB scalars and aggregate 20,000 record/requirement limits. It preserves
+original-byte digests, package metadata versus snapshot contexts, privacy and
+existing parent/frozen-evidence validation. It does not claim that the lockfile
+identifies the actual producer or proves installation.
+
+Two exact Linux/amd64 producers, **pnpm 9.15.9 and 10.34.9**, were archive-SHA-512
+pinned, safely extracted and run read-only under rootless bwrap with the recorded
+Node v26.13.0 executable. Generation used **eight producer invocations** total:
+each exact version query plus three `--lockfile-only --ignore-scripts` captures.
+Every batch passed scratch/loopback positive controls, exterior read/write/network
+negative controls, the 512 MiB kernel scratch ceiling and confirmed wait/group
+cleanup. Only an owned local registry and authored inert packages were available;
+no package lifecycle scripts, real targets or live advisory data ran.
+
+The data-only [pnpm-v9 corpus](../internal/projectinventory/testdata/producer/pnpm-v9.json)
+contains six original captures (simple/alias/optional, two peer contexts, and
+workspaces-as-unsupported) in 22,118 bytes, SHA-256
+`1d59a869878d6a0cc632ec2e655c3e33379cb6063ddc256663ea03d0b9726a47`.
+Raw lockfile bytes were not rewritten. The actual prototype generator/support
+hashes and per-command receipts are retained separately; these producer facts do
+not establish installed-layout support, every pnpm patch, native Windows/macOS
+execution, completed review or release qualification. Runtime/test acceptance
+must be recorded after integrating the code, not inferred from fixture generation.
+
 ## Current expanded range evidence
 
 `internal/managerprofile` admits stable concrete npm 7.x–12.x and Bun

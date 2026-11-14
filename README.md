@@ -113,8 +113,9 @@ confirmed vulnerabilities. See [reading a report](docs/user-guide.md#5-read-the-
 | npm 12.x | Stable versions, lockfile v3 only; shrinkwrap ignored, no fallback |
 | Bun 1.2.x / 1.3.x | Text `bun.lock` v0/v1; config absent/0/1 |
 | Bun 1.4.x | Bounded text v0–v3; config absent/0/1 |
+| pnpm (development increment) | `pnpm-lock.yaml` format 9.0; `pnpm@lockfile-9`; declared/locked observations only, installed coverage incomplete |
 | Family/legacy profiles | `bun@1.2-1.4`, `bun@1.2.x`, `bun@1.3.x`, `bun@1.4.x`; `npm@10-11` remains accepted |
-| Workspaces | Explicit relative members and bounded one-level patterns; ambiguous ownership remains a gap |
+| npm/Bun workspaces | Explicit relative members and bounded one-level patterns; ambiguous ownership remains a gap. pnpm workspaces are not supported by this increment. |
 
 This is format interpretation, **not** a guarantee for every producer, layout,
 filesystem or platform. Binary Bun locks, npm lockfile v4, prerelease/unknown
@@ -124,6 +125,15 @@ manifest hardlink pair; three or more names stay unreadable.
 New owned producer anchors include npm 7.24.2/8.19.4/9.9.4 and Bun 1.2.23/1.4.2.
 Bun 1.2.23's local Git producer case remains unqualified. Saved policies are not
 silently widened or repinned; a narrower existing profile keeps its limits.
+
+**pnpm is a development-only, partial increment; the published alpha.1 archives do not include it.**
+Use `--manager pnpm` or the explicit format profile `pnpm@lockfile-9` with a source
+build. The first slice retains original lockfile evidence and distinct peer contexts,
+not installed packages, advisory matches or integrity bindings. Non-root importers,
+patches and unsupported sources stay explicit gaps. Real format-9 captures come
+from pnpm 9.15.9 and 10.34.9; this is not blanket version/layout qualification.
+No pnpm executable, `.npmrc`, hook or executable target configuration is run/read.
+See the [bounded pnpm plan](docs/increments/pnpm-v9-scan.md).
 
 [Inventory evidence](docs/inventory-compatibility.md) · [Intelligence evidence](docs/intelligence-compatibility.md) · [Release gates](docs/pre-1.0-features.md)
 
@@ -160,8 +170,10 @@ explicitly. See [data preparation and maintenance](docs/user-guide.md#4-prepare-
 
 ## Local development
 
-The root Go module uses only the standard library. With the required toolchain
-already installed, run from this repository (not an investigated target):
+The root Go module uses the standard library plus one pinned, vendored YAML parser
+for pnpm. Builds remain offline; see [third-party notices](THIRD_PARTY_NOTICES.md).
+With the required toolchain already installed, run from this repository (not an
+investigated target):
 
 ```bash
 export GOTOOLCHAIN=local GOPROXY=off GOSUMDB=off GOWORK=off GOENV=off GOTELEMETRY=off

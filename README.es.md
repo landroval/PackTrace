@@ -120,8 +120,9 @@ confirmadas. Consulta [cómo leer el informe](docs/user-guide.es.md#5-lee-el-inf
 | npm 12.x | Versiones estables, solo lockfile v3; ignora shrinkwrap y no recurre a él |
 | Bun 1.2.x / 1.3.x | `bun.lock` de texto v0/v1; configuración ausente/0/1 |
 | Bun 1.4.x | Texto acotado v0–v3; configuración ausente/0/1 |
+| pnpm (incremento de desarrollo) | `pnpm-lock.yaml` formato 9.0; `pnpm@lockfile-9`; solo declaraciones y registros locked, cobertura instalada incompleta |
 | Perfiles de familia/anteriores | `bun@1.2-1.4`, `bun@1.2.x`, `bun@1.3.x`, `bun@1.4.x`; se conserva `npm@10-11` |
-| Workspaces | Miembros relativos explícitos y patrones acotados de un nivel; la propiedad ambigua sigue siendo una limitación |
+| Workspaces npm/Bun | Miembros relativos explícitos y patrones acotados de un nivel; la propiedad ambigua sigue siendo una limitación. Este incremento no admite workspaces pnpm. |
 
 Se interpreta el formato: **no** se garantiza cada productor, distribución,
 sistema de archivos o plataforma. Los locks binarios de Bun, lockfile v4 de npm,
@@ -132,6 +133,16 @@ hardlink del manifiesto; tres o más siguen siendo ilegibles.
 Los nuevos productores de prueba incluyen npm 7.24.2/8.19.4/9.9.4 y Bun 1.2.23/1.4.2.
 El caso de Git local de Bun 1.2.23 sigue sin cualificarse. No se amplían ni renuevan
 silenciosamente las políticas guardadas: un perfil anterior más estrecho conserva sus límites.
+
+**pnpm es un incremento parcial de desarrollo; los archivos publicados de alpha.1 no lo incluyen.**
+Con una compilación del código fuente usa `--manager pnpm` o el perfil de formato
+`pnpm@lockfile-9`. Conserva evidencia original del lockfile y contextos de peers
+separados, no paquetes instalados, coincidencias de avisos ni vínculos de integridad.
+Importers no raíz, parches y fuentes no admitidas siguen siendo limitaciones
+explícitas. Los locks reales de formato 9 proceden de pnpm 9.15.9 y 10.34.9; esto
+no cualifica todas sus versiones o distribuciones. No se ejecuta pnpm ni se leen
+`.npmrc`, hooks o configuración ejecutable del proyecto.
+Consulta el [plan acotado de pnpm](docs/increments/pnpm-v9-scan.md).
 
 [Evidencia de inventario](docs/inventory-compatibility.md) · [Evidencia de inteligencia](docs/intelligence-compatibility.md) · [Requisitos de publicación](docs/pre-1.0-features.md)
 
@@ -169,8 +180,10 @@ mismo `--state-dir` expresamente. Consulta [preparación y mantenimiento](docs/u
 
 ## Desarrollo local
 
-El módulo Go principal solo usa la biblioteca estándar. Con el toolchain requerido
-ya instalado, desde este repositorio, no desde el proyecto investigado:
+El módulo Go principal usa la biblioteca estándar y un único parser YAML fijado y
+vendorizado para pnpm. La compilación sigue siendo offline; consulta los
+[avisos de terceros](THIRD_PARTY_NOTICES.md). Con el toolchain requerido ya
+instalado, desde este repositorio, no desde el proyecto investigado:
 
 ```bash
 export GOTOOLCHAIN=local GOPROXY=off GOSUMDB=off GOWORK=off GOENV=off GOTELEMETRY=off
