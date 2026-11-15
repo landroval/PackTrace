@@ -71,7 +71,7 @@ producer/layout or any release artifact.
 
 This source-only extension is **not in the published v0.2.0-alpha.1 artifacts**.
 Those archives retain 9/10 hint recognition and their original producer evidence.
-The newer source recognizes canonical stable **9.x–11.x hints** for the same exact
+The newer source recognizes canonical stable **9.x–12.x hints** for the same exact
 FORMAT9 interpretation. Concrete producer hints are not policy-format aliases or
 producer authentication; `--manager` still takes `pnpm` / `pnpm@lockfile-9`, not a
 concrete pnpm version. Unsupported formats and malformed/prerelease/future hints
@@ -84,9 +84,9 @@ remain gaps, and saved policy pins are not changed.
 | 10.0.0 | 9.0 | observed | observed | observed | refusal/partial |
 | 10.34.9 | 9.0 | observed | observed | observed | refusal/partial |
 | 11.28.9 | 9.0 | observed | observed | observed | refusal/partial |
-| 12.18.0, native Linux x64 glibc tool | no successful captured lock | unqualified | unqualified | unqualified | unqualified |
+| 12.18.0, native Linux x64 glibc tool | 9.0 | observed in follow-up | observed in follow-up | observed in follow-up | actual hardlinks refused/partial |
 
-For each of the five generated producers, local replays retain 7 installed
+For each of the six generated producers across the two campaigns, local replays retain 7 installed
 observations for isolated copy (7 readable; 6 indeterminate candidates), 6 for
 hoisted copy (6 readable; 5 candidates), 12 for peer-context copy (12 readable;
 12 candidates), and 7 for forced hardlinks (2 readable, 5 unreadable; 1 candidate).
@@ -95,13 +95,14 @@ peer bindings. All three mandatory pnpm gaps, one incomplete scope and exit3
 remain. No workspace, hardlink allowance, advisory lookup, integrity or policy
 exception authority is added.
 
-The native12 `--version` query succeeded. Four original owned installations then
+**Historical first campaign:** the native12 `--version` query succeeded. Four original owned installations then
 failed with `ERR_PNPM_BAD_CONFIG_DEP` while trying to resolve the producer through
 the loopback registry. A separately named diagnostic used an unsupported direct
 CLI flag and failed too. These are **producer-adapter/configuration limitations**,
 not proof of general pnpm12 lockfile or scanner incompatibility. Original failures
 are retained; a successful version query/help is not installation qualification.
-pnpm12 remains outside automatic/family hint admission. Its MIT text and wrapper
+That campaign alone did not admit 12.x hints; the separate follow-up below now justifies
+stable 12.x recognition in newer source. Its MIT text and wrapper
 BSD2 notices were retained with the verified official native/wrapper pair; no
 installer, automatic tool acquisition or system installation was executed.
 
@@ -123,6 +124,35 @@ isolation controls and all child reap/group cleanup checks passed. Generation is
 closed: no leftover or historical allowance is renewed by a repair or this table.
 The initial preparer also stopped before execution at pnpm12's changed distribution;
 its native package was admitted only after the owner's separate scoped approval.
+
+### Native pnpm12 follow-up
+
+A separately approved **6-call /180-second /512-MiB /zero-download** local campaign
+revalidated the existing wrapper/native archives, executable and notices. The
+adapter used the recorded native help, omitted the owned root's `packageManager`
+self-resolution trigger, removed obsolete/unsupported direct flags, requested
+`packageImportMethod` in owned configuration, and explicitly disabled scripts,
+hooks and runtime installation. No producer installer or new acquisition ran.
+
+The representative isolated installation passed before variant expansion. All
+four cases produced format 9.0 locks; the hardlink request actually produced
+multi-link manifests. **5 calls** (one version plus four installations) were
+reserved/observed, generation lasted **1.311673 seconds /180**, and all namespace,
+canary, scratch, reap and cleanup controls passed. The sixth call was not used;
+the campaign is closed, not a standing grant.
+
+The separate [native12 corpus](../internal/projectinventory/testdata/producer/pnpm12-native.json)
+contains four raw captures in 50,858 bytes, SHA-256
+`fd714050d0b0ccde4ee936dd64a698e591dbe2b1dcff21f948ea04193791ceda`.
+The first corpus and its failed12 records remain immutable historical evidence.
+The same replay consumer exercises all 24 captures (84 profile/hint cases), including
+separately authored 12.x hints without relabeling the original producer manifests.
+Tests now assert exact readable/unreadable/candidate multiplicities and distinct
+parent locations under peer contexts; candidates remain indeterminate, not peer
+bindings. The only production change admits canonical stable 12.x hints to the
+unchanged FORMAT9 gate. Future/prerelease/malformed hints and unsupported lock
+formats remain gaps, and no new source/policy/filesystem authority is granted.
+See the [follow-up contract](increments/pnpm12-compat.md).
 
 These Linux/amd64 sample anchors are not every patch/layout, native Windows/macOS
 execution, independent release qualification, or authorization for real projects.

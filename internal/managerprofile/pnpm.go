@@ -16,7 +16,7 @@ func PNPMHint(hint string) bool {
 		return false
 	}
 	parts := strings.Split(strings.TrimPrefix(hint, "pnpm@"), ".")
-	if len(parts) != 3 || parts[0] != "9" && parts[0] != "10" && parts[0] != "11" {
+	if len(parts) != 3 || parts[0] != "9" && parts[0] != "10" && parts[0] != "11" && parts[0] != "12" {
 		return false
 	}
 	for _, p := range parts {

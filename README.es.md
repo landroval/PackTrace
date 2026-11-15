@@ -144,10 +144,11 @@ las correspondencias son candidatos indeterminados. Hardlinks genéricos, import
 no raíz, parches y fuentes no admitidas siguen siendo limitaciones explícitas.
 La cobertura instalada/reconciliación sigue incompleta; no añade búsquedas de avisos
 ni vínculos de integridad para pnpm. El release v0.2.0-alpha.1 tiene productores
-9.15.9/10.34.9 y reconoce pistas estables 9/10. Una **extensión de código aún no
-publicada** añade fixtures 9.0.0, 10.0.0 y 11.28.9 con copias isolated/hoisted y
-peers; solo ese código nuevo reconoce pistas estables 9–11. pnpm12 sigue sin
-cualificarse tras fallos del adaptador de productores. Consulta la
+9.15.9/10.34.9 y reconoce pistas estables 9.x/10.x. Una **extensión de código aún
+sin release** reconoce **9.x–12.x** estables para formato 9.0. Los productores exactos
+y los casos de copias isolated/hoisted, peers y rechazo de hardlinks son anclas de
+pruebas, no una lista blanca de parches. Una campaña nativa pnpm12 separada y
+acotada resolvió los fallos anteriores del adaptador. Consulta la
 [matriz exacta de versiones/layouts](docs/inventory-compatibility.md#unpublished-pnpm-matrix);
 las muestras no cualifican todos los parches, layouts o plataformas. No se ejecuta pnpm ni se leen
 `.npmrc`, hooks o configuración ejecutable del proyecto.
