@@ -9,7 +9,7 @@ func TestPNPMScanArguments(t *testing.T) {
 			t.Fatal(got, err)
 		}
 	}
-	for _, manager := range []string{"pnpm@9.15.9", "pnpm@10.34.9", "pnpm@lockfile-8"} {
+	for _, manager := range []string{"pnpm@9.15.9", "pnpm@10.34.9", "pnpm@11.28.9", "pnpm@12.18.0", "pnpm@lockfile-8"} {
 		if _, err := ParseArgs([]string{"scan", "--manager", manager, "owned-unused"}); err == nil {
 			t.Fatal("producer is not format profile", manager)
 		}

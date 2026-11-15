@@ -17,13 +17,15 @@ func TestPNPMSelectionAndNoInstalledAuthority(t *testing.T) {
 		{"sole", "auto", "", "", "usable", false},
 		{"explicit-auto-mixed", "auto", "pnpm@9.15.9", "package-lock.json", "indeterminate", true},
 		{"hint", "auto", "pnpm@10.34.9", "", "usable", false},
+		{"hint-11", "auto", "pnpm@11.28.9", "", "usable", false},
+		{"mixed-11", "auto", "pnpm@11.28.9", "package-lock.json", "indeterminate", false},
 		{"family", "pnpm", "", "", "usable", true},
 		{"policy-isolated", "pnpm@lockfile-9", "npm@10.9.4", "", "usable", false},
 		{"mixed-npm", "auto", "pnpm@9.15.9", "package-lock.json", "indeterminate", false},
 		{"mixed-bun", "auto", "pnpm@10.34.9", "bun.lock", "indeterminate", false},
 		{"explicit-mixed", "pnpm", "", "package-lock.json", "usable", true},
 		{"invalid-hint", "auto", "pnpm@lockfile-9", "", "indeterminate", false},
-		{"unknown-hint", "auto", "pnpm@11.0.0", "", "indeterminate", false},
+		{"unknown-hint", "auto", "pnpm@12.18.0", "", "indeterminate", false},
 		{"conflicting-hint", "pnpm", "npm@10.9.4", "", "indeterminate", true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

@@ -67,6 +67,67 @@ mandatory pnpm gaps and incomplete coverage remain even when rows are observed.
 These Linux fixture observations do not qualify native Windows/macOS, every
 producer/layout or any release artifact.
 
+## Unpublished pnpm matrix
+
+This source-only extension is **not in the published v0.2.0-alpha.1 artifacts**.
+Those archives retain 9/10 hint recognition and their original producer evidence.
+The newer source recognizes canonical stable **9.x–11.x hints** for the same exact
+FORMAT9 interpretation. Concrete producer hints are not policy-format aliases or
+producer authentication; `--manager` still takes `pnpm` / `pnpm@lockfile-9`, not a
+concrete pnpm version. Unsupported formats and malformed/prerelease/future hints
+remain gaps, and saved policy pins are not changed.
+
+| Exact producer | Lock format | Isolated copy | Hoisted copy | Distinct peer copy | Forced hardlinks |
+| --- | --- | --- | --- | --- | --- |
+| 9.0.0 | 9.0 | observed | observed | observed | refusal/partial |
+| 9.15.9 | 9.0 | observed | observed | observed | refusal/partial |
+| 10.0.0 | 9.0 | observed | observed | observed | refusal/partial |
+| 10.34.9 | 9.0 | observed | observed | observed | refusal/partial |
+| 11.28.9 | 9.0 | observed | observed | observed | refusal/partial |
+| 12.18.0, native Linux x64 glibc tool | no successful captured lock | unqualified | unqualified | unqualified | unqualified |
+
+For each of the five generated producers, local replays retain 7 installed
+observations for isolated copy (7 readable; 6 indeterminate candidates), 6 for
+hoisted copy (6 readable; 5 candidates), 12 for peer-context copy (12 readable;
+12 candidates), and 7 for forced hardlinks (2 readable, 5 unreadable; 1 candidate).
+These are distinct observed/logical slots, not unique authenticated packages or
+peer bindings. All three mandatory pnpm gaps, one incomplete scope and exit3
+remain. No workspace, hardlink allowance, advisory lookup, integrity or policy
+exception authority is added.
+
+The native12 `--version` query succeeded. Four original owned installations then
+failed with `ERR_PNPM_BAD_CONFIG_DEP` while trying to resolve the producer through
+the loopback registry. A separately named diagnostic used an unsupported direct
+CLI flag and failed too. These are **producer-adapter/configuration limitations**,
+not proof of general pnpm12 lockfile or scanner incompatibility. Original failures
+are retained; a successful version query/help is not installation qualification.
+pnpm12 remains outside automatic/family hint admission. Its MIT text and wrapper
+BSD2 notices were retained with the verified official native/wrapper pair; no
+installer, automatic tool acquisition or system installation was executed.
+
+The [data-only matrix corpus](../internal/projectinventory/testdata/producer/pnpm-matrix.json)
+contains 20 raw successful captures and six producer outcome records in
+245,568 bytes, SHA-256
+`1002c957fe67456f82ae6c63592ca3dc994a1efadf9a7ebd45f14c6587327402`.
+It preserves original lock/manifests, symlink targets and hardlink multiplicity.
+Replay is not another producer execution or an independently reproduced binary.
+Official metadata/strong archive hashes, licenses, Node/executable identities,
+actual generator hashes and full failure/reap receipts remain retained externally.
+
+The closed campaign consumed **41,953,895 official response bytes /64 MiB** and
+**32 reserved/observed producer calls /32**, including version queries/help and
+failed installs. Recorded generation lasted **254.067651 seconds /600**; the
+private scratch kernel ceiling was **512 MiB**. Rootless private PID/network
+namespaces, readonly tools, scripts-disabled owned fixtures, positive/negative
+isolation controls and all child reap/group cleanup checks passed. Generation is
+closed: no leftover or historical allowance is renewed by a repair or this table.
+The initial preparer also stopped before execution at pnpm12's changed distribution;
+its native package was admitted only after the owner's separate scoped approval.
+
+These Linux/amd64 sample anchors are not every patch/layout, native Windows/macOS
+execution, independent release qualification, or authorization for real projects.
+See the [increment contract](increments/pnpm-compat-matrix.md).
+
 ## Current expanded range evidence
 
 `internal/managerprofile` admits stable concrete npm 7.x–12.x and Bun

@@ -502,8 +502,13 @@ Non-root importers, pnpm workspace/configuration semantics, catalogs, patches,
 unsupported source forms and shared stores are not newly supported. No
 `pnpm-workspace.yaml`, `.npmrc`, hook, target script or external store is discovered
 or executed. The format-profile alias is not a concrete `packageManager` hint;
-canonical stable pnpm 9/10 hints identify a family only. Actual inert producer
-anchors are 9.15.9 and 10.34.9; they do not qualify every patch/layout/platform.
+canonical stable hints identify a family only. The published v0.2.0-alpha.1 admits
+9/10 hints with exact producer anchors 9.15.9/10.34.9. The **unpublished matrix
+extension** in newer source admits 9–11 hints and adds 9.0.0/10.0.0/11.28.9 anchors,
+including isolated and hoisted copy layouts. pnpm12 is not admitted after its
+producer-adapter failures; that is not proof the scanner cannot interpret every
+pnpm12 lock. See the [exact matrix](inventory-compatibility.md#unpublished-pnpm-matrix).
+No anchor qualifies every patch/layout/platform.
 Saved policies/pins are unchanged and are not silently upgraded to pnpm.
 
 ## 7. Policies, references and exceptions

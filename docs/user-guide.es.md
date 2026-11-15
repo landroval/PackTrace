@@ -523,9 +523,13 @@ Importers no raíz, semántica de workspace/configuración pnpm, catálogos, par
 fuentes no admitidas y almacenes compartidos no quedan soportados. No se descubren
 ni ejecutan `pnpm-workspace.yaml`, `.npmrc`, hooks, scripts del proyecto o almacenes
 externos. El alias de perfil no es una pista concreta válida en `packageManager`;
-las pistas estables canónicas pnpm 9/10 solo identifican familia. Los productores
-inertes reales son 9.15.9 y 10.34.9, sin cualificar todos los parches, distribuciones
-o plataformas. Las políticas y sus pins no se cambian ni amplían automáticamente.
+las pistas estables canónicas solo identifican familia. El release v0.2.0-alpha.1
+admite pistas 9/10 con productores exactos 9.15.9/10.34.9. La **extensión de matriz
+aún no publicada**, en código posterior, admite pistas 9–11 y añade productores
+9.0.0/10.0.0/11.28.9, con copias isolated y hoisted. pnpm12 no queda admitido tras
+los fallos de su adaptador de productores: no demuestra incompatibilidad general
+del lector. Consulta la [matriz exacta](inventory-compatibility.md#unpublished-pnpm-matrix).
+Ninguna muestra cualifica todos los parches, layouts o plataformas. Las políticas y sus pins no se cambian ni amplían automáticamente.
 
 ## 7. Políticas, referencias y excepciones
 
