@@ -524,11 +524,12 @@ fuentes no admitidas y almacenes compartidos no quedan soportados. No se descubr
 ni ejecutan `pnpm-workspace.yaml`, `.npmrc`, hooks, scripts del proyecto o almacenes
 externos. El alias de perfil no es una pista concreta válida en `packageManager`;
 las pistas estables canónicas solo identifican familia. El release v0.2.0-alpha.1
-admite pistas 9/10 con productores exactos 9.15.9/10.34.9. La **extensión de matriz
-aún no publicada**, en código posterior, admite pistas 9–11 y añade productores
-9.0.0/10.0.0/11.28.9, con copias isolated y hoisted. pnpm12 no queda admitido tras
-los fallos de su adaptador de productores: no demuestra incompatibilidad general
-del lector. Consulta la [matriz exacta](inventory-compatibility.md#unpublished-pnpm-matrix).
+admite pistas 9.x/10.x con productores exactos 9.15.9/10.34.9. Una **extensión de código
+aún sin release** admite pistas estables **9.x–12.x**, siempre con formato 9.0.
+Las versiones exactas son anclas de pruebas, no una lista blanca de parches.
+La nueva campaña nativa pnpm 12.18.0 produjo copias isolated/hoisted, peers y hardlinks
+rechazados tras corregir el adaptador; los fallos históricos se conservan.
+Consulta la [matriz exacta](inventory-compatibility.md#unpublished-pnpm-matrix).
 Ninguna muestra cualifica todos los parches, layouts o plataformas. Las políticas y sus pins no se cambian ni amplían automáticamente.
 
 ## 7. Políticas, referencias y excepciones

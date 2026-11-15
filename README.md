@@ -135,10 +135,11 @@ store names do not prove peer identity; correspondences remain indeterminate
 candidates. Generic hardlinks, non-root importers, patches and unsupported sources
 stay explicit gaps. Installed/reconciliation coverage remains incomplete; no pnpm
 advisory lookup or integrity binding is added. The published v0.2.0-alpha.1 has
-producer anchors 9.15.9/10.34.9 and recognizes stable 9/10 hints. An **unpublished
-source extension** adds 9.0.0, 10.0.0 and 11.28.9 fixtures across isolated/hoisted
-copy and peer layouts, recognizing stable 9–11 hints only in that newer source.
-pnpm12 remains unqualified after producer-adapter failures. See the
+producer anchors 9.15.9/10.34.9 and recognizes stable 9.x/10.x hints. A **source-only
+extension, not yet released**, recognizes stable **9.x–12.x** for format 9.0.
+Exact sampled producers and isolated/hoisted copy, peer and hardlink-refusal cases
+are evidence anchors, not an exclusive patch whitelist. A separately bounded native
+pnpm12 follow-up resolved the earlier producer-adapter failures. See the
 [exact version/layout matrix](docs/inventory-compatibility.md#unpublished-pnpm-matrix);
 no sample qualifies every patch/layout/platform.
 No pnpm executable, `.npmrc`, hook or executable target configuration is run/read.
