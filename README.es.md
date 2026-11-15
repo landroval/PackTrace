@@ -143,8 +143,13 @@ y contenidas. Los nombres opacos del almacén `.pnpm` no prueban identidad de pe
 las correspondencias son candidatos indeterminados. Hardlinks genéricos, importers
 no raíz, parches y fuentes no admitidas siguen siendo limitaciones explícitas.
 La cobertura instalada/reconciliación sigue incompleta; no añade búsquedas de avisos
-ni vínculos de integridad para pnpm. Los locks reales de formato 9 proceden de pnpm 9.15.9 y 10.34.9; esto
-no cualifica todas sus versiones o distribuciones. No se ejecuta pnpm ni se leen
+ni vínculos de integridad para pnpm. El release v0.2.0-alpha.1 tiene productores
+9.15.9/10.34.9 y reconoce pistas estables 9/10. Una **extensión de código aún no
+publicada** añade fixtures 9.0.0, 10.0.0 y 11.28.9 con copias isolated/hoisted y
+peers; solo ese código nuevo reconoce pistas estables 9–11. pnpm12 sigue sin
+cualificarse tras fallos del adaptador de productores. Consulta la
+[matriz exacta de versiones/layouts](docs/inventory-compatibility.md#unpublished-pnpm-matrix);
+las muestras no cualifican todos los parches, layouts o plataformas. No se ejecuta pnpm ni se leen
 `.npmrc`, hooks o configuración ejecutable del proyecto.
 Consulta el [contrato del lector](docs/increments/pnpm-v9-scan.md) y el
 [incremento de instalación separado](docs/increments/pnpm-installed.md).

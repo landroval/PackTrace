@@ -134,8 +134,13 @@ single-link manifests from active contained installation slots. Opaque `.pnpm`
 store names do not prove peer identity; correspondences remain indeterminate
 candidates. Generic hardlinks, non-root importers, patches and unsupported sources
 stay explicit gaps. Installed/reconciliation coverage remains incomplete; no pnpm
-advisory lookup or integrity binding is added. Real format-9 captures come
-from pnpm 9.15.9 and 10.34.9; this is not blanket version/layout qualification.
+advisory lookup or integrity binding is added. The published v0.2.0-alpha.1 has
+producer anchors 9.15.9/10.34.9 and recognizes stable 9/10 hints. An **unpublished
+source extension** adds 9.0.0, 10.0.0 and 11.28.9 fixtures across isolated/hoisted
+copy and peer layouts, recognizing stable 9–11 hints only in that newer source.
+pnpm12 remains unqualified after producer-adapter failures. See the
+[exact version/layout matrix](docs/inventory-compatibility.md#unpublished-pnpm-matrix);
+no sample qualifies every patch/layout/platform.
 No pnpm executable, `.npmrc`, hook or executable target configuration is run/read.
 See the [reader contract](docs/increments/pnpm-v9-scan.md) and the separate
 [installed increment](docs/increments/pnpm-installed.md).
