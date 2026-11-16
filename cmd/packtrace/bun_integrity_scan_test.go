@@ -97,6 +97,15 @@ func TestScanBunReferenceIntegrityUsesOriginalTupleAndActualFiles(t *testing.T) 
 			if report.Inventory == nil || report.Inventory.Selection.Family != "bun" || report.Inventory.Selection.State != "usable" || !report.Inventory.Complete || report.Instances != 1 {
 				t.Fatalf("Bun selection/physical inventory missing: %s", raw)
 			}
+			closedInventory := false
+			for _, coverage := range report.Coverage {
+				if coverage.Check == "inventory" {
+					closedInventory = coverage.Required && coverage.Outcome == "completed"
+				}
+			}
+			if !closedInventory {
+				t.Fatalf("portable integrity-only Bun inventory lost its original witnesses: %s", raw)
+			}
 			valid := mode == "equal" || mode == "modified"
 			if valid {
 				if report.ObservedEntries != 3 || !report.Comparison.SuppliedComparisonComplete || len(report.Comparison.Gaps) != 0 {

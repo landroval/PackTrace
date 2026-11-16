@@ -41,6 +41,7 @@ type Policy struct {
 	References             []Reference     `json:"references"`
 	NPMOrigins             []NPMOriginRule `json:"npmOrigins,omitempty"`
 	NPMRegistry            string          `json:"npmRegistry,omitempty"`
+	BunOrigins             []BunOriginRule `json:"bunOrigins,omitempty"`
 	RequirePortable        bool            `json:"requirePortable,omitempty"`
 	// AdvisoryCandidates grants local ambiguous-origin lookups, not origin authority.
 	AdvisoryCandidates bool        `json:"advisoryCandidates,omitempty"`
@@ -56,6 +57,19 @@ type NPMOriginRule struct {
 	Version  string `json:"version"`
 	Origin   string `json:"origin"`
 }
+
+// BunOriginRule explicitly grants one root tuple's npm namespace correspondence
+// and unique native installed association. Registry retains the original tuple
+// claim (including Bun's empty default); Origin is the reviewed public mapping.
+// Neither npm grants nor an old Bun policy acquires this authority.
+type BunOriginRule struct {
+	Location string `json:"location"`
+	Name     string `json:"name"`
+	Version  string `json:"version"`
+	Origin   string `json:"origin"`
+	Registry string `json:"registry"`
+}
+
 type Reference struct {
 	Location       string `json:"location"`
 	LockKey        string `json:"lockKey"`
@@ -103,7 +117,7 @@ func ParsePolicy(data []byte) (Policy, error) {
 	return p, nil
 }
 func canonicalPolicyFields(fields map[string]json.RawMessage) bool {
-	if !canonicalFields(fields, []string{"version", "designation", "reason", "provenance", "manager", "bunCacheDirectory", "requiredChecks", "failOn", "requireHardMemoryLimit", "minimumAssurance", "references", "npmOrigins", "npmRegistry", "requirePortable", "advisoryCandidates", "exceptions", "maxExceptionDays"}) {
+	if !canonicalFields(fields, []string{"version", "designation", "reason", "provenance", "manager", "bunCacheDirectory", "requiredChecks", "failOn", "requireHardMemoryLimit", "minimumAssurance", "references", "npmOrigins", "npmRegistry", "bunOrigins", "requirePortable", "advisoryCandidates", "exceptions", "maxExceptionDays"}) {
 		return false
 	}
 	for _, list := range []struct {
@@ -112,6 +126,7 @@ func canonicalPolicyFields(fields map[string]json.RawMessage) bool {
 	}{
 		{"references", []string{"location", "lockKey", "name", "version", "origin", "classification", "expectedSRI", "archive", "context"}},
 		{"npmOrigins", []string{"location", "name", "version", "origin"}},
+		{"bunOrigins", []string{"location", "name", "version", "origin", "registry"}},
 	} {
 		raw, exists := fields[list.key]
 		if !exists {
@@ -165,6 +180,20 @@ func ValidatePolicy(p Policy) error {
 		}
 		origins[strings.ToLower(r.Location)] = true
 	}
+	if len(p.BunOrigins) > 64 || len(p.BunOrigins) != 0 && !managerprofile.SupportsBun(p.Manager) {
+		return ErrPolicy
+	}
+	bun := map[string]bool{}
+	for _, r := range p.BunOrigins {
+		if !text(r.Version, 256) || !text(r.Origin, 2048) {
+			return ErrPolicy
+		}
+		_, err := intel.ParseSemVer(r.Version)
+		if !canonicalNPMName(r.Name) || r.Location != r.Name || err != nil || r.Origin != npmTarballOrigin(r.Name, r.Version) || r.Registry != "" && r.Registry != r.Origin || bun[r.Location] {
+			return ErrPolicy
+		}
+		bun[r.Location] = true
+	}
 	seen := map[string]bool{}
 	for _, r := range p.References {
 		key := strings.ToLower(r.Location)
@@ -190,7 +219,7 @@ func configureSource(r cli.ScanArgumentRequest, p Policy, builtin bool) (Plan, e
 	if r.Privacy == "" {
 		r.Privacy = "portable"
 	}
-	if r.PolicyPath == "" || !oneOf(r.Privacy, "portable", "local") || p.RequirePortable && r.Privacy == "local" || r.Output == "" || (r.StateDir != "" && !filepath.IsAbs(r.StateDir)) || (r.TrustedSnapshotDigest != "" && !supportedSnapshotPin(r.TrustedSnapshotDigest)) || ((p.MinimumAssurance == "independently-anchored" || p.BunCacheDirectory != "" || len(p.NPMOrigins) != 0 || p.NPMRegistry != "" || p.AdvisoryCandidates || len(p.Exceptions) != 0 || p.MaxExceptionDays != 0) && r.TrustedPolicyDigest == "") || (r.TrustedPolicyDigest != "" && !supportedPolicyPin(r.TrustedPolicyDigest)) || required & ^r.Checks != 0 || (r.FailOn|fail) & ^r.Checks != 0 || (r.Provided&cli.ArgumentOptionFailOn != 0 && fail & ^r.FailOn != 0) {
+	if r.PolicyPath == "" || !oneOf(r.Privacy, "portable", "local") || p.RequirePortable && r.Privacy == "local" || r.Output == "" || (r.StateDir != "" && !filepath.IsAbs(r.StateDir)) || (r.TrustedSnapshotDigest != "" && !supportedSnapshotPin(r.TrustedSnapshotDigest)) || ((p.MinimumAssurance == "independently-anchored" || p.BunCacheDirectory != "" || len(p.NPMOrigins) != 0 || p.NPMRegistry != "" || len(p.BunOrigins) != 0 || p.AdvisoryCandidates || len(p.Exceptions) != 0 || p.MaxExceptionDays != 0) && r.TrustedPolicyDigest == "") || (r.TrustedPolicyDigest != "" && !supportedPolicyPin(r.TrustedPolicyDigest)) || required & ^r.Checks != 0 || (r.FailOn|fail) & ^r.Checks != 0 || (r.Provided&cli.ArgumentOptionFailOn != 0 && fail & ^r.FailOn != 0) {
 		return Plan{}, ErrOptions
 	}
 	family := strings.Split(p.Manager, "@")[0]

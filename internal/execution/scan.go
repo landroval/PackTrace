@@ -826,10 +826,10 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 			return sender.send("closure", scanClosure{r.Index, len(r.Assessment.Differences), len(r.Assessment.Gaps)})
 		}
 		emitInventory := func(r projectinventory.Result) error {
-			p := projectinventory.Portable(r)
-			if policyMaterialWanted(cfg.Plan) || cfg.Plan.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) != 0 {
-				p = projectinventory.PortableMatching(r)
-			}
+			// Every operational coverage check needs the selected-original and
+			// native-metadata links, even without advisory or exception material.
+			// This projection adds numeric witnesses only, not private identities.
+			p := projectinventory.PortableMatching(r)
 			batches := uint32(0)
 			if e := projectinventory.WalkBatches(p, func(b projectinventory.InventoryBatch) error {
 				if e := sender.send("inventory-batch", b); e != nil {

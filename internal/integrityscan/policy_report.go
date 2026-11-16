@@ -37,21 +37,64 @@ type policyReportInputs struct {
 func BuildReportWithPolicy(plan Plan, records []Record, summary Summary, resources Resources, interrupted, abnormal bool, inventory *projectinventory.PublicInventory, intelligence *Intelligence, advisories *AdvisoryReport, materials []PolicyMaterial, limited bool, now time.Time) Report {
 	r := BuildReportWithAdvisories(plan, records, summary, resources, interrupted, abnormal, inventory, intelligence, advisories)
 	r.SchemaVersion = "1.7"
+	healthy := !interrupted && !abnormal && !resources.QueryFailed && !resources.Stale && !resources.Stopped
 	for i := range r.Coverage {
 		c := &r.Coverage[i]
 		switch c.Check {
+		case "inventory":
+			c.Outcome = "incomplete"
+			c.Reason = "selected-original-input-and-installed-metadata-leases; closed-scope-enumeration; not-runtime-resolution-or-authentication"
+			if healthy && operationalInventoryComplete(r.Inventory) {
+				c.Outcome = "completed"
+			}
+		case "integrity":
+			if c.Required {
+				c.Reason = "whole-installed-scope-reference-accounting-and-native-qualification-pending; selected-reference-comparison-reported-separately"
+			}
+		case "malicious", "vulnerability":
+			if c.Required && r.Advisories != nil && r.Advisories.State == "observed" {
+				// Historical matching explicitly cannot attest source/index
+				// completeness. Even perfect rows (or no rows) cannot erase it.
+				c.Reason += "; " + strings.Join(r.Advisories.Summary.Gaps, "; ")
+			}
+		case "reference-authority":
+			if c.Required {
+				c.Outcome = "incomplete"
+				c.Reason = "operator-pinned-policy-and-every-selected-reference-binding-required; not-publisher-authentication"
+				if healthy && OperatorReferenceAuthorityComplete(plan, records) && reportRecordsValid(plan, records) {
+					c.Outcome = "completed"
+				}
+			}
+		case "intelligence-access":
+			c.Reason = "fixed-generation-metadata-and-catalog-access-only; selected-original-read-gaps-in-advisory-coverage; storage-usage-not-observed"
+			if !healthy {
+				c.Outcome = "incomplete"
+			}
+		case "native-qualification":
+			c.Reason = "selected-platform-source-and-artifact-qualification-pending"
 		case "resident-observation":
 			c.Reason = "pre-output-comparison-snapshot; 100ms-retained-child-and-supervisor-observation; rendering-writer-teardown-reap-pending-in-caller; sampled-sum-not-hard-ceiling"
 		case "execution":
 			c.Reason = "comparison-only: " + c.Reason + "; output-and-final-lifecycle-pending-in-caller"
+			if !healthy {
+				c.Outcome = "incomplete"
+				c.Reason += "; execution-or-resident-observation-incomplete"
+			}
 		}
+	}
+	if plan.Checks&cli.ArgumentCheckIntegrity != 0 {
+		outcome := "incomplete"
+		if healthy && referenceComparisonsComplete(plan, records) {
+			outcome = "completed"
+		}
+		r.Coverage = append(r.Coverage, Coverage{Check: "reference-comparison", Required: true, Outcome: outcome, Reason: "all-selected-policy-references; validated-bindings-and-nonempty-file-comparison-receipts; not-whole-installed-scope-or-native-qualification"})
 	}
 	if plan.Builtin {
 		r.PolicyOrigin = "built-in; no-external-policy-or-grants"
 	}
 	if plan.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) != 0 {
 		outcome := "incomplete"
-		if r.Intelligence != nil && r.Intelligence.State == "available" && r.Intelligence.CheckAge == "current" && r.Intelligence.ReconciliationAge == "current" && r.Intelligence.Provenance != "unqualified" {
+		if healthy && r.Intelligence != nil && ValidateIntelligence(*r.Intelligence) == nil && r.Intelligence.State == "available" && r.Intelligence.CheckAge == "current" && r.Intelligence.ReconciliationAge == "current" && r.Intelligence.Provenance != "unqualified" {
 			outcome = "completed"
 		}
 		r.Coverage = append(r.Coverage, Coverage{Check: "intelligence-freshness", Required: true, Outcome: outcome, Reason: "source-check-and-full-reconciliation-freshness; independent-of-exception-acceptance"})
@@ -117,13 +160,14 @@ func RequiredCoverageIncomplete(r Report) bool {
 // The CLI overlays actual output/final-lifecycle errors and interruption later.
 func ReportConditions(r Report) cli.ScanExitConditions {
 	c := cli.ScanExitConditions{Interrupted: r.ExitCode == 130, ReportPreventingError: r.ExitCode == 2, RequiredCoverageIncomplete: RequiredCoverageIncomplete(r)}
-	if r.SchemaVersion == "1.7" {
-		if r.Policy == nil || r.policyContext == nil {
-			c.ReportPreventingError = true
-			return c
+	if r.SchemaVersion == "1.7" || r.policyContext != nil || r.Policy != nil || r.policyPresent {
+		if r.policyContext == nil {
+			return cli.ScanExitConditions{ReportPreventingError: true, RequiredCoverageIncomplete: true}
 		}
-		c.Interrupted = r.policyContext.conditions.Interrupted
-		c.EnforcedUnacceptedFindings = r.Policy.EnforcedUnaccepted > 0
+		c = r.policyContext.conditions
+		if !validRenderedPolicy(r) {
+			c.ReportPreventingError = true
+		}
 	} else {
 		// Historical builders retain their existing aggregate decision contract.
 		c.EnforcedUnacceptedFindings = r.ExitCode == 1

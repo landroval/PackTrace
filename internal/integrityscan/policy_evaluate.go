@@ -120,6 +120,14 @@ func ValidatePolicyMaterialShape(m PolicyMaterial) error {
 	if !projectShape(m.Project) || !scopeShape(m.Scope) || m.Scope.Project != ProjectFingerprint(m.Project) || !hexSHA(m.SourceSHA256) || !hexSHA(m.LockSourceSHA256) || m.LockSourceSHA256 != m.Project.LockSHA256 || m.Profile == "" || len(m.Profile) > 128 || m.Record < 0 || m.Difference < 0 || m.Advisory < 0 || m.Affected < 0 {
 		return ErrPolicyMaterial
 	}
+	if m.Scope.Category != "integrity" && strings.HasPrefix(m.Project.Profile, "bun@") && m.BunTupleKey == "" {
+		return ErrPolicyMaterial
+	}
+	if m.BunTupleKey != "" || m.BunRegistry != "" {
+		if m.Scope.Category == "integrity" || !strings.HasPrefix(m.Project.Profile, "bun@") || m.BunTupleKey != m.Scope.Package || m.Scope.Origin != npmTarballOrigin(m.Scope.Package, m.Scope.Version) || m.BunRegistry != "" && m.BunRegistry != m.Scope.Origin {
+			return ErrPolicyMaterial
+		}
+	}
 	if m.Scope.Category == "integrity" {
 		if m.ObservedEntryID == "" || len(m.ReferenceEntryID) > 128 || len(m.ObservedEntryID) > 128 || m.Observation == 0 || m.Advisory != 0 || m.Affected != 0 || m.OriginalSHA256 != "" || m.Profile != m.Project.Profile || !relative(m.PhysicalTarget) || !oneOf(m.DirectoryKind, "directory", "link") || (m.DirectoryKind == "link" && !hexSHA(m.LinkSHA256)) || (m.DirectoryKind == "directory" && m.LinkSHA256 != "") || !sideShape(m.Expected) || m.Expected.Type == "link" || !sideShape(m.Observed) || !strongSRI(m.ReferenceSRI) || !strongSRI(m.ReferenceObservedSRI) || !oneOf(m.Assurance, "lockfile-consistent", "independently-anchored") || !oneOf(m.ReferenceContext, "none", "patch", "generated") {
 			return ErrPolicyMaterial
@@ -168,10 +176,18 @@ func ValidatePolicyMaterial(plan Plan, inv projectinventory.PublicInventory, rec
 // this after the private exchange joins, so semantic work cannot starve receipt
 // of the worker's bounded periodic samples or certify provisional frames.
 func ValidatePolicyMaterials(plan Plan, inv projectinventory.PublicInventory, records []Record, advisories []AdvisoryDecision, rows []PolicyMaterial) error {
-	if len(rows) > MaxPolicyMaterials || ValidatePlanPolicy(plan) != nil || len(rows) != 0 && projectinventory.ValidatePublic(inv) != nil {
+	if len(rows) > MaxPolicyMaterials || !bunDecisionMultiplicity(advisories) || ValidatePlanPolicy(plan) != nil || len(rows) != 0 && projectinventory.ValidatePublic(inv) != nil {
 		return ErrPolicyMaterial
 	}
+	seenBun := map[string]bool{}
 	for _, row := range rows {
+		if row.BunTupleKey != "" {
+			key := materialKey(row)
+			if seenBun[key] {
+				return ErrPolicyMaterial
+			}
+			seenBun[key] = true
+		}
 		if validatePolicyMaterial(plan, inv, records, advisories, row) != nil {
 			return ErrPolicyMaterial
 		}
@@ -308,7 +324,20 @@ func validatePolicyMaterial(plan Plan, inv projectinventory.PublicInventory, rec
 }
 
 func materialOrigin(p Plan, inv projectinventory.PublicInventory, m PolicyMaterial, d AdvisoryDecision) bool {
-	if !supportedPolicyPin(p.TrustedPolicyDigest) || !strings.HasPrefix(m.Project.Profile, "npm@") {
+	if d.Origin == "operator-bun-rule" {
+		if !supportedPolicyPin(p.TrustedPolicyDigest) || !strings.HasPrefix(m.Project.Profile, "bun@") || d.Rule < 1 || d.Rule > len(p.Policy.BunOrigins) || m.BunTupleKey == "" {
+			return false
+		}
+		r := p.Policy.BunOrigins[d.Rule-1]
+		if r.Location != m.BunTupleKey || r.Name != m.Scope.Package || r.Version != m.Scope.Version || r.Origin != m.Scope.Origin || r.Registry != m.BunRegistry {
+			return false
+		}
+		if m.Scope.Class == "locked" {
+			return m.Scope.Instance == r.Location && d.LockedObservation == 0
+		}
+		return m.Scope.Instance == "node_modules/"+r.Name && m.PhysicalTarget == m.Scope.Instance && m.DirectoryKind == "directory" && d.LockedObservation > 0 && int(d.LockedObservation) <= len(inv.Observations) && inv.Observations[d.LockedObservation-1].Source == m.Project.Lock
+	}
+	if m.BunTupleKey != "" || m.BunRegistry != "" || !supportedPolicyPin(p.TrustedPolicyDigest) || !strings.HasPrefix(m.Project.Profile, "npm@") {
 		return false
 	}
 	if m.Scope.Class == "installed" {

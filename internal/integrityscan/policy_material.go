@@ -65,6 +65,9 @@ type PolicyMaterial struct {
 	ReferenceObservedSRI string          `json:"referenceObservedSRI"`
 	Assurance            string          `json:"assurance"`
 	ReferenceContext     string          `json:"referenceContext"`
+	// Original Bun tuple witnesses; absent for every historical npm material.
+	BunTupleKey string `json:"bunTupleKey,omitempty"`
+	BunRegistry string `json:"bunRegistry,omitempty"`
 }
 
 // PolicyEvidenceEmitter returning nil at a material limit retains findings;
