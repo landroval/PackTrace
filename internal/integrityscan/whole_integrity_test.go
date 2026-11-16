@@ -137,7 +137,7 @@ func TestWholeIntegrityOwnedCoverage(t *testing.T) {
 }
 
 func TestWholeIntegrityMissingOwnersAndReferences(t *testing.T) {
-	for _, mode := range []string{"extra", "no-references", "absent", "bad-reference", "plain-file", "nested-extra", "link", "bun-store", "pnpm-store"} {
+	for _, mode := range []string{"extra", "no-references", "absent", "bad-reference", "plain-file", "nested-extra", "link", "bun-store", "pnpm-store", "bun-store-link", "pnpm-store-file"} {
 		t.Run(mode, func(t *testing.T) {
 			plan, _, root, prepared := wholeFixture(t, []string{"node_modules/pkg"}, true)
 			switch mode {
@@ -171,6 +171,14 @@ func TestWholeIntegrityMissingOwnersAndReferences(t *testing.T) {
 					store = ".pnpm"
 				}
 				if err := os.MkdirAll(filepath.Join(root, "node_modules", store, "orphan"), 0700); err != nil {
+					t.Fatal(err)
+				}
+			case "bun-store-link":
+				if err := os.Symlink("pkg", filepath.Join(root, "node_modules/.bun")); err != nil {
+					t.Fatal(err)
+				}
+			case "pnpm-store-file":
+				if err := os.WriteFile(filepath.Join(root, "node_modules/.pnpm"), []byte("unsupported store marker"), 0600); err != nil {
 					t.Fatal(err)
 				}
 			case "link":

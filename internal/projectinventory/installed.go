@@ -118,7 +118,9 @@ func (c *collector) collectInstalled() {
 			stores = append(stores, ".pnpm")
 		}
 		for _, store := range stores {
-			if e, ok := c.entries[prefix+"node_modules/"+store]; ok && e.Kind == nativefs.KindDirectory {
+			// Core whole-scope accounting cannot treat a store-shaped link or
+			// file as absent. Preserve pnpm's separate historical boundary.
+			if e, ok := c.entries[prefix+"node_modules/"+store]; ok && (e.Kind == nativefs.KindDirectory || c.result.Selection.Family == "npm" || c.result.Selection.Family == "bun") {
 				id := c.evidence(s.ID, e.Name, "unreferenced-store-metadata")
 				c.result.Model.Evidence[id-1].Complete = e.Status == nativefs.StatusComplete
 			}

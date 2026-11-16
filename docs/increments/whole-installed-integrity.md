@@ -32,8 +32,10 @@ comparison. Their unpublished package-manager namespaces are excluded only from
 the parent instance, not from whole accounting. Overlapping published reference
 content remains an ownership gap. A normal file at a package-shaped path remains
 ordinary compared content, never a pruned directory owner; its existing unsupported
-slot-file inventory boundary remains incomplete. Links, generic shared/hardlinked
-stores, workspaces and pnpm do not gain closed-scope support.
+slot-file inventory boundary remains incomplete. Store-shaped `.bun`/`.pnpm`
+objects also block accounting when they are links or ordinary files, not just
+directories; they cannot manufacture a closed empty scope. Links, generic
+shared/hardlinked stores, workspaces and pnpm do not gain closed-scope support.
 
 ## Bounds and trust
 
@@ -57,5 +59,8 @@ the process decision later without rewriting previously emitted bytes.
 Focused owned-fixture unit/protocol tests cover equality/drift, closed empty scope,
 nested owners, unmapped/unsupported instances, missing evidence, reference/catalog,
 source/metadata/instance swaps, frozen reports and privacy. These local Go tests
-are not native/platform acceptance or a benchmark campaign. Full combined CLI,
-root verification and independent integration review remain separate checks.
+are not native/platform acceptance or a benchmark campaign. Actual combined CLI
+fixtures additionally pin portable/local equality and drift, missing/ambiguous
+instances and references, positive empty enumeration, missing-lock refusal and
+unsupported store objects. Root verification and independent review remain
+separate checks.
