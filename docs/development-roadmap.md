@@ -2,13 +2,17 @@
 
 ## Status and approval boundaries
 
-This document records the proposed development route for a usable team pilot.
-It is not the detailed technical design, an executable implementation plan, or
-approval to start production implementation.
+This document retains the original milestone goals, not a current implementation
+or qualification ledger. The Go module, operational CLI, inventory, matching,
+reference comparison, intelligence lifecycle and policy/reporting engines already
+exist; their presence does not establish complete scan or platform qualification.
+See the [public-beta implementation plan](increments/public-beta-readiness-plan.md),
+its [evidence matrix](increments/public-beta-readiness-evidence.md), and the current
+[inventory](inventory-compatibility.md) and
+[intelligence](intelligence-compatibility.md) contracts.
 
-Creating this documentation is authorized. Production code, dependency
-installation, compatibility probes, publication, and releases are not authorized
-by the existence of these documents.
+Documentation alone does not authorize implementation, compatibility campaigns,
+acquisition, publication or release. Those operations require their own scope.
 
 - Review the design and detailed implementation plan before implementation.
 - Obtain separate approval for the exact scope, inputs, and safety boundaries of
@@ -28,10 +32,11 @@ projects for supply-chain threats. Distribute a standalone binary implemented as
 a modular monolith with internal implementation packages and no public Go API
 compatibility commitment.
 
-The pilot must support and execute tests on Linux, macOS, and Windows. It must
-cover npm and modern text-based `bun.lock`, including single projects and
-workspaces/monorepos. Exact version and layout compatibility is a Phase 0 decision
-and must be demonstrated before release.
+The original direction covered Linux, macOS and Windows. The current public-beta
+scope is Linux and Windows, with npm and modern text-based `bun.lock` as the core;
+pnpm remains experimental/partial and macOS is deferred. Exact OS, architecture,
+filesystem, manager-version and layout claims need their own execution evidence;
+a parser range or cross-compiled executable is not runtime qualification.
 
 Provide three distinct detection categories:
 
@@ -45,7 +50,7 @@ and coverage are independent: findings may exist in an incomplete investigation.
 
 ### Explicit non-goals
 
-- pnpm, Yarn, and legacy binary `bun.lockb` support initially.
+- Full pnpm, Yarn, and legacy binary `bun.lockb` support in the beta core.
 - Host-compromise detection, endpoint protection, and proof of payload execution.
 - Generic suspicious-code heuristics, AI classification, or dynamic analysis.
 - Installation interception, automated remediation, deletion, or quarantine.
@@ -283,8 +288,9 @@ file responsibilities, runnable acceptance commands, expected results, known
 limitations, and a completion criterion. Include security checks in the task that
 introduces the relevant boundary.
 
-The baseline Go commands below are planned checks, not currently executable
-project tests: no Go module or production implementation has been created.
+The Go module and these baseline project checks exist. Run them on the exact
+approved candidate with the pinned toolchain; command presence or a predecessor's
+result is not fresh candidate/platform acceptance.
 
 ```text
 go test ./...

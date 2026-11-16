@@ -451,9 +451,16 @@ Do not expand this checklist with these items without a separate scope decision:
 
 ## 11. Approved directions versus remaining qualification
 
-The capabilities above remain the shipping target. The
-[design-decision record](design-decisions.md) now settles substantial directions,
-without establishing implemented or validated product support:
+The capabilities above remain shipping goals, not a current absence-of-code
+ledger. Inventory, npm advisory matching, reference comparison, intelligence
+storage/sync/import/export, policies/exceptions and reporting have implementations
+and scoped evidence. Check the current compatibility contracts and the
+[public-beta plan/evidence](increments/public-beta-readiness-plan.md) before
+reimplementing an unchecked item. Implementation, a closed increment and release
+qualification are distinct.
+
+The [design-decision record](design-decisions.md) records substantial directions
+and dated scope amendments:
 
 - npm/Bun anchors and baseline workspace/layout scope are recorded. The owner's
   current initial #7 delivery scope is Linux amd64/arm64 plus Windows 11 x64,
@@ -462,21 +469,27 @@ without establishing implemented or validated product support:
   macOS remains deferred, not completed. The historical five-row release matrix,
   native Windows 11 x64-hardware testing and producer qualification are not
   completed by this narrower delivery.
-- OSV npm aggregation, update/reconciliation direction, 24-hour freshness, and
-  seven-day full reconciliation are selected. Exact data handling and licensing
-  review remain incomplete.
-- Origin classification, explicit network authorization, baseline trust, and
-  supported assurance digests have approved contracts; concrete mappings and
-  native enforcement still need specification and tests.
-- Scan/preparation budgets, benchmark targets, and a 32 GiB managed-storage quota
-  with explicit historical cleanup are approved. Exact corpus, quota/retention
-  mechanisms, and production measurements remain pending.
-- Offline all-three-check defaults, explicit JSON policy, exit codes, JSON `1.0`,
-  portable privacy, and evidence-bound exceptions are agreed. Complete schemas,
-  encodings, worker protocol, and runtime behavior remain to be delivered.
-- Each increment requires its own written-spec, plan, and execution approvals.
-  The first eleven implementation increments completed that process; further increments and full
-  product/release qualification are not implicitly approved.
+- OSV source preparation, bounded original-backed matching and immutable update/
+  reconciliation storage are implemented. Independent 24-hour source-check and
+  seven-day full-reconciliation freshness remain required; import or a digest pin
+  cannot renew age. See [intelligence compatibility](intelligence-compatibility.md)
+  for actual source, licensing, profile and native-storage limits.
+- Explicit origin grants, baseline assurance and native acquisition/witness tests
+  exist. Unknown/private source, unsupported layouts and missing references remain
+  unverified; a narrow tested mapping is not a global origin/platform guarantee.
+- Scan/preparation budgets and managed quota/retention mechanisms exist. The fixed
+  performance corpus, measurement method, native row and execution envelope still
+  require approval and fresh measurements; no historical timing closes the beta
+  benchmark gate.
+- Operational reports use parent-owned schema `1.7`; older builders preserve their
+  historical schemas. Offline defaults, worker protocol, policy enforcement,
+  portable/local privacy and expiring evidence-bound exceptions exist. Actual
+  complete scan `0/1` and bounded full Bun support require the beta work; preserve
+  real coverage gaps and `130 > 2 > 3 > 1 > 0` rather than deleting gates.
+- Public beta targets Linux and Windows with npm/Bun core, experimental pnpm and
+  deferred macOS. Native artifact qualification, rights/security/support and
+  public delivery remain separate gates. Neither this checklist nor a previous
+  increment authorizes new campaigns, acquisition, publication or merge.
 
 Resolve remaining details through the roadmap's design and qualification process.
 This checklist does not authorize implementation, a probe, downloads, or deletion.
