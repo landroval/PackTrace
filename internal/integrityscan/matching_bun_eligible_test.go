@@ -238,28 +238,19 @@ func TestBunNativeOwnedTupleMatching(t *testing.T) {
 		t.Fatal(err)
 	}
 	p, _ := bunEligibleFixture(t, info)
-	// Native collection currently drops unknown original INFO. Without its new
-	// witness, matching MUST abstain. The principal-owned one-line collector
-	// integration is needed before this becomes a production eligible path.
-	if got := indexedMatchingOrigins(p, inv); len(got) != 0 {
-		t.Fatal("native projection without original context witness qualified", got)
-	}
-	doc, err := lockinventory.ParseBunLock([]byte(files["bun.lock"]))
-	if err != nil {
-		t.Fatal(err)
-	}
-	projection, err := lockinventory.ProjectBunLock(doc)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for i := range inv.Model.Observations {
-		o := &inv.Model.Observations[i]
+	// Exercise the production collector, never reconstruct a discarded original
+	// context from projected fields in this test.
+	locked := 0
+	for _, o := range inv.Model.Observations {
 		if o.Class == "locked" && o.Kind == "package" {
-			if inv.Model.Evidence[o.Source-1].SHA256 != doc.SHA256 {
-				t.Fatal("wrong original")
+			locked++
+			if o.Fields["matching-context"] != "supported" {
+				t.Fatal("collector lost original context", o)
 			}
-			o.Fields["matching-context"] = projectinventory.BunMatchingContext(doc, projection.Records[0])
 		}
+	}
+	if locked != 1 || len(indexedMatchingOrigins(p, inv)) != 2 {
+		t.Fatal("collected locked/native endpoints did not qualify", inv)
 	}
 	p.Privacy = "local"
 	var rows []AdvisoryDecision
