@@ -72,11 +72,11 @@ rutas aunque su texto parezca correcto. No las debilites para obtener un resulta
 
 ## 2. Compilación y requisitos
 
-La [prerelease v0.2.0-alpha.1](https://github.com/landroval/PackTrace/releases/tag/v0.2.0-alpha.1)
+La [prerelease v0.2.0-alpha.2](https://github.com/landroval/PackTrace/releases/tag/v0.2.0-alpha.2)
 ofrece archivos experimentales para Linux amd64 y Windows amd64. Linux se prueba
 con fixtures propios; Windows **solo se compila de forma cruzada, sin prueba de
 ejecución de este release**. Ninguno está cualificado para producción. Consulta
-[verificación, metadatos de compilación sin firma y limitaciones](releases/v0.2.0-alpha.1.md)
+[verificación, metadatos de compilación sin firma y limitaciones](releases/v0.2.0-alpha.2.md)
 antes de ejecutar un archivo. La [política de versiones](releases/README.md) distingue
 funciones nuevas, correcciones e iteraciones preliminares; el esquema 1.7 es independiente. No hay instalador ni descarga/configuración automática.
 
@@ -491,7 +491,7 @@ sin cualificarse. El subconjunto separado de fuentes no Git no borra ese fallo.
 
 ### Análisis parcial de pnpm formato 9
 
-En v0.2.0-alpha.1 o una compilación revisada que contenga este incremento:
+En v0.2.0-alpha.2 o una compilación revisada correspondiente:
 
 ```bash
 packtrace scan --manager pnpm --format json /ruta/al/proyecto-pnpm
@@ -523,13 +523,13 @@ Importers no raíz, semántica de workspace/configuración pnpm, catálogos, par
 fuentes no admitidas y almacenes compartidos no quedan soportados. No se descubren
 ni ejecutan `pnpm-workspace.yaml`, `.npmrc`, hooks, scripts del proyecto o almacenes
 externos. El alias de perfil no es una pista concreta válida en `packageManager`;
-las pistas estables canónicas solo identifican familia. El release v0.2.0-alpha.1
-admite pistas 9.x/10.x con productores exactos 9.15.9/10.34.9. Una **extensión de código
-aún sin release** admite pistas estables **9.x–12.x**, siempre con formato 9.0.
+las pistas estables canónicas solo identifican familia. **v0.2.0-alpha.2 admite
+pistas estables 9.x–12.x**, siempre con formato 9.0. El release anterior v0.2.0-alpha.1
+conserva el reconocimiento 9.x/10.x y sus productores originales 9.15.9/10.34.9.
 Las versiones exactas son anclas de pruebas, no una lista blanca de parches.
 La nueva campaña nativa pnpm 12.18.0 produjo copias isolated/hoisted, peers y hardlinks
 rechazados tras corregir el adaptador; los fallos históricos se conservan.
-Consulta la [matriz exacta](inventory-compatibility.md#unpublished-pnpm-matrix).
+Consulta la [matriz exacta](inventory-compatibility.md#pnpm-versionlayout-matrix).
 Ninguna muestra cualifica todos los parches, layouts o plataformas. Las políticas y sus pins no se cambian ni amplían automáticamente.
 
 ## 7. Políticas, referencias y excepciones

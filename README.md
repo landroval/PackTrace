@@ -11,9 +11,9 @@ PackTrace is a read-only, offline investigation CLI. It helps answer:
 3. **What supports that result?** Separate lockfile, installed-manifest, advisory and reference evidence.
 4. **What should I verify next?** Applicability, missing evidence, or a correction boundary recorded by the advisory.
 
-> **v0.2.0-alpha.1 — experimental prerelease, not production-qualified.**
-> [Downloads](https://github.com/landroval/PackTrace/releases/tag/v0.2.0-alpha.1) ·
-> [Release notes and verification](docs/releases/v0.2.0-alpha.1.md) ·
+> **v0.2.0-alpha.2 — experimental prerelease, not production-qualified.**
+> [Downloads](https://github.com/landroval/PackTrace/releases/tag/v0.2.0-alpha.2) ·
+> [Release notes and verification](docs/releases/v0.2.0-alpha.2.md) ·
 > [Versioning policy](docs/releases/README.md).
 > Linux amd64 is exercised on owned fixtures; Windows amd64 is cross-compiled only,
 > not runtime-tested for this release. macOS remains deferred. Zero findings never
@@ -134,13 +134,12 @@ single-link manifests from active contained installation slots. Opaque `.pnpm`
 store names do not prove peer identity; correspondences remain indeterminate
 candidates. Generic hardlinks, non-root importers, patches and unsupported sources
 stay explicit gaps. Installed/reconciliation coverage remains incomplete; no pnpm
-advisory lookup or integrity binding is added. The published v0.2.0-alpha.1 has
-producer anchors 9.15.9/10.34.9 and recognizes stable 9.x/10.x hints. A **source-only
-extension, not yet released**, recognizes stable **9.x–12.x** for format 9.0.
+advisory lookup or integrity binding is added. **v0.2.0-alpha.2 recognizes stable
+9.x–12.x hints** for format 9.0; the older v0.2.0-alpha.1 retains 9.x/10.x recognition.
 Exact sampled producers and isolated/hoisted copy, peer and hardlink-refusal cases
 are evidence anchors, not an exclusive patch whitelist. A separately bounded native
 pnpm12 follow-up resolved the earlier producer-adapter failures. See the
-[exact version/layout matrix](docs/inventory-compatibility.md#unpublished-pnpm-matrix);
+[exact version/layout matrix](docs/inventory-compatibility.md#pnpm-versionlayout-matrix);
 no sample qualifies every patch/layout/platform.
 No pnpm executable, `.npmrc`, hook or executable target configuration is run/read.
 See the [reader contract](docs/increments/pnpm-v9-scan.md) and the separate
