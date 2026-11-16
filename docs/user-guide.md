@@ -406,7 +406,7 @@ package/version groups per table; overflow and clipped cells are marked.
 ### Why many checks can be incomplete
 
 Unreadable manifests can affect inventory and installed advisory checks together.
-Expired source evidence can affect freshness and matching together. Unknown origins
+Expired source evidence keeps required freshness incomplete. Unknown origins
 leave version candidates rather than qualified findings. These are related limits,
 not separate accusations against every dependency.
 
@@ -421,6 +421,21 @@ coverage incomplete and exit `3`. Related inventory/freshness limitations are no
 additional findings or independent accusations against packages.
 Refreshing intelligence cannot fix unsupported hardlinks, unknown origins,
 unselected integrity checks or product qualification gaps.
+
+### Completed advisories within one selected snapshot
+
+In unreleased schema1.8, `advisories.selectedScope` can explain completed malicious
+and vulnerability checks **only within the admitted selected generation**. The
+parent independently checks every original's routing, selected catalog/index
+bindings, exact-pinned declarations and all selected locked/installed observations.
+A verified empty lookup means no known record in that snapshot, not safety or
+upstream completeness; failed/unsupported lookups remain incomplete. The bounded
+flat npm/simple explicitly granted Bun subset excludes ranges, aliases, unresolved
+declarations and ambiguous workspaces. Historical inputs and saved permissions do
+not gain authority. Old data retains `source-stale` and incomplete freshness;
+native, integrity, resource and final-output obligations remain separate. A
+completed advisory comparison therefore does not itself establish exit0/1.
+See the [precise contract](increments/advisory-selected-generation-completeness.md).
 
 ## 6. Scan command reference
 

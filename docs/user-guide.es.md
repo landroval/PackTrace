@@ -423,7 +423,7 @@ capturados, incluidos los hallazgos aceptados.
 ### Por qué aparecen muchas comprobaciones incompletas
 
 Los manifiestos ilegibles pueden afectar a inventario y avisos instalados a la vez.
-Una fuente caducada afecta a vigencia y matching. Un origen desconocido deja
+Una fuente caducada mantiene incompleta la vigencia requerida. Un origen desconocido deja
 candidatos de versión, no hallazgos cualificados. Son limitaciones relacionadas,
 no acusaciones independientes contra cada dependencia.
 
@@ -439,6 +439,23 @@ de inventario o vigencia no son hallazgos adicionales ni acusaciones independien
 Actualizar inteligencia no resuelve enlaces
 no admitidos, orígenes desconocidos, integridad no seleccionada ni cualificación
 del producto pendiente.
+
+### Avisos completados dentro de un snapshot seleccionado
+
+En el esquema1.8 aún no publicado, `advisories.selectedScope` puede explicar avisos
+maliciosos y vulnerabilidades completados **solo dentro de la generación admitida**.
+El padre comprueba independientemente el enrutamiento de todos los originales,
+los vínculos catálogo/índice seleccionados, las declaraciones con versión exacta
+y todas las observaciones locked/instaladas seleccionadas. Una búsqueda vacía
+verificada significa «ningún aviso conocido en ese snapshot», no seguridad ni
+completitud de la fuente upstream; búsquedas fallidas/no admitidas siguen incompletas.
+El subconjunto acotado npm plano/Bun simple con permiso explícito excluye rangos,
+alias, declaraciones sin resolver y workspaces ambiguos. Los formatos históricos y
+permisos guardados no ganan autoridad. Los datos antiguos conservan `source-stale`
+y vigencia incompleta; integridad, cualificación nativa, recursos y salida final
+siguen siendo obligaciones independientes. Completar la comparación de avisos no
+establece por sí solo una salida0/1. Consulta el
+[contrato preciso](increments/advisory-selected-generation-completeness.md) en inglés.
 
 ## 6. Referencia del comando scan
 

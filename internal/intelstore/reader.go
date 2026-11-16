@@ -35,20 +35,24 @@ func (s *Store) ReadPinnedLimited(ctx context.Context, selected *ID, remaining u
 	return snapshot, budget.consumed, errors.Join(err, budget.err)
 }
 
+func (s *Store) readRefBudget(ctx context.Context, ref ObjectRef, limit uint64, budget *identityReadBudget) (raw []byte, err error) {
+	if budget == nil {
+		return s.readRef(ctx, ref, limit)
+	}
+	if ref.Bytes > limit {
+		return nil, ErrLimit
+	}
+	r, err := s.objectReader(ctx, ref)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { err = errors.Join(err, r.Close()) }()
+	return io.ReadAll(identityIndexReader{r, budget})
+}
+
 func (s *Store) readPinned(ctx context.Context, selected *ID, budget *identityReadBudget) (*Snapshot, error) {
-	readRef := func(ref ObjectRef, limit uint64) (raw []byte, err error) {
-		if budget == nil {
-			return s.readRef(ctx, ref, limit)
-		}
-		if ref.Bytes > limit {
-			return nil, ErrLimit
-		}
-		r, err := s.objectReader(ctx, ref)
-		if err != nil {
-			return nil, err
-		}
-		defer func() { err = errors.Join(err, r.Close()) }()
-		return io.ReadAll(identityIndexReader{r, budget})
+	readRef := func(ref ObjectRef, limit uint64) ([]byte, error) {
+		return s.readRefBudget(ctx, ref, limit, budget)
 	}
 	pin, e := s.Pin(ctx, selected)
 	if e != nil {
@@ -86,6 +90,28 @@ func (s *Store) readPinned(ctx context.Context, selected *ID, budget *identityRe
 	}
 	return &Snapshot{store: s, pin: pin, manifest: manifest, descriptor: descriptor, descriptorRef: header.Descriptor, catalog: catalog}, nil
 }
+
+// ObserveLimited charges the independently repeated descriptor, manifest and
+// source-provenance object reads, including failures, to the caller's remaining
+// comparison allowance. Generation seal/pin/native metadata retain their own caps.
+func (s *Snapshot) ObserveLimited(ctx context.Context, now time.Time, expected *ID, remaining uint64) (Observation, uint64, error) {
+	if s == nil || remaining > 8<<30 {
+		return Observation{}, 0, ErrUnavailable
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.closed {
+		return Observation{}, 0, ErrUnavailable
+	}
+	budget := &identityReadBudget{remaining: remaining}
+	got, err := s.store.observe(ctx, s.pin, now, expected, budget)
+	err = errors.Join(err, budget.err)
+	if err != nil {
+		got = Observation{}
+	}
+	return got, budget.consumed, err
+}
+
 func (s *Snapshot) Observe(ctx context.Context, now time.Time, expected *ID) (Observation, error) {
 	if s == nil {
 		return Observation{}, ErrUnavailable

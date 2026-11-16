@@ -15,7 +15,9 @@ The new optional `advisories.selectedScope` has contract
 explanations, not portable authority. Only an independently admitted private
 receipt can enable completion. `scopeAttempt.bytesRead` and `.work` report
 additional actual admission work, including failed attempts, separately from the
-historical matching summary's work. Their sum with the original summary must fit
+historical matching summary's work. Repeated source observation descriptor,
+manifest and provenance/preparation object reads are charged too; seal/pin/native
+metadata keep their existing separate caps. Their sum with the original summary must fit
 the unchanged 512-MiB/4096-unit comparison ceilings. A failed attempt cannot be
 retried on the same report with a renewed allowance.
 
@@ -24,10 +26,13 @@ retried on the same report with a renewed allowance.
 After worker EOF and exchange join, the parent:
 
 1. Retains its own snapshot reader under the already admitted selected generation
-   pin, through output/finalization. Additional descriptor/manifest/catalog reads
-   consume the original matching allowance. It independently observes and compares
-   generation, source authority, original acquisition freshness and selection.
-   A digest pin does not renew age. No source is acquired, resealed or reapproved.
+   pin, through output/finalization. Additional descriptor/manifest/catalog and
+   repeated source-observation object reads consume the original matching allowance.
+   It independently observes and compares generation, source authority, original
+   acquisition freshness and selection. Expired/unknown age does not prevent a
+   finite selected-snapshot comparison: `source-stale` remains in the summary and
+   required intelligence-freshness remains incomplete. A digest pin does not renew
+   age. No source is acquired, resealed or reapproved.
 2. Reparses retained original inventory bytes against stable input receipts and
    joins their entire selected observation/evidence projection. Existing inventory
    enumeration and installed metadata witnesses remain required. Missing private
@@ -88,13 +93,15 @@ cannot use the new receipt to complete checks.
 
 The necessary unreleased-1.8 report distinction is explicit: **only** an admitted
 operational report removes the two historical summary baseline gaps, accompanying
-that replacement with `selectedScope` and a scoped coverage reason. Operational
-report validation first checks the private original-bound receipt, then restores
-the historical baseline gaps in a temporary validation copy. Calling the historical
+that replacement with `selectedScope` and a scoped coverage reason. The independent
+`source-stale` gap, when applicable, is retained rather than waived or deleted.
+Operational report validation first checks the private original-bound receipt and
+independent stale-gap consistency, then restores the historical baseline gaps in
+a temporary validation copy. Calling the historical
 summary validator alone on that new operational summary therefore rejects it;
 consumers must honor the new companion contract, not infer authority from missing
 gaps. An unresolved same-obligation gap is never displayed beside completed
-coverage. Other historical inputs and immutable bundles are not reinterpreted.
+coverage; source age belongs to the separate required freshness obligation. Other historical inputs and immutable bundles are not reinterpreted.
 
 The private receipt binds plan, original inventory/evidence, intelligence,
 observations, decisions, category scope and accounting; operational report sealing
@@ -102,3 +109,37 @@ freezes those inputs. Public JSON, claimed child completion, gap deletion, copie
 hashes, field substitution, downgrade, or exceptions cannot recreate it. Portable
 reports add no private identities, paths, hashes or raw originals. No snapshot
 storage-usage observations or final-lifecycle promises are invented.
+
+## Integrated acceptance and residual qualification
+
+The real supervised CLI regression uses the checked-in inert `full.bundle` and
+its independent original-generator oracle, not controller grants or a synthesized
+completion report. It checks malicious and vulnerability positives, supported
+version negatives, and original/catalog/index-backed absence, each in default
+portable and explicit local JSON. It checks unchanged target bytes/types,
+equivalent decisions/enforcement/coverage and presentation privacy. Nine controls
+retain incompleteness for candidates without grants, undesignated generation,
+withdrawn/corrected originals, unknown source, unlocked declarations/installed
+observations, unavailable manifest and missing/corrupt originals. No-match is
+never manufactured for failed reads or unsupported originals.
+
+Integration first reproduced RED on all five positive cases: the initial admission
+incorrectly required current age. Separating finite snapshot scope from freshness
+made these GREEN without changing the fixture timestamps, qualifying native work,
+removing stale evidence or changing actual/frozen exit3. Review also found that
+repeated source-observation object reads needed cumulative accounting; bounded
+observation now preserves existing evidence semantics and charges failure paths.
+Its new regression initially failed compilation because the bounded method did
+not exist; this was not an executed semantic assertion. A subsequent test-helper
+compile failure (nonexistent snapshot accessor) was corrected using the existing
+explicit digest API. All intermediate evidence is retained in the external handoff.
+
+Executed integration checks: full non-race `intel`, `intelstore`,
+`projectinventory`, `integrityscan`, `execution` and `cmd/packtrace` packages;
+affected vet and offline CLI build; targeted serial races for original audit,
+parent acquisition/observation, selected advisory admission, matching/original/
+material protocol, CLI advisory completeness, previous whole-integrity scope and
+failed-public-output receipt regressions. These are owned fixture/source tests,
+not native qualification, a root/full execution race, a performance campaign or
+proof that all beta gates/global operational0/1 are complete. Required native,
+resident, freshness and final-lifecycle obligations remain independent.

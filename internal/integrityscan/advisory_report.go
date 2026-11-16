@@ -136,10 +136,14 @@ func validateAdvisoryReport(plan Plan, inventory projectinventory.PublicInventor
 		return false
 	}
 	if a.SelectedScope != nil {
-		if !validSelectedAdvisoryScope(plan, inventory, intelligence, a) || len(a.Summary.Gaps) != 0 {
+		if !validSelectedAdvisoryScope(plan, inventory, intelligence, a) {
 			return false
 		}
-		a.Summary.Gaps = []string{"declared-unassessed", "index-completeness"}
+		stale := intelligence.CheckAge != "current" || intelligence.ReconciliationAge != "current"
+		if stale && (len(a.Summary.Gaps) != 1 || a.Summary.Gaps[0] != "source-stale") || !stale && len(a.Summary.Gaps) != 0 {
+			return false
+		}
+		a.Summary.Gaps = append([]string{"declared-unassessed", "index-completeness"}, a.Summary.Gaps...)
 	}
 	if a.State != "observed" || a.Decisions == nil || a.Summary.Gaps == nil || ValidateAdvisorySummary(a.Summary, a.Decisions, inventory) != nil {
 		return false

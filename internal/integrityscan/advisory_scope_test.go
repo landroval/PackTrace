@@ -7,9 +7,11 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"packtrace/internal/cli"
 	"packtrace/internal/intel"
+	"packtrace/internal/intelstore"
 	"packtrace/internal/nativefs"
 	"packtrace/internal/projectinventory"
 )
@@ -57,11 +59,25 @@ func selectedAdvisoryFixture(t *testing.T, name, version, declaration string, ex
 
 func selectedAdvisoryRows(t *testing.T, p Plan, inv projectinventory.PublicInventory, snapshotName string) (AdvisoryReport, Intelligence, func(AdvisoryReport) AdvisoryReport) {
 	t.Helper()
-	snap, info := matchingSnapshotNamed(t, snapshotName)
+	return selectedAdvisoryRowsAt(t, p, inv, snapshotName, matchingNow)
+}
+
+func selectedAdvisoryRowsAt(t *testing.T, p Plan, inv projectinventory.PublicInventory, snapshotName string, now time.Time) (AdvisoryReport, Intelligence, func(AdvisoryReport) AdvisoryReport) {
+	t.Helper()
+	snap, initial := matchingSnapshotNamed(t, snapshotName)
+	sum, err := intel.ParseSnapshotDigest(matchingPinnedPlan(t, initial).TrustedSnapshotDigest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	id := intelstore.ID(sum)
+	observed, observeErr := snap.Observe(context.Background(), now, &id)
+	if observeErr != nil {
+		t.Fatal(observeErr)
+	}
+	info := SnapshotIntelligence(observed, "expected-digest")
 	p.TrustedSnapshotDigest = matchingPinnedPlan(t, info).TrustedSnapshotDigest
 	a := AdvisoryReport{State: "observed", Decisions: []AdvisoryDecision{}}
-	var err error
-	a.Summary, err = MatchInventory(context.Background(), p, *inv.OriginalClaims, snap, info, matchingNow, func(d AdvisoryDecision) error {
+	a.Summary, err = MatchInventory(context.Background(), p, *inv.OriginalClaims, snap, info, now, func(d AdvisoryDecision) error {
 		a.Decisions = append(a.Decisions, d)
 		if d.EnforcementEligible {
 			a.Findings++
@@ -75,7 +91,7 @@ func selectedAdvisoryRows(t *testing.T, p Plan, inv projectinventory.PublicInven
 		t.Fatal("matching fixture", err, a)
 	}
 	return a, info, func(a AdvisoryReport) AdvisoryReport {
-		return AdmitSelectedAdvisoryScope(context.Background(), p, inv, info, a, snap, matchingNow, 0)
+		return AdmitSelectedAdvisoryScope(context.Background(), p, inv, info, a, snap, now, 0)
 	}
 }
 
@@ -128,6 +144,29 @@ func TestSelectedAdvisoryOriginalScope(t *testing.T) {
 				t.Fatal("public JSON recreated operational authority")
 			}
 		})
+	}
+}
+
+func TestSelectedAdvisoryExpiredSnapshotKeepsIndependentFreshness(t *testing.T) {
+	p, inv := selectedAdvisoryFixture(t, "npmfixture-0002", "1.0.0", "1.0.0")
+	now := matchingNow.Add(30 * 24 * time.Hour)
+	a, info, admit := selectedAdvisoryRowsAt(t, p, inv, "full.bundle", now)
+	if info.CheckAge != "expired" || info.ReconciliationAge != "expired" {
+		t.Fatal("fixture must actually be expired", info)
+	}
+	a = admit(a)
+	if a.SelectedScope == nil || len(a.Summary.Gaps) != 1 || a.Summary.Gaps[0] != "source-stale" {
+		t.Fatal("snapshot proof erased or conflated freshness", a)
+	}
+	p.TrustedSnapshotDigest = matchingPinnedPlan(t, info).TrustedSnapshotDigest
+	r := BuildReportWithPolicy(p, nil, Summary{}, Resources{}, false, false, &inv, &info, &a, nil, false, now)
+	for _, c := range r.Coverage {
+		if (c.Check == "malicious" || c.Check == "vulnerability") && c.Outcome != "completed" || c.Check == "intelligence-freshness" && c.Outcome != "incomplete" {
+			t.Fatal("independent scope/freshness coverage", c)
+		}
+	}
+	if _, err := Render(r, "json"); err != nil {
+		t.Fatal("expired finite comparison not renderable", err)
 	}
 }
 

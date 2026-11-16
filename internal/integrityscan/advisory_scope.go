@@ -150,7 +150,7 @@ func selectedIndexMatches(name string, e intel.SnapshotNPMEvidence, expected map
 // retained by the caller through output/finalization; admission never reseals it.
 func AdmitSelectedAdvisoryScope(ctx context.Context, plan Plan, inv projectinventory.PublicInventory, info Intelligence, a AdvisoryReport, snapshot *intelstore.Snapshot, now time.Time, acquisitionBytes uint64) (out AdvisoryReport) {
 	out = a
-	if a.SelectedScope != nil || a.ScopeAttempt != nil || acquisitionBytes > maxMatchingBytes-a.Summary.BytesRead {
+	if a.SelectedScope != nil || a.ScopeAttempt != nil || a.Summary.BytesRead > maxMatchingBytes || a.Summary.Work < 0 || a.Summary.Work > maxMatchingDecisions || acquisitionBytes > maxMatchingBytes-a.Summary.BytesRead {
 		return a
 	}
 	work := a.Summary.Work
@@ -164,12 +164,12 @@ func AdmitSelectedAdvisoryScope(ctx context.Context, plan Plan, inv projectinven
 			out.scopeReceipt = &advisoryScopeReceipt{digest: advisoryScopeDigest(plan, inv, info, out)}
 		}
 	}()
-	if ctx == nil || snapshot == nil || a.SelectedScope != nil || a.ScopeAttempt != nil || !validateAdvisoryReport(plan, inv, info, a) || projectinventory.ValidateOriginalClaims(inv) != nil || !operationalInventoryComplete(&inv) || !qualifiedSource(info) || info.CheckAge != "current" || info.ReconciliationAge != "current" {
+	if ctx == nil || snapshot == nil || a.SelectedScope != nil || a.ScopeAttempt != nil || !validateAdvisoryReport(plan, inv, info, a) || projectinventory.ValidateOriginalClaims(inv) != nil || !operationalInventoryComplete(&inv) || !qualifiedSource(info) {
 		return a
 	}
 	// Independently compare selected generation/source/freshness against the
 	// actual retained pin, not a receipt hash supplied alongside claimed inputs.
-	if info.Selection == "previous-fallback" || len(info.Gaps) != 2 {
+	if info.Selection == "previous-fallback" {
 		return a
 	}
 	rawID, err := hex.DecodeString(info.ID)
@@ -186,7 +186,9 @@ func AdmitSelectedAdvisoryScope(ctx context.Context, plan Plan, inv projectinven
 		}
 		expectedID = &id
 	}
-	observation, err := snapshot.Observe(ctx, now, expectedID)
+	attempted = true
+	observation, observedBytes, err := snapshot.ObserveLimited(ctx, now, expectedID, maxMatchingBytes-a.Summary.BytesRead-proofBytes)
+	proofBytes += observedBytes
 	if err != nil || !reflect.DeepEqual(SnapshotIntelligence(observation, info.Selection), info) {
 		return a
 	}
@@ -268,7 +270,7 @@ func AdmitSelectedAdvisoryScope(ctx context.Context, plan Plan, inv projectinven
 		return a
 	}
 	for _, gap := range summary.Gaps {
-		if gap != "declared-unassessed" && gap != "index-completeness" {
+		if gap != "declared-unassessed" && gap != "index-completeness" && gap != "source-stale" {
 			return a
 		}
 	}
@@ -293,7 +295,12 @@ func AdmitSelectedAdvisoryScope(ctx context.Context, plan Plan, inv projectinven
 		}
 	}
 	a.SelectedScope = &SelectedAdvisoryScope{Contract: "selected-generation-originals-v1", Malicious: true, Vulnerability: true}
+	// Replace only the two obligations established by this receipt. Source age
+	// remains visible and independently blocks intelligence-freshness coverage.
 	a.Summary.Gaps = []string{}
+	if info.CheckAge != "current" || info.ReconciliationAge != "current" {
+		a.Summary.Gaps = append(a.Summary.Gaps, "source-stale")
+	}
 	a.scopeReceipt = &advisoryScopeReceipt{digest: advisoryScopeDigest(plan, inv, info, a)}
 	return a
 }

@@ -5,7 +5,9 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
+	"time"
 
 	"packtrace/internal/intel"
 )
@@ -65,6 +67,30 @@ func TestOriginalAuditReadsAllObjectsAndChargesFailures(t *testing.T) {
 				t.Fatal("failed reads not charged", used, err)
 			}
 		})
+	}
+}
+
+func TestParentSnapshotObservationSharesReadBudget(t *testing.T) {
+	snapshot, _ := limitedSnapshot(t)
+	now := time.Date(2026, 10, 3, 0, 0, 0, 0, time.UTC)
+	id := snapshot.pin.ID()
+	original, err := snapshot.Observe(context.Background(), now, &id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	observed, want, err := snapshot.ObserveLimited(context.Background(), now, &id, 512<<20)
+	if err != nil || want == 0 || !reflect.DeepEqual(original, observed) {
+		t.Fatal("bounded observation changed evidence", want, err)
+	}
+	for _, limit := range []uint64{0, 1, want - 1, want} {
+		got, used, err := snapshot.ObserveLimited(context.Background(), now, &id, limit)
+		if limit < want {
+			if !errors.Is(err, ErrLimit) || used != limit || !reflect.DeepEqual(got, Observation{}) {
+				t.Fatal("failed observation must charge reads and return no evidence", limit, used, err)
+			}
+		} else if err != nil || used != want || !reflect.DeepEqual(got, original) {
+			t.Fatal("exact observation budget", used, err)
+		}
 	}
 }
 

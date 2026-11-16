@@ -75,6 +75,10 @@ func licenseProfile(receipt sourceReceipt, prep preparationRecord) bool {
 // Observe is readonly and uses an already retained generation. An expected ID
 // is authority supplied by this invocation, never a field decoded from storage.
 func (s *Store) Observe(ctx context.Context, pin *Pin, now time.Time, expected *ID) (Observation, error) {
+	return s.observe(ctx, pin, now, expected, nil)
+}
+
+func (s *Store) observe(ctx context.Context, pin *Pin, now time.Time, expected *ID, budget *identityReadBudget) (Observation, error) {
 	var result Observation
 	if s == nil || pin == nil || ctx == nil {
 		return result, ErrUnavailable
@@ -96,7 +100,7 @@ func (s *Store) Observe(ctx context.Context, pin *Pin, now time.Time, expected *
 	if e != nil {
 		return result, e
 	}
-	raw, e := s.readRef(ctx, header.Descriptor, 4096)
+	raw, e := s.readRefBudget(ctx, header.Descriptor, 4096, budget)
 	if e != nil {
 		return result, e
 	}
@@ -104,7 +108,7 @@ func (s *Store) Observe(ctx context.Context, pin *Pin, now time.Time, expected *
 	if e != nil {
 		return result, e
 	}
-	raw, e = s.readRef(ctx, descriptor.Manifest, 1<<20)
+	raw, e = s.readRefBudget(ctx, descriptor.Manifest, 1<<20, budget)
 	if e != nil {
 		return result, e
 	}
@@ -126,13 +130,13 @@ func (s *Store) Observe(ctx context.Context, pin *Pin, now time.Time, expected *
 	var receipt sourceReceipt
 	sourceProfile := false
 	if !zeroRef(descriptor.Provenance) {
-		raw, e = s.readRef(ctx, descriptor.Provenance, 32<<10)
+		raw, e = s.readRefBudget(ctx, descriptor.Provenance, 32<<10, budget)
 		if e != nil {
 			return Observation{}, e
 		}
 		if json.Unmarshal(raw, &receipt) == nil && receipt.Version == 1 && receipt.Source == "osv-npm" {
 			sourceProfile = true
-			raw, e = s.readRef(ctx, receipt.Preparation, 512<<10)
+			raw, e = s.readRefBudget(ctx, receipt.Preparation, 512<<10, budget)
 			if e != nil {
 				return Observation{}, e
 			}
