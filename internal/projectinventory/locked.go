@@ -97,6 +97,9 @@ func (c *collector) projectBun(doc inventory.BunLockDocument, source uint32) err
 			kind = kinds[r.Kind]
 		}
 		fields := map[string]string{"name-state": fieldState(r.Name.State), "resolution-state": fieldState(r.Resolution.State), "integrity-state": fieldState(r.Integrity.State), "integrity": r.Integrity.Value, "registry-state": fieldState(r.Registry.State), "git-tag": r.GitTag.Value, "tuple-key": r.Key}
+		// Inspect the retained original before unknown INFO/document context is
+		// discarded by projection. A grant cannot repair unsupported context.
+		fields["matching-context"] = BunMatchingContext(doc, r)
 		if r.Info != nil {
 			var info map[string]json.RawMessage
 			if json.Unmarshal(r.Info, &info) == nil {
