@@ -373,6 +373,12 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 					return errScanProtocol
 				}
 				intelligenceClosed = true
+			case "bun-original":
+				var v projectinventory.Result
+				if !started || cfg.Stage != "acquire" || !bunOriginalWanted(cfg.Plan) || !intelligenceClosed || inventoryClosed || inventorySequence != 0 || inventory.OriginalClaims != nil || pending != nil || expected != 0 || fatal != "" || decode(m.Data, &v) != nil || v.Selection.Family != "bun" || material.addOriginal(v) != nil {
+					return errScanProtocol
+				}
+				inventory.OriginalClaims = &v
 			case "inventory-batch":
 				var v projectinventory.InventoryBatch
 				if !started || cfg.Stage != "acquire" || cfg.Plan == nil || !intelligenceClosed || inventoryClosed || pending != nil || expected != 0 || fatal != "" || decode(m.Data, &v) != nil || v.Sequence != inventorySequence || projectinventory.AppendBatch(&inventory, v) != nil {
@@ -387,7 +393,7 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 				inventory.Selection = v.Selection
 				inventory.Counts = v.Counts
 				inventory.Complete = v.Complete
-				if projectinventory.ValidatePublic(inventory) != nil {
+				if projectinventory.ValidatePublic(inventory) != nil || inventory.OriginalClaims != nil && projectinventory.ValidateOriginalClaims(inventory) != nil {
 					return errScanProtocol
 				}
 				inventoryClosed = true
@@ -826,6 +832,14 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 			return sender.send("closure", scanClosure{r.Index, len(r.Assessment.Differences), len(r.Assessment.Gaps)})
 		}
 		emitInventory := func(r projectinventory.Result) error {
+			originalSent := false
+			if bunOriginalWanted(cfg.Plan) {
+				var err error
+				originalSent, err = material.emitOriginal(sender.send, r)
+				if err != nil {
+					return err
+				}
+			}
 			p := projectinventory.Portable(r)
 			if policyMaterialWanted(cfg.Plan) || cfg.Plan.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) != 0 {
 				p = projectinventory.PortableMatching(r)
@@ -870,7 +884,12 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 				}
 				emitLocal = func(d integrityscan.LocalAdvisory) error { return sender.send("matching-advisory", d) }
 			}
-			matched, e := integrityscan.MatchInventoryWithPolicyEvidence(ctx, *cfg.Plan, r, snapshot, intelligenceInfo, now, func(d integrityscan.AdvisoryDecision) error {
+			matchingPlan := *cfg.Plan
+			if !originalSent {
+				// Missing bounded acquisition evidence cannot grant Bun authority.
+				matchingPlan.Policy.BunOrigins = nil
+			}
+			matched, e := integrityscan.MatchInventoryWithPolicyEvidence(ctx, matchingPlan, r, snapshot, intelligenceInfo, now, func(d integrityscan.AdvisoryDecision) error {
 				return sender.send("matching-decision", d)
 			}, emitLocal, emitEvidence)
 			if e != nil {
