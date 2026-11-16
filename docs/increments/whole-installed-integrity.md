@@ -62,5 +62,8 @@ source/metadata/instance swaps, frozen reports and privacy. These local Go tests
 are not native/platform acceptance or a benchmark campaign. Actual combined CLI
 fixtures additionally pin portable/local equality and drift, missing/ambiguous
 instances and references, positive empty enumeration, missing-lock refusal and
-unsupported store objects. Root verification and independent review remain
-separate checks.
+unsupported store objects. Additional ordinary-user Linux CLI cases deny actual
+manifest read permission for npm/Bun in portable/local modes: the instance stays
+unreadable/incomplete, not absent or falsely drifted, and scans preserve its denied
+mode and original target bytes. These are not Windows ACL or native qualification
+claims. Root verification and independent review remain separate checks.
