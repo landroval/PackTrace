@@ -8,7 +8,6 @@ import (
 	"errors"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -167,6 +166,9 @@ func categorySelected(plan Plan, category string) bool {
 // indexedMatchingOrigins shares the selected-lock and alias checks across physical
 // observations. Exact location rules take priority, including mismatching rules.
 func indexedMatchingOrigins(plan Plan, inv projectinventory.Result) map[uint32]AdvisoryDecision {
+	if strings.HasPrefix(plan.Manager, "bun@") {
+		return indexedBunMatchingOrigins(plan, inv)
+	}
 	out := map[uint32]AdvisoryDecision{}
 	if ValidatePolicy(plan.Policy) != nil || plan.Manager != plan.Policy.Manager || !supportedPolicyPin(plan.TrustedPolicyDigest) || !strings.HasPrefix(plan.Manager, "npm@") || inv.Selection.Family != "npm" || inv.Selection.Profile != plan.Manager || inv.Selection.State != "usable" {
 		return out
@@ -239,10 +241,7 @@ func indexedMatchingOrigins(plan Plan, inv projectinventory.Result) map[uint32]A
 		if o.Class != "installed" || o.Kind != "directory" || o.Status != "complete" || !canonicalNPMName(o.Name) || o.Fields["name-state"] != "value" || o.Fields["version-state"] != "value" || o.Fields["installation-name"] != o.Name || o.Fields["physical-target"] != o.Location {
 			continue
 		}
-		_, err := intel.ParseSemVer(o.Version)
-		mid, metaErr := strconv.ParseUint(o.Fields["metadata-evidence"], 10, 32)
-		manifest, metadata := evidence[o.Source], evidence[uint32(mid)]
-		if err != nil || metaErr != nil || !manifest.Complete || manifest.Method != "native-input-lease" || manifest.Location != o.Location+"/package.json" || !metadata.Complete || metadata.Method != "native-metadata-lease" || metadata.Location != o.Location || manifest.Scope != o.Workspace || metadata.Scope != o.Workspace {
+		if !matchingInstalledWitness(o, evidence) {
 			continue
 		}
 		rs := relations[o.ID]
@@ -825,17 +824,29 @@ func publicMatchingEndpoint(inv projectinventory.PublicInventory, o projectinven
 		return false
 	}
 	locked := inv.Observations[d.LockedObservation-1]
-	if !lockedPackage(locked.Class, locked.Kind) || locked.Kind != "url" || locked.Status != "complete" || locked.Workspace != o.Workspace {
+	bun := d.Origin == "operator-bun-rule"
+	if !lockedPackage(locked.Class, locked.Kind) || (!bun && locked.Kind != "url") || (bun && locked.Kind != "package") || locked.Status != "complete" || locked.Workspace != o.Workspace {
 		return false
 	}
 	count := 0
 	for _, r := range inv.Relations {
-		if r.Kind != "locked-correspondence" || r.To != o.ID {
+		if r.To != o.ID || (!bun && r.Kind != "locked-correspondence") || (bun && !oneOf(r.Kind, "locked-correspondence", "candidate-correspondence")) {
 			continue
 		}
 		count++
-		if r.From != locked.ID || r.Status != "claim-agreement" || r.Evidence != o.Source {
+		kind, status := "locked-correspondence", "claim-agreement"
+		if bun {
+			kind, status = "candidate-correspondence", "indeterminate"
+		}
+		if r.From != locked.ID || r.Kind != kind || r.Status != status || r.Evidence != o.Source {
 			return false
+		}
+	}
+	if bun {
+		for _, r := range inv.Relations {
+			if r.From == locked.ID && oneOf(r.Kind, "locked-correspondence", "candidate-correspondence") && r.To != o.ID {
+				return false
+			}
 		}
 	}
 	if count != 1 || o.Source == 0 || int(o.Source) > len(inv.Evidence) {
@@ -849,7 +860,7 @@ func publicMatchingEndpoint(inv projectinventory.PublicInventory, o projectinven
 		return false
 	}
 	metadata := inv.Evidence[o.MetadataEvidence-1]
-	return metadata.Scope == o.Workspace && metadata.Method == "native-metadata-lease" && metadata.Status == "complete"
+	return metadata.Scope == o.Workspace && metadata.Method == "native-metadata-lease" && metadata.Status == "complete" && (!bun || e.MetadataEvidence == o.MetadataEvidence)
 }
 
 func ValidateAdvisoryDecision(plan Plan, inventory projectinventory.PublicInventory, info Intelligence, d AdvisoryDecision) error {
@@ -859,7 +870,7 @@ func ValidateAdvisoryDecision(plan Plan, inventory projectinventory.PublicInvent
 	if plan.Builtin {
 		policyErr = ValidatePlanPolicy(plan)
 	}
-	if projectinventory.ValidatePublic(inventory) != nil || ValidateIntelligence(info) != nil || policyErr != nil || plan.Manager != plan.Policy.Manager || !oneOf(plan.Privacy, "", "portable", "local") || plan.Policy.RequirePortable && plan.Privacy == "local" || plan.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) == 0 || d.Sequence < 0 || d.Sequence >= 4096 || d.Observation == 0 || int(d.Observation) > len(inventory.Observations) || d.Advisory < 0 || d.Advisory > 4096 || d.Affected < -1 || d.Affected >= 20000 || d.Rule < 0 || d.Rule > len(plan.Policy.NPMOrigins) || !oneOf(d.VersionOutcome, "match", "no-match", "indeterminate") || !oneOf(d.Outcome, "match", "no-match", "indeterminate") || !oneOf(d.Category, "malicious", "vulnerability", "unknown") || !oneOf(d.Profile, "openssf-malicious-v1", "osv-openssf-malicious-v1", "osv-github-reviewed-v1", "osv-github-malware-v1", "unknown") || !oneOf(d.Activity, "not-withdrawn", "withdrawn", "unknown") || !oneOf(d.Origin, "operator-npm-rule", "operator-npm-registry", "unqualified") || !oneOf(d.Source, "qualified", "unqualified") || d.Support == nil || len(d.Support) > 256 || !matchingGapShape(d.Gaps) {
+	if projectinventory.ValidatePublic(inventory) != nil || ValidateIntelligence(info) != nil || policyErr != nil || plan.Manager != plan.Policy.Manager || !oneOf(plan.Privacy, "", "portable", "local") || plan.Policy.RequirePortable && plan.Privacy == "local" || plan.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) == 0 || d.Sequence < 0 || d.Sequence >= 4096 || d.Observation == 0 || int(d.Observation) > len(inventory.Observations) || d.Advisory < 0 || d.Advisory > 4096 || d.Affected < -1 || d.Affected >= 20000 || d.Rule < 0 || d.Rule > max(len(plan.Policy.NPMOrigins), len(plan.Policy.BunOrigins)) || !oneOf(d.VersionOutcome, "match", "no-match", "indeterminate") || !oneOf(d.Outcome, "match", "no-match", "indeterminate") || !oneOf(d.Category, "malicious", "vulnerability", "unknown") || !oneOf(d.Profile, "openssf-malicious-v1", "osv-openssf-malicious-v1", "osv-github-reviewed-v1", "osv-github-malware-v1", "unknown") || !oneOf(d.Activity, "not-withdrawn", "withdrawn", "unknown") || !oneOf(d.Origin, "operator-npm-rule", "operator-npm-registry", "operator-bun-rule", "unqualified") || !oneOf(d.Source, "qualified", "unqualified") || d.Support == nil || len(d.Support) > 256 || !matchingGapShape(d.Gaps) {
 		return ErrAdvisory
 	}
 	if !validAdvisoryVersionProblem(d) {
@@ -879,7 +890,7 @@ func ValidateAdvisoryDecision(plan Plan, inventory projectinventory.PublicInvent
 	if o.ID != d.Observation || !(lockedPackage(o.Class, o.Kind) || o.Class == "installed") {
 		return ErrAdvisory
 	}
-	if !publicMatchingEndpoint(inventory, o, d) || o.Class == "installed" && d.Origin != "unqualified" && plan.Policy.NPMRegistry != "https://registry.npmjs.org" {
+	if !publicMatchingEndpoint(inventory, o, d) || o.Class == "installed" && d.Origin != "unqualified" && d.Origin != "operator-bun-rule" && plan.Policy.NPMRegistry != "https://registry.npmjs.org" {
 		return ErrAdvisory
 	}
 	profileCategory := "unknown"
@@ -889,7 +900,7 @@ func ValidateAdvisoryDecision(plan Plan, inventory projectinventory.PublicInvent
 	case "osv-github-reviewed-v1":
 		profileCategory = "vulnerability"
 	}
-	if (d.Source == "qualified") != qualifiedSource(info) || profileCategory != d.Category || (d.Origin == "operator-npm-rule") != (d.Rule > 0) {
+	if (d.Source == "qualified") != qualifiedSource(info) || profileCategory != d.Category || oneOf(d.Origin, "operator-npm-rule", "operator-bun-rule") != (d.Rule > 0) {
 		return ErrAdvisory
 	}
 	if d.Origin != "unqualified" {
@@ -900,7 +911,16 @@ func ValidateAdvisoryDecision(plan Plan, inventory projectinventory.PublicInvent
 		if d.Origin == "operator-npm-registry" && plan.Policy.NPMRegistry != "https://registry.npmjs.org" {
 			return ErrAdvisory
 		}
-		if !supportedPolicyPin(plan.TrustedPolicyDigest) || !strings.HasPrefix(plan.Manager, "npm@") || inventory.Selection.Family != "npm" || inventory.Selection.State != "usable" || locked.Kind != "url" || locked.Status != "complete" || locked.Source == 0 || int(locked.Source) > len(inventory.Evidence) {
+		family, kind := "npm", "url"
+		if d.Origin == "operator-bun-rule" {
+			family, kind = "bun", "package"
+			if d.Rule < 1 || d.Rule > len(plan.Policy.BunOrigins) || locked.Workspace != 1 || o.Workspace != 1 || locked.Source != inventory.Selection.Evidence {
+				return ErrAdvisory
+			}
+		} else if d.Rule > len(plan.Policy.NPMOrigins) {
+			return ErrAdvisory
+		}
+		if !supportedPolicyPin(plan.TrustedPolicyDigest) || !strings.HasPrefix(plan.Manager, family+"@") || inventory.Selection.Family != family || inventory.Selection.State != "usable" || locked.Kind != kind || locked.Status != "complete" || locked.Source == 0 || int(locked.Source) > len(inventory.Evidence) {
 			return ErrAdvisory
 		}
 		e := inventory.Evidence[locked.Source-1]
@@ -972,6 +992,9 @@ func ValidateAdvisoryDecision(plan Plan, inventory projectinventory.PublicInvent
 }
 
 func ValidateAdvisorySummary(s AdvisorySummary, decisions []AdvisoryDecision, inventory projectinventory.PublicInventory) error {
+	if !bunDecisionMultiplicity(decisions) {
+		return ErrAdvisory
+	}
 	if inventory.Selection.Family == "pnpm" && s.BytesRead != 0 {
 		return ErrAdvisory
 	}
