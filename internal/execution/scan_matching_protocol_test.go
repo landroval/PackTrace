@@ -80,7 +80,15 @@ func matchingFaultFrames(c *channel, cfg scanConfig, mode string) int {
 	if mode == "matching-bad-count" {
 		s.Decisions++
 	}
-	if mode != "matching-missing-closure" {
+	if mode == "matching-scope-gap-deletion" {
+		s.Gaps = []string{"inventory-incomplete"}
+	}
+	if mode == "matching-scope-child-completed" {
+		_ = c.send("matching-closure", struct {
+			integrityscan.AdvisorySummary
+			Scope *integrityscan.SelectedAdvisoryScope `json:"selectedScope"`
+		}{s, &integrityscan.SelectedAdvisoryScope{Contract: "selected-generation-originals-v1", Malicious: true, Vulnerability: true}})
+	} else if mode != "matching-missing-closure" {
 		_ = c.send("matching-closure", s)
 	}
 	if mode == "matching-duplicate-closure" {

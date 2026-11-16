@@ -596,6 +596,22 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 		}
 	default:
 	}
+	// Admission runs only after EOF/exchange join. The parent independently
+	// reads the retained selected generation; no worker completion flag grants
+	// category coverage, and this snapshot remains owned through output/reap.
+	if failure == nil && cfg.Stage == "acquire" && cfg.Plan != nil && run.Inventory != nil && run.Intelligence != nil && run.Advisories != nil && s.intelligence != nil && s.intelligence.pin != nil && s.intelligence.store != nil {
+		owner := s.intelligence
+		// No allowance is renewed for the independent parent catalog read.
+		// The original matcher and all subsequent proof work share 512 MiB.
+		const matchingBytes = integrityscan.MaxAdvisoryReadBytes
+		var used uint64
+		if owner.snapshot == nil && run.Advisories.Summary.BytesRead <= matchingBytes {
+			id := owner.pin.ID()
+			owner.snapshot, used, _ = owner.store.ReadPinnedLimited(ctx, &id, matchingBytes-run.Advisories.Summary.BytesRead)
+		}
+		a := integrityscan.AdmitSelectedAdvisoryScope(ctx, *cfg.Plan, *run.Inventory, *run.Intelligence, *run.Advisories, owner.snapshot, time.Unix(0, owner.cfg.NowUnixNS), used)
+		run.Advisories = &a
+	}
 	resources := monitor.result()
 	s.scan.protocolResult(resources)
 	run.Resources = s.scan.snapshot().Resources

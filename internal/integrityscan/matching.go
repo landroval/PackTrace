@@ -267,6 +267,11 @@ func MatchInventoryWithLocal(ctx context.Context, plan Plan, inventory projectin
 }
 
 func MatchInventoryWithPolicyEvidence(ctx context.Context, plan Plan, inventory projectinventory.Result, snapshot *intelstore.Snapshot, info Intelligence, now time.Time, emit func(AdvisoryDecision) error, local func(LocalAdvisory) error, emitEvidence PolicyEvidenceEmitter) (AdvisorySummary, error) {
+	return matchInventoryBudget(ctx, plan, inventory, snapshot, info, now, emit, local, emitEvidence, 0, 0, nil)
+}
+
+// Parent replay shares the original comparison's cumulative work/read ceilings.
+func matchInventoryBudget(ctx context.Context, plan Plan, inventory projectinventory.Result, snapshot *intelstore.Snapshot, info Intelligence, now time.Time, emit func(AdvisoryDecision) error, local func(LocalAdvisory) error, emitEvidence PolicyEvidenceEmitter, spentBytes uint64, spentWork int, inspect func(string, intel.SnapshotNPMEvidence) error) (AdvisorySummary, error) {
 	var project ProjectEvidence
 	if emitEvidence == nil || !policyEvidenceNeeded(plan) {
 		emitEvidence = nil
@@ -281,7 +286,7 @@ func MatchInventoryWithPolicyEvidence(ctx context.Context, plan Plan, inventory 
 	if emitEvidence != nil {
 		evidenceIndex = indexPolicyInventory(inventory)
 	}
-	s := AdvisorySummary{Gaps: []string{"declared-unassessed", "index-completeness"}}
+	s := AdvisorySummary{BytesRead: spentBytes, Work: spentWork, Gaps: []string{"declared-unassessed", "index-completeness"}}
 	if !inventory.Complete {
 		s.Gaps = addMatchingGap(s.Gaps, "inventory-incomplete")
 	}
@@ -386,6 +391,11 @@ func MatchInventoryWithPolicyEvidence(ctx context.Context, plan Plan, inventory 
 	})
 	explanationBytes := 0
 	process := func(name string, evidence intel.SnapshotNPMEvidence) error {
+		if inspect != nil {
+			if err := inspect(name, evidence); err != nil {
+				return err
+			}
+		}
 		// Only narrow verified-original receipts survive evaluation; never raw OSV.
 		var originals map[int]LocalAdvisory
 		if emitEvidence != nil {

@@ -9,7 +9,7 @@ import (
 )
 
 func bunOriginalWanted(p *integrityscan.Plan) bool {
-	return p != nil && (p.Checks&cli.ArgumentCheckIntegrity != 0 || len(p.Policy.BunOrigins) != 0 && p.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) != 0)
+	return p != nil && p.Checks&(cli.ArgumentCheckIntegrity|cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) != 0
 }
 
 // Original acquisition and exception material share the existing private byte

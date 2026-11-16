@@ -21,6 +21,35 @@ type Snapshot struct {
 }
 
 func (s *Store) ReadPinned(ctx context.Context, selected *ID) (*Snapshot, error) {
+	return s.readPinned(ctx, selected, nil)
+}
+
+// ReadPinnedLimited charges additional parent admission reads (including failed
+// descriptor/manifest/catalog reads) against the comparison's remaining budget.
+func (s *Store) ReadPinnedLimited(ctx context.Context, selected *ID, remaining uint64) (*Snapshot, uint64, error) {
+	if remaining > 8<<30 {
+		return nil, 0, ErrLimit
+	}
+	budget := &identityReadBudget{remaining: remaining}
+	snapshot, err := s.readPinned(ctx, selected, budget)
+	return snapshot, budget.consumed, errors.Join(err, budget.err)
+}
+
+func (s *Store) readPinned(ctx context.Context, selected *ID, budget *identityReadBudget) (*Snapshot, error) {
+	readRef := func(ref ObjectRef, limit uint64) (raw []byte, err error) {
+		if budget == nil {
+			return s.readRef(ctx, ref, limit)
+		}
+		if ref.Bytes > limit {
+			return nil, ErrLimit
+		}
+		r, err := s.objectReader(ctx, ref)
+		if err != nil {
+			return nil, err
+		}
+		defer func() { err = errors.Join(err, r.Close()) }()
+		return io.ReadAll(identityIndexReader{r, budget})
+	}
 	pin, e := s.Pin(ctx, selected)
 	if e != nil {
 		return nil, e
@@ -30,7 +59,7 @@ func (s *Store) ReadPinned(ctx context.Context, selected *ID) (*Snapshot, error)
 	if e != nil {
 		return fail(e)
 	}
-	raw, e := s.readRef(ctx, header.Descriptor, 4096)
+	raw, e := readRef(header.Descriptor, 4096)
 	if e != nil {
 		return fail(e)
 	}
@@ -38,7 +67,7 @@ func (s *Store) ReadPinned(ctx context.Context, selected *ID) (*Snapshot, error)
 	if e != nil {
 		return fail(e)
 	}
-	raw, e = s.readRef(ctx, descriptor.Manifest, 1<<20)
+	raw, e = readRef(descriptor.Manifest, 1<<20)
 	if e != nil {
 		return fail(e)
 	}
@@ -50,7 +79,7 @@ func (s *Store) ReadPinned(ctx context.Context, selected *ID) (*Snapshot, error)
 	if e != nil {
 		return fail(e)
 	}
-	catalog, e := intel.ReadSnapshotCatalog(ctx, manifest, input)
+	catalog, e := intel.ReadSnapshotCatalog(ctx, manifest, identityIndexReader{input, budget})
 	closeErr := input.Close()
 	if e != nil || closeErr != nil {
 		return fail(errors.Join(e, closeErr))

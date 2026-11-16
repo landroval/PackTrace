@@ -12,12 +12,15 @@ import (
 // AdvisoryReport keeps advisory findings separate from integrity drift. Its
 // locators refer to the same portable inventory and fixed intelligence generation.
 type AdvisoryReport struct {
-	State      string             `json:"state"`
-	Decisions  []AdvisoryDecision `json:"decisions"`
-	Summary    AdvisorySummary    `json:"summary"`
-	Findings   int                `json:"findings"`
-	Candidates int                `json:"candidates"`
-	Local      *LocalDetails      `json:"local,omitempty"`
+	State         string                 `json:"state"`
+	Decisions     []AdvisoryDecision     `json:"decisions"`
+	Summary       AdvisorySummary        `json:"summary"`
+	Findings      int                    `json:"findings"`
+	Candidates    int                    `json:"candidates"`
+	Local         *LocalDetails          `json:"local,omitempty"`
+	SelectedScope *SelectedAdvisoryScope `json:"selectedScope,omitempty"`
+	ScopeAttempt  *AdvisoryScopeAttempt  `json:"scopeAttempt,omitempty"`
+	scopeReceipt  *advisoryScopeReceipt
 
 	candidatesPresent     bool // Retain schema provenance even when the count is zero.
 	candidateFlagsPresent bool // Explicit false is still a new-schema field.
@@ -81,6 +84,14 @@ func BuildReportWithAdvisories(plan Plan, records []Record, summary Summary, res
 	a := AdvisoryReport{State: "unavailable", Decisions: []AdvisoryDecision{}, Summary: AdvisorySummary{Gaps: []string{}}}
 	if advisories != nil && inventory != nil && intelligence != nil && validateAdvisoryReport(plan, *inventory, *intelligence, *advisories) {
 		a = *advisories
+		if a.SelectedScope != nil {
+			scope := *a.SelectedScope
+			a.SelectedScope = &scope
+		}
+		if a.ScopeAttempt != nil {
+			attempt := *a.ScopeAttempt
+			a.ScopeAttempt = &attempt
+		}
 		a.Decisions = append([]AdvisoryDecision{}, advisories.Decisions...)
 		for i := range a.Decisions {
 			a.Decisions[i].FirstVersionProblem = cloneAdvisoryVersionProblem(advisories.Decisions[i].FirstVersionProblem)
@@ -121,6 +132,15 @@ func BuildReportWithAdvisories(plan Plan, records []Record, summary Summary, res
 }
 
 func validateAdvisoryReport(plan Plan, inventory projectinventory.PublicInventory, intelligence Intelligence, a AdvisoryReport) bool {
+	if a.ScopeAttempt != nil && (a.ScopeAttempt.BytesRead > maxMatchingBytes-a.Summary.BytesRead || a.ScopeAttempt.Work < 0 || a.ScopeAttempt.Work > maxMatchingDecisions-a.Summary.Work) {
+		return false
+	}
+	if a.SelectedScope != nil {
+		if !validSelectedAdvisoryScope(plan, inventory, intelligence, a) || len(a.Summary.Gaps) != 0 {
+			return false
+		}
+		a.Summary.Gaps = []string{"declared-unassessed", "index-completeness"}
+	}
 	if a.State != "observed" || a.Decisions == nil || a.Summary.Gaps == nil || ValidateAdvisorySummary(a.Summary, a.Decisions, inventory) != nil {
 		return false
 	}
@@ -158,6 +178,9 @@ func validRenderedAdvisories(r Report) bool {
 		return false
 	}
 	a := r.Advisories
+	if (a.SelectedScope != nil || a.ScopeAttempt != nil) && r.SchemaVersion != OperationalSchemaVersion {
+		return false
+	}
 	for _, d := range a.Decisions {
 		if d.Origin == "operator-bun-rule" && r.SchemaVersion != OperationalSchemaVersion {
 			return false

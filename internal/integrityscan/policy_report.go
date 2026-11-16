@@ -62,9 +62,12 @@ func BuildReportWithPolicy(plan Plan, records []Record, summary Summary, resourc
 			}
 		case "malicious", "vulnerability":
 			if c.Required && r.Advisories != nil && r.Advisories.State == "observed" {
-				// Historical matching explicitly cannot attest source/index
-				// completeness. Even perfect rows (or no rows) cannot erase it.
-				c.Reason += "; " + strings.Join(r.Advisories.Summary.Gaps, "; ")
+				if healthy && r.Inventory != nil && r.Intelligence != nil && validSelectedAdvisoryScope(plan, *r.Inventory, *r.Intelligence, *r.Advisories) {
+					c.Outcome = "completed"
+					c.Reason = "selected-generation-originals-v1; every-catalog-original-routed-and-selected-index-binding-verified; exact-pinned-declarations-and-all-selected-observations-evaluated; qualified-empty-lookup-means-no-known-record-in-selected-generation-only; not-upstream-completeness-or-threat-absence"
+				} else {
+					c.Reason += "; " + strings.Join(r.Advisories.Summary.Gaps, "; ")
+				}
 			}
 		case "reference-authority":
 			if c.Required {
@@ -131,6 +134,9 @@ func BuildReportWithPolicy(plan Plan, records []Record, summary Summary, resourc
 		}
 		inputs.Inventory.OriginalClaims = retained.OriginalClaims
 		r.Inventory.OriginalClaims = retained.OriginalClaims
+		// Freeze the original-backed scope seal together with the comparison.
+		// The digest is value-bound, so replacing equal independently copied
+		// originals preserves it without sharing caller-owned mutable slices.
 	}
 	evaluation, err := EvaluatePolicy(plan, records, inputs.Inventory, inputs.Decisions, materials, limited, now)
 	if err != nil {
