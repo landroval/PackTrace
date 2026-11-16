@@ -240,6 +240,75 @@ func BuildReportWithInventory(plan Plan, records []Record, summary Summary, reso
 	return r
 }
 
+// These are operational receipt predicates, not native/tool qualification. The
+// supervisor must already have admitted the original leases and records. Public
+// counts and completion bits alone cannot establish either predicate.
+func operationalInventoryComplete(p *projectinventory.PublicInventory) bool {
+	if p == nil || projectinventory.ValidatePublic(*p) != nil || !p.Complete || p.Selection.Evidence == 0 {
+		return false
+	}
+	selected := p.Evidence[p.Selection.Evidence-1]
+	if selected.Method != "native-input-lease" || selected.Status != "complete" {
+		return false
+	}
+	enumerated := false
+	for _, e := range p.Evidence {
+		enumerated = enumerated || e.Scope == 1 && e.Method == "native-metadata" && e.Status == "complete"
+	}
+	if !enumerated {
+		return false
+	}
+	for _, o := range p.Observations {
+		source := p.Evidence[o.Source-1]
+		if source.Method != "native-input-lease" || source.Status != "complete" {
+			return false
+		}
+		if o.Class == "locked" && o.Source != p.Selection.Evidence {
+			return false
+		}
+		if o.Class == "installed" {
+			if o.MetadataEvidence == 0 || source.MetadataEvidence != o.MetadataEvidence {
+				return false
+			}
+			metadata := p.Evidence[o.MetadataEvidence-1]
+			if metadata.Method != "native-metadata-lease" || metadata.Status != "complete" {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func reportRecordsValid(plan Plan, records []Record) bool {
+	if len(records) == 0 || len(records) != len(plan.Policy.References) {
+		return false
+	}
+	for i, record := range records {
+		// Recheck receipt coherence, not source authenticity. The actual policy
+		// source hash/lease was checked by the parent before retaining records.
+		hash := record.Lock.SourceHash
+		if plan.TrustedPolicyDigest != "" {
+			hash = plan.TrustedPolicyDigest
+		}
+		if record.Index != i || ValidateRecord(plan, record, hash) != nil {
+			return false
+		}
+	}
+	return true
+}
+
+func referenceComparisonsComplete(plan Plan, records []Record) bool {
+	if !reportRecordsValid(plan, records) {
+		return false
+	}
+	for _, record := range records {
+		if !record.Assessment.SuppliedComparisonComplete || len(record.Assessment.Gaps) != 0 || len(record.Assessment.Differences) == 0 {
+			return false
+		}
+	}
+	return true
+}
+
 func Render(r Report, format string) ([]byte, error) {
 	if !validRenderedPolicy(r) {
 		return nil, errors.New("scan: report-failed")
