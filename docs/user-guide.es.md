@@ -551,14 +551,36 @@ sin campos desconocidos/duplicados ni permisos null; máximo 256 KiB.
 | `bunCacheDirectory` | Raíz Bun absoluta explícita opcional; solo perfil Linux de par cerrado |
 | `npmOrigins` | Hasta 64 correspondencias npm exactas de ubicación/nombre/versión/origen; no autenticidad general |
 | `npmRegistry` | Permiso opcional revisado para el registro público npm; no acceso de red ni prueba del contenido instalado |
+| `bunOrigins` | Desarrollo: hasta64 permisos exactos de tuple raíz/namespace Bun con pin explícito; no hereda permisos npm/caché |
 | `requirePortable` | Rechaza salida local si es true |
 | `exceptions`, `maxExceptionDays` | Aceptación exacta revisada; nunca exención de cobertura |
 
 Se requiere pin independiente de política para candidatos, caché Bun, permisos de
-origen/registro npm, excepciones y referencias independently-anchored. `setup`
+origen/registro npm, origen Bun, excepciones y referencias independently-anchored. `setup`
 guarda esa designación una vez; una ejecución explícita debe recibir el pin por
 separado. No declares público un paquete privado/desconocido para obtener hallazgos.
 La investigación de candidatos Bun no establece origen npm público.
+
+### Permisos exactos de namespace Bun (desarrollo)
+
+Esta capacidad aditiva no está en `v0.2.0-alpha.2` publicado. Una política Bun puede
+revisar hasta64 tuples raíz mediante `bunOrigins`. Cada regla requiere los cinco
+campos canónicos; este ejemplo es un fragmento para una política revisada:
+
+```json
+{"bunOrigins":[{"location":"left-pad","name":"left-pad","version":"1.0.0","origin":"https://registry.npmjs.org/left-pad/-/left-pad-1.0.0.tgz","registry":""}]}
+```
+
+`location` es la clave original del tuple, igual al nombre canónico del paquete;
+no es una ruta de disco. `registry` debe coincidir exactamente con el original:
+default Bun vacío o URL canónica exacta del tarball. `origin` es la correspondencia
+explícita del operador, no autenticidad del publicador/contenido ni permiso de red.
+Solo son elegibles tuples raíz sin contexto desconocido y una asociación única de
+manifiesto propio/directorio nativo. Workspaces, aliases, contexto peer/patch/desconocido,
+testigos ausentes y copias ambiguas siguen sin cualificar. Políticas y pins antiguos
+no ganan autoridad: revisa los nuevos bytes y selecciona el pin explícitamente;
+nunca se reaprobará setup en silencio. La integridad sigue requiriendo referencias
+preparadas válidas e independientes de este permiso.
 
 ### Referencias de integridad
 
@@ -603,8 +625,11 @@ packtrace scan --privacy portable --format json /ruta/al/proyecto
 packtrace scan --format sarif /ruta/al/proyecto
 ```
 
-El JSON operativo usa esquema **1.7**, con campos locales explicativos opcionales
-acotados. El soporte histórico de informes 1.0–1.6 y los esquemas de entrada
+El esquema operativo de desarrollo es **1.8**: añade decisiones de origen Bun
+exacto y cobertura acotada `reference-comparison`. Alpha.2 publicado usa **1.7**.
+Los contratos históricos1.0–1.7 se conservan; JSON público no recrea autoridad
+privada del padre. Se mantienen campos locales explicativos opcionales
+acotados. El soporte histórico de informes 1.0–1.7 y los esquemas de entrada
 suministrada son distintos. Las vistas usan un único resultado validado, no
 detectores separados. SARIF no convierte candidatos no cualificados en alertas.
 Un JSON guardado no puede reconstruir el contexto privado de autoridad necesario

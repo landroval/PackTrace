@@ -531,14 +531,35 @@ no unknown/duplicate keys, no null grants, maximum 256 KiB.
 | `bunCacheDirectory` | Optional explicit absolute Bun-cache root; Linux closed-pair profile only |
 | `npmOrigins` | Up to 64 exact npm location/name/version/origin correspondences; not blanket authenticity |
 | `npmRegistry` | Optional reviewed public npm registry grant; not a network grant or proof of installed bytes |
+| `bunOrigins` | Development: up to64 explicitly pinned exact root Bun tuple/namespace grants; no inherited npm/cache permission |
 | `requirePortable` | Refuses local output when true |
 | `exceptions`, `maxExceptionDays` | Exact reviewed acceptance, never a coverage waiver |
 
 An independent policy pin is required for candidates, Bun cache, npm origin/registry
-grants, exceptions and independently anchored references. `setup` records that
+and Bun-origin grants, exceptions and independently anchored references. `setup` records that
 explicit designation once. A one-off scan must supply its reviewed pin separately.
 Do not mark private/unknown packages public merely to obtain eligible findings.
 Bun candidate investigation does not establish public npm origin.
+
+### Exact Bun namespace grants (development)
+
+This additive capability is not in published `v0.2.0-alpha.2`. A Bun policy may
+explicitly review up to64 root tuples through `bunOrigins`. Each rule requires all
+five canonical fields; for example, this is a fragment to add to a reviewed policy:
+
+```json
+{"bunOrigins":[{"location":"left-pad","name":"left-pad","version":"1.0.0","origin":"https://registry.npmjs.org/left-pad/-/left-pad-1.0.0.tgz","registry":""}]}
+```
+
+`location` is the original tuple key, equal to its canonical package name—not a
+filesystem path. `registry` must exactly match the retained original claim: empty
+Bun default or the exact canonical tarball URL. `origin` is the operator's explicit
+namespace mapping, not publisher/content authentication or network permission.
+Only supported context-free root tuples and a unique matching own manifest/native
+directory association are eligible. Workspaces, aliases, peer/patch/unknown context,
+missing witnesses and ambiguous copies remain unqualified. Old policies and pins
+gain no authority; review new bytes and select a new pin explicitly, never silently
+reapprove saved setup. Integrity still requires separate valid prepared references.
 
 ### Integrity references
 
@@ -582,8 +603,10 @@ packtrace scan --privacy portable --format json /path/to/project
 packtrace scan --format sarif /path/to/project
 ```
 
-JSON operational schema is **1.7**, with optional bounded local explanation fields.
-Historical report 1.0–1.6 support and supplied-input schemas are separate. All views
+Development operational schema is **1.8**: additive exact Bun origin decisions and
+scoped `reference-comparison` coverage, with bounded local explanation fields.
+Published alpha.2 uses **1.7**; historical report1.0–1.7 and supplied-input schemas
+keep their own contracts. Public JSON cannot recreate private parent authority. All views
 use the same validated result, not separate detectors. SARIF does not promote
 unqualified candidates to vulnerability alerts. A saved JSON report cannot recreate
 PackTrace's private authority context for authoritative rerendering.

@@ -26,7 +26,7 @@ func TestPolicyReportOperationalIntegrityAndProvenance(t *testing.T) {
 	// Typed retained comparison rows, not a native acquisition/qualification claim.
 	records := []Record{{Assessment: integrity.InstanceAssessment{InstanceID: "1", Differences: []integrity.Difference{{Kind: integrity.DifferenceModified, InstanceID: "1", EntryID: "1", EvidenceID: "1:observed:1"}}}}}
 	r := BuildReportWithPolicy(plan, records, Summary{}, Resources{}, false, false, nil, nil, nil, nil, false, time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC))
-	if r.SchemaVersion != "1.7" || r.Policy == nil || r.Findings != 1 || len(r.Policy.Findings) != 1 || r.Policy.Findings[0].Accepted || r.Policy.Findings[0].Enforced || r.ExitCode != 3 || !RequiredCoverageIncomplete(r) {
+	if r.SchemaVersion != "1.8" || r.Policy == nil || r.Findings != 1 || len(r.Policy.Findings) != 1 || r.Policy.Findings[0].Accepted || r.Policy.Findings[0].Enforced || r.ExitCode != 3 || !RequiredCoverageIncomplete(r) {
 		t.Fatalf("lost finding or coverage: %+v policy=%+v", r, r.Policy)
 	}
 	for _, format := range []string{"terminal", "json", "sarif"} {
@@ -56,6 +56,7 @@ func TestPolicyReportOperationalIntegrityAndProvenance(t *testing.T) {
 		}
 	}
 	mutations := []func(*Report){
+		func(r *Report) { r.SchemaVersion = "1.7" },
 		func(r *Report) { r.SchemaVersion = "1.6" },
 		func(r *Report) { r.SchemaVersion = "1.0"; r.Policy = nil },
 		func(r *Report) { r.Policy = nil },

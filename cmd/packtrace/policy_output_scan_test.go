@@ -47,7 +47,7 @@ func TestScanFileOutputUsesActualBoundRootsWithoutImplicitState(t *testing.T) {
 		t.Fatal("requested artifact absent", err)
 	}
 	var report integrityscan.Report
-	if json.Unmarshal(data, &report) != nil || report.SchemaVersion != "1.7" || report.Policy == nil || report.Policy.Source != "built-in" || report.ExitCode != 3 || report.Intelligence != nil {
+	if json.Unmarshal(data, &report) != nil || report.SchemaVersion != "1.8" || report.Policy == nil || report.Policy.Source != "built-in" || report.ExitCode != 3 || report.Intelligence != nil {
 		t.Fatalf("file model mismatch: %s", data)
 	}
 	before := append([]byte(nil), data...)

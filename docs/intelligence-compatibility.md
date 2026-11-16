@@ -107,6 +107,15 @@ recorded npm identities with private/unknown origins. It is off by default;
 indeterminate, never enforcement eligible, with a separate observation-row count.
 Portable retains opaque references and SARIF does not turn candidates into alerts.
 
+Development operational reports use schema **1.8**, distinct from published
+alpha.2's **1.7** and the historical builders above. They add explicit pinned
+`bunOrigins` for supported simple root tuples and unique native installed
+association, plus scoped selected-reference comparison coverage. Exact original
+registry/context and admitted endpoint witnesses remain mandatory; npm/cache/
+candidate grants and old policy pins do not confer Bun eligibility. Namespace
+mapping never authenticates bytes, selects missing references or completes native,
+source/index or lifetime-resource qualification. See the [user guide](user-guide.md#exact-bun-namespace-grants-development).
+
 Intel command output uses its separate schema **1.0**. Successful bounded
 maintenance/preparation is not successful complete project security coverage.
 Operational/output failure is `2`, incomplete usable evidence is `3`, interruption

@@ -11,6 +11,10 @@ import (
 	"packtrace/internal/projectinventory"
 )
 
+// OperationalSchemaVersion separates additive Bun-origin and scoped coverage
+// receipts from the historical 1.7 contract; application release versions differ.
+const OperationalSchemaVersion = "1.8"
+
 // policyReportContext is never serialized. Frozen inputs prevent callers from
 // changing the policy through aliased slices after the parent evaluation.
 // The seal additionally binds coverage, privacy, findings and comparison exit.
@@ -31,12 +35,12 @@ type policyReportInputs struct {
 	Now       time.Time
 }
 
-// BuildReportWithPolicy is the operational 1.7 comparison snapshot. It does not
+// BuildReportWithPolicy is the operational comparison snapshot. It does not
 // predict successful output, final binding checks or writer teardown/reap.
 // Invalid policy material leaves an unrenderable report, never a legacy fallback.
 func BuildReportWithPolicy(plan Plan, records []Record, summary Summary, resources Resources, interrupted, abnormal bool, inventory *projectinventory.PublicInventory, intelligence *Intelligence, advisories *AdvisoryReport, materials []PolicyMaterial, limited bool, now time.Time) Report {
 	r := BuildReportWithAdvisories(plan, records, summary, resources, interrupted, abnormal, inventory, intelligence, advisories)
-	r.SchemaVersion = "1.7"
+	r.SchemaVersion = OperationalSchemaVersion
 	healthy := !interrupted && !abnormal && !resources.QueryFailed && !resources.Stale && !resources.Stopped
 	for i := range r.Coverage {
 		c := &r.Coverage[i]
@@ -160,7 +164,7 @@ func RequiredCoverageIncomplete(r Report) bool {
 // The CLI overlays actual output/final-lifecycle errors and interruption later.
 func ReportConditions(r Report) cli.ScanExitConditions {
 	c := cli.ScanExitConditions{Interrupted: r.ExitCode == 130, ReportPreventingError: r.ExitCode == 2, RequiredCoverageIncomplete: RequiredCoverageIncomplete(r)}
-	if r.SchemaVersion == "1.7" || r.policyContext != nil || r.Policy != nil || r.policyPresent {
+	if oneOf(r.SchemaVersion, "1.7", OperationalSchemaVersion) || r.policyContext != nil || r.Policy != nil || r.policyPresent {
 		if r.policyContext == nil {
 			return cli.ScanExitConditions{ReportPreventingError: true, RequiredCoverageIncomplete: true}
 		}
@@ -199,7 +203,7 @@ func (r *Report) UnmarshalJSON(data []byte) error {
 }
 
 func validRenderedPolicy(r Report) bool {
-	if r.SchemaVersion != "1.7" {
+	if !oneOf(r.SchemaVersion, "1.7", OperationalSchemaVersion) {
 		return r.Policy == nil && r.policyContext == nil && !r.policyPresent
 	}
 	if r.Policy == nil || r.policyContext == nil {

@@ -29,7 +29,7 @@ func runPolicyAcceptanceJSON(t *testing.T, args ...string) (integrityscan.Report
 		t.Fatalf("expected genuinely incomplete scan, err=%v state=%v stdout=%s stderr=%s", err, cmd.ProcessState, out.String(), diag.String())
 	}
 	var report integrityscan.Report
-	if json.Unmarshal(out.Bytes(), &report) != nil || report.SchemaVersion != "1.7" || report.Policy == nil || report.ExitCode != 3 {
+	if json.Unmarshal(out.Bytes(), &report) != nil || report.SchemaVersion != "1.8" || report.Policy == nil || report.ExitCode != 3 {
 		t.Fatalf("missing operational policy model: %s", out.String())
 	}
 	return report, out.Bytes()

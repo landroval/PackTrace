@@ -43,7 +43,7 @@ alone does not authorize probes, dependency installation, or publication.
 **Current #5 candidate:** the native collector and common scan JSON 1.1 now retain
 declared/locked/installed evidence, selected workspaces and distinct physical slots.
 Five pinned producers generated owned fixtures; their inert native replay preserves
-links and hardlink refusal. See [current compatibility evidence](inventory-compatibility.md#current-owned-producer-candidate-evidence)
+links and hardlink refusal. See [current compatibility evidence](inventory-compatibility.md#current-expanded-range-evidence)
 for exact rows and explicit unqualified variants (including Bun1.3.2 Git+file).
 The outer shipping checks below stay open pending the candidate's exact-source
 public native acceptance and protected integration. Historical milestone counts
@@ -481,8 +481,8 @@ and dated scope amendments:
   performance corpus, measurement method, native row and execution envelope still
   require approval and fresh measurements; no historical timing closes the beta
   benchmark gate.
-- Operational reports use parent-owned schema `1.7`; older builders preserve their
-  historical schemas. Offline defaults, worker protocol, policy enforcement,
+- Development operational reports use parent-owned schema `1.8`; published alpha.2
+  uses `1.7`, and older builders preserve their historical schemas. Offline defaults, worker protocol, policy enforcement,
   portable/local privacy and expiring evidence-bound exceptions exist. Actual
   complete scan `0/1` and bounded full Bun support require the beta work; preserve
   real coverage gaps and `130 > 2 > 3 > 1 > 0` rather than deleting gates.

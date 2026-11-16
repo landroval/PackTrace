@@ -319,14 +319,14 @@ func Render(r Report, format string) ([]byte, error) {
 	if !validRenderedAdvisories(r) {
 		return nil, errors.New("scan: report-failed")
 	}
-	if r.Intelligence != nil && (!oneOf(r.SchemaVersion, "1.2", "1.3", "1.4", "1.5", "1.6", "1.7") || ValidateIntelligence(*r.Intelligence) != nil) {
+	if r.Intelligence != nil && (!oneOf(r.SchemaVersion, "1.2", "1.3", "1.4", "1.5", "1.6", "1.7", OperationalSchemaVersion) || ValidateIntelligence(*r.Intelligence) != nil) {
 		return nil, errors.New("scan: report-failed")
 	}
 	if r.Inventory != nil && projectinventory.ValidatePublic(*r.Inventory) != nil {
 		return nil, errors.New("scan: report-failed")
 	}
 	// Historical schemas must not acquire the 1.6 count merely by rendering.
-	if r.Advisories != nil && !oneOf(r.SchemaVersion, "1.6", "1.7") {
+	if r.Advisories != nil && !oneOf(r.SchemaVersion, "1.6", "1.7", OperationalSchemaVersion) {
 		a := *r.Advisories
 		a.legacyCandidates = true
 		r.Advisories = &a
@@ -336,7 +336,7 @@ func Render(r Report, format string) ([]byte, error) {
 		data, e := json.MarshalIndent(r, "", "  ")
 		return append(data, '\n'), e
 	case "terminal", "terminal-color":
-		if r.SchemaVersion == "1.7" {
+		if oneOf(r.SchemaVersion, "1.7", OperationalSchemaVersion) {
 			data := renderTerminalSummary(r)
 			if format == "terminal-color" {
 				data = colorTerminalSummary(data)
@@ -389,11 +389,11 @@ func Render(r Report, format string) ([]byte, error) {
 		}
 		out.Write(detail)
 		coverage := "incomplete"
-		if r.SchemaVersion == "1.7" && !RequiredCoverageIncomplete(r) {
+		if oneOf(r.SchemaVersion, "1.7", OperationalSchemaVersion) && !RequiredCoverageIncomplete(r) {
 			coverage = "complete"
 		}
 		exitLabel := "Exit"
-		if r.SchemaVersion == "1.7" {
+		if oneOf(r.SchemaVersion, "1.7", OperationalSchemaVersion) {
 			exitLabel = "Comparison exit"
 		}
 		fmt.Fprintf(&out, "Required coverage: %s\n%s: %d\n", coverage, exitLabel, r.ExitCode)
@@ -470,7 +470,7 @@ func Render(r Report, format string) ([]byte, error) {
 		}{toolName}}, results, []any{struct {
 			ExecutionSuccessful        bool  `json:"executionSuccessful"`
 			ToolExecutionNotifications []any `json:"toolExecutionNotifications"`
-		}{r.SchemaVersion == "1.7" && !ReportConditions(r).Interrupted && !ReportConditions(r).ReportPreventingError && !RequiredCoverageIncomplete(r), notifications}}, r}}})
+		}{oneOf(r.SchemaVersion, "1.7", OperationalSchemaVersion) && !ReportConditions(r).Interrupted && !ReportConditions(r).ReportPreventingError && !RequiredCoverageIncomplete(r), notifications}}, r}}})
 		return append(data, '\n'), e
 	}
 	return nil, errors.New("scan: report-failed")

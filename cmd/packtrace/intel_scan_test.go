@@ -197,7 +197,7 @@ func TestScanPreparedSnapshotIsOfflinePrivateAndNotMatching(t *testing.T) {
 					} `json:"intelligence"`
 					Findings int `json:"findings"`
 				}
-				if json.Unmarshal(out.Bytes(), &report) != nil || report.SchemaVersion != "1.7" || report.Intelligence.State != "available" || report.Intelligence.Selection != "expected-digest" || report.Findings != 1 || report.Intelligence.Objects != nil || report.Intelligence.Bytes != nil || report.Intelligence.Reserved != nil {
+				if json.Unmarshal(out.Bytes(), &report) != nil || report.SchemaVersion != "1.8" || report.Intelligence.State != "available" || report.Intelligence.Selection != "expected-digest" || report.Findings != 1 || report.Intelligence.Objects != nil || report.Intelligence.Bytes != nil || report.Intelligence.Reserved != nil {
 					t.Fatal("state changed integrity or invented storage occupation", out.String())
 				}
 			}
@@ -229,7 +229,7 @@ func TestScanWithMissingStateDoesNotInitialize(t *testing.T) {
 			State string `json:"state"`
 		} `json:"intelligence"`
 	}
-	if json.Unmarshal(out.Bytes(), &report) != nil || report.SchemaVersion != "1.7" || report.Intelligence.State != "unavailable" {
+	if json.Unmarshal(out.Bytes(), &report) != nil || report.SchemaVersion != "1.8" || report.Intelligence.State != "unavailable" {
 		t.Fatal("missing source projection absent", out.String())
 	}
 	if strings.Contains(out.String()+diag.String(), "PRIVATE") {
