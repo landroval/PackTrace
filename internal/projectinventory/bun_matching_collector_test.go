@@ -40,9 +40,18 @@ func TestBunCollectedOriginalMatchingContext(t *testing.T) {
 				t.Fatal(err)
 			}
 			defer root.Close()
-			inv, err := Collect(context.Background(), root, Options{Profile: "bun@1.3.x", ExplicitManager: true})
+			if tc.name == "plain" {
+				ordinary, err := Collect(context.Background(), root, Options{Profile: "bun@1.3.x", ExplicitManager: true})
+				if err != nil || len(ordinary.OriginalInputs) != 0 {
+					t.Fatal("ordinary inventory retained unrequested original bytes")
+				}
+			}
+			inv, err := Collect(context.Background(), root, Options{Profile: "bun@1.3.x", ExplicitManager: true, RetainBunOriginals: true})
 			if err != nil {
 				t.Fatal(err)
+			}
+			if len(inv.OriginalInputs) != 2 || ValidateOriginalBytes(inv) != nil || ValidateOriginalClaims(PortableMatching(inv)) != nil {
+				t.Fatal("retained original bytes not verifiable")
 			}
 			count := 0
 			sum := sha256.Sum256([]byte(raw))

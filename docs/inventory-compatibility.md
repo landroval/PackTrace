@@ -8,7 +8,25 @@ Inert producer data includes npm 7.24.2, 8.19.4, 9.9.4, 10.9.9, 11.20.0, 12.2.2
 and Bun 1.2.23, 1.3.14, 1.4.2;
 these do not qualify every release/layout/platform. The optional Linux Bun-cache
 profile admits only a verified, retained exactly-two-name manifest hardlink pair;
-generic hardlink refusal remains unchanged. Current operational scan schema is 1.7.
+generic hardlink refusal remains unchanged. Current operational scan schema is 1.8;
+the published alpha.2 schema 1.7 contract remains historical and unchanged.
+
+Explicit new Bun origin grants require a private original-byte witness: the
+already stable-read governing lock, root manifest and own installed manifests.
+The parent checks SHA256 receipts and reparses these bytes with the collector's
+existing parsers/projections before accepting semantic claims, decisions or
+policy material. This closes same-receipt context/identity substitutions, not a
+native acquisition child fabricating both bytes and receipts, publisher identity,
+or independent filesystem authentication. No new native qualification is implied.
+Capture is limited to 512 KiB total; the existing 1 MiB frame, 8 MiB cumulative
+private serialized bytes and channel limits still apply. Raw input rows join
+original observation/evidence and policy-material rows in their cumulative 4096
+allowance. Historical integrity witnesses retain a separate per-batch row cap,
+sharing private bytes/channel limits, not a global 4096-row claim. Missing,
+inconsistent or oversized originals withhold Bun eligibility with existing
+origin-unqualified gaps. Unsupported/incomplete installed inputs and root
+workspace hints can also conservatively withhold this authority. No target
+rereads or original bytes/private hashes are added to public reports.
 
 The exact artifact counts, schemas, pending gates and versions below describe the
 **historical increment at its recorded source**, not a current blanket support

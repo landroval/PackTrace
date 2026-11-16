@@ -175,6 +175,12 @@ func typedShape(data []byte, t reflect.Type) bool {
 		}
 		return known == len(fields)
 	case reflect.Slice:
+		// encoding/json represents retained byte inputs as base64 strings, not
+		// arrays. Require that exact encoding and a non-null decoded byte slice.
+		if t == reflect.TypeOf([]byte{}) {
+			var value []byte
+			return len(data) > 0 && data[0] == '"' && json.Unmarshal(data, &value) == nil && value != nil
+		}
 		var values []json.RawMessage
 		if json.Unmarshal(data, &values) != nil || values == nil {
 			return false

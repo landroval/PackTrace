@@ -10,16 +10,16 @@ import (
 )
 
 func TestBunOriginalSharesPrivateMaterialBudget(t *testing.T) {
-	original := projectinventory.Result{
-		Selection: projectinventory.Selection{Family: "bun"},
-		Model:     projectinventory.Model{Observations: []projectinventory.Observation{{ID: 1, Name: "private-name"}}, Evidence: []projectinventory.Evidence{{ID: 1}}},
+	original := bunProtocolOriginal()
+	if err := projectinventory.ValidateOriginalBytes(original); err != nil {
+		t.Fatal("fixture bytes", err)
 	}
 	var sent []string
 	send := func(kind string, v any) error { sent = append(sent, kind); return nil }
 	b := scanPolicyMaterialBuffer{}
 	ok, err := b.emitOriginal(send, original)
 	encoded, _ := json.Marshal(projectinventory.PrivateOriginal(original))
-	if err != nil || !ok || len(sent) != 1 || sent[0] != "bun-original" || b.bytes != len(encoded) || b.originalRows != 2 {
+	if err != nil || !ok || len(sent) != 1 || sent[0] != "bun-original" || b.bytes != len(encoded) || b.originalRows != len(original.Model.Observations)+len(original.Model.Evidence)+len(original.OriginalInputs) {
 		t.Fatal("original admission", ok, err, b)
 	}
 	if b.addOriginal(original) == nil {

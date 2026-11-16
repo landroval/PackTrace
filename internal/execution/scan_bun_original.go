@@ -16,8 +16,8 @@ func bunOriginalWanted(p *integrityscan.Plan) bool {
 // and row ceilings, as well as the channel's cumulative frame/traffic budget.
 // A witness too large for one existing frame abstains; it never renews a budget.
 func (b *scanPolicyMaterialBuffer) addOriginal(r projectinventory.Result) error {
-	rows := len(r.Model.Observations) + len(r.Model.Evidence)
-	if b.closed || b.originalRows != 0 || rows == 0 || rows > integrityscan.MaxPolicyMaterials-len(b.rows) {
+	rows := len(r.Model.Observations) + len(r.Model.Evidence) + len(r.OriginalInputs)
+	if b.closed || b.originalRows != 0 || rows == 0 || rows > integrityscan.MaxPolicyMaterials-len(b.rows) || projectinventory.ValidateOriginalBytes(r) != nil {
 		return errScanProtocol
 	}
 	encoded, err := json.Marshal(r)
@@ -30,7 +30,7 @@ func (b *scanPolicyMaterialBuffer) addOriginal(r projectinventory.Result) error 
 }
 
 func (b *scanPolicyMaterialBuffer) emitOriginal(send func(string, any) error, r projectinventory.Result) (bool, error) {
-	if r.Selection.Family != "bun" || len(r.Model.Observations)+len(r.Model.Evidence) > integrityscan.MaxPolicyMaterials-len(b.rows) {
+	if r.Selection.Family != "bun" || len(r.Model.Observations)+len(r.Model.Evidence)+len(r.OriginalInputs) > integrityscan.MaxPolicyMaterials-len(b.rows) {
 		return false, nil
 	}
 	r = projectinventory.PrivateOriginal(r)

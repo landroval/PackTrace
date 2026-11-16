@@ -2,9 +2,11 @@ package execution
 
 import (
 	"context"
+	"crypto/sha256"
 	"io"
 	"os"
 	"os/exec"
+	"packtrace/internal/inventory"
 	"runtime"
 	"testing"
 	"time"
@@ -17,18 +19,33 @@ import (
 
 // Owned synthetic acquisition claims exercise IPC admission, not native truth.
 func bunProtocolOriginal() projectinventory.Result {
+	lock := []byte(`{"lockfileVersion":1,"workspaces":{"":{}},"packages":{"left-pad":["left-pad@1.0.0","",{},"sha512-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="]}}`)
+	root := []byte(`{}`)
+	doc, err := inventory.ParseBunLock(lock)
+	if err != nil {
+		panic(err)
+	}
+	pkgs, err := inventory.ProjectBunLock(doc)
+	if err != nil {
+		panic(err)
+	}
+	ws, err := inventory.ProjectBunWorkspaces(doc)
+	if err != nil {
+		panic(err)
+	}
 	return projectinventory.Result{
-		Complete:  true,
-		Selection: projectinventory.Selection{Family: "bun", Profile: "bun@1.3.x", File: "bun.lock", State: "usable", Reason: "none"},
+		OriginalInputs: []projectinventory.OriginalInput{{Source: 1, Bytes: root}, {Source: 2, Bytes: lock}},
+		Complete:       true,
+		Selection:      projectinventory.Selection{Family: "bun", Profile: "bun@1.3.x", File: "bun.lock", State: "usable", Reason: "none"},
 		Model: projectinventory.Model{
 			Scopes: []projectinventory.Scope{{ID: 1, Kind: "project", Status: "complete"}},
 			Evidence: []projectinventory.Evidence{
-				{ID: 1, Scope: 1, Location: "package.json", Method: "native-input-lease", Complete: true, SHA256: [32]byte{1}},
-				{ID: 2, Scope: 1, Location: "bun.lock", Method: "native-input-lease", Complete: true, SHA256: [32]byte{2}},
+				{ID: 1, Scope: 1, Location: "package.json", Method: "native-input-lease", Complete: true, SHA256: sha256.Sum256(root)},
+				{ID: 2, Scope: 1, Location: "bun.lock", Method: "native-input-lease", Complete: true, SHA256: sha256.Sum256(lock)},
 			},
-			Observations: []projectinventory.Observation{{ID: 1, Workspace: 1, Source: 2, Class: "locked", Kind: "package", Status: "complete", Location: "left-pad", Name: "left-pad", Version: "1.0.0", Fields: map[string]string{
-				"tuple-key": "left-pad", "matching-context": "supported", "name-state": "value", "resolution-state": "value", "registry-state": "value", "integrity-state": "value", "integrity": "sha512-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-			}}},
+			Observations: []projectinventory.Observation{{ID: 1, Workspace: 1, Source: 2, Class: "locked", Kind: "package", Status: "complete", Location: "left-pad", Name: "left-pad", Version: "1.0.0", Requirements: pkgs.Records[0].Requirements, Fields: map[string]string{
+				"tuple-key": "left-pad", "matching-context": "supported", "name-state": "value", "resolution-state": "value", "registry-state": "value", "integrity-state": "value", "git-tag": "", "integrity": "sha512-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+			}}, {ID: 2, Workspace: 1, Source: 2, Class: "locked", Kind: "workspace", Status: "complete", Fields: map[string]string{"name-state": "absent", "version-state": "absent"}, Requirements: ws.Records[0].Requirements}},
 		},
 	}
 }
@@ -65,7 +82,10 @@ func bunOriginalProtocolChild(mode string) int {
 	_ = c.send("intel-closure", scanIntelligenceClosure{1})
 	original := bunProtocolOriginal()
 	b := scanPolicyMaterialBuffer{}
-	if mode != "missing" {
+	if mode == "corrupt-original" {
+		original.OriginalInputs[0].Bytes[0] = '!'
+		_ = c.send("bun-original", projectinventory.PrivateOriginal(original))
+	} else if mode != "missing" {
 		if _, err := b.emitOriginal(c.send, original); err != nil {
 			return 94
 		}
@@ -103,7 +123,7 @@ func TestBunOriginalProtocolAdmission(t *testing.T) {
 	if runtime.GOOS != "linux" {
 		t.Skip("owned local process controls")
 	}
-	for _, mode := range []string{"valid", "missing", "duplicate", "projection", "late", "cross-grant"} {
+	for _, mode := range []string{"valid", "missing", "duplicate", "projection", "late", "cross-grant", "corrupt-original"} {
 		t.Run(mode, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
@@ -123,8 +143,17 @@ func TestBunOriginalProtocolAdmission(t *testing.T) {
 			if (err == nil) != (mode == "valid") {
 				t.Fatalf("protocol outcome: %v process=%v inventory=%+v advisories=%+v", err, cmd.ProcessState, run.Inventory, run.Advisories)
 			}
-			if mode == "valid" && (run.Inventory == nil || run.Inventory.OriginalClaims == nil || run.Advisories == nil || run.Advisories.Decisions[0].Origin != "operator-bun-rule") {
-				t.Fatal("positive bound tuple lost")
+			if mode == "valid" {
+				if run.Inventory == nil || run.Inventory.OriginalClaims == nil || run.Advisories == nil {
+					t.Fatal("positive original witness lost")
+				}
+				found := false
+				for _, d := range run.Advisories.Decisions {
+					found = found || d.Origin == "operator-bun-rule"
+				}
+				if !found {
+					t.Fatal("positive bound tuple lost")
+				}
 			}
 		})
 	}

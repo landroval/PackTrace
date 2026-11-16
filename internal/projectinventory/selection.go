@@ -287,6 +287,9 @@ func (c *collector) inspectBun(name string) inventory.BunInputUsability {
 		c.gap(1, id, "lock-unreadable")
 		return inventory.BunInputUsabilityUnreadable
 	}
+	if c.retainBunOriginals {
+		c.retainOriginal(id, data)
+	}
 	doc, e := inventory.ParseBunLock(data)
 	if e != nil {
 		c.gap(1, id, "lock-invalid")
@@ -296,21 +299,30 @@ func (c *collector) inspectBun(name string) inventory.BunInputUsability {
 		}
 		return inventory.BunInputUsabilityInvalid
 	}
-	var version int
-	if json.Unmarshal(doc.Fields["lockfileVersion"], &version) != nil || version < 0 || version > managerprofile.BunTextVersionMax(c.result.Selection.Profile) {
+	if !bunLockVersionSupported(doc, c.result.Selection.Profile) {
 		c.gap(1, id, "lock-version-unsupported")
 		return inventory.BunInputUsabilityUnsupported
 	}
-	if raw, ok := doc.Fields["configVersion"]; ok {
-		var v int
-		if json.Unmarshal(raw, &v) != nil || string(raw) == "null" || v < 0 || v > 1 {
-			c.gap(1, id, "config-version-unsupported")
-			return inventory.BunInputUsabilityUnsupported
-		}
+	if !bunConfigSupported(doc) {
+		c.gap(1, id, "config-version-unsupported")
+		return inventory.BunInputUsabilityUnsupported
 	}
 	if c.projectBun(doc, id) != nil {
 		c.gap(1, id, "locked-projection-invalid")
 		return inventory.BunInputUsabilityInvalid
 	}
 	return inventory.BunInputUsabilityUsable
+}
+
+func bunLockVersionSupported(doc inventory.BunLockDocument, profile string) bool {
+	var version int
+	return json.Unmarshal(doc.Fields["lockfileVersion"], &version) == nil && version >= 0 && version <= managerprofile.BunTextVersionMax(profile)
+}
+
+func bunConfigSupported(doc inventory.BunLockDocument) bool {
+	if raw, ok := doc.Fields["configVersion"]; ok {
+		var v int
+		return json.Unmarshal(raw, &v) == nil && string(raw) != "null" && v >= 0 && v <= 1
+	}
+	return true
 }

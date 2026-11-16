@@ -19,19 +19,74 @@ import (
 
 func bunEligibleFixture(t *testing.T, info Intelligence) (Plan, matchingFixture) {
 	t.Helper()
+	return bunEligibleNamedFixture(t, info, "left-pad", "1.0.0")
+}
+
+func bunEligibleNamedFixture(t *testing.T, info Intelligence, name, version string) (Plan, matchingFixture) {
+	t.Helper()
 	f := matchingInstalledFixture()
 	f.inv.Selection.Family, f.inv.Selection.Profile, f.inv.Selection.File = "bun", "bun@1.3.x", "bun.lock"
 	f.inv.Model.Evidence[0].Location = "bun.lock"
-	f.inv.Model.Evidence[0].SHA256 = sha256.Sum256([]byte("original bun.lock"))
-	f.inv.Model.Evidence[2].SHA256 = sha256.Sum256([]byte("original installed manifest"))
-	f.inv.Model.Evidence = append(f.inv.Model.Evidence, projectinventory.Evidence{ID: 4, Scope: 1, Location: "package.json", Method: "native-input-lease", Complete: true, SHA256: sha256.Sum256([]byte("original root manifest"))})
+	lock := []byte(`{"lockfileVersion":1,"workspaces":{"":{}},"packages":{"left-pad":["left-pad@1.0.0","",{},"sha512-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="]}}`)
+	own := []byte(`{"name":"left-pad","version":"1.0.0"}`)
+	rootBytes := []byte(`{}`)
+	f.inv.OriginalInputs = []projectinventory.OriginalInput{{Source: 1, Bytes: lock}, {Source: 3, Bytes: own}, {Source: 4, Bytes: rootBytes}}
+	f.inv.Model.Evidence[0].SHA256 = sha256.Sum256(lock)
+	f.inv.Model.Evidence[2].SHA256 = sha256.Sum256(own)
+	f.inv.Model.Evidence = append(f.inv.Model.Evidence, projectinventory.Evidence{ID: 4, Scope: 1, Location: "package.json", Method: "native-input-lease", Complete: true, SHA256: sha256.Sum256(rootBytes)})
 	o := &f.inv.Model.Observations[0]
 	o.Kind, o.Location, o.Origin = "package", "left-pad", ""
 	o.Fields = map[string]string{"name-state": "value", "resolution-state": "value", "registry-state": "value", "integrity-state": "value", "integrity": "sha512-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==", "tuple-key": "left-pad", "git-tag": "", "matching-context": "supported"}
+	// Typed fixture rows come from the same parsers as collection, never an
+	// asserted successful validator or invented receipt.
+	bd, err := lockinventory.ParseBunLock(lock)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bp, err := lockinventory.ProjectBunLock(bd)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bw, err := lockinventory.ProjectBunWorkspaces(bd)
+	if err != nil {
+		t.Fatal(err)
+	}
+	o.Requirements = bp.Records[0].Requirements
+	md, err := lockinventory.ParseManifest(own)
+	if err != nil {
+		t.Fatal(err)
+	}
+	mp, err := lockinventory.ProjectManifest(md)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.inv.Model.Observations[1].Requirements = mp.Groups
+	f.inv.Model.Observations = append(f.inv.Model.Observations, projectinventory.Observation{ID: 3, Workspace: 1, Source: 1, Class: "locked", Kind: "workspace", Status: "complete", Fields: map[string]string{"name-state": "absent", "version-state": "absent"}, Requirements: bw.Records[0].Requirements})
 	f.inv.Model.Relations[0].Kind, f.inv.Model.Relations[0].Status = "candidate-correspondence", "indeterminate"
 	p := matchingPinnedPlan(t, info)
 	p.Manager, p.Policy.Manager, p.Policy.NPMOrigins = "bun@1.3.x", "bun@1.3.x", nil
 	p.Policy.BunOrigins = []BunOriginRule{{Location: "left-pad", Name: "left-pad", Version: "1.0.0", Origin: npmTarballOrigin("left-pad", "1.0.0"), Registry: ""}}
+	for i := range f.inv.Model.Observations {
+		o := &f.inv.Model.Observations[i]
+		if o.Kind == "workspace" {
+			continue
+		}
+		o.Name, o.Version = name, version
+		if o.Class == "locked" {
+			o.Location, o.Fields["tuple-key"] = name, name
+		} else {
+			o.Location = "node_modules/" + name
+			o.Fields["installation-name"], o.Fields["physical-target"] = name, o.Location
+		}
+	}
+	f.inv.Model.Evidence[1].Location = "node_modules/" + name
+	f.inv.Model.Evidence[2].Location = "node_modules/" + name + "/package.json"
+	for i := range f.inv.OriginalInputs {
+		in := &f.inv.OriginalInputs[i]
+		in.Bytes = []byte(strings.ReplaceAll(strings.ReplaceAll(string(in.Bytes), "left-pad", name), "1.0.0", version))
+		f.inv.Model.Evidence[in.Source-1].SHA256 = sha256.Sum256(in.Bytes)
+	}
+	p.Policy.BunOrigins = []BunOriginRule{{Location: name, Name: name, Version: version, Origin: npmTarballOrigin(name, version)}}
 	return p, f
 }
 
@@ -48,6 +103,9 @@ func TestBunEligibleExactNewGrant(t *testing.T) {
 		if d.EnforcementEligible {
 			positives++
 		}
+		if d.Observation == 3 {
+			continue
+		} // Root workspace is not a package endpoint.
 		if d.Origin != "operator-bun-rule" || d.Rule != 1 || d.Candidate {
 			t.Fatal("exact Bun grant not used", d)
 		}
@@ -233,7 +291,7 @@ func TestBunNativeOwnedTupleMatching(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer root.Close()
-	inv, err := projectinventory.Collect(context.Background(), root, projectinventory.Options{Profile: "bun@1.3.x", ExplicitManager: true})
+	inv, err := projectinventory.Collect(context.Background(), root, projectinventory.Options{Profile: "bun@1.3.x", ExplicitManager: true, RetainBunOriginals: true})
 	if err != nil {
 		t.Fatal(err)
 	}

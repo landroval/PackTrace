@@ -268,7 +268,7 @@ func acquireFromRoot(ctx context.Context, root, cache *nativefs.Root, prepared, 
 	// the authority exclusion. A hash or child assertion alone cannot admit it.
 	// Discovery is metadata-only. Content is acquired only through a necessary
 	// lock-file selection or a captured package subroot, never root-then-filter.
-	collected, e := projectinventory.Collect(ctx, root, projectinventory.Options{Profile: plan.Manager, ExplicitManager: plan.ExplicitManager, BunCache: cache})
+	collected, e := projectinventory.Collect(ctx, root, projectinventory.Options{Profile: plan.Manager, ExplicitManager: plan.ExplicitManager, BunCache: cache, RetainBunOriginals: len(plan.Policy.BunOrigins) != 0 && plan.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) != 0})
 	if e != nil {
 		return summary, ErrAcquisition
 	}

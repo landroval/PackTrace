@@ -26,8 +26,13 @@ func TestBunParentCrossGrant(t *testing.T) {
 	t.Run("missing-acquisition", func(t *testing.T) {
 		missing := pub
 		missing.OriginalClaims = nil
-		if ValidateAdvisoryDecision(p, missing, info, ds[0]) == nil || ValidatePolicyMaterials(p, missing, nil, ds, ms) == nil {
-			t.Fatal("missing independent acquisition admitted")
+		for _, d := range ds {
+			if d.Origin == "operator-bun-rule" && ValidateAdvisoryDecision(p, missing, info, d) == nil {
+				t.Fatal("missing independent acquisition admitted for decision")
+			}
+		}
+		if ValidatePolicyMaterials(p, missing, nil, ds, ms) == nil {
+			t.Fatal("missing independent acquisition admitted for material")
 		}
 	})
 	for _, d := range ds {
@@ -110,6 +115,9 @@ func TestBunParentCrossGrant(t *testing.T) {
 			}
 			admitted := projectinventory.PortableMatching(mixed)
 			for _, d := range ds {
+				if d.Origin != "operator-bun-rule" {
+					continue
+				}
 				if mutation != "tuple-context" && d.LockedObservation == 0 {
 					continue
 				}
@@ -136,6 +144,7 @@ func TestBunParentCrossGrant(t *testing.T) {
 	}
 	// Mutating live acquisition claims cannot change the sealed parent inputs.
 	f.inv.Model.Observations[0].Name = "other"
+	f.inv.OriginalInputs[0].Bytes[0] = '!'
 	if !validRenderedPolicy(r) || !validRenderedAdvisories(r) {
 		t.Fatal("live acquisition mutation changed frozen evaluation")
 	}

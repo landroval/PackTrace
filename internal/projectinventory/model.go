@@ -8,9 +8,10 @@ import (
 )
 
 type Options struct {
-	Profile         string
-	ExplicitManager bool
-	BunCache        *nativefs.Root // Optional caller-authorized, physically disjoint source.
+	Profile            string
+	ExplicitManager    bool
+	BunCache           *nativefs.Root // Optional caller-authorized, physically disjoint source.
+	RetainBunOriginals bool           // Explicit private byte witness for new Bun grants only.
 }
 
 type Observation struct {
@@ -66,7 +67,16 @@ type Selection struct {
 	Profile, Family, File, State, Reason string
 	Explicit                             bool
 }
+
+// OriginalInput is private acquisition material, never a public inventory field.
+// Source joins bytes to an existing stable-read evidence receipt.
+type OriginalInput struct {
+	Source uint32
+	Bytes  []byte
+}
+
 type Result struct {
+	OriginalInputs []OriginalInput
 	// Metadata is the same live discovery used by collection, never an IPC value.
 	Metadata  nativefs.Snapshot `json:"-"`
 	Model     Model

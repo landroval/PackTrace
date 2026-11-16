@@ -36,6 +36,9 @@ type collector struct {
 	requirementsRemaining int
 	classCounts           map[string]int
 	cache                 *bunCacheIndex
+	retainBunOriginals    bool
+	originalBytes         int
+	originalOverflow      bool
 }
 
 // Collect reads only governing metadata and necessary manifests from a retained
@@ -45,6 +48,7 @@ func Collect(ctx context.Context, root *nativefs.Root, opts Options) (Result, er
 		return Result{}, ErrCollection
 	}
 	c := collector{ctx: ctx, root: root, entries: map[string]nativefs.Entry{}, blocked: map[string]bool{}, manifestRemaining: maxManifestTotal, requirementsRemaining: maxRecords, classCounts: map[string]int{}}
+	c.retainBunOriginals = opts.RetainBunOriginals
 	c.result.Model.Scopes = []Scope{{ID: 1, Kind: "project", Status: "incomplete"}}
 	c.result.Selection = Selection{Profile: opts.Profile, Explicit: opts.ExplicitManager, State: "indeterminate", Reason: "profile-unqualified"}
 	if ctx.Err() != nil {
@@ -222,6 +226,9 @@ func (c *collector) read(scope uint32, name string, limit int64, budget *int64) 
 	ev := &c.result.Model.Evidence[id-1]
 	ev.SHA256 = sha256.Sum256(data)
 	ev.Complete = true
+	if c.retainBunOriginals && (name == "package.json" || c.result.Selection.Family == "bun" && strings.HasSuffix(name, "/package.json")) {
+		c.retainOriginal(id, data)
+	}
 	return data, id, nil
 }
 func (c *collector) collectManifest(scope uint32, name string) *inventory.ManifestDocument {
@@ -235,10 +242,17 @@ func (c *collector) collectManifest(scope uint32, name string) *inventory.Manife
 		c.gap(scope, id, "manifest-invalid")
 		return nil
 	}
-	projection, e := inventory.ProjectManifest(doc)
-	if e != nil {
+	if c.projectManifest(scope, id, name, doc) != nil {
 		c.gap(scope, id, "manifest-invalid")
 		return nil
+	}
+	return &doc
+}
+
+func (c *collector) projectManifest(scope, id uint32, name string, doc inventory.ManifestDocument) error {
+	projection, e := inventory.ProjectManifest(doc)
+	if e != nil {
+		return e
 	}
 	for _, group := range projection.Groups {
 		if group.State == inventory.FieldAbsent {
@@ -251,7 +265,7 @@ func (c *collector) collectManifest(scope uint32, name string) *inventory.Manife
 		for _, d := range group.Entries {
 			if c.requirementsRemaining == 0 {
 				c.gap(scope, id, "requirement-limit")
-				return &doc
+				return nil
 			}
 			c.requirementsRemaining--
 			c.add(Observation{Workspace: scope, Source: id, Class: "declared", Kind: group.Name, Status: "complete", Location: name, Name: d.Name, Requirement: d.Requirement, Fields: map[string]string{"requirement-state": fieldState(d.State)}})
@@ -260,7 +274,7 @@ func (c *collector) collectManifest(scope uint32, name string) *inventory.Manife
 			}
 		}
 	}
-	return &doc
+	return nil
 }
 func fieldState(s inventory.FieldState) string {
 	switch s {

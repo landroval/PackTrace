@@ -50,22 +50,8 @@ func TestBunEligibleOriginalCategoryMatchNonmatchAndCorrection(t *testing.T) {
 			{"npmfixture-0001", "1.0.0", "vulnerability", "match", "no-match"}, // changed fixed boundary
 		} {
 			t.Run(bundle+"/"+tc.name+"/"+tc.version, func(t *testing.T) {
-				p, f := bunEligibleFixture(t, info)
+				p, f := bunEligibleNamedFixture(t, info, tc.name, tc.version)
 				p.Checks = cli.ArgumentCheckMalicious | cli.ArgumentCheckVulnerability
-				for i := range f.inv.Model.Observations {
-					o := &f.inv.Model.Observations[i]
-					o.Name, o.Version = tc.name, tc.version
-					if o.Class == "locked" {
-						o.Location = tc.name
-						o.Fields["tuple-key"] = tc.name
-					} else {
-						o.Location = "node_modules/" + tc.name
-						o.Fields["installation-name"] = tc.name
-						o.Fields["physical-target"] = o.Location
-					}
-				}
-				f.inv.Model.Evidence[1].Location = "node_modules/" + tc.name
-				f.inv.Model.Evidence[2].Location = "node_modules/" + tc.name + "/package.json"
 				p.Policy.BunOrigins = []BunOriginRule{{Location: tc.name, Name: tc.name, Version: tc.version, Origin: npmTarballOrigin(tc.name, tc.version)}}
 				expected := tc.initial
 				if bundle == "corrected.bundle" {
