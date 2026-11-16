@@ -325,7 +325,7 @@ func validatePolicyMaterial(plan Plan, inv projectinventory.PublicInventory, rec
 
 func materialOrigin(p Plan, inv projectinventory.PublicInventory, m PolicyMaterial, d AdvisoryDecision) bool {
 	if d.Origin == "operator-bun-rule" {
-		if !supportedPolicyPin(p.TrustedPolicyDigest) || !strings.HasPrefix(m.Project.Profile, "bun@") || d.Rule < 1 || d.Rule > len(p.Policy.BunOrigins) || m.BunTupleKey == "" {
+		if !supportedPolicyPin(p.TrustedPolicyDigest) || !strings.HasPrefix(m.Project.Profile, "bun@") || d.Rule < 1 || d.Rule > len(p.Policy.BunOrigins) || m.BunTupleKey == "" || !boundBunMaterial(p, inv, m, d) {
 			return false
 		}
 		r := p.Policy.BunOrigins[d.Rule-1]

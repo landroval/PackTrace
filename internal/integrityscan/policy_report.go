@@ -29,10 +29,12 @@ type policyReportInputs struct {
 	Plan      Plan
 	Records   []Record
 	Inventory projectinventory.PublicInventory
-	Decisions []AdvisoryDecision
-	Materials []PolicyMaterial
-	Limited   bool
-	Now       time.Time
+	// Private frozen input only; never a field of Report/PublicInventory JSON.
+	OriginalClaims *projectinventory.Result
+	Decisions      []AdvisoryDecision
+	Materials      []PolicyMaterial
+	Limited        bool
+	Now            time.Time
 }
 
 // BuildReportWithPolicy is the operational comparison snapshot. It does not
@@ -106,6 +108,7 @@ func BuildReportWithPolicy(plan Plan, records []Record, summary Summary, resourc
 	inputs := policyReportInputs{Plan: plan, Records: records, Materials: materials, Limited: limited, Now: now}
 	if r.Inventory != nil {
 		inputs.Inventory = *r.Inventory
+		inputs.OriginalClaims = r.Inventory.OriginalClaims
 	}
 	if r.Advisories != nil {
 		inputs.Decisions = r.Advisories.Decisions
@@ -113,6 +116,16 @@ func BuildReportWithPolicy(plan Plan, records []Record, summary Summary, resourc
 	frozen, err := json.Marshal(inputs)
 	if err != nil {
 		return r
+	}
+	// Private acquisition claims must not remain aliased to the caller after the
+	// comparison seal. Public JSON still excludes them; only frozen inputs keep them.
+	if inputs.OriginalClaims != nil {
+		var retained policyReportInputs
+		if json.Unmarshal(frozen, &retained) != nil {
+			return r
+		}
+		inputs.Inventory.OriginalClaims = retained.OriginalClaims
+		r.Inventory.OriginalClaims = retained.OriginalClaims
 	}
 	evaluation, err := EvaluatePolicy(plan, records, inputs.Inventory, inputs.Decisions, materials, limited, now)
 	if err != nil {
@@ -217,6 +230,7 @@ func validRenderedPolicy(r Report) bool {
 	if json.Unmarshal(r.policyContext.inputs, &inputs) != nil {
 		return false
 	}
+	inputs.Inventory.OriginalClaims = inputs.OriginalClaims
 	return ValidatePolicyEvaluation(inputs.Plan, inputs.Records, inputs.Inventory, inputs.Decisions, inputs.Materials, inputs.Limited, inputs.Now, *r.Policy) == nil
 }
 

@@ -47,14 +47,17 @@ type InventoryBatch struct {
 	Gaps         []Gap               `json:"gaps,omitempty"`
 }
 type PublicInventory struct {
-	Scopes       []PublicScope       `json:"scopes"`
-	Evidence     []PublicEvidence    `json:"evidence"`
-	Observations []PublicObservation `json:"observations"`
-	Relations    []Relation          `json:"relations"`
-	Gaps         []Gap               `json:"gaps"`
-	Selection    PublicSelection     `json:"selection"`
-	Counts       Counters            `json:"counts"`
-	Complete     bool                `json:"complete"`
+	// OriginalClaims is private acquisition evidence, never report JSON. The
+	// supervisor admits it separately before decisions, not from policy material.
+	OriginalClaims *Result             `json:"-"`
+	Scopes         []PublicScope       `json:"scopes"`
+	Evidence       []PublicEvidence    `json:"evidence"`
+	Observations   []PublicObservation `json:"observations"`
+	Relations      []Relation          `json:"relations"`
+	Gaps           []Gap               `json:"gaps"`
+	Selection      PublicSelection     `json:"selection"`
+	Counts         Counters            `json:"counts"`
+	Complete       bool                `json:"complete"`
 }
 
 func allowed(s string, values ...string) bool { return slices.Contains(values, s) }
@@ -112,6 +115,9 @@ func Portable(r Result) PublicInventory {
 // matching projection. Historical Portable inventories keep their exact shape.
 func PortableMatching(r Result) PublicInventory {
 	p := Portable(r)
+	if r.Selection.Family == "bun" {
+		p.OriginalClaims = &r
+	}
 	for _, e := range r.Model.Evidence {
 		if e.Scope == 1 && e.Method == "native-input-lease" && e.Location == r.Selection.File {
 			p.Selection.Evidence = e.ID

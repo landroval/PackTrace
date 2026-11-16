@@ -914,7 +914,7 @@ func ValidateAdvisoryDecision(plan Plan, inventory projectinventory.PublicInvent
 		family, kind := "npm", "url"
 		if d.Origin == "operator-bun-rule" {
 			family, kind = "bun", "package"
-			if d.Rule < 1 || d.Rule > len(plan.Policy.BunOrigins) || locked.Workspace != 1 || o.Workspace != 1 || locked.Source != inventory.Selection.Evidence {
+			if d.Rule < 1 || d.Rule > len(plan.Policy.BunOrigins) || locked.Workspace != 1 || o.Workspace != 1 || locked.Source != inventory.Selection.Evidence || !boundBunDecision(plan, inventory, d) {
 				return ErrAdvisory
 			}
 		} else if d.Rule > len(plan.Policy.NPMOrigins) {

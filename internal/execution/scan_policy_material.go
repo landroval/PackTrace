@@ -15,10 +15,11 @@ type scanPolicyMaterialClosure struct {
 }
 
 type scanPolicyMaterialBuffer struct {
-	rows    []integrityscan.PolicyMaterial
-	bytes   int
-	limited bool
-	closed  bool
+	rows         []integrityscan.PolicyMaterial
+	originalRows int
+	bytes        int
+	limited      bool
+	closed       bool
 }
 
 func policyMaterialWanted(plan *integrityscan.Plan) bool {
@@ -32,7 +33,7 @@ func (b *scanPolicyMaterialBuffer) accept(v integrityscan.PolicyMaterial) error 
 		return errScanProtocol
 	}
 	encoded, e := json.Marshal(v)
-	if e != nil || len(encoded) > maxMessage-4096 || len(b.rows) >= integrityscan.MaxPolicyMaterials || len(encoded) > integrityscan.MaxPolicyMaterialBytes-b.bytes {
+	if e != nil || len(encoded) > maxMessage-4096 || len(b.rows)+b.originalRows >= integrityscan.MaxPolicyMaterials || len(encoded) > integrityscan.MaxPolicyMaterialBytes-b.bytes {
 		return errScanProtocol
 	}
 	b.rows = append(b.rows, v)
@@ -80,7 +81,7 @@ func (b *scanPolicyMaterialBuffer) emit(send func(string, any) error, v integrit
 	if e != nil {
 		return errScanProtocol
 	}
-	if len(encoded) > maxMessage-4096 || len(b.rows) >= integrityscan.MaxPolicyMaterials || len(encoded) > integrityscan.MaxPolicyMaterialBytes-b.bytes {
+	if len(encoded) > maxMessage-4096 || len(b.rows)+b.originalRows >= integrityscan.MaxPolicyMaterials || len(encoded) > integrityscan.MaxPolicyMaterialBytes-b.bytes {
 		b.limited = true
 		return nil
 	}
