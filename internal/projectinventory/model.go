@@ -8,10 +8,11 @@ import (
 )
 
 type Options struct {
-	Profile            string
-	ExplicitManager    bool
-	BunCache           *nativefs.Root // Optional caller-authorized, physically disjoint source.
-	RetainBunOriginals bool           // Explicit private byte witness for new Bun grants only.
+	Profile                  string
+	ExplicitManager          bool
+	BunCache                 *nativefs.Root // Optional caller-authorized, physically disjoint source.
+	RetainBunOriginals       bool           // Explicit private byte witness for new Bun grants only.
+	RetainIntegrityOriginals bool           // Private selected-input/instance accounting; no origin grant.
 }
 
 type Observation struct {

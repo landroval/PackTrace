@@ -115,7 +115,7 @@ func Portable(r Result) PublicInventory {
 // matching projection. Historical Portable inventories keep their exact shape.
 func PortableMatching(r Result) PublicInventory {
 	p := Portable(r)
-	if r.Selection.Family == "bun" {
+	if r.Selection.Family == "bun" || r.Selection.Family == "npm" && len(r.OriginalInputs) != 0 {
 		p.OriginalClaims = &r
 	}
 	for _, e := range r.Model.Evidence {

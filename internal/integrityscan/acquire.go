@@ -34,6 +34,7 @@ type Record struct {
 	PolicyObservation     uint32                       `json:"policyObservation,omitempty"`
 	PolicyWitnesses       []PolicyDifferenceWitness    `json:"policyWitnesses,omitempty"`
 	PolicyMaterialLimited bool                         `json:"policyMaterialLimited,omitempty"`
+	IntegrityScope        *IntegrityScopeWitness       `json:"integrityScope,omitempty"`
 }
 type Summary struct {
 	Records           int  `json:"records"`
@@ -268,7 +269,7 @@ func acquireFromRoot(ctx context.Context, root, cache *nativefs.Root, prepared, 
 	// the authority exclusion. A hash or child assertion alone cannot admit it.
 	// Discovery is metadata-only. Content is acquired only through a necessary
 	// lock-file selection or a captured package subroot, never root-then-filter.
-	collected, e := projectinventory.Collect(ctx, root, projectinventory.Options{Profile: plan.Manager, ExplicitManager: plan.ExplicitManager, BunCache: cache, RetainBunOriginals: len(plan.Policy.BunOrigins) != 0 && plan.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) != 0})
+	collected, e := projectinventory.Collect(ctx, root, projectinventory.Options{Profile: plan.Manager, ExplicitManager: plan.ExplicitManager, BunCache: cache, RetainIntegrityOriginals: plan.Checks&cli.ArgumentCheckIntegrity != 0, RetainBunOriginals: len(plan.Policy.BunOrigins) != 0 && plan.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) != 0})
 	if e != nil {
 		return summary, ErrAcquisition
 	}
@@ -287,12 +288,10 @@ func acquireFromRoot(ctx context.Context, root, cache *nativefs.Root, prepared, 
 			emitEvidence = nil
 		}
 	}
-	var evidenceIndex policyEvidenceInventory
-	if emitEvidence != nil {
-		evidenceIndex = indexPolicyInventory(collected)
-	}
+	evidenceIndex := indexPolicyInventory(collected)
 	metadata := collected.Metadata
 	locked := lockedFromInventory(collected)
+	qualifiedOwners := qualifiedIntegrityOwners(plan, evidenceIndex)
 	summary.SnapshotComplete = metadata.Complete
 	summary.InventoryComplete = collected.Complete
 	// Global native qualification is not granted by an operator pin. Reference
@@ -307,8 +306,8 @@ func acquireFromRoot(ctx context.Context, root, cache *nativefs.Root, prepared, 
 	entriesRemaining := 100000
 	referenceRemaining, expandedRemaining := int64(16<<30), int64(8<<30)
 	authorityComplete := plan.TrustedPolicyDigest != "" && supportedPolicyPin(plan.TrustedPolicyDigest) && len(plan.Policy.References) > 0
-	// An observed extra package is inventory evidence, not a missing reference
-	// error. Integrity's mapped comparison/ownership coverage remains separate.
+	// Inventory is emitted independently: the parent joins every physical owner
+	// to the exact comparison receipt, not merely the selected reference count.
 	if plan.Checks&cli.ArgumentCheckIntegrity == 0 {
 		return summary, nil
 	}
@@ -340,7 +339,7 @@ func acquireFromRoot(ctx context.Context, root, cache *nativefs.Root, prepared, 
 							snap, snapErr := packageRoot.SnapshotPruned(ctx, nativefs.Limits{FileBytes: 256 << 20, TotalBytes: snapshotRemaining, Entries: entriesRemaining - 1, Depth: 64}, func(entry nativefs.Entry) bool {
 								// Only a captured directory can be a nested physical owner;
 								// regular files at package-shaped paths remain content.
-								return entry.Kind == nativefs.KindDirectory && packageLocation(r.Location+"/"+entry.Name) && !bundled[r.Location+"/"+entry.Name]
+								return entry.Kind == nativefs.KindDirectory && entry.Status == nativefs.StatusComplete && packageLocation(r.Location+"/"+entry.Name) && !bundled[r.Location+"/"+entry.Name]
 							})
 							snapshotRemaining -= snap.ReadBytes
 							if snapErr != nil {
@@ -357,14 +356,14 @@ func acquireFromRoot(ctx context.Context, root, cache *nativefs.Root, prepared, 
 							entriesRemaining -= len(snap.Entries)
 							summary.ObservedEntries += len(snap.Entries)
 							summary.SnapshotComplete = summary.SnapshotComplete && snap.Complete
-							installed, count = installedSnapshot(ctx, packageRoot, snap, plan, i, bundled, &reread)
+							installed, count = installedSnapshot(ctx, packageRoot, snap, plan, i, bundled, qualifiedOwners, &reread)
 						} else {
 							summary.SnapshotComplete = false
 						}
 						if packageRoot != nil {
 							packageRoot.Close()
 						}
-						assessment, compareErr := integrity.CompareReferenceCatalog(binding, catalog, installed)
+						assessment, compareErr := integrity.CompareReferenceCatalogOwned(binding, catalog, installed)
 						if compareErr == nil {
 							if len(assessment.Contexts) == 0 && r.Context != "none" {
 								kind := integrity.ContextPatch
@@ -375,6 +374,7 @@ func acquireFromRoot(ctx context.Context, root, cache *nativefs.Root, prepared, 
 							}
 							record.Assessment = assessment
 							record.ObservedEntries = count
+							emitIntegrityScopeWitness(plan, policyHash, evidenceIndex, &record, catalog, installed)
 							if emitEvidence != nil {
 								if err := emitIntegrityPolicyEvidence(project, plan, &record, evidenceIndex, catalog, installed, emitEvidence); err != nil {
 									return summary, err
@@ -397,7 +397,7 @@ func acquireFromRoot(ctx context.Context, root, cache *nativefs.Root, prepared, 
 	return summary, nil
 }
 
-func installedSnapshot(ctx context.Context, root *nativefs.Root, snap nativefs.Snapshot, plan Plan, index int, bundled map[string]bool, remaining *int64) (integrity.InstalledSnapshot, int) {
+func installedSnapshot(ctx context.Context, root *nativefs.Root, snap nativefs.Snapshot, plan Plan, index int, bundled, qualifiedOwners map[string]bool, remaining *int64) (integrity.InstalledSnapshot, int) {
 	ref := plan.Policy.References[index]
 	id := instanceID(index)
 	scope := integrity.InstalledScope{InstanceID: id, OwnerInstanceID: id, EvidenceID: id + ":scope", Enumerated: snap.Enumerated, OwnershipKnown: true, Status: integrity.ObservationComplete}
@@ -467,7 +467,7 @@ func installedSnapshot(ctx context.Context, root *nativefs.Root, snap nativefs.S
 	}
 	for j, other := range plan.Policy.References {
 		if j != index && physicalDirectories[other.Location] && strings.HasPrefix(other.Location, prefix) {
-			result.Scopes = append(result.Scopes, integrity.InstalledScope{InstanceID: id, OwnerInstanceID: instanceID(j), Prefix: strings.TrimPrefix(other.Location, prefix), EvidenceID: id + ":nested", Enumerated: true, OwnershipKnown: true, Status: integrity.ObservationComplete})
+			result.Scopes = append(result.Scopes, integrity.InstalledScope{InstanceID: id, OwnerInstanceID: instanceID(j), Prefix: strings.TrimPrefix(other.Location, prefix), EvidenceID: id + ":nested", Enumerated: true, OwnershipKnown: qualifiedOwners[other.Location], Status: integrity.ObservationComplete})
 		}
 	}
 	for _, entry := range snap.Entries {

@@ -38,7 +38,7 @@ func PrivateOriginal(r Result) Result {
 // fabricating both originals and receipts remains the native acquisition boundary;
 // this is not filesystem authentication or trusted manifest identity.
 func ValidateOriginalClaims(p PublicInventory) error {
-	if p.OriginalClaims == nil || p.Selection.Family != "bun" || p.OriginalClaims.Selection.Family != "bun" || ValidatePublic(p) != nil || ValidateOriginalBytes(*p.OriginalClaims) != nil {
+	if p.OriginalClaims == nil || !allowed(p.Selection.Family, "npm", "bun") || p.OriginalClaims.Selection.Family != p.Selection.Family || ValidatePublic(p) != nil || ValidateOriginalBytes(*p.OriginalClaims) != nil {
 		return ErrWire
 	}
 	original := PortableMatching(*p.OriginalClaims)

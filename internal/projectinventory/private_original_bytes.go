@@ -34,7 +34,7 @@ func (c *collector) retainOriginal(source uint32, data []byte) {
 // fabricating BOTH bytes and receipts, nor authenticate mutable target identity.
 // All failures are deliberately content-free at this private boundary.
 func ValidateOriginalBytes(r Result) error {
-	if r.Selection.Family != "bun" || r.Selection.State != "usable" || len(r.OriginalInputs) == 0 || len(r.OriginalInputs) > maxOriginalInputRows {
+	if !allowed(r.Selection.Family, "npm", "bun") || r.Selection.State != "usable" || len(r.OriginalInputs) == 0 || len(r.OriginalInputs) > maxOriginalInputRows {
 		return ErrWire
 	}
 	evidence := map[uint32]Evidence{}
@@ -96,11 +96,19 @@ func ValidateOriginalBytes(r Result) error {
 	if c.projectManifest(1, root, "package.json", doc) != nil {
 		return ErrWire
 	}
-	bun, err := inventory.ParseBunLock(raw[lock])
-	if err != nil {
-		return ErrWire
+	c.result.Selection = r.Selection
+	if r.Selection.Family == "bun" {
+		bun, err := inventory.ParseBunLock(raw[lock])
+		if err != nil || !bunLockVersionSupported(bun, r.Selection.Profile) || !bunConfigSupported(bun) || c.projectBun(bun, lock) != nil {
+			return ErrWire
+		}
+	} else {
+		npm, err := inventory.ParseNPMLock(raw[lock])
+		if err != nil || c.projectNPM(npm, lock) != nil {
+			return ErrWire
+		}
 	}
-	if !bunLockVersionSupported(bun, r.Selection.Profile) || !bunConfigSupported(bun) || c.projectBun(bun, lock) != nil || len(c.result.Model.Gaps) != 0 {
+	if len(c.result.Model.Gaps) != 0 {
 		return ErrWire
 	}
 	used[root], used[lock] = true, true

@@ -55,7 +55,10 @@ func BuildReportWithPolicy(plan Plan, records []Record, summary Summary, resourc
 			}
 		case "integrity":
 			if c.Required {
-				c.Reason = "whole-installed-scope-reference-accounting-and-native-qualification-pending; selected-reference-comparison-reported-separately"
+				c.Reason = "whole-installed-scope; original-inventory-and-native-instance-reference-receipts; separate-reference-authority-and-native-qualification"
+				if healthy && wholeIntegrityComplete(plan, records, r.Inventory) {
+					c.Outcome = "completed"
+				}
 			}
 		case "malicious", "vulnerability":
 			if c.Required && r.Advisories != nil && r.Advisories.State == "observed" {
@@ -92,6 +95,8 @@ func BuildReportWithPolicy(plan Plan, records []Record, summary Summary, resourc
 		outcome := "incomplete"
 		if healthy && referenceComparisonsComplete(plan, records) {
 			outcome = "completed"
+		} else if healthy && len(plan.Policy.References) == 0 && wholeIntegrityComplete(plan, records, r.Inventory) {
+			outcome = "not-applicable"
 		}
 		r.Coverage = append(r.Coverage, Coverage{Check: "reference-comparison", Required: true, Outcome: outcome, Reason: "all-selected-policy-references; validated-bindings-and-nonempty-file-comparison-receipts; not-whole-installed-scope-or-native-qualification"})
 	}

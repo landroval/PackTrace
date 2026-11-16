@@ -262,6 +262,9 @@ func (c *collector) inspectNPM(name string) inventory.NPMInputUsability {
 		c.gap(1, id, "lock-unreadable")
 		return inventory.NPMInputUsabilityUnreadable
 	}
+	if c.retainBunOriginals {
+		c.retainOriginal(id, data)
+	}
 	doc, e := inventory.ParseNPMLock(data)
 	if e == nil && managerprofile.IsNPM12(c.result.Selection.Profile) && strings.TrimSpace(string(doc.Fields["lockfileVersion"])) != "3" {
 		e = &inventory.ParseError{Code: "unsupported-version"}

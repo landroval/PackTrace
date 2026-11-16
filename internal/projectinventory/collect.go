@@ -48,7 +48,7 @@ func Collect(ctx context.Context, root *nativefs.Root, opts Options) (Result, er
 		return Result{}, ErrCollection
 	}
 	c := collector{ctx: ctx, root: root, entries: map[string]nativefs.Entry{}, blocked: map[string]bool{}, manifestRemaining: maxManifestTotal, requirementsRemaining: maxRecords, classCounts: map[string]int{}}
-	c.retainBunOriginals = opts.RetainBunOriginals
+	c.retainBunOriginals = opts.RetainBunOriginals || opts.RetainIntegrityOriginals
 	c.result.Model.Scopes = []Scope{{ID: 1, Kind: "project", Status: "incomplete"}}
 	c.result.Selection = Selection{Profile: opts.Profile, Explicit: opts.ExplicitManager, State: "indeterminate", Reason: "profile-unqualified"}
 	if ctx.Err() != nil {
@@ -226,7 +226,7 @@ func (c *collector) read(scope uint32, name string, limit int64, budget *int64) 
 	ev := &c.result.Model.Evidence[id-1]
 	ev.SHA256 = sha256.Sum256(data)
 	ev.Complete = true
-	if c.retainBunOriginals && (name == "package.json" || c.result.Selection.Family == "bun" && strings.HasSuffix(name, "/package.json")) {
+	if c.retainBunOriginals && (name == "package.json" || strings.HasSuffix(name, "/package.json")) {
 		c.retainOriginal(id, data)
 	}
 	return data, id, nil

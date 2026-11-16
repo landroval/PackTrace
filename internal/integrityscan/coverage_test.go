@@ -49,7 +49,7 @@ func TestOperationalReferenceComparisonCoverage(t *testing.T) {
 	if coverageRow(t, r, "reference-comparison").Outcome != "completed" {
 		t.Fatal("actual selected-reference comparison lost")
 	}
-	if coverageRow(t, r, "inventory").Outcome != "completed" || coverageRow(t, r, "integrity").Outcome != "incomplete" || coverageRow(t, r, "native-qualification").Outcome != "incomplete" || coverageRow(t, r, "resident-observation").Outcome != "incomplete" || r.ExitCode != 3 {
+	if coverageRow(t, r, "inventory").Outcome != "completed" || coverageRow(t, r, "integrity").Outcome != "completed" || coverageRow(t, r, "native-qualification").Outcome != "incomplete" || coverageRow(t, r, "resident-observation").Outcome != "incomplete" || r.ExitCode != 3 {
 		t.Fatalf("scope promoted qualification: %+v", r.Coverage)
 	}
 	for _, format := range []string{"terminal", "json", "sarif"} {

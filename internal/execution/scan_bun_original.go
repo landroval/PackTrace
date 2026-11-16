@@ -9,7 +9,7 @@ import (
 )
 
 func bunOriginalWanted(p *integrityscan.Plan) bool {
-	return p != nil && len(p.Policy.BunOrigins) != 0 && p.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) != 0
+	return p != nil && (p.Checks&cli.ArgumentCheckIntegrity != 0 || len(p.Policy.BunOrigins) != 0 && p.Checks&(cli.ArgumentCheckMalicious|cli.ArgumentCheckVulnerability) != 0)
 }
 
 // Original acquisition and exception material share the existing private byte
@@ -30,7 +30,7 @@ func (b *scanPolicyMaterialBuffer) addOriginal(r projectinventory.Result) error 
 }
 
 func (b *scanPolicyMaterialBuffer) emitOriginal(send func(string, any) error, r projectinventory.Result) (bool, error) {
-	if r.Selection.Family != "bun" || len(r.Model.Observations)+len(r.Model.Evidence)+len(r.OriginalInputs) > integrityscan.MaxPolicyMaterials-len(b.rows) {
+	if (r.Selection.Family != "bun" && r.Selection.Family != "npm") || len(r.Model.Observations)+len(r.Model.Evidence)+len(r.OriginalInputs) > integrityscan.MaxPolicyMaterials-len(b.rows) {
 		return false, nil
 	}
 	r = projectinventory.PrivateOriginal(r)

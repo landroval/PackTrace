@@ -113,9 +113,15 @@ func (c *collector) collectInstalled() {
 		if s.Location != "" {
 			prefix = s.Location + "/"
 		}
-		if e, ok := c.entries[prefix+"node_modules/.bun"]; ok && e.Kind == nativefs.KindDirectory {
-			id := c.evidence(s.ID, e.Name, "unreferenced-store-metadata")
-			c.result.Model.Evidence[id-1].Complete = e.Status == nativefs.StatusComplete
+		stores := []string{".bun"}
+		if c.result.Selection.Family == "npm" || c.result.Selection.Family == "bun" {
+			stores = append(stores, ".pnpm")
+		}
+		for _, store := range stores {
+			if e, ok := c.entries[prefix+"node_modules/"+store]; ok && e.Kind == nativefs.KindDirectory {
+				id := c.evidence(s.ID, e.Name, "unreferenced-store-metadata")
+				c.result.Model.Evidence[id-1].Complete = e.Status == nativefs.StatusComplete
+			}
 		}
 	}
 }

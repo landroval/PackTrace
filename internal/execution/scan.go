@@ -375,7 +375,7 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 				intelligenceClosed = true
 			case "bun-original":
 				var v projectinventory.Result
-				if !started || cfg.Stage != "acquire" || !bunOriginalWanted(cfg.Plan) || !intelligenceClosed || inventoryClosed || inventorySequence != 0 || inventory.OriginalClaims != nil || pending != nil || expected != 0 || fatal != "" || decode(m.Data, &v) != nil || v.Selection.Family != "bun" || material.addOriginal(v) != nil {
+				if !started || cfg.Stage != "acquire" || !bunOriginalWanted(cfg.Plan) || !intelligenceClosed || inventoryClosed || inventorySequence != 0 || inventory.OriginalClaims != nil || pending != nil || expected != 0 || fatal != "" || decode(m.Data, &v) != nil || (v.Selection.Family != "bun" && v.Selection.Family != "npm") || material.addOriginal(v) != nil {
 					return errScanProtocol
 				}
 				inventory.OriginalClaims = &v
@@ -495,6 +495,9 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 			case "instance":
 				var v integrityscan.Record
 				if !started || cfg.Stage != "acquire" || !intelligenceClosed || !inventoryClosed || !advisoryClosed || cfg.Plan == nil || pending != nil || material.closed || fatal != "" || decode(m.Data, &v) != nil || v.Index != expected || integrityscan.ValidateRecord(*cfg.Plan, v, cfg.PolicyHash) != nil {
+					return errScanProtocol
+				}
+				if !integrityscan.ValidateIntegrityScopeReceipt(*cfg.Plan, v, cfg.PolicyHash) || material.addIntegrityScope(v.IntegrityScope) != nil {
 					return errScanProtocol
 				}
 				if materialWanted {
@@ -810,6 +813,7 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 			emitEvidence = func(v integrityscan.PolicyMaterial) error { return material.emit(sender.send, v) }
 		}
 		emitRecord := func(r integrityscan.Record) error {
+			material.retainIntegrityScope(&r)
 			material.limited = material.limited || r.PolicyMaterialLimited
 			if emitEvidence != nil && material.addWitnesses(r.PolicyWitnesses) != nil {
 				material.limited = true

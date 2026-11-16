@@ -58,6 +58,31 @@ func (b *scanPolicyMaterialBuffer) addWitnesses(rows []integrityscan.PolicyDiffe
 	return nil
 }
 
+// Withhold only accounting proof when it cannot fit the existing record frame
+// or shared private allowance; the comparison and its findings still stream.
+func (b *scanPolicyMaterialBuffer) retainIntegrityScope(r *integrityscan.Record) {
+	if r.IntegrityScope == nil {
+		return
+	}
+	encoded, err := json.Marshal(r)
+	if err != nil || len(encoded) > maxMessage-4096 || b.addIntegrityScope(r.IntegrityScope) != nil {
+		r.IntegrityScope = nil
+	}
+}
+
+func (b *scanPolicyMaterialBuffer) addIntegrityScope(w *integrityscan.IntegrityScopeWitness) error {
+	if w == nil {
+		return nil
+	}
+	encoded, err := json.Marshal(w)
+	if b.closed || err != nil || b.originalRows+len(b.rows) >= integrityscan.MaxPolicyMaterials || len(encoded) > maxMessage-4096 || len(encoded) > integrityscan.MaxPolicyMaterialBytes-b.bytes {
+		return errScanProtocol
+	}
+	b.originalRows++
+	b.bytes += len(encoded)
+	return nil
+}
+
 func (b *scanPolicyMaterialBuffer) finish(v scanPolicyMaterialClosure) error {
 	if b.closed || v.Rows != len(b.rows) || v.Bytes != b.bytes || b.limited && !v.Limited {
 		return errScanProtocol
