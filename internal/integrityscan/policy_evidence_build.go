@@ -122,12 +122,25 @@ func buildAdvisoryPolicyEvidence(p ProjectEvidence, idx policyEvidenceInventory,
 	if !ok {
 		return PolicyMaterial{}, false
 	}
+	locked := o
 	if o.Class == "installed" {
-		locked, exists := idx.observations[d.LockedObservation]
-		if !exists || locked.Class != "locked" || locked.Source != p.Lock || locked.Name != o.Name || locked.Version != o.Version || locked.Location != o.Location {
+		var exists bool
+		locked, exists = idx.observations[d.LockedObservation]
+		location := o.Location
+		if d.Origin == "operator-bun-rule" {
+			location = o.Name
+		}
+		if !exists || locked.Class != "locked" || locked.Source != p.Lock || locked.Name != o.Name || locked.Version != o.Version || locked.Location != location {
 			return PolicyMaterial{}, false
 		}
 		m.Scope.Origin = locked.Origin
+	}
+	if d.Origin == "operator-bun-rule" {
+		m.BunTupleKey, m.BunRegistry = locked.Fields["tuple-key"], locked.Origin
+		if m.BunTupleKey != o.Name {
+			return PolicyMaterial{}, false
+		}
+		m.Scope.Origin = npmTarballOrigin(o.Name, o.Version)
 	}
 	m.Advisory = d.Advisory
 	m.Affected = d.Affected
