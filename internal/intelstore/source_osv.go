@@ -161,7 +161,12 @@ func (s *Store) Sync(ctx context.Context, options SyncOptions) (OperationResult,
 	}
 	return s.sync(ctx, &Budget{}, fetchPublic)
 }
-func (s *Store) syncFull(ctx context.Context, b *Budget, fetch sourceFetch) (result OperationResult, failure error) {
+func (s *Store) syncFull(ctx context.Context, b *Budget, fetch sourceFetch) (OperationResult, error) {
+	return s.syncFullVersion(ctx, b, fetch, 2)
+}
+
+// Version dispatch is private; old canonical fixture construction uses v1.
+func (s *Store) syncFullVersion(ctx context.Context, b *Budget, fetch sourceFetch, version int) (result OperationResult, failure error) {
 	if fetch == nil {
 		return result, ErrUnavailable
 	}
@@ -212,7 +217,7 @@ func (s *Store) syncFull(ctx context.Context, b *Budget, fetch sourceFetch) (res
 	if e != nil {
 		return result, e
 	}
-	draft, e := prepareArchive(tx.work, tx, captured, original.Size())
+	draft, e := prepareArchiveVersion(tx.work, tx, captured, original.Size(), version)
 	if e != nil {
 		return result, e
 	}
@@ -249,6 +254,14 @@ func (s *Store) syncFull(ctx context.Context, b *Budget, fetch sourceFetch) (res
 		receipt.CheckedAt = previous.receipt.CheckedAt
 		receipt.ReconciledAt = previous.receipt.ReconciledAt
 		receipt.FullReconciliationEstablished = previous.receipt.FullReconciliationEstablished
+	}
+	if version == 2 {
+		// Listing/reconciliation reuse deliberately drops construction authority.
+		// This explicit full operation must verify its final originals/index again.
+		draft, e = rebuildFullConstruction(tx.work, tx, draft)
+		if e != nil {
+			return result, e
+		}
 	}
 	return publishSourceDraft(tx.work, tx, draft, receipt, meta.Updated, tx.prep.record.DispositionGaps == 0)
 }
@@ -330,6 +343,11 @@ func publishSourceDraft(ctx context.Context, tx *Transaction, draft generationDr
 	id, e := tx.seal(tx.work, draft)
 	if e != nil {
 		return result, e
+	}
+	if p.Version == 2 && p.Proof != nil && p.Proof.Routable {
+		if e := tx.attestValidation(tx.work, id); e != nil {
+			return result, e
+		}
 	}
 	if e := tx.attestLocal(tx.work, id); e != nil {
 		return result, e

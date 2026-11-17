@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"reflect"
 	"time"
 
@@ -110,15 +111,7 @@ func advisoryOriginalRoutable(record intel.SnapshotOriginalEvidence) bool {
 	if sha256.Sum256(record.Raw) != record.SHA256 || record.Header.SourceSHA256 != record.SHA256 || record.Identity.SourceSHA256 != record.SHA256 || record.Affected.SourceSHA256 != record.SHA256 || record.Times.SourceSHA256 != record.SHA256 {
 		return false
 	}
-	if record.State != intel.SnapshotOriginalVerified || (record.Header.Schema != intel.OSVHeaderSchemaV1Implicit && record.Header.Schema != intel.OSVHeaderSchemaV1Declared) || record.Affected.State != intel.OSVFieldValue || len(record.Identity.Entries) == 0 || len(record.Identity.Entries) != len(record.Affected.Entries) {
-		return false
-	}
-	for i, identity := range record.Identity.Entries {
-		if identity.Index != i || identity.Qualification != intel.OSVNPMIdentityCandidate || identity.Ecosystem.Value != "npm" || !canonicalNPMName(identity.Name.Value) {
-			return false
-		}
-	}
-	return true
+	return record.State == intel.SnapshotOriginalVerified && intel.OSVAllSlotsRoutable(record.Header, record.Affected, record.Identity)
 }
 
 func selectedIndexMatches(name string, e intel.SnapshotNPMEvidence, expected map[advisoryIndexKey]bool) bool {
@@ -143,7 +136,7 @@ func selectedIndexMatches(name string, e intel.SnapshotNPMEvidence, expected map
 }
 
 // AdmitSelectedAdvisoryScope is parent-side admission, never a worker Completed
-// flag. It reads every original, reconstructs selected identity/index support,
+// flag. It validates construction or audits legacy originals, reconstructs selected identity/index support,
 // independently repeats actual evaluation, and compares all emitted decisions.
 // All extra work is charged cumulatively against the original scan's ceilings.
 // Failure leaves the historical report unchanged. The same Snapshot must remain
@@ -217,7 +210,18 @@ func AdmitSelectedAdvisoryScope(ctx context.Context, plan Plan, inv projectinven
 	}
 	attempted = true
 	bindings := 0
-	consumed, err := snapshot.WalkOriginals(ctx, maxMatchingBytes-a.Summary.BytesRead-proofBytes, func(ordinal uint64, record intel.SnapshotOriginalEvidence) error {
+	proofRead, proofErr := snapshot.ValidateConstruction(ctx, maxMatchingBytes-a.Summary.BytesRead-proofBytes)
+	proofBytes += proofRead
+	if proofErr != nil && !errors.Is(proofErr, intelstore.ErrNoConstructionProof) {
+		return a
+	}
+	walk := snapshot.WalkOriginals
+	if proofErr == nil {
+		walk = func(ctx context.Context, remaining uint64, emit func(uint64, intel.SnapshotOriginalEvidence) error) (uint64, error) {
+			return walkSelectedAdvisoryOriginals(ctx, snapshot, selected, remaining, emit)
+		}
+	}
+	consumed, err := walk(ctx, maxMatchingBytes-a.Summary.BytesRead-proofBytes, func(ordinal uint64, record intel.SnapshotOriginalEvidence) error {
 		units := max(1, len(record.Affected.Entries))
 		if units > maxMatchingDecisions-work {
 			return ErrAdvisory

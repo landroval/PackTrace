@@ -13,6 +13,12 @@ import (
 	"strings"
 )
 
+type constructionProof struct {
+	Profile    string
+	Commitment [32]byte
+	Routable   bool
+}
+
 type preparationRecord struct {
 	Version                                                int    `json:"version"`
 	Source                                                 string `json:"source"`
@@ -23,6 +29,7 @@ type preparationRecord struct {
 	EEFRecords                    uint64 `json:",omitempty"`
 	GSDRecords                    uint64 `json:",omitempty"`
 	TemporalGaps, DispositionGaps uint64
+	Proof                         *constructionProof `json:",omitempty"`
 }
 type preparationState struct {
 	cat, idLines    bytes.Buffer
@@ -62,7 +69,11 @@ func publicRecordID(id string) bool {
 	}
 	return true
 }
-func prepareArchive(ctx context.Context, t *Transaction, input io.ReaderAt, size int64) (result generationDraft, failure error) {
+func prepareArchive(ctx context.Context, t *Transaction, input io.ReaderAt, size int64) (generationDraft, error) {
+	return prepareArchiveVersion(ctx, t, input, size, 1)
+}
+
+func prepareArchiveVersion(ctx context.Context, t *Transaction, input io.ReaderAt, size int64, version int) (result generationDraft, failure error) {
 	defer func() {
 		if failure != nil && t != nil {
 			t.mu.Lock()
@@ -103,7 +114,7 @@ func prepareArchive(ctx context.Context, t *Transaction, input io.ReaderAt, size
 		}
 	}
 	sort.Slice(files, func(i, j int) bool { return files[i].Name < files[j].Name })
-	p := &preparationState{record: preparationRecord{Version: 1, Source: "caller-supplied"}}
+	p := &preparationState{record: newPreparation(version)}
 	t.prep = p
 	for _, f := range files {
 		if e := ctx.Err(); e != nil {
@@ -161,6 +172,9 @@ func prepareOriginal(ctx context.Context, t *Transaction, expectedID string, raw
 	identities, e := intel.QualifyOSVNPMIdentities(header, affected)
 	if e != nil {
 		return ErrCorrupt
+	}
+	if p.record.Proof != nil && !intel.OSVAllSlotsRoutable(header, affected, identities) {
+		p.record.Proof.Routable = false
 	}
 	var ref ObjectRef
 	if existing != nil {

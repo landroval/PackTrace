@@ -100,7 +100,7 @@ func TestFullMatchingFixtureReproducible(t *testing.T) {
 				store, _ := transactionFixture(t)
 				fetch, close := fullSourceFixture(t, mode)
 				defer close()
-				result, e := store.syncFull(context.Background(), &Budget{StagingBytes: 64 << 20}, fetch)
+				result, e := store.syncFullVersion(context.Background(), &Budget{StagingBytes: 64 << 20}, fetch, 1)
 				if e != nil || result.Records != 503 {
 					t.Fatal("authored full source preparation", result, e)
 				}

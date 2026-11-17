@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-func fullSourceFixture(t *testing.T, mode string) (func(context.Context, *Budget, requestSpec, io.Writer) (responseEvidence, error), func()) {
+func fullSourceFixture(t *testing.T, mode string, authored ...[]archiveRecord) (func(context.Context, *Budget, requestSpec, io.Writer) (responseEvidence, error), func()) {
 	t.Helper()
 	matchingMode := mode == "matching" || mode == "matching-readable" || mode == "matching-explanation" || mode == "matching-aliases" || mode == "matching-full" || mode == "matching-corrected"
 	record := strings.ReplaceAll(ownedOSVRecord, "OWNED-1", "GHSA-2345-6789-cfgh")
@@ -67,6 +67,10 @@ func fullSourceFixture(t *testing.T, mode string) (func(context.Context, *Budget
 		id = strings.TrimSuffix(records[0].name, ".json")
 	} else if matchingMode {
 		records = fullMatchingSourceRecords(mode == "matching-corrected")
+		id = strings.TrimSuffix(records[0].name, ".json")
+	}
+	if len(authored) != 0 {
+		records = authored[0]
 		id = strings.TrimSuffix(records[0].name, ".json")
 	}
 	archive := ownedArchive(t, records)

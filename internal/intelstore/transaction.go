@@ -32,23 +32,24 @@ type ObjectRef struct {
 	Bytes  uint64
 }
 type Transaction struct {
-	mu         sync.Mutex
-	store      *Store
-	writer     *nativefs.OwnedLock
-	durability *nativefs.DurabilityBatch
-	work       context.Context
-	cancel     context.CancelFunc
-	id         ID
-	path       string
-	held       uint64
-	written    uint64
-	sequence   uint64
-	budget     Budget
-	failed     error
-	closed     bool
-	sealed     map[ID]sealedGeneration
-	prep       *preparationState
-	kind       operation
+	mu          sync.Mutex
+	store       *Store
+	writer      *nativefs.OwnedLock
+	durability  *nativefs.DurabilityBatch
+	work        context.Context
+	cancel      context.CancelFunc
+	id          ID
+	path        string
+	held        uint64
+	written     uint64
+	sequence    uint64
+	budget      Budget
+	failed      error
+	closed      bool
+	sealed      map[ID]sealedGeneration
+	prep        *preparationState
+	kind        operation
+	constructed ObjectRef // Set only by a full original-derived v2 build.
 }
 type reservationJournal struct {
 	Version        int    `json:"version"`

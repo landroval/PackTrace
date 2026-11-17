@@ -247,6 +247,10 @@ func reuseIndexDraft(ctx context.Context, t *Transaction, base generationDraft, 
 	fresh := &preparationState{record: preparationRecord{Version: 1, Source: "caller-supplied"}}
 	t.prep = fresh
 	record := prep
+	// Reuse has no checked all-original construction transition. Never inherit
+	// a full-build proof or its transaction capability from the base.
+	record.Version, record.Proof = 1, nil
+	t.constructed = ObjectRef{}
 	var removed preparationRecord
 	var originals, ids indexMetadataSpool
 	changed := make(map[uint64]bool)

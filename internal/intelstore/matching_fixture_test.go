@@ -77,7 +77,7 @@ func matchingFixtureBundleFor(t *testing.T, mode string, records uint64) ([]byte
 			t.Logf("fixture request kind=%d evidence=%+v err=%v", spec.kind, ev, err)
 			return ev, err
 		}
-		result, err := s.syncFull(context.Background(), &Budget{StagingBytes: 16 << 20}, traced)
+		result, err := s.syncFullVersion(context.Background(), &Budget{StagingBytes: 16 << 20}, traced, 1)
 		if err != nil {
 			t.Fatal(err)
 		}

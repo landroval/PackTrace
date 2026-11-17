@@ -64,6 +64,9 @@ func matchingScanFixtureBundle(t *testing.T, version string, originRule bool, bu
 	if e != nil {
 		t.Fatal(e)
 	}
+	if filepath.IsAbs(bundle) {
+		source, bundle = filepath.Dir(bundle), filepath.Base(bundle)
+	}
 	root, e := nativefs.OpenRoot(ctx, source)
 	if e != nil {
 		t.Fatal(e)

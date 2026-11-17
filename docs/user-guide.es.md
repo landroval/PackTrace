@@ -444,9 +444,14 @@ del producto pendiente.
 
 En el esquema1.8 aún no publicado, `advisories.selectedScope` puede explicar avisos
 maliciosos y vulnerabilidades completados **solo dentro de la generación admitida**.
-El padre comprueba independientemente el enrutamiento de todos los originales,
-los vínculos catálogo/índice seleccionados, las declaraciones con versión exacta
-y todas las observaciones locked/instaladas seleccionadas. Una búsqueda vacía
+El padre valida independientemente la construcción catálogo/índice derivada de
+originales (o realiza la auditoría histórica acotada), los vínculos originales
+seleccionados, las declaraciones con versión exacta y todas las observaciones
+locked/instaladas seleccionadas. Una nueva preparación/importación completa
+explícita puede establecer validación local separada; no otorga autoridad de
+adquisición ni renueva la vigencia. Las generaciones antiguas no se actualizan
+silenciosamente y la reutilización incremental no hereda esa prueba. Las lecturas
+del catálogo y de los bloques seleccionados siguen compartiendo los límites existentes. Una búsqueda vacía
 verificada significa «ningún aviso conocido en ese snapshot», no seguridad ni
 completitud de la fuente upstream; búsquedas fallidas/no admitidas siguen incompletas.
 El subconjunto acotado npm plano/Bun simple con permiso explícito excluye rangos,

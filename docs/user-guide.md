@@ -426,8 +426,13 @@ unselected integrity checks or product qualification gaps.
 
 In unreleased schema1.8, `advisories.selectedScope` can explain completed malicious
 and vulnerability checks **only within the admitted selected generation**. The
-parent independently checks every original's routing, selected catalog/index
-bindings, exact-pinned declarations and all selected locked/installed observations.
+parent independently validates original-derived catalog/index construction (or
+performs the bounded legacy original audit), selected original bindings,
+exact-pinned declarations and all selected locked/installed observations.
+New explicit full preparation/import may establish separate local validation;
+it neither grants acquisition authority nor renews freshness. Old generations
+are not silently upgraded, and incremental reuse does not inherit that proof.
+Catalog and selected-block reads still share existing limits.
 A verified empty lookup means no known record in that snapshot, not safety or
 upstream completeness; failed/unsupported lookups remain incomplete. The bounded
 flat npm/simple explicitly granted Bun subset excludes ranges, aliases, unresolved

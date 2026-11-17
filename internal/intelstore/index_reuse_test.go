@@ -3,6 +3,7 @@ package intelstore
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"path/filepath"
 	"reflect"
@@ -42,6 +43,12 @@ func TestIncrementalReprojectsOnlyChangedOriginalsButPreservesWholeCatalog(t *te
 		t.Fatal(e)
 	}
 	defer snapshot.Close()
+	if old.preparation.Version != 2 || old.preparation.Proof == nil || !old.preparation.Proof.Routable {
+		t.Fatal("fixture lacks full-build authority")
+	}
+	if _, err := snapshot.ValidateConstruction(ctx, 512<<20); !errors.Is(err, ErrNoConstructionProof) {
+		t.Fatal("incremental reuse inherited full-build validation", err)
+	}
 	evidence, e := snapshot.ReadIdentity(ctx, "left-pad")
 	if e != nil || len(evidence.Records) != 4 {
 		t.Fatal("unchanged original/index linkage lost", len(evidence.Records), e)

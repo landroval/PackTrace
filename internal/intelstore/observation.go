@@ -141,7 +141,8 @@ func (s *Store) observe(ctx context.Context, pin *Pin, now time.Time, expected *
 				return Observation{}, e
 			}
 		}
-		if json.Unmarshal(raw, &prep) != nil || prep.Version != 1 || prep.Records != result.Records || prep.Memberships != result.Memberships || prep.IdentityGaps > 2_000_000*64 || prep.TemporalGaps > prep.Records || prep.DispositionGaps > prep.Records {
+		prep, e = parsePreparation(raw)
+		if e != nil || prep.Records != result.Records || prep.Memberships != result.Memberships || prep.IdentityGaps > 2_000_000*64 || prep.TemporalGaps > prep.Records || prep.DispositionGaps > prep.Records {
 			return Observation{}, ErrCorrupt
 		}
 		result.IdentityGaps, result.TemporalGaps, result.DispositionGaps = prep.IdentityGaps, prep.TemporalGaps, prep.DispositionGaps

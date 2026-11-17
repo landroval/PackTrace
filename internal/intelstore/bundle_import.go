@@ -118,6 +118,11 @@ func (s *Store) Import(ctx context.Context, input *nativefs.File, options Import
 	if e := input.Stable(); e != nil {
 		return result, ErrCorrupt
 	}
+	if tx.prep.record.Version == 2 && tx.prep.record.Proof.Routable {
+		if e := tx.attestValidation(tx.work, sealed); e != nil {
+			return result, e
+		}
+	}
 	// Import never calls attestLocal, never copies a key/MAC control and never
 	// turns an expected input digest into persistent source-acquisition authority.
 	if e := tx.activate(tx.work, sealed); e != nil {
@@ -144,8 +149,8 @@ func rebuildImported(ctx context.Context, t *Transaction, descriptor generationD
 	if !source {
 		return generationDraft{}, ErrUntrusted
 	}
-	var prep preparationRecord
-	if json.Unmarshal(raw, &prep) != nil || prep.Version != 1 || prep.Records != manifest.Originals.Records || prep.SourceIDs.Bytes > 512<<20 {
+	prep, prepErr := parsePreparation(raw)
+	if prepErr != nil || prep.Records != manifest.Originals.Records || prep.SourceIDs.Bytes > 512<<20 {
 		return generationDraft{}, ErrCorrupt
 	}
 	catalogInput, e := t.store.objectReader(ctx, ObjectRef{manifest.Originals.SHA256, manifest.Originals.Bytes})
@@ -163,7 +168,7 @@ func rebuildImported(ctx context.Context, t *Transaction, descriptor generationD
 	}
 	scan := newSourceIDCursor(ids)
 	defer ids.Close()
-	t.prep = &preparationState{record: preparationRecord{Version: 1, Source: "caller-supplied"}}
+	t.prep = &preparationState{record: newPreparation(prep.Version)}
 	for ordinal := uint64(0); ordinal < manifest.Originals.Records; ordinal++ {
 		digest, size, ok := catalog.Reference(ordinal)
 		if !ok || size > 4<<20 {

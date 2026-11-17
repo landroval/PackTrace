@@ -349,7 +349,7 @@ func (s *Store) pruneState(ctx context.Context) (state *pruneState, failure erro
 			if f.Kind != nativefs.KindRegular || f.Size < 0 || f.Size > limit {
 				return state, ErrOwnership
 			}
-			if leaf != "manifest.json" && leaf != "sealed.json" && leaf != "read.lock" && leaf != "local-acquisition.mac" && leaf != "retired" {
+			if leaf != "manifest.json" && leaf != "sealed.json" && leaf != "read.lock" && leaf != "local-acquisition.mac" && leaf != "original-index-validation.mac" && leaf != "retired" {
 				return state, ErrOwnership
 			}
 			if leaf == "sealed.json" {

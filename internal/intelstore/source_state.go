@@ -46,7 +46,8 @@ func (s *Store) loadSourceState(ctx context.Context, id ID) (sourceState, error)
 	if e != nil {
 		return state, e
 	}
-	if json.Unmarshal(raw, &state.preparation) != nil || state.preparation.Version != 1 || state.preparation.Records > 2_000_000 || state.preparation.Memberships > 2_000_000 || !knownPublisherCounts(state.preparation) || state.preparation.SourceIDs.Bytes > 512<<20 {
+	state.preparation, e = parsePreparation(raw)
+	if e != nil || state.preparation.Records > 2_000_000 || state.preparation.Memberships > 2_000_000 || !knownPublisherCounts(state.preparation) || state.preparation.SourceIDs.Bytes > 512<<20 {
 		return state, ErrCorrupt
 	}
 	raw, e = s.readRef(ctx, state.descriptor.Manifest, 1<<20)

@@ -39,12 +39,21 @@ After worker EOF and exchange join, the parent:
    originals, frame/row/capture overflow, unsupported families or incomplete
    inventory abstain. These native acquisition receipts do not authenticate a
    mutable target's package claims against an adversarial host/worker.
-3. Reads **every** selected catalog original, one at a time, checking object
-   digest/length/EOF/stability and actual OSV projections. Routing requires the
-   current supported OSV-v1 npm identity profile for every affected slot. Unknown,
-   absent, non-npm or otherwise unroutable originals abstain, rather than certify
-   absence. The finite audit supports at most the existing 1024 original ordinals
-   and 4096 selected bindings; parser retention and metadata caps are not raised.
+3. Either validates original-derived construction or audits legacy originals.
+   New explicit full preparation uses private preparation metadata v2, binding the
+   exact catalog and ordered 256 index references/counts to the supported all-slot
+   OSV-v1 npm routing profile. A separate local validation MAC is written only
+   after controlled full construction or exact original-backed import rebuilding,
+   sealed under the writer fence. It uses the existing managed key with a distinct
+   validation domain, physical store/instance/generation/profile binding; it is
+   neither an acquisition assertion nor portable/exported authority. Import never
+   calls acquisition attestation. Scan validates this construction before reading
+   only relevant originals, checking their digest/length/EOF/stability and actual
+   projections. Unknown, absent, non-npm or otherwise unroutable global records
+   abstain, rather than certify absence. Legacy metadata-v1 retains its original
+   meaning and bounded all-original audit (at most 1024 ordinals). The proof path
+   retains the existing 1024 selected-original/parser and 4096 work/binding limits;
+   it does not impose those selected limits on the total catalog record count.
 4. Derives selected identity/source-ordinal/affected-slot/original bindings from
    those actual originals, then compares every selected index lookup's bindings
    exactly against them. A catalog digest, declaration bit, row count or successful
@@ -109,6 +118,40 @@ freezes those inputs. Public JSON, claimed child completion, gap deletion, copie
 hashes, field substitution, downgrade, or exceptions cannot recreate it. Portable
 reports add no private identities, paths, hashes or raw originals. No snapshot
 storage-usage observations or final-lifecycle promises are invented.
+
+## Scalable construction and compatibility
+
+This changes neither snapshot manifest1.1 meaning nor old preparation-v1 bytes,
+canonical bundle/generation IDs, pins or source timestamps. New v2 proof metadata
+is strictly canonical; unknown fields/profiles/versions are rejected. Imported
+proofs are rederived from actual originals and their exact canonical preparation
+and manifest references must agree: rehashing a false proof/index does not earn
+validation. Supplied declaration bits, counters, source-acquisition MACs and an
+operator generation pin cannot substitute for controlled validation. No scan
+writes, missing-marker repair, resealing or automatic old-generation migration
+occurs. Missing/corrupt/copied/cross-domain validation or key loss abstains.
+
+Incremental index reuse has no checked all-original proof transition and emits
+v1 without construction authority. It cannot silently inherit the preceding full
+build's validation; a subsequent explicitly requested full operation is needed
+for a new proof-bearing generation. The final full build reparses originals after
+listing/reconciliation reuse under the same preparation budget, without extending
+its 8-GiB processed-advisory limit. Validation follows generation pin/reader
+retention and pruning; it is not exported or transferred between physical stores.
+
+Read complexity remains **catalog bytes + selected full hash blocks + relevant
+originals + replay**, not strictly selection-proportional random access. Those
+actual bytes, including proof/key/marker and failed reads, share the unchanged
+512-MiB comparison allowance. Large catalogs or selected blocks that exceed
+existing metadata/read/work bounds still remain incomplete. Supporting catalog
+cardinality above4096 does not resolve unknown routing or the historical real
+source's859 identity gaps, and is not a real-source or performance qualification.
+
+Owned deterministic1105/4105-original bundles exercise actual supervised npm/Bun
+positive categories, version negatives and selected-generation absence. Both
+portable/local output and unchanged targets are checked; selected proof work is
+measured rather than charged once per unrelated global original. The original
+small fixture remains a regression, not evidence of large-catalog support.
 
 ## Integrated acceptance and residual qualification
 

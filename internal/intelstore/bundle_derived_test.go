@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"packtrace/internal/intel"
 	"testing"
 )
 
@@ -86,7 +87,51 @@ func TestImportRebuildRejectsByteConsistentForgedIdentityIndex(t *testing.T) {
 	}
 	set.Close()
 	extras = append(extras, badBlock, badManifest)
-	badID, e := tx.seal(ctx, generationDraft{Manifest: badManifest, Objects: extras, Cursor: snapshot.descriptor.Cursor, Provenance: snapshot.descriptor.Provenance})
+	// Forge the new construction declaration as well: every public digest and
+	// count agrees, but only the original-backed rebuild can establish truth.
+	raw, e = s.readRef(ctx, snapshot.descriptor.Provenance, 32<<10)
+	if e != nil {
+		t.Fatal(e)
+	}
+	var receipt sourceReceipt
+	if json.Unmarshal(raw, &receipt) != nil {
+		t.Fatal("receipt")
+	}
+	raw, e = s.readRef(ctx, receipt.Preparation, 512<<10)
+	if e != nil {
+		t.Fatal(e)
+	}
+	prep, e := parsePreparation(raw)
+	if e != nil || prep.Version != 2 {
+		t.Fatal("v2 fixture", e)
+	}
+	manifest, e := intel.ParseSnapshotManifestV11(manifestRaw)
+	if e != nil {
+		t.Fatal(e)
+	}
+	var refs [256]ObjectRef
+	var counts [256]uint64
+	for i, block := range manifest.Blocks {
+		refs[i] = ObjectRef{block.Reference.SHA256, block.Reference.Bytes}
+		counts[i] = block.Reference.Records
+	}
+	prep.Proof.Commitment = constructionCommitment(ObjectRef{manifest.Originals.SHA256, manifest.Originals.Bytes}, manifest.Originals.Records, refs, counts)
+	if !proofMatches(prep, manifest) {
+		t.Fatal("forgery was not self-consistent")
+	}
+	raw, _ = json.Marshal(prep)
+	receipt.Preparation, e = tx.put(ctx, bytes.NewReader(raw), uint64(len(raw)))
+	if e != nil {
+		t.Fatal(e)
+	}
+	extras = append(extras, receipt.Preparation)
+	raw, _ = json.Marshal(receipt)
+	badProvenance, e := tx.put(ctx, bytes.NewReader(raw), uint64(len(raw)))
+	if e != nil {
+		t.Fatal(e)
+	}
+	extras = append(extras, badProvenance)
+	badID, e := tx.seal(ctx, generationDraft{Manifest: badManifest, Objects: extras, Cursor: snapshot.descriptor.Cursor, Provenance: badProvenance})
 	if e != nil {
 		t.Fatal(e)
 	}

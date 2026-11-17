@@ -297,11 +297,18 @@ func buildIndexes(ctx context.Context, t *Transaction) (generationDraft, error) 
 		}
 		refs[i] = ref
 	}
-	return finishIndexes(ctx, t, p.record, catalog, sourceIDs, refs, p.counts)
+	draft, err := finishIndexes(ctx, t, p.record, catalog, sourceIDs, refs, p.counts)
+	if err == nil && p.record.Version == 2 {
+		t.constructed = draft.Provenance
+	}
+	return draft, err
 }
 
 func finishIndexes(ctx context.Context, t *Transaction, record preparationRecord, catalog, sourceIDs ObjectRef, refs [256]ObjectRef, counts [256]uint64) (generationDraft, error) {
 	record.SourceIDs = sourceIDs
+	if record.Version == 2 && record.Proof != nil {
+		record.Proof.Commitment = constructionCommitment(catalog, record.Records, refs, counts)
+	}
 	t.prep.record = record
 	blocks := make([]any, 256)
 	objects := []ObjectRef{catalog, sourceIDs}
