@@ -1,0 +1,48 @@
+name: Windows guide examples
+
+on:
+  pull_request:
+    types: [opened]
+    branches: [development]
+    paths:
+      - docs/windows-smoke-guide/**
+      - .github/workflows/windows-guide-check.yml
+
+permissions: {}
+
+jobs:
+  examples:
+    # One issue-specific check; no native scanner campaign or default-branch run.
+    if: github.head_ref == 'issue-114-windows-guide' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: windows-2022
+    timeout-minutes: 5
+    steps:
+      - name: Check exact source and PowerShell 5.1 examples
+        shell: powershell
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ($PSVersionTable.PSVersion.Major -ne 5 -or $PSVersionTable.PSVersion.Minor -ne 1) {
+            throw 'Expected Windows PowerShell 5.1.'
+          }
+          if ($env:SOURCE_SHA -notmatch '^[0-9a-f]{40}$') { throw 'Invalid source SHA.' }
+          $Source = Join-Path $env:RUNNER_TEMP 'packtrace-guide-source'
+          New-Item -ItemType Directory -Path $Source | Out-Null
+          Set-Location $Source
+          git init --quiet
+          if ($LASTEXITCODE -ne 0) { throw 'git init failed.' }
+          git -c credential.helper= -c core.hooksPath=NUL fetch --quiet --depth=1 https://github.com/landroval/PackTrace.git $env:SOURCE_SHA
+          if ($LASTEXITCODE -ne 0) { throw 'Source fetch failed.' }
+          git -c core.hooksPath=NUL checkout --quiet --detach FETCH_HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'Source checkout failed.' }
+          $Actual = git rev-parse HEAD
+          if ($Actual -ne $env:SOURCE_SHA) { throw 'Source identity mismatch.' }
+          $Output = Join-Path $env:RUNNER_TEMP 'packtrace-guide-samples'
+          python docs/windows-smoke-guide/render.py $Output --scripts-only
+          if ($LASTEXITCODE -ne 0) { throw 'Sample generation failed.' }
+          python -c "import pathlib,sys,zipfile; root=pathlib.Path(sys.argv[1]); z=zipfile.ZipFile('docs/windows-smoke-guide/PackTrace-Windows-Guia-corregida-r1.zip'); files=[p for p in root.iterdir() if p.is_file()]; assert all(z.read(p.name)==p.read_bytes() for p in files); print('OK: published scripts and Markdown match source')" $Output
+          if ($LASTEXITCODE -ne 0) { throw 'Published bundle differs from source.' }
+          & (Join-Path $Output 'verify-samples.ps1') -ExecuteFixture
+          "Source SHA: $Actual"
+          'Scope: examples only; no PackTrace executable, advisory download, real project, or Windows 11 qualification.'
