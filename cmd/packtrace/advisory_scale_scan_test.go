@@ -4,12 +4,14 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
 	"packtrace/internal/integrityscan"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"testing"
 	"time"
 
@@ -38,14 +40,14 @@ func TestScanAdvisoryScale(t *testing.T) {
 		} {
 			t.Run(fmt.Sprintf("%d/%s", count, tc.name), func(t *testing.T) {
 				target, policy, state, pp, sp := advisoryCompletenessFixture(t, tc.pkg, tc.version, filepath.Join(dir, fmt.Sprintf("scale-%d-false.bundle", count)), "")
-				assertScaleOriginalCatalog(t, state, count, tc.pkg)
+				expected := assertScaleOriginalCatalog(t, state, count, tc.pkg)
 				before := wholeIntegrityTree(t, target)
 				var portable integrityscan.Report
 				for _, privacy := range []string{"portable", "local"} {
 					t.Run(privacy, func(t *testing.T) {
 						r, raw := runPolicyAcceptanceJSON(t, "--privacy", privacy, "--policy", policy, "--trusted-policy-digest", pp, "--trusted-snapshot-digest", sp, "--state-dir", state, "--checks", "malicious,vulnerability", "--fail-on", "malicious,vulnerability", "--format", "json", target)
 						advisoryCompletenessIndependent(t, r, "operator-designated")
-						assertScaleDecisionOracle(t, r, tc.pkg, tc.findings)
+						assertScaleDecisionOracle(t, r, tc.pkg, tc.version, tc.findings, expected)
 						advisoryCompletenessPrivacy(t, raw, privacy, target, policy, state, pp, sp)
 						if r.Privacy != privacy || r.Advisories == nil || r.Advisories.Findings != tc.findings || r.Policy.EnforcedUnaccepted != tc.findings {
 							t.Fatalf("findings/privacy/enforcement: %s", raw)
@@ -84,7 +86,7 @@ func TestScanAdvisoryScaleBun(t *testing.T) {
 	for _, pkg := range []string{"npmfixture-0002", "npmfixture-0003"} {
 		t.Run(pkg, func(t *testing.T) {
 			target, policy, state, _, sp := advisoryCompletenessFixture(t, pkg, "1.0.0", filepath.Join(dir, "scale-4105-false.bundle"), "")
-			assertScaleOriginalCatalog(t, state, 4105, pkg)
+			expected := assertScaleOriginalCatalog(t, state, 4105, pkg)
 			if err := os.Remove(filepath.Join(target, "package-lock.json")); err != nil {
 				t.Fatal(err)
 			}
@@ -118,7 +120,7 @@ func TestScanAdvisoryScaleBun(t *testing.T) {
 			for _, privacy := range []string{"portable", "local"} {
 				r, raw := runPolicyAcceptanceJSON(t, "--privacy", privacy, "--policy", policy, "--trusted-policy-digest", pp, "--trusted-snapshot-digest", sp, "--state-dir", state, "--checks", "malicious,vulnerability", "--fail-on", "malicious,vulnerability", "--format", "json", target)
 				advisoryCompletenessIndependent(t, r, "operator-designated")
-				assertScaleDecisionOracle(t, r, pkg, 2)
+				assertScaleDecisionOracle(t, r, pkg, "1.0.0", 2, expected)
 				advisoryCompletenessPrivacy(t, raw, privacy, target, policy, state, pp, sp)
 				if r.Advisories == nil || r.Advisories.Findings != 2 || r.Policy.EnforcedUnaccepted != 2 {
 					t.Fatalf("Bun findings: %s", raw)
@@ -155,7 +157,7 @@ func TestScanAdvisoryScaleUnroutable(t *testing.T) {
 
 // ReadPinned verifies actual catalog bytes, row cardinality, digest and length;
 // filenames and generation declarations alone are not this size oracle.
-func assertScaleOriginalCatalog(t *testing.T, state string, count int, pkg string) {
+func assertScaleOriginalCatalog(t *testing.T, state string, count int, pkg string) integrityscan.LocalAdvisory {
 	t.Helper()
 	ctx := context.Background()
 	store, err := intelstore.Open(ctx, state, intelstore.ReadOnly)
@@ -180,7 +182,7 @@ func assertScaleOriginalCatalog(t *testing.T, state string, count int, pkg strin
 		if len(evidence.Records) != 0 {
 			t.Fatal("authored snapshot absence not observed")
 		}
-		return
+		return integrityscan.LocalAdvisory{}
 	}
 	id := "MAL-2026-3"
 	if pkg == "npmfixture-0003" {
@@ -189,9 +191,10 @@ func assertScaleOriginalCatalog(t *testing.T, state string, count int, pkg strin
 	if len(evidence.Records) != 1 || evidence.Records[0].Header.ID.Value != id {
 		t.Fatal("wrong authored selected original", pkg)
 	}
+	return integrityscan.LocalAdvisory{Advisory: 1, ID: id, SHA256: hex.EncodeToString(evidence.Records[0].SHA256[:])}
 }
 
-func assertScaleDecisionOracle(t *testing.T, r integrityscan.Report, pkg string, findings int) {
+func assertScaleDecisionOracle(t *testing.T, r integrityscan.Report, pkg, version string, findings int, expected integrityscan.LocalAdvisory) {
 	t.Helper()
 	if r.Advisories == nil || r.Inventory == nil {
 		t.Fatal("missing actual observations/decisions")
@@ -204,22 +207,62 @@ func assertScaleDecisionOracle(t *testing.T, r integrityscan.Report, pkg string,
 		outcome = "match"
 	}
 	classes := map[string]int{}
+	var locked uint32
+	for _, o := range r.Inventory.Observations {
+		if o.Class == "locked" && o.Kind != "workspace" && o.Kind != "project" {
+			if locked != 0 {
+				t.Fatal("ambiguous locked endpoint")
+			}
+			locked = o.ID
+		}
+	}
+	if locked == 0 {
+		t.Fatal("missing locked endpoint")
+	}
+	if r.Privacy == "local" && expected.Advisory != 0 {
+		if r.Advisories.Local == nil || len(r.Advisories.Local.Advisories) != 1 {
+			t.Fatal("missing local original reference")
+		}
+		actual := r.Advisories.Local.Advisories[0]
+		if actual.Advisory != expected.Advisory || actual.ID != expected.ID || actual.SHA256 != expected.SHA256 {
+			t.Fatal("decision ordinal maps to wrong original", actual)
+		}
+	}
 	for _, d := range r.Advisories.Decisions {
 		if d.Observation == 0 || int(d.Observation) > len(r.Inventory.Observations) {
 			t.Fatal("bad observation join", d)
 		}
 		o := r.Inventory.Observations[d.Observation-1]
 		if o.Class == "locked" && o.Kind == "workspace" && d.Advisory == 0 && d.Outcome == "indeterminate" && len(d.Gaps) == 2 && !d.EnforcementEligible {
+			if !slices.Contains(d.Gaps, "origin-unqualified") || !slices.Contains(d.Gaps, "identity-unqualified") {
+				t.Fatal("unproven root-context exception", d)
+			}
 			continue
 		}
 		classes[o.Class]++
+		if o.Class == "installed" && d.LockedObservation != locked {
+			t.Fatal("installed decision joined wrong lock endpoint", d)
+		}
+		if r.Privacy == "local" {
+			found := false
+			if r.Advisories.Local != nil {
+				for _, local := range r.Advisories.Local.Observations {
+					if local.Observation == d.Observation {
+						found = local.Name == pkg && local.Version == version
+					}
+				}
+			}
+			if !found {
+				t.Fatal("decision joined wrong original package/version", d)
+			}
+		}
 		if pkg == "left-pad" {
 			if d.Advisory != 0 || d.Outcome != "indeterminate" || d.EnforcementEligible || d.Candidate || len(d.Gaps) != 1 || d.Gaps[0] != "identity-empty" {
 				t.Fatal("absence manufactured evaluation", d)
 			}
 			continue
 		}
-		if d.Category != category || d.Outcome != outcome || d.VersionOutcome != outcome || !d.FullyEvaluated || d.Candidate || d.Source != "qualified" || d.Activity != "not-withdrawn" || d.EnforcementEligible != (findings != 0) || o.Class == "installed" && d.LockedObservation == 0 {
+		if d.Advisory != expected.Advisory || d.Category != category || d.Outcome != outcome || d.VersionOutcome != outcome || !d.FullyEvaluated || d.Candidate || d.Source != "qualified" || d.Activity != "not-withdrawn" || d.EnforcementEligible != (findings != 0) || o.Class == "installed" && d.LockedObservation == 0 {
 			t.Fatal("category/version/original association oracle", d)
 		}
 	}
