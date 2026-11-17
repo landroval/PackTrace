@@ -228,31 +228,7 @@ func configureSource(r cli.ScanArgumentRequest, p Policy, builtin bool) (Plan, e
 	}
 	return Plan{Provided: r.Provided, PolicyFile: filepath.Base(r.PolicyPath), TrustedPolicyDigest: r.TrustedPolicyDigest, StateDir: r.StateDir, TrustedSnapshotDigest: r.TrustedSnapshotDigest, Manager: p.Manager, ExplicitManager: r.Manager != "auto", Privacy: r.Privacy, Checks: r.Checks, FailOn: r.FailOn | fail, Policy: p}, nil
 }
-func canonicalNPMName(name string) bool {
-	if len(name) == 0 || len(name) > 214 {
-		return false
-	}
-	parts := strings.Split(name, "/")
-	if strings.HasPrefix(name, "@") {
-		if len(parts) != 2 {
-			return false
-		}
-		parts[0] = strings.TrimPrefix(parts[0], "@")
-	} else if len(parts) != 1 {
-		return false
-	}
-	for _, p := range parts {
-		if p == "" || p[0] == '.' || p[0] == '_' {
-			return false
-		}
-		for _, c := range p {
-			if !(c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '-' || c == '_' || c == '.' || c == '~') {
-				return false
-			}
-		}
-	}
-	return true
-}
+func canonicalNPMName(name string) bool { return intel.CanonicalNPMName(name) }
 func npmTarballOrigin(name, version string) string {
 	return "https://registry.npmjs.org/" + name + "/-/" + path.Base(name) + "-" + version + ".tgz"
 }
