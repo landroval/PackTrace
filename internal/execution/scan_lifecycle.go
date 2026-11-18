@@ -25,7 +25,16 @@ type ScanRoleReceipt struct {
 	ExitCode                                                      int // meaningful only when WaitReturned; -1 if no process state
 	CallerContext, WorkContext, LifecycleContext                  string
 }
+
+// ScanFinalization records a conservative sum of individual native peaks, not
+// simultaneous RSS or a guarantee through the supervisor's own exit. Status is
+// observed, missing (including unjoined roles), failed, or unsupported.
+type ScanFinalization struct {
+	Status                                            string
+	SupervisorPeakResidentBytes, SumPeakResidentBytes uint64
+}
 type ScanReceipt struct {
+	Finalization                    ScanFinalization
 	Resources                       integrityscan.Resources
 	Roles                           []ScanRoleReceipt
 	MaxSampleGap                    time.Duration
@@ -59,6 +68,9 @@ type scanLifecycle struct {
 	caller            context.Context
 	firstFault        ScanFault
 	finalContext      string
+	finalization      ScanFinalization
+	finalized         bool
+	finalErr          error
 }
 
 func newScanLifecycle(ctx context.Context, deadline time.Time) *scanLifecycle {
@@ -254,7 +266,7 @@ func (m *scanLifecycle) snapshot() ScanReceipt {
 	if m.finished {
 		lifecycleContext = m.finalContext
 	}
-	return ScanReceipt{Resources: m.resources, Roles: append([]ScanRoleReceipt(nil), m.roles...), MaxSampleGap: m.maxGap, ConcurrentSamples: m.concurrentSamples, Finished: m.finished, CleanupConfirmed: m.cleanup, FirstFault: m.firstFault, CallerContext: scanContextStatus(m.caller), LifecycleContext: lifecycleContext}
+	return ScanReceipt{Finalization: m.finalization, Resources: m.resources, Roles: append([]ScanRoleReceipt(nil), m.roles...), MaxSampleGap: m.maxGap, ConcurrentSamples: m.concurrentSamples, Finished: m.finished, CleanupConfirmed: m.cleanup, FirstFault: m.firstFault, CallerContext: scanContextStatus(m.caller), LifecycleContext: lifecycleContext}
 }
 func (m *scanLifecycle) check() error {
 	r := m.snapshot()
@@ -349,7 +361,7 @@ func (r *ScanRun) Finish() (ScanReceipt, error) {
 	receipt, e := s.scan.finish()
 	if f := r.fileOutput; f != nil && receipt.CleanupConfirmed && !s.broken.Load() {
 		if closeErr := f.finish(); closeErr != nil {
-			s.scan.noteFault("file-output-close", closeErr)
+			s.scan.noteFinalFault("file-output-close", closeErr)
 			e = errors.Join(e, closeErr)
 			receipt = s.scan.snapshot()
 		}
@@ -358,7 +370,7 @@ func (r *ScanRun) Finish() (ScanReceipt, error) {
 		if !q.closed {
 			cacheErr := errors.Join(q.check(), q.close())
 			if cacheErr != nil {
-				s.scan.noteFault("bun-cache-close", cacheErr)
+				s.scan.noteFinalFault("bun-cache-close", cacheErr)
 				e = errors.Join(e, cacheErr)
 				receipt = s.scan.snapshot()
 			}
@@ -371,7 +383,7 @@ func (r *ScanRun) Finish() (ScanReceipt, error) {
 			q.closeErr = errors.Join(bindingErr, closeErr)
 		}
 		if q.closeErr != nil {
-			s.scan.noteFault("intelligence-close", q.closeErr)
+			s.scan.noteFinalFault("intelligence-close", q.closeErr)
 			e = errors.Join(e, q.closeErr)
 			receipt = s.scan.snapshot()
 		}
@@ -379,11 +391,13 @@ func (r *ScanRun) Finish() (ScanReceipt, error) {
 	if q := r.userSetup; q != nil && receipt.CleanupConfirmed && !s.broken.Load() && !q.closed {
 		setupErr := errors.Join(q.check(s.caller), q.close())
 		if setupErr != nil {
-			s.scan.noteFault("user-setup-close", setupErr)
+			s.scan.noteFinalFault("user-setup-close", setupErr)
 			e = errors.Join(e, setupErr)
 			receipt = s.scan.snapshot()
 		}
 	}
+	e = s.scan.finalize(e)
+	receipt = s.scan.snapshot()
 	r.Operational = receipt
 	r.Resources = receipt.Resources
 	if s.broken.Load() {
