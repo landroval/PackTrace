@@ -38,7 +38,13 @@ checkpoint and retain their existing runtime behavior; no zero or measured pass
 is inferred. Intel preparation and legacy batch paths do not invoke it.
 
 Public report bytes, schema, reason strings, coverage, native qualification,
-thresholds and policy enforcement are unchanged. This checkpoint cannot satisfy
+thresholds and policy enforcement are unchanged. The separate
+[exact-artifact accounting investigation](linux-exact-lifetime-accounting-decision.md)
+records why passive external waits cannot recover already-consumed child peaks,
+and the explicit operational-output/privacy decision needed before exposing the
+existing private receipt. It neither replaces nor weakens B6.
+
+This checkpoint cannot satisfy
 the plan's stronger whole-lifetime benchmark contract or establish production
 0/1: supervisor exit, exact-artifact native qualification, and complete required
 coverage remain outside this local slice.
