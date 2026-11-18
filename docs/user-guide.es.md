@@ -568,7 +568,7 @@ sin campos desconocidos/duplicados ni permisos null; máximo 256 KiB.
 | `requiredChecks`, `failOn` | Cobertura requerida y categorías exigibles; arrays; `failOn` puede estar vacío |
 | `requireHardMemoryLimit` | Actualmente debe ser `false`; no hay garantía hard-RSS no admitida |
 | `minimumAssurance` | `lockfile-consistent` o `independently-anchored` |
-| `references` | Array requerido; vacío si no se seleccionan referencias preparadas |
+| `references` / `referenceTable` | Selecciona exactamente una codificación explícita; `references: []` no selecciona referencias preparadas |
 | `advisoryCandidates` | Búsqueda local explícita con origen ambiguo; no cualifica el origen |
 | `bunCacheDirectory` | Raíz Bun absoluta explícita opcional; solo perfil Linux de par cerrado |
 | `npmOrigins` | Hasta 64 correspondencias npm exactas de ubicación/nombre/versión/origen; no autenticidad general |
@@ -611,6 +611,35 @@ archivo preparado. Cada objeto contiene `location`, `lockKey`, `name`, `version`
 `origin`, `classification` (`public|private|unknown`), `expectedSRI`, `archive` y
 `context` (`none|patch|generated`). Las rutas de ámbito y archivo son selectores
 relativos acotados; `archive` se resuelve desde el directorio de la política.
+
+En desarrollo también se admite una codificación compacta solo de origen, en lugar
+de `references`:
+
+```json
+{"referenceTable":{"format":"same-location-lockkey-v1","classification":"unknown","context":"none","rows":[["node_modules/pkg","pkg","1.0.0","fixture:private","sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=","pkg.tgz"]]}}
+```
+
+Es un fragmento de política, no un archivo de referencia utilizable ni un permiso
+de confianza. Cada fila contiene exactamente seis strings, en orden: ubicación,
+nombre, versión, origen, SRI esperado y archivo. El formato explícito establece
+`lockKey` igual a ubicación; clasificación y contexto son valores explícitos
+compartidos por todas las filas. Los nueve campos expandidos pasan la validación
+semántica existente, conservando el orden. Usa objetos legacy si difieren las
+claves del lock o la clasificación/contexto por referencia. Se permite `rows: []`.
+Se rechazan ambas codificaciones juntas, ninguna, formatos desconocidos, campos
+no canónicos/duplicados, nulls y tuples mal formados.
+
+Se conservan los límites de 256 KiB de origen y 20.000 referencias; la decodificación
+de ancho fijo queda acotada por los bytes de origen y ese número de referencias.
+Los pins identifican los **bytes originales de origen**, no el JSON expandido.
+Cambiar la codificación requiere revisar los bytes nuevos y seleccionar su pin
+explícitamente; no cambian la semántica ni los pins anteriores. Los planes/frames
+siguen transportando referencias normalizadas bajo los límites existentes. Admitir
+la política compacta **no** demuestra completitud de inventarios grandes: el fixture
+congelado de 1.000 paquetes aún supera el límite compartido de 4.096 filas privadas
+(6.006 filas), además de un exceso independiente del frame original. No se omiten
+ni relajan asociaciones físicas, bytes originales, uniones ni presupuestos privados.
+Consulta el [informe local acotado](increments/compact-policy-capacity-fix.md).
 
 Un SRI de lockfile normalmente identifica un **archivo publicado**, no el directorio
 instalado. Una caché o archivo arbitrario no es automáticamente una referencia

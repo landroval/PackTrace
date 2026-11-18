@@ -546,7 +546,7 @@ no unknown/duplicate keys, no null grants, maximum 256 KiB.
 | `requiredChecks`, `failOn` | Required coverage and enforced categories; arrays, `failOn` may be empty |
 | `requireHardMemoryLimit` | Currently must be `false`; no unsupported hard-RSS guarantee |
 | `minimumAssurance` | `lockfile-consistent` or `independently-anchored` |
-| `references` | Required array, empty when no prepared references are selected |
+| `references` / `referenceTable` | Select exactly one explicit reference encoding; `references: []` selects no prepared references |
 | `advisoryCandidates` | Optional explicit ambiguous-origin local lookup; not origin qualification |
 | `bunCacheDirectory` | Optional explicit absolute Bun-cache root; Linux closed-pair profile only |
 | `npmOrigins` | Up to 64 exact npm location/name/version/origin correspondences; not blanket authenticity |
@@ -588,6 +588,32 @@ prepared archive. Each reference object has `location`, `lockKey`, `name`,
 `version`, `origin`, `classification` (`public|private|unknown`), `expectedSRI`,
 `archive` and `context` (`none|patch|generated`). Scope/archive paths are bounded
 relative selectors; archive paths resolve from the policy directory.
+
+Development also accepts a source-only compact encoding instead of `references`:
+
+```json
+{"referenceTable":{"format":"same-location-lockkey-v1","classification":"unknown","context":"none","rows":[["node_modules/pkg","pkg","1.0.0","fixture:private","sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=","pkg.tgz"]]}}
+```
+
+This is a policy fragment, not a usable reference archive or a trust grant. Each
+row has exactly six strings, in order: location, name, version, origin, expected
+SRI, archive. The explicit format sets `lockKey` equal to location; classification
+and context are explicitly shared by every row. All nine expanded reference fields
+undergo the existing semantic validation, in the original row order. Use legacy
+objects for differing lock keys or per-reference classification/context. Empty
+`rows: []` is allowed. Both encodings together, neither encoding, unknown formats,
+noncanonical/duplicate fields, nulls and malformed tuples are rejected.
+
+The 256-KiB source and 20,000-reference ceilings remain; fixed-width decoding is
+bounded by source bytes and that reference count. Pins hash the **original source
+bytes**, not expanded JSON. Changing encoding requires reviewing the new bytes and
+selecting their pin explicitly; existing policy semantics and pins do not change.
+Plans/worker frames still carry the normalized references and retain their existing
+limits. Compact policy admission does **not** establish large-inventory completeness:
+the frozen 1,000-package fixture still fails the 4,096 shared private-row gate
+(6,006 rows), with an independent original-frame overflow. No physical bindings,
+original bytes, joins or private budgets are omitted or relaxed. See the
+[bounded local fix report](increments/compact-policy-capacity-fix.md).
 
 A lockfile SRI normally hashes a published **archive**, not the installed directory.
 An arbitrary cache/archive is not automatically an authenticated reference.

@@ -108,16 +108,36 @@ func ParsePolicy(data []byte) (Policy, error) {
 	if !canonicalPolicyFields(fields) || !strictExceptionFields(fields) {
 		return Policy{}, ErrPolicy
 	}
-	var p Policy
+	// The source-only table is normalized once. Plans and worker frames retain
+	// only Policy's existing ordered explicit references, never two authorities.
+	type policyFields Policy
+	var source struct {
+		policyFields
+		ReferenceTable json.RawMessage `json:"referenceTable"`
+	}
 	d := json.NewDecoder(bytes.NewReader(data))
 	d.DisallowUnknownFields()
-	if d.Decode(&p) != nil || ValidatePolicy(p) != nil {
+	if d.Decode(&source) != nil {
+		return Policy{}, ErrPolicy
+	}
+	p := Policy(source.policyFields)
+	if source.ReferenceTable != nil {
+		if _, mixed := fields["references"]; mixed {
+			return Policy{}, ErrPolicy
+		}
+		var err error
+		p.References, err = parseReferenceTable(source.ReferenceTable)
+		if err != nil {
+			return Policy{}, ErrPolicy
+		}
+	}
+	if ValidatePolicy(p) != nil {
 		return Policy{}, ErrPolicy
 	}
 	return p, nil
 }
 func canonicalPolicyFields(fields map[string]json.RawMessage) bool {
-	if !canonicalFields(fields, []string{"version", "designation", "reason", "provenance", "manager", "bunCacheDirectory", "requiredChecks", "failOn", "requireHardMemoryLimit", "minimumAssurance", "references", "npmOrigins", "npmRegistry", "bunOrigins", "requirePortable", "advisoryCandidates", "exceptions", "maxExceptionDays"}) {
+	if !canonicalFields(fields, []string{"version", "designation", "reason", "provenance", "manager", "bunCacheDirectory", "requiredChecks", "failOn", "requireHardMemoryLimit", "minimumAssurance", "references", "referenceTable", "npmOrigins", "npmRegistry", "bunOrigins", "requirePortable", "advisoryCandidates", "exceptions", "maxExceptionDays"}) {
 		return false
 	}
 	for _, list := range []struct {
@@ -149,7 +169,7 @@ func ValidatePolicy(p Policy) error {
 	if validateExceptions(p) != nil {
 		return ErrPolicy
 	}
-	if p.Version != 1 || p.Designation != "user-designated" || !text(p.Reason, 4096) || !text(p.Provenance, 4096) || !profile(p.Manager) || p.RequireHardMemoryLimit || (p.MinimumAssurance != "lockfile-consistent" && p.MinimumAssurance != "independently-anchored") || len(p.References) > 20000 || p.References == nil {
+	if p.Version != 1 || p.Designation != "user-designated" || !text(p.Reason, 4096) || !text(p.Provenance, 4096) || !profile(p.Manager) || p.RequireHardMemoryLimit || (p.MinimumAssurance != "lockfile-consistent" && p.MinimumAssurance != "independently-anchored") || len(p.References) > maxPolicyReferences || p.References == nil {
 		return ErrPolicy
 	}
 	checks, ok := categories(p.RequiredChecks)
