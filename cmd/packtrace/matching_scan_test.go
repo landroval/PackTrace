@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"packtrace/internal/execution"
 	"packtrace/internal/integrityscan"
 	"packtrace/internal/intelstore"
 	"packtrace/internal/nativefs"
@@ -90,6 +91,80 @@ func matchingScanFixtureBundle(t *testing.T, version string, originRule bool, bu
 	return target, policy, state, policyPin, snapshotPin
 }
 
+// This oracle is authored for the fixture, not computed by a production
+// completeness predicate or copied from the other member of the pair. It also
+// keeps unselected optional obligations distinct from required gaps.
+func assertMatchingCoverage(t *testing.T, r integrityscan.Report) {
+	t.Helper()
+	want := map[string]struct {
+		required bool
+		outcome  string
+	}{
+		"inventory":              {true, "completed"},
+		"integrity":              {false, "not-run"},
+		"malicious":              {true, "incomplete"},
+		"vulnerability":          {true, "incomplete"},
+		"reference-authority":    {false, "not-run"},
+		"native-qualification":   {true, "incomplete"},
+		"resident-observation":   {true, "incomplete"},
+		"execution":              {true, "completed"},
+		"intelligence-access":    {true, "completed"},
+		"intelligence-freshness": {true, "incomplete"},
+	}
+	for _, c := range r.Coverage {
+		w, ok := want[c.Check]
+		if !ok || c.Required != w.required || c.Outcome != w.outcome || c.Reason == "" {
+			t.Fatalf("unexpected coverage row: %+v", c)
+		}
+		delete(want, c.Check)
+	}
+	if len(want) != 0 {
+		t.Fatal("missing coverage rows", want)
+	}
+}
+
+// Receipts are inspected after Wait even on successful assertions. Comparison
+// coverage must not be retroactively completed by a healthy final receipt.
+func assertMatchingScanReceipt(t *testing.T, raw string, outputFailed bool) {
+	t.Helper()
+	t.Logf("final receipt: %s", raw)
+	var r execution.ScanReceipt
+	if err := json.Unmarshal([]byte(raw), &r); err != nil {
+		t.Fatal("invalid final receipt", err, raw)
+	}
+	if !r.Finished || !r.CleanupConfirmed || r.Resources.QueryFailed || r.Resources.Stale || r.Resources.Stopped || r.Resources.WorkerSamples == 0 || r.Resources.SupervisorSamples == 0 || r.CallerContext != "active" {
+		t.Fatal("unhealthy final receipt", raw)
+	}
+	wantRoles := []string{"scan", "scan", "scan-writer"}
+	if outputFailed {
+		// The caller attempts a diagnostic after the failed report writer;
+		// that writer also encounters the closed inherited sink.
+		wantRoles = append(wantRoles, "scan-writer")
+	}
+	if len(r.Roles) != len(wantRoles) {
+		t.Fatal("unexpected preparation/comparison/output roles", raw)
+	}
+	for i, role := range r.Roles {
+		wantExit := 0
+		wantExchange := true
+		if outputFailed && i >= 2 {
+			wantExit, wantExchange = 2, false
+		}
+		if role.Role != wantRoles[i] || !role.Reaped || !role.WaitReturned || !role.ExchangeJoined || !role.StderrJoined || role.Samples == 0 || role.ExchangeSucceeded != wantExchange || role.ExitCode != wantExit {
+			t.Fatal("unconfirmed child lifecycle", raw)
+		}
+	}
+	fault := r.FirstFault
+	if outputFailed {
+		writerFailure := fault.Stage == "exchange" && fault.Code == "output-failed" || fault.Stage == "wait-exit" && fault.Code == "child-exit"
+		if !writerFailure || fault.Role != "scan-writer" || r.Roles[2].ExitCode != 2 {
+			t.Fatal("late output failure lost its causal writer fault", raw)
+		}
+	} else if fault.Stage != "" || fault.Code != "" || fault.Role != "" {
+		t.Fatal("unexpected first fault", raw)
+	}
+}
+
 func TestScanActualOfflineAdvisoryMatching(t *testing.T) {
 	if runtime.GOOS != "linux" && runtime.GOOS != "windows" {
 		t.Skip("native authored scan")
@@ -134,6 +209,8 @@ func TestScanActualOfflineAdvisoryMatching(t *testing.T) {
 					if e == nil || cmd.ProcessState == nil || cmd.ProcessState.ExitCode() != 3 || diag.Len() != 0 {
 						t.Fatalf("actual scan: %v state=%v out=%s diag=%s receipt=%s", e, cmd.ProcessState, out.String(), diag.String(), receipt())
 					}
+					t.Logf("actual exit: %d", cmd.ProcessState.ExitCode())
+					assertMatchingScanReceipt(t, receipt(), false)
 					for _, secret := range []string{"PRIVATE", "left-pad", "registry.npmjs.org", "MAL-2026-", "sha256-", "withdrawn_versions"} {
 						if strings.Contains(out.String()+diag.String(), secret) {
 							t.Fatalf("portable matching leaked %q", secret)
@@ -170,9 +247,21 @@ func TestScanActualOfflineAdvisoryMatching(t *testing.T) {
 							t.Fatal("SARIF candidates promoted or findings omitted", out.String())
 						}
 					}
+					if format == "json" {
+						t.Logf("comparison: %s", out.String())
+					}
 					a := report.Advisories
 					if report.SchemaVersion != "1.8" || report.ExitCode != 3 || report.Findings != 0 || a == nil || a.State != "observed" || a.Findings != tc.findings || a.Summary.Observations != 1 || a.Summary.TotalObservations != 1 || len(a.Decisions) == 0 {
 						t.Fatal("actual matching/independent drift model disagrees", out.String())
+					}
+					assertMatchingCoverage(t, report)
+					if report.Policy == nil || len(report.Policy.Findings) != tc.findings || report.Policy.EnforcedUnaccepted != tc.findings {
+						t.Fatal("policy findings differ from the independent case oracle", out.String())
+					}
+					for _, f := range report.Policy.Findings {
+						if f.Category != "malicious" || f.Accepted || !f.Enforced {
+							t.Fatal("eligible malicious finding lost enforcement", out.String())
+						}
 					}
 					negative, withdrawn, unsupported := false, false, false
 					for _, d := range a.Decisions {
@@ -182,6 +271,30 @@ func TestScanActualOfflineAdvisoryMatching(t *testing.T) {
 					}
 					if tc.rule && tc.snapshotPin && (!withdrawn || tc.version == "1.0.0" && !unsupported || tc.version == "2.0.0" && !negative) {
 						t.Fatal("withdrawal/correction or full negative lost", out.String())
+					}
+					if format == "json" && tc.rule && tc.snapshotPin {
+						t.Run("late-output-failure", func(t *testing.T) {
+							// Identical executable, arguments, policy, generation and owned
+							// inputs. Only the inherited output sink changes. No snapshot
+							// is patched or promoted to final operational authority.
+							read, write, err := os.Pipe()
+							if err != nil {
+								t.Fatal(err)
+							}
+							if err := read.Close(); err != nil {
+								t.Fatal(err)
+							}
+							defer write.Close()
+							failed := exec.CommandContext(ctx, os.Args[0], args...)
+							final := retainScanReceipt(t, failed)
+							failed.Stdout, failed.Stderr = write, write
+							err = failed.Run()
+							if err == nil || failed.ProcessState == nil || failed.ProcessState.ExitCode() != 2 {
+								t.Fatalf("late output: %v state=%v receipt=%s", err, failed.ProcessState, final())
+							}
+							t.Logf("actual exit: %d; preceding comparison exit: %d; enforced unaccepted: %d", failed.ProcessState.ExitCode(), report.ExitCode, report.Policy.EnforcedUnaccepted)
+							assertMatchingScanReceipt(t, final(), true)
+						})
 					}
 				})
 			}
