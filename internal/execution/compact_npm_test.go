@@ -109,7 +109,7 @@ func TestOfflineCompactNPMParentAdmission(t *testing.T) {
 	cfg := scanConfig{Stage: "acquire", Target: target, PolicyPath: policyPath, PolicyHash: "sha256-" + base64.StdEncoding.EncodeToString(sum[:]), Plan: &plan}
 	_, err = run.superviseScanPhase(ctx, cfg, exec.Command(os.Args[0], "-test.run=^TestWholeIntegrityProtocolChild$", "equal"), identity)
 	if err != nil {
-		t.Fatalf("supervised parent %v inventory=%v resources=%+v", err, run.Inventory != nil, run.Resources)
+		t.Fatalf("supervised parent %v inventory=%v resources=%+v receipt=%+v", err, run.Inventory != nil, run.Resources, run.output.state.scan.snapshot())
 	}
 	if run.Inventory == nil || run.Inventory.OriginalClaims == nil || len(run.Inventory.OriginalClaims.OriginalInputs) != 1002 || projectinventory.ValidateOriginalClaims(*run.Inventory) != nil {
 		t.Fatal("parent original admission absent")

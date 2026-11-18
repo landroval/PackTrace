@@ -19,7 +19,12 @@ import (
 
 func runPolicyAcceptanceJSON(t *testing.T, args ...string) (integrityscan.Report, []byte) {
 	t.Helper()
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	return runPolicyAcceptanceJSONWithin(t, 20*time.Second, args...)
+}
+
+func runPolicyAcceptanceJSONWithin(t *testing.T, timeout time.Duration, args ...string) (integrityscan.Report, []byte) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, os.Args[0], append([]string{"-test.run=^TestSupervisedCLIProcess$", "--", "scan"}, args...)...)
 	receipt := retainScanReceipt(t, cmd)

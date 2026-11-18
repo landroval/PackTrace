@@ -38,6 +38,8 @@ type ScanReceipt struct {
 	Resources                       integrityscan.Resources
 	Roles                           []ScanRoleReceipt
 	MaxSampleGap                    time.Duration
+	MaxSamplingLockWait             time.Duration
+	MaxSamplingQueryTime            time.Duration
 	ConcurrentSamples               int // actual ticks with both admitted Intel roles live
 	Finished, CleanupConfirmed      bool
 	FirstFault                      ScanFault
@@ -61,6 +63,8 @@ type scanLifecycle struct {
 	allowProgress     bool // only explicit Intel preparation; never SCAN or legacy batches
 	last              time.Time
 	maxGap            time.Duration
+	maxLockWait       time.Duration
+	maxQueryTime      time.Duration
 	concurrentSamples int
 	finished, cleanup bool
 	finishErr         error
@@ -96,8 +100,10 @@ func (m *scanLifecycle) faultLocked() bool {
 	return m.resources.QueryFailed || m.resources.Stale || m.resources.Stopped
 }
 func (m *scanLifecycle) tick() {
+	start := time.Now()
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	m.maxLockWait = max(m.maxLockWait, time.Since(start))
 	m.tickLocked()
 }
 func (m *scanLifecycle) tickLocked() {
@@ -106,7 +112,10 @@ func (m *scanLifecycle) tickLocked() {
 		gap := now.Sub(m.last)
 		m.maxGap = max(m.maxGap, gap)
 		if gap > 350*time.Millisecond {
-			m.faultLockedAt("sample-gap", nil)
+			if m.firstFault.Stage == "" {
+				m.faultLockedAt("sample-gap", nil)
+				m.firstFault.SampleGap = gap
+			}
 			m.resources.Stale = true
 		}
 	}
@@ -157,6 +166,7 @@ func (m *scanLifecycle) tickLocked() {
 		m.faultLockedAt("resident-threshold", nil)
 		m.resources.Stopped = true
 	}
+	m.maxQueryTime = max(m.maxQueryTime, time.Since(now))
 	if m.faultLocked() {
 		m.cancel()
 	}
@@ -266,7 +276,7 @@ func (m *scanLifecycle) snapshot() ScanReceipt {
 	if m.finished {
 		lifecycleContext = m.finalContext
 	}
-	return ScanReceipt{Finalization: m.finalization, Resources: m.resources, Roles: append([]ScanRoleReceipt(nil), m.roles...), MaxSampleGap: m.maxGap, ConcurrentSamples: m.concurrentSamples, Finished: m.finished, CleanupConfirmed: m.cleanup, FirstFault: m.firstFault, CallerContext: scanContextStatus(m.caller), LifecycleContext: lifecycleContext}
+	return ScanReceipt{Finalization: m.finalization, Resources: m.resources, Roles: append([]ScanRoleReceipt(nil), m.roles...), MaxSampleGap: m.maxGap, MaxSamplingLockWait: m.maxLockWait, MaxSamplingQueryTime: m.maxQueryTime, ConcurrentSamples: m.concurrentSamples, Finished: m.finished, CleanupConfirmed: m.cleanup, FirstFault: m.firstFault, CallerContext: scanContextStatus(m.caller), LifecycleContext: lifecycleContext}
 }
 func (m *scanLifecycle) check() error {
 	r := m.snapshot()

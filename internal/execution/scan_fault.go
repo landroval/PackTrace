@@ -15,6 +15,9 @@ import (
 type ScanFault struct {
 	Stage, Code, Role string
 	Elapsed           time.Duration
+	SampleGap         time.Duration // first stale transition only; never changes admission
+	Operation         string
+	OperationElapsed  time.Duration
 	QueryStage        string
 	Errno             int
 	Revents           int16
@@ -82,6 +85,20 @@ func (m *scanLifecycle) faultLockedRole(stage string, err error, role string) {
 	}
 	m.firstFault = f
 }
+
+// noteProtocolStale records the first protocol freshness failure at detection,
+// before cancellation or cleanup can obscure which guard fired.
+func (m *scanLifecycle) noteProtocolStale(stage string, gap time.Duration, operation string, elapsed time.Duration) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.firstFault.Stage == "" {
+		m.faultLockedAt(stage, nil)
+		m.firstFault.SampleGap = gap
+		m.firstFault.Operation = operation
+		m.firstFault.OperationElapsed = elapsed
+	}
+}
+
 func (m *scanLifecycle) noteFault(stage string, err error) { m.noteRoleFault(stage, err, "") }
 func (m *scanLifecycle) noteRoleFault(stage string, err error, role string) {
 	if err == nil {

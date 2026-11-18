@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+	"time"
 
 	"packtrace/internal/nativefs"
 	"packtrace/internal/projectinventory"
@@ -60,6 +61,52 @@ func TestScanCompactNPMRootWholeIntegrity(t *testing.T) {
 					}
 				})
 			}
+		})
+	}
+}
+
+// This opt-in corpus is independently generated/replayed outside the product.
+// Completion of comparison is deliberately distinct from whole-scope admission.
+func TestOfflineCompactNPMBoundaryCLI(t *testing.T) {
+	base := os.Getenv("PACKTRACE_COMPACT_NPM_BOUNDARIES")
+	if base == "" {
+		t.Skip("requires owned multi-file and boundary fixtures")
+	}
+	for _, tc := range []struct {
+		name                             string
+		instances, findings              int
+		inventory, integrity, comparison string
+	}{
+		{"multifile-1000", 1000, 0, "completed", "completed", "completed"},
+		{"witness-1022", 1022, 0, "completed", "completed", "completed"},
+		{"witness-1023", 1023, 0, "completed", "incomplete", "completed"},
+		{"manifest-4k", 1000, 0, "completed", "incomplete", "completed"},
+		{"nested-1000", 1000, 1, "completed", "incomplete", "incomplete"},
+		{"workspace-1000", 1000, 0, "incomplete", "incomplete", "completed"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			target := filepath.Join(base, tc.name, "target")
+			policy := filepath.Join(base, tc.name, "prepared", "compact-policy.json")
+			raw, err := os.ReadFile(policy)
+			if err != nil {
+				t.Fatal(err)
+			}
+			sum := sha256.Sum256(raw)
+			before := wholeIntegrityTree(t, target)
+			// The external eight-file replay takes ~31 s. This is only the
+			// test-process timeout; no product deadline or freshness guard changes.
+			r, _ := runPolicyAcceptanceJSONWithin(t, 90*time.Second, "--policy", policy, "--trusted-policy-digest", "sha256-"+base64.StdEncoding.EncodeToString(sum[:]), "--checks", "integrity", "--privacy", "portable", "--format", "json", target)
+			wholeIntegrityCoverage(t, r, "inventory", tc.inventory)
+			wholeIntegrityCoverage(t, r, "integrity", tc.integrity)
+			wholeIntegrityCoverage(t, r, "reference-comparison", tc.comparison)
+			wholeIntegrityCoverage(t, r, "native-qualification", "incomplete")
+			if r.Instances != tc.instances || r.Findings != tc.findings || r.ExitCode != 3 {
+				t.Fatalf("wrong bounded outcome: instances=%d findings=%d exit=%d", r.Instances, r.Findings, r.ExitCode)
+			}
+			if !reflect.DeepEqual(before, wholeIntegrityTree(t, target)) {
+				t.Fatal("target changed")
+			}
+			t.Logf("instances=%d findings=%d exit=%d inventory=%s integrity=%s comparison=%s", r.Instances, r.Findings, r.ExitCode, tc.inventory, tc.integrity, tc.comparison)
 		})
 	}
 }

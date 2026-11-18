@@ -41,7 +41,11 @@ func TestScanReceiptKeepsFirstFaultAfterLaterFailure(t *testing.T) {
 	if err := run.Checkpoint(); err == nil {
 		t.Fatal("stale sample accepted")
 	}
-	first, _ := json.Marshal(s.scan.snapshot())
+	stale := s.scan.snapshot()
+	if stale.FirstFault.Stage != "sample-gap" || stale.FirstFault.SampleGap < time.Second || stale.MaxSamplingQueryTime <= 0 || stale.MaxSamplingLockWait <= 0 {
+		t.Fatalf("sampling delay diagnosis missing: %+v", stale)
+	}
+	first, _ := json.Marshal(stale)
 	var before struct{ FirstFault struct{ Stage, Code string } }
 	if err := json.Unmarshal(first, &before); err != nil {
 		t.Fatal(err)

@@ -44,6 +44,40 @@ func TestScanResidentStopsOnPairedThresholdAndExposesMissingSamples(t *testing.T
 		})
 	}
 }
+func TestScanFirstStaleDiagnosticDoesNotRelaxGuard(t *testing.T) {
+	for _, stage := range []string{"protocol-own-gap", "protocol-sample-gap", "protocol-no-sample"} {
+		t.Run(stage, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			lifecycle := &scanLifecycle{ctx: ctx, caller: ctx, started: time.Now(), active: -1}
+			monitor := newScanMonitor(cancel)
+			monitor.noteStale = lifecycle.noteProtocolStale
+			monitor.operation("npm-root-original")
+			monitor.last = time.Now().Add(-time.Second)
+			switch stage {
+			case "protocol-own-gap":
+				monitor.own()
+			case "protocol-sample-gap":
+				if monitor.sample(residentSample{Bytes: 1, Valid: true}) != errScanResource {
+					t.Fatal("stale sample accepted")
+				}
+			case "protocol-no-sample":
+				monitor.result()
+			}
+			first := lifecycle.snapshot().FirstFault
+			monitor.operation("PRIVATE-child-controlled-label")
+			monitor.result()
+			got := lifecycle.snapshot().FirstFault
+			if !monitor.result().Stale || got != first || got.Stage != stage || got.SampleGap < time.Second || got.Operation != "npm-root-original" || got.OperationElapsed <= 0 {
+				t.Fatalf("first stale cause lost or guard relaxed: %+v", got)
+			}
+			if monitor.operationName != "other" {
+				t.Fatal("unbounded diagnostic label")
+			}
+		})
+	}
+}
+
 func TestScanSourceReceiptRejectsNonDigest(t *testing.T) {
 	if scanSourceHash("sha256-"+"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=") == false {
 		t.Fatal("strong source hash rejected")

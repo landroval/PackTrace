@@ -280,6 +280,7 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 	phase, cancel := context.WithCancel(ctx)
 	defer cancel()
 	monitor := newScanMonitor(cancel)
+	monitor.noteStale = s.scan.noteProtocolStale
 	type phaseData struct {
 		policy       integrityscan.PolicyObservation
 		records      []integrityscan.Record
@@ -322,7 +323,9 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 		localBatches := uint32(0)
 		localDetails := integrityscan.LocalDetails{Observations: []integrityscan.LocalObservation{}, Advisories: []integrityscan.LocalAdvisory{}}
 		for {
+			monitor.operation("receive")
 			m, e := c.receive()
+			monitor.operation(m.Type)
 			if e == io.EOF {
 				if !completed {
 					return errScanProtocol
@@ -984,17 +987,40 @@ func ScanWorkerMain(in io.Reader, out io.Writer, diagnosticOut io.Writer) int {
 // scanLifecycle independently observes retained processes through runtime exit
 // and confirmed reap, including the writer. Neither mechanism is a hard cap.
 type scanMonitor struct {
-	mu         sync.Mutex
-	resources  integrityscan.Resources
-	cancel     context.CancelFunc
-	last       time.Time
-	elapsed    int64
-	maxElapsed int64 // zero retains the legacy5min bound
-	worker     uint64
+	mu             sync.Mutex
+	resources      integrityscan.Resources
+	cancel         context.CancelFunc
+	last           time.Time
+	elapsed        int64
+	maxElapsed     int64 // zero retains the legacy5min bound
+	worker         uint64
+	noteStale      func(string, time.Duration, string, time.Duration)
+	operationName  string
+	operationStart time.Time
 }
 
 func newScanMonitor(cancel context.CancelFunc) *scanMonitor {
 	return &scanMonitor{cancel: cancel, last: time.Now(), elapsed: -1}
+}
+func (m *scanMonitor) operation(name string) {
+	// Never retain child-provided labels outside this fixed diagnostic vocabulary.
+	switch name {
+	case "receive", "resident", "policy", "npm-root-original", "inventory-batch", "inventory-closure", "instance", "done":
+	default:
+		name = "other"
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.operationName, m.operationStart = name, time.Now()
+}
+func (m *scanMonitor) noteStaleLocked(stage string, gap time.Duration) {
+	if !m.resources.Stale && m.noteStale != nil {
+		elapsed := time.Duration(0)
+		if !m.operationStart.IsZero() {
+			elapsed = time.Since(m.operationStart)
+		}
+		m.noteStale(stage, gap, m.operationName, elapsed)
+	}
 }
 func (m *scanMonitor) own() {
 	n, e := nativefs.OwnResidentBytes()
@@ -1019,7 +1045,8 @@ func (m *scanMonitor) own() {
 			m.cancel()
 		}
 	}
-	if time.Since(m.last) > 350*time.Millisecond {
+	if gap := time.Since(m.last); gap > 350*time.Millisecond {
+		m.noteStaleLocked("protocol-own-gap", gap)
 		m.resources.Stale = true
 		m.cancel()
 	}
@@ -1064,7 +1091,8 @@ func (m *scanMonitor) sample(s residentSample) error {
 	if s.ElapsedMS < 0 || s.ElapsedMS > limit || s.ElapsedMS < m.elapsed {
 		return errScanProtocol
 	}
-	if time.Since(m.last) > 350*time.Millisecond {
+	if gap := time.Since(m.last); gap > 350*time.Millisecond {
+		m.noteStaleLocked("protocol-sample-gap", gap)
 		m.resources.Stale = true
 		return errScanResource
 	}
@@ -1094,6 +1122,7 @@ func (m *scanMonitor) result() integrityscan.Resources {
 	defer m.mu.Unlock()
 	r := m.resources
 	if r.WorkerSamples == 0 {
+		m.noteStaleLocked("protocol-no-sample", time.Since(m.last))
 		r.Stale = true
 	}
 	return r
