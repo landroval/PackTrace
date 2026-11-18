@@ -19,6 +19,7 @@ type ScanRoleReceipt struct {
 	PID                                                           int
 	Samples                                                       int
 	PeakResidentBytes                                             uint64
+	WaitPeakResidentBytes                                         uint64 `json:",omitempty"` // Linux wait rusage, not a sample; absent when unavailable.
 	ExitObserved, Reaped                                          bool
 	ExchangeJoined, ExchangeSucceeded, WaitReturned, StderrJoined bool
 	ExitCode                                                      int // meaningful only when WaitReturned; -1 if no process state
@@ -197,16 +198,17 @@ func (m *scanLifecycle) roleIndexLocked(pid int) int {
 	}
 	return -1
 }
-func (m *scanLifecycle) reaped(pid int, confirmed bool) {
+func (m *scanLifecycle) reaped(pid int, state *os.ProcessState) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.tickLocked()
 	index := m.roleIndexLocked(pid)
 	if index >= 0 {
 		r := &m.roles[index]
-		r.Reaped = confirmed
-		if confirmed {
+		r.Reaped = state != nil && state.Pid() == pid
+		if r.Reaped {
 			r.ExitObserved = true
+			r.WaitPeakResidentBytes = waitPeakResidentBytes(state)
 		}
 		// No live observation is not a successful zero/missing sample.
 		if r.Samples == 0 {

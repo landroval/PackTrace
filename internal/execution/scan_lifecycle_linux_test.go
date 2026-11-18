@@ -51,6 +51,9 @@ func TestScanParentRenderingAndSequentialWriterHaveFinalReceipt(t *testing.T) {
 	if post.Finished || len(post.Roles) != 1 || post.Roles[0].Role != "scan-writer" || !post.Roles[0].Reaped || !post.Roles[0].ExitObserved || post.Roles[0].Samples < 1 || post.Roles[0].PeakResidentBytes == 0 {
 		t.Fatalf("writer not actually attributed through reap: %+v", post)
 	}
+	if peak := post.Roles[0].WaitPeakResidentBytes; peak < 1024 || peak%1024 != 0 || !post.Roles[0].WaitReturned {
+		t.Fatalf("missing Linux wait peak: %+v", post.Roles[0])
+	}
 	if post.Resources.WorkerSamples <= prepared.Resources.WorkerSamples {
 		t.Fatal("future writer samples were fabricated in pre-output snapshot")
 	}
@@ -88,6 +91,9 @@ func TestScanBlockedWriterRemainsObservedUntilCancelReap(t *testing.T) {
 	for {
 		r := s.scan.snapshot()
 		if len(r.Roles) == 1 && r.Roles[0].Samples >= 4 {
+			if r.Roles[0].WaitPeakResidentBytes != 0 {
+				t.Fatal("live child already has wait peak")
+			}
 			break
 		}
 		if time.Now().After(deadline) {
@@ -105,7 +111,7 @@ func TestScanBlockedWriterRemainsObservedUntilCancelReap(t *testing.T) {
 		t.Fatal("writer cancellation did not join/reap")
 	}
 	receipt, e := run.Finish()
-	if e == nil || len(receipt.Roles) != 1 || receipt.Roles[0].PID != pid || !receipt.Roles[0].Reaped || !receipt.CleanupConfirmed || receipt.Resources.Stale || receipt.Resources.QueryFailed {
+	if e == nil || len(receipt.Roles) != 1 || receipt.Roles[0].PID != pid || receipt.Roles[0].WaitPeakResidentBytes == 0 || !receipt.Roles[0].Reaped || !receipt.CleanupConfirmed || receipt.Resources.Stale || receipt.Resources.QueryFailed {
 		t.Fatal(receipt, e)
 	}
 	if pids, _ := ownChildren(); len(pids) != 0 {

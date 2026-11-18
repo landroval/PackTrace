@@ -342,7 +342,11 @@ func (s *runState) runChild(ctx context.Context, cmd *exec.Cmd, release func(), 
 				r.CallerContext, r.WorkContext, r.LifecycleContext = scanContextStatus(ctx), scanContextStatus(work), scanContextStatus(s.scan.ctx)
 			}
 			s.scan.mu.Unlock()
-			s.scan.reaped(cmd.Process.Pid, !s.broken.Load() && cmd.ProcessState != nil)
+			var state *os.ProcessState
+			if waitReturned && !s.broken.Load() {
+				state = cmd.ProcessState
+			}
+			s.scan.reaped(cmd.Process.Pid, state)
 		}()
 	}
 	// Check again after Start: os/exec may expose only the CHILD endpoints via Fd.
