@@ -1,8 +1,83 @@
 # Linux exact-artifact lifetime accounting: decision required
 
-Status: **blocked on an explicit operational-output/API/privacy decision**, not a
-new qualification mechanism. Investigation baseline is immutable
+Status: **optional private Linux channel implemented after explicit fresh owner
+grant**. This is operational evidence, not a new qualification mechanism.
+The investigation below records the historical blocker at immutable
 `40d92ec594c7e73bcfb24dc40e85ed82b7bd102c`.
+
+## Approved narrow channel
+
+The real CLI accepts `scan --private-lifetime-fd=N ...` only by explicit argument,
+never environment discovery. N is a canonical decimal descriptor from 3 through
+1048576. The external owner must supply an exclusively owned, already nonblocking,
+write-only **anonymous Linux pipe**. Validation requires S_IFIFO and pipefs
+(PIPEFS_MAGIC), not just S_IFIFO: named filesystem FIFOs are intentionally rejected,
+as are regular files, terminals, sockets, read/read-write endpoints, closed FDs,
+and device/inode aliases of any stdio descriptor. No path is opened or written,
+no `/proc` discovery occurs, and shared open-description status flags are not
+changed. The descriptor is marked close-on-exec, is never placed in worker
+ExtraFiles/arguments/environments, and is closed by the supervisor after use.
+The caller must not concurrently replace it, change its flags, or share its use.
+Other platforms reject the opt-in; Intel/legacy paths cannot activate it.
+
+The existing `runMainObserved` hook captures exactly one post-Finish receipt.
+After caller exit adjudication, one atomic nonblocking write emits at most 4096
+bytes (Linux PIPE_BUF), including its newline, with no retry or blocking fallback.
+There are at most 16 actual admitted role entries; these are a transport cap,
+not a universal launch bound. Overflow, absent observer, encoding/transport
+failure, EAGAIN, EPIPE, short write, or unsupported endpoint fails closed with
+exit 2; an already selected cancellation remains 130. Invalid endpoints use the
+existing CLI argument diagnostic. Post-Finish transport failure performs no
+further diagnostic I/O, since an inherited stderr might itself be blocked.
+Earlier failure/incompleteness cannot become success. No receipt is promised
+when argument validation prevents a scan from starting. A pipe accepting bytes
+is not acknowledgment that its reader retained or validated them.
+
+The version-1 JSON projection has fixed keys, fixed role names `scan` and
+`scan-writer`, native wait and sampled peaks, sample counters and maximum sampling
+gap, actual Wait/reap/control-exchange/stderr joins, exchange success and child
+exit, cleanup/Finish and finalization states, resource-failure booleans, bounded
+context labels, the first fault's bounded stage/code/role, and selected CLI exit.
+Unknown diagnostic labels become `other`; unknown roles fail serialization.
+There are no PIDs, absolute timestamps, target/package/store/key identities,
+paths, policy data, errno details, or raw errors. A zero/missing peak or failed
+join is retained as missing evidence, never a measured zero/pass. The transport
+does not replace the first fault with a later output error.
+
+The owner must validate one complete bounded record (including duplicate-key and
+record rejection), bind it to its launch/executable hash and provenance, check
+actual fixture-specific role order/completeness and joins, then use its own real
+supervisor wait4 status and rusage **after exit**. Do not substitute the receipt's
+predicted status, internal self query, RUSAGE_CHILDREN, or a test executable.
+Add the positive per-child native wait peaks to the positive supervisor wait
+peak with explicit missing/overflow rejection. This metric is the conservative
+Linux wait high-water sum, which may include descendant maxima, **not own-only,
+simultaneous RSS, a hard ceiling, or B6 acceptance**. Failed operational cases
+have no successful aggregate measurement. Public resident/native coverage remains
+incomplete; private parsing grants no authority or qualification.
+
+Reproducible external runner, negative parser oracles, exact-artifact controls,
+actual numbers, and source/build/test provenance are retained in the unique owned
+local directory:
+
+`/home/justcharles/.local/state/packtrace/advisory-completeness-RIKjKdJf/scale-fix/private-lifetime-5OA2OgXC`
+
+`runner.py SOURCE BINARY FIXTURE OUTPUT` uses an owned session, a 120-second
+watchdog, finite captures, actual wait4 ownership, and the two authored npm
+fixtures' launch contract (two sequential scan roles, then one stdout writer).
+It runs opt-out/opt-in and broken/blocked controls, preserves public coverage,
+and checks freshness rather than silently renewing source dates. Its
+`--selftest` rejects absent, truncated, duplicate, oversized, missing/zero/overflow
+metrics, missing/failed joins, cancellation, first/final faults, changed roles,
+and outer exit mismatch. The retained source generators may be used offline
+in a **new owned directory** if the original fixtures have aged; no real
+acquisition or new keys are necessary. Existing owned tests also cover late
+source-close/finalization faults and cancellation precedence. Fault-injected
+threshold tests remain fault tests, not actual memory-budget campaigns.
+
+No public schema, coverage predicate, authority, install path, runtime threshold,
+worker/wait ownership, or campaign budget changes. The rest of this document
+is historical investigation and must not be read as undoing this narrow grant.
 
 No production flags, environment hooks, observers, dependencies or behavior were
 added. No ptrace, interception, privileges, taskstats subscription, host/security

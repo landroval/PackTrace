@@ -16,7 +16,7 @@ import (
 // Only the real inspect-batch invocation changes interrupt handling. Other
 // commands retain their existing behavior, including direct test callers.
 func runMain(args []string, in io.Reader, out, diagnostic io.Writer) int {
-	return runMainObserved(args, in, out, diagnostic, nil)
+	return runMainLifetime(args, in, out, diagnostic)
 }
 func runMainObserved(args []string, in io.Reader, out, diagnostic io.Writer, observed scanObserver) int {
 	if len(args) > 0 {

@@ -15,7 +15,8 @@ import (
 )
 
 // An observer receives caller-owned completion evidence only after Finish.
-// Production supplies nil: there is no flag, environment switch or fallback I/O.
+// Production supplies nil unless the caller explicitly selects the private Linux
+// lifetime pipe. There is no environment switch or fallback I/O.
 type scanObserver func(execution.ScanReceipt)
 
 func runScan(request cli.ScanArgumentRequest, out, diagnostic io.Writer) int {
