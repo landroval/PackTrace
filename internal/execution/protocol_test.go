@@ -50,6 +50,25 @@ func TestStrictPayloadBoundary(t *testing.T) {
 		}
 	}
 }
+func TestReceivedPayloadRetainsStrictChecks(t *testing.T) {
+	for _, tc := range []struct {
+		data  string
+		valid bool
+	}{
+		{`{"build":"ok"}`, true},
+		{`{"build":"ok","bu\u0069ld":"other"}`, false},
+		{`{"build":"\ud800"}`, false},
+		{`{"BUILD":"ok"}`, false},
+		{`{"build":null}`, false},
+	} {
+		line := strings.Replace(wire(1, "hello", hello{"ok"}), `{"build":"ok"}`, tc.data, 1)
+		m, err := newChannel(strings.NewReader(line), io.Discard, &traffic{}).receive()
+		if ok := err == nil && decodeCheckedObject(m.Data, &hello{}) == nil; ok != tc.valid {
+			t.Fatalf("payload %s accepted=%t", tc.data, ok)
+		}
+	}
+}
+
 func TestExactEncodedCapsAndCombinedBudget(t *testing.T) {
 	base := wire(1, "hello", hello{""})
 	line := wire(1, "hello", hello{strings.Repeat("x", maxMessage-len(base))})

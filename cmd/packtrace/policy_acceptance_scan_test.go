@@ -22,11 +22,12 @@ func runPolicyAcceptanceJSON(t *testing.T, args ...string) (integrityscan.Report
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, os.Args[0], append([]string{"-test.run=^TestSupervisedCLIProcess$", "--", "scan"}, args...)...)
+	receipt := retainScanReceipt(t, cmd)
 	var out, diag bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &diag
 	err := cmd.Run()
 	if err == nil || cmd.ProcessState == nil || cmd.ProcessState.ExitCode() != 3 || diag.Len() != 0 {
-		t.Fatalf("expected genuinely incomplete scan, err=%v state=%v stdout=%s stderr=%s", err, cmd.ProcessState, out.String(), diag.String())
+		t.Fatalf("expected genuinely incomplete scan, err=%v state=%v stdout=%s stderr=%s receipt=%s", err, cmd.ProcessState, out.String(), diag.String(), receipt())
 	}
 	var report integrityscan.Report
 	if json.Unmarshal(out.Bytes(), &report) != nil || report.SchemaVersion != "1.8" || report.Policy == nil || report.ExitCode != 3 {

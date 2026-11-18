@@ -118,6 +118,12 @@ func decode(data []byte, v any) error {
 	if _, code := jsoninput.Object(data, maxMessage); code != "" {
 		return errProtocol
 	}
+	return decodeCheckedObject(data, v)
+}
+
+// data must be an object already checked recursively by jsoninput.Object.
+// In particular receive checks the entire envelope, including its raw payload.
+func decodeCheckedObject(data []byte, v any) error {
 	if !typedShape(data, reflect.TypeOf(v).Elem()) {
 		return errProtocol
 	}

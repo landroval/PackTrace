@@ -375,7 +375,7 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 				intelligenceClosed = true
 			case "bun-original":
 				var v projectinventory.Result
-				if !started || cfg.Stage != "acquire" || !bunOriginalWanted(cfg.Plan) || !intelligenceClosed || inventoryClosed || inventorySequence != 0 || inventory.OriginalClaims != nil || pending != nil || expected != 0 || fatal != "" || decode(m.Data, &v) != nil || (v.Selection.Family != "bun" && v.Selection.Family != "npm") || material.addOriginal(v) != nil {
+				if !started || cfg.Stage != "acquire" || !bunOriginalWanted(cfg.Plan) || !intelligenceClosed || inventoryClosed || inventorySequence != 0 || inventory.OriginalClaims != nil || pending != nil || expected != 0 || fatal != "" || decodeCheckedObject(m.Data, &v) != nil || (v.Selection.Family != "bun" && v.Selection.Family != "npm") || material.addOriginal(v) != nil {
 					return errScanProtocol
 				}
 				inventory.OriginalClaims = &v
