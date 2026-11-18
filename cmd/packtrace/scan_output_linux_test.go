@@ -4,6 +4,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -12,6 +13,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"packtrace/internal/execution"
 )
 
 func TestScanInterruptBlockedSequentialWriter(t *testing.T) {
@@ -69,6 +72,15 @@ func TestScanInterruptBlockedSequentialWriter(t *testing.T) {
 		reaped = true
 		if cmd.ProcessState.ExitCode() != 130 || strings.Contains(diagnostic.String(), "PRIVATE") {
 			t.Fatalf("blocked scan output exit=%d diag=%s receipt=%s", cmd.ProcessState.ExitCode(), diagnostic.String(), receipt())
+		}
+		var final execution.ScanReceipt
+		if err := json.Unmarshal([]byte(receipt()), &final); err != nil || !final.Finished || !final.CleanupConfirmed || len(final.Roles) != 3 {
+			t.Fatalf("missing final interrupted receipt: %+v err=%v", final, err)
+		}
+		for i, r := range final.Roles {
+			if !r.WaitReturned || !r.Reaped || !r.StderrJoined || !r.ExchangeJoined || r.WaitPeakResidentBytes == 0 || (i == 2) != (r.Role == "scan-writer") {
+				t.Fatalf("unaccounted role after interrupted output: %+v", r)
+			}
 		}
 	case <-time.After(3 * time.Second):
 		t.Fatal("blocked scan writer not joined/reaped")

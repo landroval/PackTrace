@@ -31,7 +31,7 @@ func TestScanLifetimeWaitSumOwnedLinux(t *testing.T) {
 	total := uint64(usage.Maxrss) * 1024
 	counts := map[string]int{}
 	for _, role := range r.Roles {
-		if !role.WaitReturned || !role.Reaped || role.WaitPeakResidentBytes == 0 {
+		if !role.WaitReturned || !role.Reaped || !role.ExchangeJoined || !role.ExchangeSucceeded || !role.StderrJoined || role.ExitCode != 0 || role.WaitPeakResidentBytes == 0 {
 			t.Fatal("unaccounted role", role)
 		}
 		counts[role.Role]++
