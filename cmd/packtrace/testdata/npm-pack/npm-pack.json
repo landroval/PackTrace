@@ -1,0 +1,31 @@
+{
+  "owned-integrity-fixture": {
+    "id": "owned-integrity-fixture@1.0.0",
+    "name": "owned-integrity-fixture",
+    "version": "1.0.0",
+    "size": 254,
+    "unpackedSize": 122,
+    "shasum": "e1ac1b7f993574d2d93393ba2efff2c9e8f5e9c5",
+    "integrity": "sha512-7YYGgFrH295ze/664KOjM1iPdYVyXGn9nF+pZW57G2Y/ZRUlOtxebRCNUArFgVwcfCa9Gd01jtJqW8jVvVSo6g==",
+    "filename": "owned-integrity-fixture-1.0.0.tgz",
+    "files": [
+      {
+        "path": "index.js",
+        "size": 21,
+        "mode": 420
+      },
+      {
+        "path": "lib/deep/value.txt",
+        "size": 21,
+        "mode": 420
+      },
+      {
+        "path": "package.json",
+        "size": 80,
+        "mode": 420
+      }
+    ],
+    "entryCount": 3,
+    "bundled": []
+  }
+}

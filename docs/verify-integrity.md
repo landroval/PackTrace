@@ -41,6 +41,24 @@ ownership layouts remain incomplete, not silently excluded. It uses the same
 bounded supervised parser, original-byte receipts, unique reference/instance
 joins, source leases, and final lifecycle checks as scan.
 
+### Qualification boundaries
+
+Untouched owned offline `npm pack` artifacts are regression-tested in ordinary,
+scoped and nested instance locations, including nested file paths. This does not
+establish compatibility with every npm version or registry archive. The reference
+profile is bounded gzip/USTAR regular files/directories with exactly two terminal
+zero blocks; extra tar record padding, PAX/GNU extensions and links are unsupported
+and remain incomplete. Never truncate or repack a reference to obtain acceptance.
+See [fixture provenance](../cmd/packtrace/testdata/npm-pack/README.md).
+
+Command-level tests cover an expired deadline, a real blocked-output deadline
+(with joined/reaped writer), and a real supervisor observation gap that trips the
+resource guard. These supplement output-failure and interruption coverage; they
+are **not qualification of every lifecycle limit**. Resident-threshold exhaustion
+and actual late close/reap failures have not been induced through this command.
+Shared execution tests exercise additional finalization faults, not a substitute
+for command-level fault qualification. No production fault-injection switches exist.
+
 Output describes the frozen comparison snapshot, not predicted output/cleanup
 success. A late error can override the process status after bytes were emitted;
 those bytes are not rewritten. Always inspect the actual process exit status.
@@ -83,6 +101,23 @@ paquetes maliciosos/vulnerabilidades ni declara calificación multiplataforma.
 Los diseños no compatibles (workspaces, enlaces/almacenes, propiedad ambigua) siguen
 incompletos. Reutiliza el análisis supervisado, evidencia original, correspondencias
 únicas, leases y controles finales de `scan`.
+
+### Límites de calificación
+
+Se prueban archivos propios de `npm pack` offline, sin modificar, en ubicaciones
+normales, con scope y anidadas, con rutas internas anidadas. No demuestra
+compatibilidad con todas las versiones npm ni archivos del registro. El perfil
+admite gzip/USTAR acotado, archivos regulares/directorios y exactamente dos bloques
+cero finales. Padding adicional, extensiones PAX/GNU y enlaces siguen incompletos.
+No trunques ni reempaquetes una referencia para conseguir aceptación.
+Véase la [procedencia del fixture](../cmd/packtrace/testdata/npm-pack/README.md).
+
+Las pruebas del comando cubren plazo vencido, plazo con salida realmente bloqueada
+(y writer recolectado), y una pausa real de observación que activa el control de
+recursos. No califican todos los límites: no se han provocado agotamiento del
+umbral residente ni fallos reales tardíos de cierre/recolección mediante este
+comando. Las pruebas compartidas de ejecución cubren otros fallos, sin sustituir
+esa calificación. No existen interruptores de inyección de fallos en producción.
 
 La salida describe la comparación congelada, no predice el éxito de escritura o
 limpieza. Un error posterior puede cambiar el estado del proceso sin reescribir
