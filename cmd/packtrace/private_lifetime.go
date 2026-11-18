@@ -97,32 +97,19 @@ func lifetimeFailureExit(exit int) int {
 	return 2
 }
 
-// Only explicit SCAN invocations inspect the option. No environment discovery,
-// descriptor probing when absent, or propagation of the option to workers.
+// Only the first option immediately after "scan" can opt in. All later tokens
+// belong to the public parser (including option values, -- and operands).
+// No environment discovery, absent-option FD probing, or worker propagation.
 func runMainLifetime(args []string, in io.Reader, out, diagnostic io.Writer) int {
-	if len(args) == 0 || args[0] != "scan" {
+	if len(args) < 2 || args[0] != "scan" || (args[1] != lifetimeFlag && !strings.HasPrefix(args[1], lifetimeFlag+"=")) {
 		return runMainObserved(args, in, out, diagnostic, nil)
 	}
-	fd := -1
-	clean := make([]string, 0, len(args))
-	for _, arg := range args {
-		if arg == lifetimeFlag || strings.HasPrefix(arg, lifetimeFlag+"=") {
-			if fd != -1 || !strings.HasPrefix(arg, lifetimeFlag+"=") {
-				return failure(diagnostic, "scan: private-receipt-invalid")
-			}
-			raw := strings.TrimPrefix(arg, lifetimeFlag+"=")
-			n, e := strconv.Atoi(raw)
-			if e != nil || n < 3 || n > 1<<20 || strconv.Itoa(n) != raw {
-				return failure(diagnostic, "scan: private-receipt-invalid")
-			}
-			fd = n
-		} else {
-			clean = append(clean, arg)
-		}
+	raw := strings.TrimPrefix(args[1], lifetimeFlag+"=")
+	fd, err := strconv.Atoi(raw)
+	if err != nil || fd < 3 || fd > 1<<20 || strconv.Itoa(fd) != raw {
+		return failure(diagnostic, "scan: private-receipt-invalid")
 	}
-	if fd == -1 {
-		return runMainObserved(args, in, out, diagnostic, nil)
-	}
+	clean := append([]string{"scan"}, args[2:]...)
 	if !validLifetimeFD(fd) || !prepareLifetimeFD(fd) {
 		return failure(diagnostic, "scan: private-receipt-invalid")
 	}

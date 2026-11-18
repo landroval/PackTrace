@@ -7,8 +7,15 @@ The investigation below records the historical blocker at immutable
 
 ## Approved narrow channel
 
-The real CLI accepts `scan --private-lifetime-fd=N ...` only by explicit argument,
-never environment discovery. N is a canonical decimal descriptor from 3 through
+The real CLI accepts `scan --private-lifetime-fd=N ...` only by explicit argument
+**immediately after `scan`, before every public option or operand**, never by
+environment discovery. This deliberately narrow prefix is not a public parser
+option: tokens after `--`, used as ordinary option values, after the first operand,
+or even after another public option are passed unchanged to the public parser
+and never authorize descriptor probing, modification, writes or close. Any
+subsequent occurrence follows ordinary public parsing (an actual unknown option
+is rejected); it is not a second opt-in. The retained external runner already
+inserts the prefix in this position. N is a canonical decimal descriptor from 3 through
 1048576. The external owner must supply an exclusively owned, already nonblocking,
 write-only **anonymous Linux pipe**. Validation requires S_IFIFO and pipefs
 (PIPEFS_MAGIC), not just S_IFIFO: named filesystem FIFOs are intentionally rejected,
