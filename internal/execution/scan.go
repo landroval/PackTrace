@@ -373,6 +373,16 @@ func (run *ScanRun) superviseScanPhase(ctx context.Context, cfg scanConfig, cmd 
 					return errScanProtocol
 				}
 				intelligenceClosed = true
+			case "npm-root-original":
+				var v projectinventory.CompactNPMRoot
+				if !started || cfg.Stage != "acquire" || !bunOriginalWanted(cfg.Plan) || !intelligenceClosed || inventoryClosed || inventorySequence != 0 || inventory.OriginalClaims != nil || pending != nil || expected != 0 || fatal != "" || decodeCheckedObject(m.Data, &v) != nil {
+					return errScanProtocol
+				}
+				r, err := material.addCompactNPM(v)
+				if err != nil {
+					return errScanProtocol
+				}
+				inventory.OriginalClaims = &r
 			case "bun-original":
 				var v projectinventory.Result
 				if !started || cfg.Stage != "acquire" || !bunOriginalWanted(cfg.Plan) || !intelligenceClosed || inventoryClosed || inventorySequence != 0 || inventory.OriginalClaims != nil || pending != nil || expected != 0 || fatal != "" || decodeCheckedObject(m.Data, &v) != nil || (v.Selection.Family != "bun" && v.Selection.Family != "npm") || material.addOriginal(v) != nil {

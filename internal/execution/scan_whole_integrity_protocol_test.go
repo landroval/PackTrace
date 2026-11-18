@@ -80,6 +80,18 @@ func wholeIntegrityProtocolChild(mode string) int {
 		}
 		return c.send("closure", scanClosure{r.Index, len(r.Assessment.Differences), len(r.Assessment.Gaps)})
 	}, func(original projectinventory.Result) error {
+		if mode == "missing-native-receipt" || mode == "swapped-native-receipt" {
+			v, ok := projectinventory.CompactNPMOriginal(original)
+			if !ok {
+				return errScanProtocol
+			}
+			if mode == "missing-native-receipt" {
+				v.Receipts = v.Receipts[:len(v.Receipts)-1]
+			} else {
+				v.Receipts[1].SHA256, v.Receipts[len(v.Receipts)-1].SHA256 = v.Receipts[len(v.Receipts)-1].SHA256, v.Receipts[1].SHA256
+			}
+			return c.send("npm-root-original", v)
+		}
 		if mode != "missing-original" {
 			ok, err := b.emitOriginal(c.send, original)
 			if err != nil {
@@ -109,6 +121,12 @@ func TestWholeIntegrityProtocolAccounting(t *testing.T) {
 	if runtime.GOOS != "linux" {
 		t.Skip("owned Linux protocol fixture")
 	}
+	for _, origin := range []string{"fixture:private", "https://registry.npmjs.org/pkg/-/pkg-1.0.0.tgz"} {
+		t.Run(origin, func(t *testing.T) { testWholeIntegrityProtocolAccounting(t, origin) })
+	}
+}
+
+func testWholeIntegrityProtocolAccounting(t *testing.T, origin string) {
 	base := t.TempDir()
 	target := filepath.Join(base, "target")
 	prepared := filepath.Join(base, "prepared")
@@ -132,17 +150,21 @@ func TestWholeIntegrityProtocolAccounting(t *testing.T) {
 	}
 	sum := sha256.Sum256(archive.Bytes())
 	sri := "sha256-" + base64.StdEncoding.EncodeToString(sum[:])
-	p := integrityscan.Policy{Version: 1, Designation: "user-designated", Reason: "owned", Provenance: "owned", Manager: "npm@10.9.4", RequiredChecks: []string{"integrity"}, FailOn: []string{}, MinimumAssurance: "lockfile-consistent", References: []integrityscan.Reference{{Location: "node_modules/pkg", LockKey: "node_modules/pkg", Name: "pkg", Version: "1.0.0", Origin: "fixture:private", Classification: "unknown", ExpectedSRI: sri, Archive: "pkg.tgz", Context: "none"}}}
+	p := integrityscan.Policy{Version: 1, Designation: "user-designated", Reason: "owned", Provenance: "owned", Manager: "npm@10.9.4", RequiredChecks: []string{"integrity"}, FailOn: []string{}, MinimumAssurance: "lockfile-consistent", References: []integrityscan.Reference{{Location: "node_modules/pkg", LockKey: "node_modules/pkg", Name: "pkg", Version: "1.0.0", Origin: origin, Classification: "unknown", ExpectedSRI: sri, Archive: "pkg.tgz", Context: "none"}}}
 	policy, _ := json.Marshal(p)
 	sum = sha256.Sum256(policy)
 	hash := "sha256-" + base64.StdEncoding.EncodeToString(sum[:])
 	policyPath := filepath.Join(prepared, "policy.json")
-	for name, data := range map[string][]byte{policyPath: policy, filepath.Join(prepared, "pkg.tgz"): archive.Bytes(), filepath.Join(target, "package.json"): []byte(`{}`), filepath.Join(target, "node_modules/pkg/package.json"): own, filepath.Join(target, "package-lock.json"): []byte(`{"lockfileVersion":3,"packages":{"":{},"node_modules/pkg":{"name":"pkg","version":"1.0.0","resolved":"fixture:private","integrity":"` + sri + `"}}}`)} {
+	for name, data := range map[string][]byte{policyPath: policy, filepath.Join(prepared, "pkg.tgz"): archive.Bytes(), filepath.Join(target, "package.json"): []byte(`{}`), filepath.Join(target, "node_modules/pkg/package.json"): own, filepath.Join(target, "package-lock.json"): []byte(`{"lockfileVersion":3,"packages":{"":{},"node_modules/pkg":{"name":"pkg","version":"1.0.0","resolved":"` + origin + `","integrity":"` + sri + `"}}}`)} {
 		if err := os.WriteFile(name, data, 0600); err != nil {
 			t.Fatal(err)
 		}
 	}
-	for _, mode := range []string{"equal", "missing-original", "missing-receipt", "endpoint", "catalog", "source", "metadata"} {
+	modes := []string{"equal", "missing-original", "missing-receipt", "endpoint", "catalog", "source", "metadata"}
+	if strings.HasPrefix(origin, "https:") {
+		modes = append(modes, "missing-native-receipt", "swapped-native-receipt")
+	}
+	for _, mode := range modes {
 		t.Run(mode, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
@@ -154,7 +176,7 @@ func TestWholeIntegrityProtocolAccounting(t *testing.T) {
 			}
 			cfg := scanConfig{Stage: "acquire", Target: target, PolicyPath: policyPath, PolicyHash: hash, Plan: &plan}
 			_, err = run.superviseScanPhase(ctx, cfg, exec.Command(os.Args[0], "-test.run=^TestWholeIntegrityProtocolChild$", mode), identity)
-			if mode == "endpoint" || mode == "catalog" {
+			if mode == "endpoint" || mode == "catalog" || mode == "missing-native-receipt" || mode == "swapped-native-receipt" {
 				if err == nil {
 					t.Fatal("wrong catalog/reference receipt admitted")
 				}
@@ -162,6 +184,17 @@ func TestWholeIntegrityProtocolAccounting(t *testing.T) {
 			}
 			if err != nil {
 				t.Fatal(err)
+			}
+			if mode == "equal" && strings.HasPrefix(origin, "https:") {
+				if run.Inventory == nil || run.Inventory.OriginalClaims == nil {
+					t.Fatal("compact originals absent")
+				}
+				v, ok := projectinventory.CompactNPMOriginal(*run.Inventory.OriginalClaims)
+				if !ok || len(v.Inputs) != 3 {
+					t.Fatal("compact fixture not admitted")
+				}
+				t.Logf("compact supervised comparisons=%d originals=%d", len(run.Records), len(v.Inputs))
+				testCompactNPMSharedBudget(t, v, run.Records[0].IntegrityScope)
 			}
 			report := integrityscan.BuildReportWithPolicy(plan, run.Records, run.Summary, run.Resources, false, false, run.Inventory, nil, nil, nil, false, time.Now().UTC())
 			outcome := ""

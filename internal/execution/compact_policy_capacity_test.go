@@ -130,15 +130,31 @@ func TestOfflineCompactPolicyCapacity(t *testing.T) {
 	rowCount := len(original.Model.Observations) + len(original.Model.Evidence) + len(original.OriginalInputs)
 	envelopeJSON, _ := json.Marshal(envelope{Version: 1, Seq: 1, Job: 1, Type: "bun-original", Data: encoded})
 	var b scanPolicyMaterialBuffer
-	called := false
-	sent, err := b.emitOriginal(func(string, any) error { called = true; return nil }, inv)
-	if rowCount != 6006 || len(envelopeJSON)+1 != 2848088 || sent || called || err != nil || b.bytes != 0 || b.originalRows != 0 {
-		t.Fatalf("unchanged first private gate: rows=%d envelope=%d sent=%v err=%v", rowCount, len(envelopeJSON)+1, sent, err)
+	var wire bytes.Buffer
+	sent, err := b.emitOriginal(newChannel(bytes.NewReader(nil), &wire, &traffic{}).send, inv)
+	if rowCount != 6006 || len(envelopeJSON)+1 <= maxMessage || !sent || err != nil || b.originalRows != 3006 {
+		t.Fatalf("compact admission: rows=%d legacyEnvelope=%d sent=%v err=%v", rowCount, len(envelopeJSON)+1, sent, err)
 	}
-	if b.addOriginal(original) == nil {
+	env, err := newChannel(bytes.NewReader(wire.Bytes()), &bytes.Buffer{}, &traffic{}).receive()
+	if err != nil || env.Type != "npm-root-original" {
+		t.Fatal("compact transport", err)
+	}
+	var v projectinventory.CompactNPMRoot
+	if decodeCheckedObject(env.Data, &v) != nil {
+		t.Fatal("compact decode")
+	}
+	var parent scanPolicyMaterialBuffer
+	admitted, err := parent.addCompactNPM(v)
+	pub := projectinventory.PortableMatching(inv)
+	pub.OriginalClaims = &admitted
+	if err != nil || projectinventory.ValidateOriginalClaims(pub) != nil || parent.originalRows != b.originalRows || parent.bytes != b.bytes {
+		t.Fatal("independent parent admission", err)
+	}
+	var legacy scanPolicyMaterialBuffer
+	if legacy.addOriginal(original) == nil {
 		t.Fatal("parent original row gate changed")
 	}
-	facts := map[string]any{"legacyPolicyBytes": len(raw), "compactPolicyBytes": len(compact), "references": len(p.References), "exactOrderedExpansion": true, "sourceAdmitted": true, "pin": pin, "normalizedFrameLFBytes": lengths, "originalRows": rowCount, "originalEnvelopeLFBytes": len(envelopeJSON) + 1, "originalAdmitted": false, "firstRemainingGate": "shared 4096 private rows; semantic rows unchanged", "wholeIntegrityCompleted": false, "scope": "metadata-only, no 1000-package payload comparison"}
+	facts := map[string]any{"legacyPolicyBytes": len(raw), "compactPolicyBytes": len(compact), "references": len(p.References), "exactOrderedExpansion": true, "sourceAdmitted": true, "pin": pin, "normalizedFrameLFBytes": lengths, "originalRows": rowCount, "originalEnvelopeLFBytes": len(envelopeJSON) + 1, "originalAdmitted": true, "compactOriginalRows": b.originalRows, "compactOriginalBytes": b.bytes, "compactOriginalFrameLFBytes": wire.Len(), "firstRemainingGate": "metadata admission complete; payload comparison not run here", "wholeIntegrityCompleted": false, "scope": "metadata-only, no 1000-package payload comparison"}
 	saveCapacity(t, filepath.Join(dir, "compact-capacity.json"), facts)
 	t.Logf("%+v", facts)
 }

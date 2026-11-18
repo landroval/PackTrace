@@ -55,7 +55,9 @@ func TestOfflineMetadataCapacity(t *testing.T) {
 			var frame bytes.Buffer
 			ch := newChannel(bytes.NewReader(nil), &frame, &traffic{})
 			var material scanPolicyMaterialBuffer
-			sent, err := material.emitOriginal(ch.send, inv)
+			// Preserve the frozen legacy regression independently of the new
+			// compact-profile admission and supervised tests.
+			sent, err := material.emitLegacyOriginal(ch.send, inv)
 			if err != nil {
 				t.Fatal(err)
 			}
