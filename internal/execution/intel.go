@@ -25,7 +25,7 @@ type IntelRun struct {
 func (r *IntelRun) WriteOutput(ctx context.Context, out io.Writer, data []byte) error {
 	return r.lifecycle.WriteOutput(ctx, out, data)
 }
-func (r *IntelRun) Finish() (ScanReceipt, error) { return r.lifecycle.Finish() }
+func (r *IntelRun) Finish() (ScanReceipt, error) { return r.lifecycle.finish(false) }
 
 type intelConfig struct {
 	Nonce   string                   `json:"nonce"`

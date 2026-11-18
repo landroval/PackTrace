@@ -15,8 +15,20 @@ func TestIntelActualWorkerUnavailableStatusNeverInitializes(t *testing.T) {
 	}
 	path := filepath.Join(t.TempDir(), "absent")
 	run, e := RunIntel(context.Background(), cli.IntelArgumentRequest{Action: cli.ArgumentActionIntelStatus, StateDir: path, Format: "json"})
+	if e != nil || !run.Usable {
+		t.Fatal(e, run.Result)
+	}
+	// A scan-only wait-peak threshold must not adjudicate intel status.
+	m := run.lifecycle.output.state.scan
+	m.mu.Lock()
+	if len(m.roles) != 1 {
+		m.mu.Unlock()
+		t.Fatal("missing preparation role")
+	}
+	m.roles[0].WaitPeakResidentBytes = 1<<30 + 1
+	m.mu.Unlock()
 	receipt, finish := run.Finish()
-	if e != nil || finish != nil || !run.Usable || run.Result.Outcome != "unavailable" || !receipt.CleanupConfirmed || len(receipt.Roles) != 1 || !receipt.Roles[0].Reaped {
+	if receipt.Finalization.Status != "" || e != nil || finish != nil || !run.Usable || run.Result.Outcome != "unavailable" || !receipt.CleanupConfirmed || len(receipt.Roles) != 1 || !receipt.Roles[0].Reaped {
 		t.Fatal("actual fixed worker failed", run.Result, e, finish, receipt)
 	}
 	if _, e := os.Stat(path); !os.IsNotExist(e) {

@@ -348,7 +348,9 @@ func (r *ScanRun) Checkpoint() error {
 
 // Finish must be called by the owner AFTER the last output attempt. The final
 // receipt is retained in the caller; already-written bytes cannot be rewritten.
-func (r *ScanRun) Finish() (ScanReceipt, error) {
+func (r *ScanRun) Finish() (ScanReceipt, error) { return r.finish(true) }
+
+func (r *ScanRun) finish(checkScanPeaks bool) (ScanReceipt, error) {
 	if r.output.state == nil || r.output.state.scan == nil {
 		return ScanReceipt{}, nil
 	}
@@ -396,8 +398,10 @@ func (r *ScanRun) Finish() (ScanReceipt, error) {
 			receipt = s.scan.snapshot()
 		}
 	}
-	e = s.scan.finalize(e)
-	receipt = s.scan.snapshot()
+	if checkScanPeaks {
+		e = s.scan.finalize(e)
+		receipt = s.scan.snapshot()
+	}
 	r.Operational = receipt
 	r.Resources = receipt.Resources
 	if s.broken.Load() {
