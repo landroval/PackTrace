@@ -174,6 +174,8 @@ interface/signature is a design output, not assumed to exist in this plan.
 
 - [ ] Distinguish real nonapplicability from an unselected optional check and from a
   required unsupported case. Do not remove a required category merely to get0.
+The PackTrace maintainer is the designated native acceptance authorizer. Acceptance must name the exact executable and tested runtime/root profile; a changed executable or profile, or revoked acceptance, leaves qualification incomplete. This design decision accepts no artifact and authorizes no key operations or campaigns.
+
 - [ ] Define trusted qualification admission and invalid/stale/wrong-source,
   wrong-binary, wrong-platform/FS and forged evidence refusal before report sealing.
   Preserve rejection of child-granted authority and public JSON deserialization.
