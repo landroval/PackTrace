@@ -1,5 +1,8 @@
 # Manual de uso de PackTrace
 
+Solo comparación npm en Linux: [`verify-integrity`](verify-integrity.md#español)
+es un comando explícito separado con referencias fijadas (sin publicar); no cambia `scan`.
+
 [English](user-guide.md) · [Inicio del proyecto](../README.es.md)
 
 Este manual describe el binario experimental actual, no una versión cualificada

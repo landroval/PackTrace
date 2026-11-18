@@ -1,5 +1,8 @@
 # PackTrace user manual
 
+Linux npm comparison only: [`verify-integrity`](verify-integrity.md) is a separate
+explicit pinned-reference command (unreleased); it does not change `scan`.
+
 [Español](user-guide.es.md) · [Project home](../README.md)
 
 This manual describes the current experimental binary, not a promise of a
