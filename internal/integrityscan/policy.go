@@ -81,9 +81,13 @@ type Reference struct {
 	Archive        string `json:"archive"`
 	Context        string `json:"context"`
 }
+
+const VerifyNPMProfile = "verify-npm-v1"
+
 type Plan struct {
-	Builtin  bool                `json:"builtin,omitempty"`
-	Provided cli.ArgumentOptions `json:"provided,omitempty"`
+	IntegrityProfile string              `json:"integrityProfile,omitempty"`
+	Builtin          bool                `json:"builtin,omitempty"`
+	Provided         cli.ArgumentOptions `json:"provided,omitempty"`
 	// PolicyFile is a source selector, never authority. Acquisition must reread
 	// it through a newly proven external capability before target content.
 	PolicyFile            string             `json:"policyFile"`

@@ -74,7 +74,24 @@ func (m *expandedMeter) Read(p []byte) (int, error) {
 
 // InspectReferenceArchive checks a caller-supplied gzip USTAR package/ stream; it neither acquires nor authenticates its source.
 // Invalid streams expose counters only; no partially usable entries escape.
-func InspectReferenceArchive(ctx context.Context, b ReferenceBinding, r io.Reader, l Limits) (result ReferenceCatalog, err error) {
+func InspectReferenceArchive(ctx context.Context, b ReferenceBinding, r io.Reader, l Limits) (ReferenceCatalog, error) {
+	return InspectReferenceArchiveProfile(ctx, b, r, l, ArchiveLegacy)
+}
+
+// ArchiveProfile is selected by the caller, never by archive or policy bytes.
+// ArchiveVerifyNPM admits one safe envelope and a narrowly defined historical
+// timestamp trailer in an otherwise empty USTAR prefix. It is not GNU/PAX support.
+type ArchiveProfile uint8
+
+const (
+	ArchiveLegacy ArchiveProfile = iota
+	ArchiveVerifyNPM
+)
+
+func InspectReferenceArchiveProfile(ctx context.Context, b ReferenceBinding, r io.Reader, l Limits, profile ArchiveProfile) (result ReferenceCatalog, err error) {
+	if profile != ArchiveLegacy && profile != ArchiveVerifyNPM {
+		return result, errReferenceArchive
+	}
 	if ctx == nil || r == nil || !b.usable || b.instanceID == "" || len(b.expectedDigests) == 0 {
 		return result, errReferenceArchive
 	}
@@ -103,6 +120,7 @@ func InspectReferenceArchive(ctx context.Context, b ReferenceBinding, r io.Reade
 	}
 	seen := make(map[string]node)
 	var names int64
+	var envelope string
 	var block [512]byte
 	for {
 		if _, e = io.ReadFull(expanded, block[:]); e != nil {
@@ -136,7 +154,7 @@ func InspectReferenceArchive(ctx context.Context, b ReferenceBinding, r io.Reade
 			result.observedSRI = name + "-" + base64.StdEncoding.EncodeToString(observed)
 			return result, nil
 		}
-		if len(entries) >= l.Entries || !validUSTAR(block[:]) {
+		if len(entries) >= l.Entries || !validUSTARProfile(block[:], profile) {
 			return result, errReferenceArchive
 		}
 		raw := tarText(block[0:100])
@@ -152,8 +170,14 @@ func InspectReferenceArchive(ctx context.Context, b ReferenceBinding, r io.Reade
 		if !valid || size > l.FileBytes || (typ == '5' && size != 0) {
 			return result, errReferenceArchive
 		}
-		path, valid := archiveName(raw, typ == '5', l)
+		path, valid := archiveNameProfile(raw, typ == '5', l, profile)
 		if !valid {
+			return result, errReferenceArchive
+		}
+		root := strings.SplitN(path, "/", 2)[0]
+		if envelope == "" {
+			envelope = root
+		} else if root != envelope {
 			return result, errReferenceArchive
 		}
 		names += int64(len(raw))
@@ -179,8 +203,8 @@ func InspectReferenceArchive(ctx context.Context, b ReferenceBinding, r io.Reade
 				seen[k] = node{spelling: parent}
 			}
 		}
-		entryName := strings.TrimPrefix(path, "package/")
-		if path == "package" {
+		entryName := strings.TrimPrefix(path, envelope+"/")
+		if path == envelope {
 			entryName = ""
 		} // envelope only; package/package remains package
 		entry := ReferenceEntry{EntryID: strconv.Itoa(len(entries) + 1), Name: entryName, Size: size, Type: EntryDirectory}
@@ -238,7 +262,20 @@ func tarOctal(b []byte) (int64, bool) {
 	n, e := strconv.ParseInt(s, 8, 64)
 	return n, e == nil && n >= 0
 }
-func validUSTAR(b []byte) bool {
+func validUSTAR(b []byte) bool { return validUSTARProfile(b, ArchiveLegacy) }
+
+func validUSTARProfile(b []byte, profile ArchiveProfile) bool {
+	if profile == ArchiveVerifyNPM {
+		// Neither unused link targets nor unused header padding may carry an
+		// alternate interpretation in this profile.
+		for _, field := range [][]byte{b[157:257], b[500:512]} {
+			for _, v := range field {
+				if v != 0 {
+					return false
+				}
+			}
+		}
+	}
 	if string(b[257:263]) != "ustar\x00" || string(b[263:265]) != "00" {
 		return false
 	}
@@ -269,7 +306,11 @@ func validUSTAR(b []byte) bool {
 			}
 		}
 	}
-	for _, field := range [][]byte{b[:100], b[157:257], b[265:297], b[297:329], b[345:500]} {
+	prefix := b[345:500]
+	if profile == ArchiveVerifyNPM && historicalTimestampPrefix(b) {
+		prefix = b[345:476]
+	}
+	for _, field := range [][]byte{b[:100], b[157:257], b[265:297], b[297:329], prefix} {
 		if i := bytes.IndexByte(field, 0); i >= 0 {
 			for _, v := range field[i:] {
 				if v != 0 {
@@ -280,12 +321,43 @@ func validUSTAR(b []byte) bool {
 	}
 	return true
 }
+
+// historicalTimestampPrefix permits only two identical fixed-width octal
+// timestamps after 131 zero bytes, with NUL terminators and zero unused bytes.
+// No path prefix is interpreted from these bytes; the original checksum and SRI
+// still cover them. All other metadata and header checks remain mandatory.
+func historicalTimestampPrefix(b []byte) bool {
+	for _, v := range b[345:476] {
+		if v != 0 {
+			return false
+		}
+	}
+	for _, v := range b[500:512] {
+		if v != 0 {
+			return false
+		}
+	}
+	if b[487] != 0 || b[499] != 0 || !bytes.Equal(b[476:488], b[488:500]) {
+		return false
+	}
+	for _, v := range b[476:487] {
+		if v < '0' || v > '7' {
+			return false
+		}
+	}
+	_, ok := tarOctal(b[476:488])
+	return ok
+}
+
 func archiveName(raw string, dir bool, l Limits) (string, bool) {
+	return archiveNameProfile(raw, dir, l, ArchiveLegacy)
+}
+func archiveNameProfile(raw string, dir bool, l Limits, profile ArchiveProfile) (string, bool) {
 	if int64(len(raw)) > l.NameBytes || !utf8.ValidString(raw) || strings.ContainsAny(raw, "\\:\x00<>\"|?*") || strings.HasPrefix(raw, "/") || strings.HasPrefix(raw, "//") {
 		return "", false
 	}
 	if dir {
-		if !strings.HasSuffix(raw, "/") {
+		if profile == ArchiveLegacy && !strings.HasSuffix(raw, "/") {
 			return "", false
 		}
 		raw = strings.TrimSuffix(raw, "/")
@@ -293,7 +365,7 @@ func archiveName(raw string, dir bool, l Limits) (string, bool) {
 		return "", false
 	}
 	parts := strings.Split(raw, "/")
-	if len(parts) > l.PathDepth+1 || parts[0] != "package" || len(parts) == 1 && !dir {
+	if len(parts) > l.PathDepth+1 || profile == ArchiveLegacy && parts[0] != "package" || len(parts) == 1 && !dir {
 		return "", false
 	}
 	for _, p := range parts {

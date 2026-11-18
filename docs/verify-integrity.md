@@ -51,6 +51,35 @@ zero blocks; extra tar record padding, PAX/GNU extensions and links are unsuppor
 and remain incomplete. Never truncate or repack a reference to obtain acceptance.
 See [fixture provenance](../cmd/packtrace/testdata/npm-pack/README.md).
 
+Only this command explicitly selects **`verify-npm-v1`**; legacy `scan` and the
+legacy archive API keep their prior semantics. It permits exactly one safe,
+case-sensitive top-level envelope, explicit or inferred, strips exactly that
+component, and permits directory headers with or without one final `/`. The
+envelope is never package identity. Mixed roots, root files, collisions, unsafe
+components, special entries and nonzero unused link/padding fields are rejected.
+A historical USTAR variant permits only an otherwise empty prefix containing two
+identical 11-digit octal/NUL timestamps at offsets 476 and 488, with zero bytes
+345–475 and 500–511. This does not enable GNU/PAX interpretation or arbitrary
+nonzero prefix tails. Checksums, numeric grammar, resource bounds, exact tar/gzip
+termination and SRI over the **unaltered compressed bytes** remain mandatory.
+
+Authenticated published files may qualify their exact ancestor namespaces for
+native traversal, including package-shaped fixture directories. This is not an
+ownership grant from archive membership: the entire physical subtree, including
+extras, must be captured and bounded/stably read and compared. Separately mapped
+or locked owners take precedence; a captured manifest at a content-only candidate
+also retains a potential separate-owner gap. Deeper unpublished package boundaries, links,
+unreadable/unstable content and ambiguous ownership remain negative evidence.
+Empty published directories alone do not qualify traversal. Distinct negative
+boundaries retain distinct opaque evidence identities through portable reporting.
+
+An offline public pilot covers all 160 original SRI-verified archives of the
+retained `node-js-getting-started` lock snapshot. The installed tree was previously
+reconstructed from those archives, **not independently installed**; equality is
+not independent producer or publisher authentication. Intact, drift, missing,
+mixed and restored controls use one binary, policy and pin without repacking.
+This evidence does not qualify all registry archives or every assurance dimension.
+
 Command-level tests cover an expired deadline, a real blocked-output deadline
 (with joined/reaped writer), and a real supervisor observation gap that trips the
 resource guard. These supplement output-failure and interruption coverage; they
@@ -111,6 +140,34 @@ admite gzip/USTAR acotado, archivos regulares/directorios y exactamente dos bloq
 cero finales. Padding adicional, extensiones PAX/GNU y enlaces siguen incompletos.
 No trunques ni reempaquetes una referencia para conseguir aceptación.
 Véase la [procedencia del fixture](../cmd/packtrace/testdata/npm-pack/README.md).
+
+Solo este comando selecciona explícitamente **`verify-npm-v1`**; `scan` y la API
+antigua conservan sus semánticas. Admite una única envoltura superior segura,
+sensible a mayúsculas, explícita o inferida; elimina exactamente ese componente
+y permite directorios con o sin una `/` terminal. La envoltura no establece
+identidad. Rechaza raíces mixtas, archivos raíz, colisiones, componentes inseguros,
+entradas especiales y bytes no nulos en campos de enlace/padding sin uso.
+La variante histórica USTAR solo admite dos marcas octales idénticas de 11 dígitos
+más NUL en offsets 476 y 488, con ceros en 345–475 y 500–511 y sin prefijo de ruta.
+No habilita GNU/PAX ni colas arbitrarias. Conserva checksum, gramática numérica,
+límites, terminación exacta tar/gzip y SRI de los **bytes comprimidos originales**.
+
+Los archivos publicados autenticados pueden habilitar el recorrido nativo de sus
+ancestros exactos, incluso directorios fixture con forma de paquete. La pertenencia
+al archivo no concede propiedad: se captura y compara todo el subárbol físico,
+incluidos extras, con lecturas estables y acotadas. Propietarios mapeados o del
+lock separados prevalecen; un manifiesto físico en un candidato de contenido
+mantiene el hueco de posible propietario separado. Límites más profundos no publicados, enlaces, contenido
+ilegible/inestable y propiedad ambigua siguen siendo evidencia negativa. Directorios
+publicados vacíos no bastan. Los límites negativos distintos mantienen identidades
+opacas de evidencia distintas, incluso en la salida portable.
+
+El piloto público offline cubre los 160 archivos originales verificados por SRI del
+lock retenido de `node-js-getting-started`. El árbol instalado fue reconstruido
+previamente desde esos archivos, **no instalado independientemente**. Igualdad no
+autentica al productor/editor. Los controles intacto, cambios, referencia ausente,
+mixto y restaurado usan el mismo binario, política y pin, sin reempaquetar. Esto no
+califica todos los archivos del registro ni todas las dimensiones de garantía.
 
 Las pruebas del comando cubren plazo vencido, plazo con salida realmente bloqueada
 (y writer recolectado), y una pausa real de observación que activa el control de

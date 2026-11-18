@@ -44,6 +44,11 @@ func ValidateRecord(plan Plan, r Record, policyHash string) error {
 		if s == "" || s == id+":scope" || s == id+":nested" || s == id+":unmapped" {
 			return true
 		}
+		boundary := id + ":boundary:"
+		if strings.HasPrefix(s, boundary) {
+			n, e := strconv.Atoi(strings.TrimPrefix(s, boundary))
+			return e == nil && n >= 1 && n <= 100000 && s == boundary+strconv.Itoa(n)
+		}
 		prefix := id + ":observed:"
 		if !strings.HasPrefix(s, prefix) {
 			return false

@@ -3,6 +3,7 @@ package integrityscan
 import (
 	"path/filepath"
 	"reflect"
+	"strings"
 
 	"packtrace/internal/cli"
 )
@@ -27,6 +28,9 @@ func configureBuiltin(r cli.ScanArgumentRequest) (Plan, error) {
 // ValidatePlanPolicy admits only exact recomputed built-ins, or the existing
 // explicit-policy source with independently pinned grants.
 func ValidatePlanPolicy(p Plan) error {
+	if p.IntegrityProfile != "" && (p.IntegrityProfile != VerifyNPMProfile || p.Builtin || !strings.HasPrefix(p.Manager, "npm@") || p.Checks != cli.ArgumentCheckIntegrity || !supportedPolicyPin(p.TrustedPolicyDigest) || p.Policy.MinimumAssurance != "independently-anchored") {
+		return ErrPolicy
+	}
 	r := cli.ScanArgumentRequest{Manager: p.Manager, Privacy: p.Privacy, PolicyPath: p.PolicyFile, TrustedPolicyDigest: p.TrustedPolicyDigest, StateDir: p.StateDir, TrustedSnapshotDigest: p.TrustedSnapshotDigest, Checks: p.Checks, FailOn: p.FailOn, Provided: p.Provided, Output: "-"}
 	var want Plan
 	var err error

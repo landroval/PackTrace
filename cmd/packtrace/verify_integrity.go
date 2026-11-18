@@ -55,7 +55,7 @@ func runIntegrityContext(ctx context.Context, request cli.ScanArgumentRequest, o
 	defer cancel()
 	old := debug.SetMemoryLimit(128 << 20)
 	defer debug.SetMemoryLimit(old)
-	run, err := execution.RunScan(work, request)
+	run, err := execution.RunIntegrityCheck(work, request)
 	run.NoteFailure("run", err)
 	conditions := cli.ScanExitConditions{Interrupted: errors.Is(ctx.Err(), context.Canceled), ReportPreventingError: !run.Usable || !reportableScanFailure(err)}
 	defer func() {

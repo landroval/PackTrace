@@ -112,6 +112,16 @@ type residentSample struct {
 // The same state/budget subsequently owns the existing terminable writer role.
 // The caller must Finish after its last output attempt, including error paths.
 func RunScan(ctx context.Context, request cli.ScanArgumentRequest) (ScanRun, error) {
+	return runScan(ctx, request, false)
+}
+
+// RunIntegrityCheck selects the narrow npm archive/namespace profile. It does
+// not alter scan defaults or derive compatibility from untrusted policy bytes.
+func RunIntegrityCheck(ctx context.Context, request cli.ScanArgumentRequest) (ScanRun, error) {
+	return runScan(ctx, request, true)
+}
+
+func runScan(ctx context.Context, request cli.ScanArgumentRequest, verify bool) (ScanRun, error) {
 	s := newRunState(ctx)
 	run := ScanRun{output: BatchRun{state: s}}
 	if ctx.Err() != nil {
@@ -171,6 +181,12 @@ func RunScan(ctx context.Context, request cli.ScanArgumentRequest) (ScanRun, err
 	}
 	if e != nil {
 		return run, e
+	}
+	if verify {
+		plan.IntegrityProfile = integrityscan.VerifyNPMProfile
+		if integrityscan.ValidatePlanPolicy(plan) != nil {
+			return run, integrityscan.ErrOptions
+		}
 	}
 	run.Plan = plan
 	run.Usable = true
