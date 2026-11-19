@@ -364,22 +364,17 @@ func acquireFromRoot(ctx context.Context, root, cache *nativefs.Root, prepared, 
 							}
 							for j := range snap.Entries {
 								snap.Entries[j].Name = r.Location + "/" + snap.Entries[j].Name
-								// A physical manifest at a traversal candidate is a
-								// separate potential owner, even if discovery did not
-								// descend this fixture namespace. Do not grant ownership
-								// from absence in the inventory or archive membership.
-								name := snap.Entries[j].Name
-								if strings.HasSuffix(name, "/package.json") {
-									dir := strings.TrimSuffix(name, "/package.json")
-									if contentScopes[dir] {
-										delete(bundled, dir)
-									}
-								}
 							}
 							snap.Entries = append(snap.Entries, nativefs.Entry{Name: r.Location, Kind: nativefs.KindDirectory, Status: nativefs.StatusComplete})
 							entriesRemaining -= len(snap.Entries)
 							summary.ObservedEntries += len(snap.Entries)
 							summary.SnapshotComplete = summary.SnapshotComplete && snap.Complete
+							// Published bytes permit observation, not an ownership
+							// grant. Even an identical manifestless subtree could be
+							// a separate unrecorded package. Retain its negative scope.
+							for name := range contentScopes {
+								delete(bundled, name)
+							}
 							installed, count = installedSnapshot(ctx, packageRoot, snap, plan, i, bundled, qualifiedOwners, &reread)
 						} else {
 							summary.SnapshotComplete = false

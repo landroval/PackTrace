@@ -100,6 +100,43 @@ func TestVerifyArchiveHistoricalMetadata(t *testing.T) {
 	}
 }
 
+func TestArchiveProfilesDifferentialHeaders(t *testing.T) {
+	base := archiveFixture(t, &tar.Header{Name: "package/a", Typeflag: tar.TypeReg})
+	for _, tc := range []struct {
+		name           string
+		mutate         func([]byte)
+		legacy, verify bool
+	}{
+		{"safe-prefix", func(b []byte) { clear(b[:100]); copy(b[:100], "a"); copy(b[345:500], "package/src") }, true, true},
+		{"other-envelope", func(b []byte) { clear(b[:100]); copy(b[:100], "other/index.js") }, false, true},
+		{"hidden-name", func(b []byte) { b[99] = 'x' }, false, false},
+		{"hidden-prefix", func(b []byte) { b[499] = 'x' }, false, false},
+		{"hidden-owner", func(b []byte) { b[296] = 'x' }, false, false},
+		{"unused-link", func(b []byte) { b[157] = 'x' }, true, false},
+		{"unused-padding", func(b []byte) { b[511] = 'x' }, true, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			raw := unzipFixture(t, base)
+			tc.mutate(raw[:512])
+			fixTarChecksum(raw[:512])
+			b := zipFixture(t, raw)
+			c, e := InspectReferenceArchive(context.Background(), archiveBinding(t, b), bytes.NewReader(b), Limits{})
+			if (e == nil) != tc.legacy || c.verified != tc.legacy {
+				t.Fatal("legacy acceptance changed", c, e)
+			}
+			inspectProfile(t, b, tc.verify)
+		})
+	}
+	// Case-fold collisions and mixed envelopes are rejected by both APIs.
+	for _, names := range [][2]string{{"package/A", "package/a"}, {"other/a", "package/b"}} {
+		b := archiveFixture(t, &tar.Header{Name: names[0]}, &tar.Header{Name: names[1]})
+		if c, e := InspectReferenceArchive(context.Background(), archiveBinding(t, b), bytes.NewReader(b), Limits{}); e == nil || c.verified {
+			t.Fatal("legacy collision/mixed root accepted")
+		}
+		inspectProfile(t, b, false)
+	}
+}
+
 func TestVerifyArchiveRetainsStreamGuards(t *testing.T) {
 	b := archiveFixture(t, &tar.Header{Name: "root/a", Typeflag: tar.TypeReg, Size: 3})
 	raw := unzipFixture(t, b)

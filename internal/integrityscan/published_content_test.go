@@ -65,7 +65,7 @@ func TestPublishedContentProfileNativeComparison(t *testing.T) {
 	}
 	records, _, _ := acquireContentProfile(t, root, policy, p, true)
 	a := records[0].Assessment
-	want := map[string]integrity.DifferenceKind{"4": integrity.DifferenceModified, "5": integrity.DifferenceMissing, "6": integrity.DifferenceTypeChanged}
+	want := map[string]integrity.DifferenceKind{"1": integrity.DifferenceModified, "2": integrity.DifferenceMissing, "3": integrity.DifferenceTypeChanged}
 	added := 0
 	for _, d := range a.Differences {
 		if want[d.EntryID] == d.Kind {
@@ -75,8 +75,8 @@ func TestPublishedContentProfileNativeComparison(t *testing.T) {
 			added++
 		}
 	}
-	if !a.SuppliedComparisonComplete || len(a.Gaps) != 0 || len(want) != 0 || added != 2 {
-		t.Fatal("published scope lost native drift/extras", a, want)
+	if a.SuppliedComparisonComplete || len(a.Gaps) != 1 || a.Gaps[0].Code != integrity.GapOwnership || len(want) != 0 || added != 1 {
+		t.Fatal("ambiguous subtree closed or unrelated native drift lost", a, want)
 	}
 }
 
@@ -104,6 +104,35 @@ func TestPublishedContentExactBoundaries(t *testing.T) {
 			}
 			if a.SuppliedComparisonComplete || !ownership {
 				t.Fatal("unknown scope swallowed", rel, manifest, a)
+			}
+		}
+	}
+}
+
+// Matching authenticated bytes do not distinguish parent fixtures from an
+// unrecorded separate package without a manifest. Neither profile may complete.
+func TestPublishedContentIdenticalManifestlessOwnerRemainsAmbiguous(t *testing.T) {
+	root, policy, p := contentFixture(t)
+	dir := filepath.Join(root, "node_modules/pkg", ownedBundle)
+	for _, name := range []string{"added.js", "type.js"} {
+		if e := os.Remove(filepath.Join(dir, name)); e != nil {
+			t.Fatal(e)
+		}
+	}
+	for _, name := range []string{"index.js", "gone.js", "type.js"} {
+		if e := os.WriteFile(filepath.Join(dir, name), []byte("original"), 0600); e != nil {
+			t.Fatal(e)
+		}
+	}
+	for _, verify := range []bool{false, true} {
+		records, _, _ := acquireContentProfile(t, root, policy, p, verify)
+		a := records[0].Assessment
+		if a.SuppliedComparisonComplete || len(a.Gaps) != 1 || a.Gaps[0].Code != integrity.GapOwnership {
+			t.Fatal("identical bytes granted ownership", verify, a)
+		}
+		for _, d := range a.Differences {
+			if d.EntryID == "4" || d.EntryID == "5" || d.EntryID == "6" {
+				t.Fatal("ambiguous owner compared as parent", verify, d)
 			}
 		}
 	}
@@ -190,7 +219,7 @@ func TestDistinctUnknownBoundaryEvidenceSurvivesValidation(t *testing.T) {
 			seen[g.EvidenceID] = true
 		}
 	}
-	if len(seen) != 2 {
+	if len(seen) != 3 {
 		t.Fatal("missing boundaries", records)
 	}
 	portable := integrity.BuildPortableIntegrity(integrity.Assessment{Instances: []integrity.InstanceAssessment{records[0].Assessment}})
@@ -203,7 +232,7 @@ func TestDistinctUnknownBoundaryEvidenceSurvivesValidation(t *testing.T) {
 			positions[g.Evidence] = true
 		}
 	}
-	if len(positions) != 2 {
+	if len(positions) != 3 {
 		t.Fatal("portable boundaries missing", portable)
 	}
 }

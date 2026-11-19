@@ -64,21 +64,58 @@ nonzero prefix tails. Checksums, numeric grammar, resource bounds, exact tar/gzi
 termination and SRI over the **unaltered compressed bytes** remain mandatory.
 
 Authenticated published files may qualify their exact ancestor namespaces for
-native traversal, including package-shaped fixture directories. This is not an
-ownership grant from archive membership: the entire physical subtree, including
-extras, must be captured and bounded/stably read and compared. Separately mapped
-or locked owners take precedence; a captured manifest at a content-only candidate
-also retains a potential separate-owner gap. Deeper unpublished package boundaries, links,
-unreadable/unstable content and ambiguous ownership remain negative evidence.
-Empty published directories alone do not qualify traversal. Distinct negative
-boundaries retain distinct opaque evidence identities through portable reporting.
+native **observation**, including package-shaped fixture directories. Archive
+membership does not establish installed ownership: such directories retain an
+`ownership-ambiguous` gap even if all bytes match and no manifest or lock entry
+exists. A separate manifestless package with identical bytes cannot be distinguished
+from parent-owned fixtures. Observed content under that negative scope does not
+become a parent comparison; independent drift elsewhere is still reported. Explicit
+mapped/locked owners take precedence; the existing literal bundled-lock qualification
+is unchanged. Deeper unpublished boundaries, links and unreadable/unstable content
+remain negative evidence. Empty published directories do not qualify traversal.
 
-An offline public pilot covers all 160 original SRI-verified archives of the
-retained `node-js-getting-started` lock snapshot. The installed tree was previously
-reconstructed from those archives, **not independently installed**; equality is
-not independent producer or publisher authentication. Intact, drift, missing,
-mixed and restored controls use one binary, policy and pin without repacking.
-This evidence does not qualify all registry archives or every assurance dimension.
+**Intentional shared evidence change:** distinct negative boundaries now retain
+distinct opaque `:boundary:N` identities, including in legacy `scan`. Its archive
+acceptance and decision gates are unchanged, but its evidence representation is not
+byte-for-byte compatible: prior `:nested`/`:unmapped` identities could alias separate
+boundaries, and portable evidence ordinals can change. A local-base differential
+probe (`8d60af6`, `TestLegacyBoundaryPublicContract`) covers a mapped nested owner
+and two unknown boundaries: completeness, gap codes and comparisons are unchanged;
+the three gaps now have three evidence identities rather than two.
+
+The retained offline public pilot contains 160 original SRI-verified archives of
+`node-js-getting-started`. Its tree was reconstructed from those same archives,
+**not independently installed**. Its pin was calculated for the original experiment,
+not obtained from independent policy review. Neither the old controls nor the
+collector establish publisher authentication or independent installation equality.
+
+With the conservative ownership correction, 159 instance comparisons complete;
+`resolve` (instance 131) retains one `ownership-ambiguous` gap. Therefore intact and
+restored whole-tree runs exit **3**, not 0. Express drift and each of the nine
+formerly unusable archive instances still produce one positive drift finding, but
+exit **3** because the unrelated ownership gap remains. Missing-reference and mixed
+controls also exit **3**. Modifying/removing content beneath the ambiguous boundary
+cannot claim a parent-owned comparison. The historical 0/1 results describe the
+older inferred-ownership implementation, not this corrected executable.
+
+### Reusable offline replay
+
+From the repository, supply the retained evidence directory, the exact built
+executable, and a **new** external output directory (none may be target code):
+
+```text
+python3 probes/offline-integrity/replay_public_pilot.py OLD_EVIDENCE EXACT_BINARY NEW_EVIDENCE
+```
+
+`OLD_EVIDENCE` must contain `owned-case/`, `owned.baseline.json`, and the existing
+`policy.pin`. The script checks all 160 original archive SRIs and the retained pin,
+copies the restored pilot and executable, and never creates a new pin, installs,
+downloads, repacks or executes package code. It records 17 real process controls
+(including nine individual archive mutations and two targeted ambiguous-ownership
+probes), exact argv/status, binary SHA-256 and before/after input hashes. It restores
+its copy after every control and verifies the original is unchanged. Any unexpected
+exit, mutation or drift count fails the replay; it cannot upgrade experimental
+trust. These results do not qualify every registry archive or lifecycle limit.
 
 Command-level tests cover an expired deadline, a real blocked-output deadline
 (with joined/reaped writer), and a real supervisor observation gap that trips the
@@ -125,7 +162,8 @@ No usa red, instalaciones, configuración/credenciales del proyecto ni ejecuta c
 - **2:** entrada/pin inválidos o fallo fatal de adquisición, recursos, salida, cierre
   o recolección de procesos. **130:** interrupción real. Orden: `130 > 2 > 3 > 1 > 0`.
 
-**No es `scan`**: no cambia sus requisitos ni sus salidas. No consulta avisos de
+**No es `scan`**: no relaja sus requisitos de decisión. Las identidades compartidas
+de evidencia de límites sí cambian intencionadamente (véase abajo). No consulta avisos de
 paquetes maliciosos/vulnerabilidades ni declara calificación multiplataforma.
 Los diseños no compatibles (workspaces, enlaces/almacenes, propiedad ambigua) siguen
 incompletos. Reutiliza el análisis supervisado, evidencia original, correspondencias
@@ -152,22 +190,46 @@ más NUL en offsets 476 y 488, con ceros en 345–475 y 500–511 y sin prefijo 
 No habilita GNU/PAX ni colas arbitrarias. Conserva checksum, gramática numérica,
 límites, terminación exacta tar/gzip y SRI de los **bytes comprimidos originales**.
 
-Los archivos publicados autenticados pueden habilitar el recorrido nativo de sus
-ancestros exactos, incluso directorios fixture con forma de paquete. La pertenencia
-al archivo no concede propiedad: se captura y compara todo el subárbol físico,
-incluidos extras, con lecturas estables y acotadas. Propietarios mapeados o del
-lock separados prevalecen; un manifiesto físico en un candidato de contenido
-mantiene el hueco de posible propietario separado. Límites más profundos no publicados, enlaces, contenido
-ilegible/inestable y propiedad ambigua siguen siendo evidencia negativa. Directorios
-publicados vacíos no bastan. Los límites negativos distintos mantienen identidades
-opacas de evidencia distintas, incluso en la salida portable.
+Los archivos publicados autenticados permiten **observar** sus ancestros exactos,
+incluso directorios con forma de paquete, pero no demuestran propiedad instalada.
+Esos límites conservan `ownership-ambiguous` aunque todos los bytes coincidan y
+no haya manifiesto ni entrada lock: un paquete separado sin registrar puede tener
+los mismos bytes. El subárbol ambiguo no se compara como propiedad del padre;
+los cambios independientes fuera de él siguen detectándose. Propietarios explícitos
+prevalecen; no se altera la calificación existente de bundles con evidencia literal
+del lock. Límites más profundos, enlaces y lecturas ilegibles/inestables siguen
+siendo negativos. Directorios publicados vacíos no habilitan el recorrido.
 
-El piloto público offline cubre los 160 archivos originales verificados por SRI del
-lock retenido de `node-js-getting-started`. El árbol instalado fue reconstruido
-previamente desde esos archivos, **no instalado independientemente**. Igualdad no
-autentica al productor/editor. Los controles intacto, cambios, referencia ausente,
-mixto y restaurado usan el mismo binario, política y pin, sin reempaquetar. Esto no
-califica todos los archivos del registro ni todas las dimensiones de garantía.
+**Cambio compartido intencional:** también en `scan`, límites distintos usan
+identidades opacas `:boundary:N`, en lugar de `:nested`/`:unmapped`, que podían
+colapsarlos. No cambia la aceptación legacy de archivos ni las decisiones, pero
+sí puede cambiar la representación pública y los ordinales portables. La prueba
+diferencial contra el base local `8d60af6` cubre un propietario anidado y dos límites
+desconocidos: conserva completitud, códigos de gaps y comparaciones; las tres
+identidades de evidencia ahora son distintas, antes eran dos.
+
+El piloto retenido contiene los 160 archivos originales verificados por SRI de
+`node-js-getting-started`. El árbol se reconstruyó desde esas mismas referencias,
+**no se instaló independientemente**; el pin se calculó para el experimento, no
+procede de revisión independiente. Ni los controles ni el colector autentican al
+editor ni demuestran igualdad frente a una instalación independiente.
+
+Con la corrección conservadora completan 159 instancias; `resolve` (131) conserva
+un gap de propiedad. Intacto y restaurado salen **3**, no 0. Cambiar Express o cada
+una de las nueve instancias con archivos antes inutilizables produce una diferencia
+positiva, pero sigue saliendo **3** por el límite de propiedad independiente.
+Referencia ausente y caso mixto también salen **3**. Cambiar/eliminar contenido
+bajo el límite ambiguo no inventa una comparación atribuida al padre. Los antiguos
+0/1 corresponden a la implementación anterior que infería propiedad.
+
+El replay offline reutilizable se ejecuta con el comando de la sección inglesa:
+requiere la evidencia retenida (`owned-case/`, `owned.baseline.json`, `policy.pin`),
+el ejecutable exacto y un directorio externo nuevo. Verifica los 160 SRI y el pin
+existente sin regenerarlo; trabaja solo sobre copias. Guarda 17 controles reales,
+argv, salidas, estados, hash del binario y snapshots antes/después; restaura su copia
+y comprueba que el original no cambió. Incluye nueve mutaciones individuales y dos
+sondas de propiedad ambigua. No usa red, npm/node, instalación, reempaquetado ni
+código de paquetes; tampoco convierte el pin experimental en confianza independiente.
 
 Las pruebas del comando cubren plazo vencido, plazo con salida realmente bloqueada
 (y writer recolectado), y una pausa real de observación que activa el control de

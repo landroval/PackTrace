@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"packtrace/internal/cli"
@@ -18,9 +19,17 @@ import (
 func TestPublicPilotOfflineEvidence(t *testing.T) {
 	base := os.Getenv("PACKTRACE_PILOT_CASE")
 	output := os.Getenv("PACKTRACE_PILOT_EVIDENCE")
-	if base == "" || output == "" {
-		t.Skip("explicit owned pilot copy and external evidence directory required")
+	pinFile := os.Getenv("PACKTRACE_PILOT_PIN")
+	if base == "" || output == "" || pinFile == "" {
+		t.Skip("explicit owned pilot copy, retained pin and external evidence directory required")
 	}
+	pin, e := os.ReadFile(pinFile)
+	if e != nil {
+		t.Fatal(e)
+	}
+	// Reuse the retained experimental pin; this collector does not establish
+	// independent policy review, producer provenance or publisher identity.
+	trusted := strings.TrimSpace(string(pin))
 	raw, e := os.ReadFile(filepath.Join(base, "references/policy.json"))
 	if e != nil {
 		t.Fatal(e)
@@ -29,7 +38,7 @@ func TestPublicPilotOfflineEvidence(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	plan, e := Configure(cli.ScanArgumentRequest{PolicyPath: "policy.json", TrustedPolicyDigest: sourceSRI(raw), Manager: "npm", Checks: cli.ArgumentCheckIntegrity, FailOn: cli.ArgumentCheckIntegrity, Privacy: "portable", Output: "-"}, p)
+	plan, e := Configure(cli.ScanArgumentRequest{PolicyPath: "policy.json", TrustedPolicyDigest: trusted, Manager: "npm", Checks: cli.ArgumentCheckIntegrity, FailOn: cli.ArgumentCheckIntegrity, Privacy: "portable", Output: "-"}, p)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -91,7 +100,16 @@ func TestPublicPilotOfflineEvidence(t *testing.T) {
 		t.Fatalf("expected original 160 instances, got %d", len(records))
 	}
 	for i, r := range records {
-		if !r.Assessment.SuppliedComparisonComplete || len(r.Assessment.Gaps) != 0 {
+		if i == 130 {
+			if r.Assessment.SuppliedComparisonComplete || len(r.Assessment.Gaps) == 0 {
+				t.Error("resolve manifestless package-shaped ownership must remain ambiguous")
+			}
+			for _, g := range r.Assessment.Gaps {
+				if g.Code != integrity.GapOwnership {
+					t.Errorf("unexpected resolve constraint: %+v", g)
+				}
+			}
+		} else if !r.Assessment.SuppliedComparisonComplete || len(r.Assessment.Gaps) != 0 {
 			t.Errorf("instance %d: %+v", i+1, r.Assessment.Gaps)
 		}
 	}

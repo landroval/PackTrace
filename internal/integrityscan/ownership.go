@@ -8,10 +8,11 @@ import (
 )
 
 // publishedContentScopes supplies traversal candidates, not installed ownership
-// or equality. Only a fully authenticated published file establishes its exact
-// ancestor namespace. Native acquisition must capture and stably read the entire
-// physical subtree, including extras; deeper unpublished package boundaries stay
-// unknown. Separately mapped or locked owners are never folded into the parent.
+// or equality. An authenticated published file permits observing its exact
+// ancestor namespace, but the package-shaped boundary remains ownership-ambiguous
+// even for identical manifestless bytes. Native acquisition captures and stably
+// reads the subtree, including extras; deeper unpublished boundaries stay unknown.
+// Separately mapped or locked owners are never folded into the parent.
 // Empty directories alone supply no content proof.
 func publishedContentScopes(plan Plan, index int, locked lockedInputs, installed policyEvidenceInventory, catalog integrity.ReferenceCatalog) map[string]bool {
 	result := map[string]bool{}
