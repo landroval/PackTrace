@@ -117,7 +117,7 @@ func TestVerifyIntegrityPersistentReferenceRemoval(t *testing.T) {
 	pin := "sha256-" + base64.StdEncoding.EncodeToString(sum[:])
 	args := []string{"verify-integrity", "--policy", policy, "--trusted-policy-digest", pin, target}
 	var out, diag bytes.Buffer
-	if code := runMain(args, forbiddenReader{}, &out, &diag); code != 0 {
+	if code := runMain(args, forbiddenReader{}, &out, &diag); code != 0 || !strings.Contains(out.String(), "comparisons completed: 2/2.") || strings.Contains(out.String(), "Incomplete:") {
 		t.Fatalf("intact %d %s %s", code, &out, &diag)
 	}
 	if err := os.WriteFile(filepath.Join(target, "node_modules/PRIVATE-pkg/index.js"), []byte("drift"), 0600); err != nil {
@@ -133,7 +133,7 @@ func TestVerifyIntegrityPersistentReferenceRemoval(t *testing.T) {
 	}
 	out.Reset()
 	diag.Reset()
-	if code := runMain(args, forbiddenReader{}, &out, &diag); code != 3 || !strings.Contains(out.String(), "drift findings: 1") {
+	if code := runMain(args, forbiddenReader{}, &out, &diag); code != 3 || !strings.Contains(out.String(), "drift findings: 1") || !strings.Contains(out.String(), "comparisons completed: 1/2.") || !strings.Contains(out.String(), "reference-unusable") {
 		t.Fatalf("missing plus drift %d %s %s", code, &out, &diag)
 	}
 }

@@ -19,7 +19,11 @@ expected archive SRI. The existing policy/reference syntax is documented in the
 
 Both options are mandatory. No other options or saved setup are used. Output is
 short portable text: comparison completeness and positive drift count, without
-package identities, paths or hashes. There is no JSON authority import or output
+package identities, paths or hashes. It also reports how many selected references
+were fully compared and the reasons for incomplete coverage. `ownership-ambiguous`
+means the owner of some content could not be established. A full reference count
+alone does not establish that every installed package was accounted for.
+There is no JSON authority import or output
 file option; redirect stdout to an external file if needed. No network requests,
 installs, target configuration/credentials, or package code execution occur.
 
@@ -149,7 +153,11 @@ del archivo. Véase la sintaxis existente en el [manual](user-guide.es.md).
 
 Ambas opciones son obligatorias; no acepta otras opciones ni configuración guardada.
 La salida breve y portable indica comparación completa/incompleta y número de
-cambios, sin identidades, rutas ni hashes. No importa autoridad desde JSON público.
+cambios, sin identidades, rutas ni hashes. También muestra cuántas referencias
+seleccionadas se compararon por completo y los motivos de cobertura incompleta.
+`ownership-ambiguous` significa que no pudo determinarse a qué paquete pertenece
+parte del contenido. Completar todas las referencias no demuestra por sí solo que
+se hayan verificado todos los paquetes instalados. No importa autoridad desde JSON público.
 No usa red, instalaciones, configuración/credenciales del proyecto ni ejecuta código.
 
 - **0:** todas las instancias y referencias tienen correspondencia única; se

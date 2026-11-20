@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"packtrace/internal/cli"
@@ -41,11 +42,19 @@ func RenderIntegrityCheck(r Report) ([]byte, cli.ScanExitConditions, error) {
 		references = supportedPolicyPin(p.TrustedPolicyDigest)
 	}
 	complete := healthy && references && wholeIntegrityComplete(p, in.Records, &in.Inventory)
-	drift := 0
+	drift, compared := 0, 0
+	gapCodes := map[string]bool{}
 	// Count only positively observed differences from admitted bound comparisons.
 	// Missing reference/evidence cannot create a finding or suppress incompleteness.
 	for _, rec := range in.Records {
-		for _, d := range rec.Assessment.Differences {
+		a := rec.Assessment
+		if a.Assurance == integrity.AssuranceIndependent && a.SuppliedComparisonComplete && len(a.Gaps) == 0 && len(a.Differences) != 0 {
+			compared++
+		}
+		for _, g := range a.Gaps {
+			gapCodes[string(g.Code)] = true // fixed vocabulary from the validated report
+		}
+		for _, d := range a.Differences {
 			if d.Kind != integrity.DifferenceUnchanged {
 				drift++
 			}
@@ -56,6 +65,33 @@ func RenderIntegrityCheck(r Report) ([]byte, cli.ScanExitConditions, error) {
 	if complete {
 		state = "complete"
 	}
-	data := []byte(fmt.Sprintf("npm integrity comparison: %s; drift findings: %d\nTrusted pinned references and whole installed scope only; not advisory scanning or a safety verdict.\nComparison snapshot; output and final lifecycle checks pending.\n", state, drift))
+	detail := fmt.Sprintf("Pinned reference comparisons completed: %d/%d.\n", compared, len(p.Policy.References))
+	if !complete {
+		if !healthy {
+			gapCodes["execution-incomplete"] = true
+		}
+		if len(gapCodes) == 0 {
+			if !references {
+				gapCodes["reference-coverage-incomplete"] = true
+			} else {
+				gapCodes["installed-scope-unverified"] = true
+			}
+		}
+		codes := make([]string, 0, len(gapCodes))
+		for code := range gapCodes {
+			codes = append(codes, code)
+		}
+		sort.Strings(codes)
+		for i, code := range codes {
+			switch code {
+			case string(integrity.GapOwnership):
+				codes[i] += " (cannot determine which package owns some content)"
+			case string(integrity.GapReference):
+				codes[i] += " (a pinned archive is missing or could not be verified)"
+			}
+		}
+		detail += "Incomplete: " + strings.Join(codes, ", ") + ".\n"
+	}
+	data := []byte(fmt.Sprintf("npm integrity comparison: %s; drift findings: %d\n%sTrusted pinned references and whole installed scope only; not advisory scanning or a safety verdict.\nComparison snapshot; output and final lifecycle checks pending.\n", state, drift, detail))
 	return data, conditions, nil
 }
