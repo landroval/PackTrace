@@ -55,15 +55,16 @@ zero blocks; extra tar record padding, PAX/GNU extensions and links are unsuppor
 and remain incomplete. Never truncate or repack a reference to obtain acceptance.
 See [fixture provenance](../cmd/packtrace/testdata/npm-pack/README.md).
 
-Only this command explicitly selects **`verify-npm-v1`**; legacy `scan` and the
+Only this command explicitly selects **`verify-npm-v2`**; legacy `scan` and the
 legacy archive API keep their prior semantics. It permits exactly one safe,
 case-sensitive top-level envelope, explicit or inferred, strips exactly that
 component, and permits directory headers with or without one final `/`. The
 envelope is never package identity. Mixed roots, root files, collisions, unsafe
 components, special entries and nonzero unused link/padding fields are rejected.
 A historical USTAR variant permits only an otherwise empty prefix containing two
-identical 11-digit octal/NUL timestamps at offsets 476 and 488, with zero bytes
-345–475 and 500–511. This does not enable GNU/PAX interpretation or arbitrary
+11-digit octal/NUL timestamps at offsets 476 and 488, with zero bytes
+345–475 and 500–511. Unlike v1, v2 checks the two fields independently; neither
+value contributes to a path or a content comparison. This does not enable GNU/PAX interpretation or arbitrary
 nonzero prefix tails. Checksums, numeric grammar, resource bounds, exact tar/gzip
 termination and SRI over the **unaltered compressed bytes** remain mandatory.
 
@@ -187,14 +188,16 @@ cero finales. Padding adicional, extensiones PAX/GNU y enlaces siguen incompleto
 No trunques ni reempaquetes una referencia para conseguir aceptación.
 Véase la [procedencia del fixture](../cmd/packtrace/testdata/npm-pack/README.md).
 
-Solo este comando selecciona explícitamente **`verify-npm-v1`**; `scan` y la API
+Solo este comando selecciona explícitamente **`verify-npm-v2`**; `scan` y la API
 antigua conservan sus semánticas. Admite una única envoltura superior segura,
 sensible a mayúsculas, explícita o inferida; elimina exactamente ese componente
 y permite directorios con o sin una `/` terminal. La envoltura no establece
 identidad. Rechaza raíces mixtas, archivos raíz, colisiones, componentes inseguros,
 entradas especiales y bytes no nulos en campos de enlace/padding sin uso.
-La variante histórica USTAR solo admite dos marcas octales idénticas de 11 dígitos
+La variante histórica USTAR solo admite dos marcas octales de 11 dígitos
 más NUL en offsets 476 y 488, con ceros en 345–475 y 500–511 y sin prefijo de ruta.
+A diferencia de v1, v2 valida cada marca por separado; ninguno de los valores
+interviene en las rutas ni en la comparación del contenido.
 No habilita GNU/PAX ni colas arbitrarias. Conserva checksum, gramática numérica,
 límites, terminación exacta tar/gzip y SRI de los **bytes comprimidos originales**.
 

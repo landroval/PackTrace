@@ -86,10 +86,11 @@ type ArchiveProfile uint8
 const (
 	ArchiveLegacy ArchiveProfile = iota
 	ArchiveVerifyNPM
+	ArchiveVerifyNPMv2 // the two timestamp fields need not have the same value
 )
 
 func InspectReferenceArchiveProfile(ctx context.Context, b ReferenceBinding, r io.Reader, l Limits, profile ArchiveProfile) (result ReferenceCatalog, err error) {
-	if profile != ArchiveLegacy && profile != ArchiveVerifyNPM {
+	if profile > ArchiveVerifyNPMv2 {
 		return result, errReferenceArchive
 	}
 	if ctx == nil || r == nil || !b.usable || b.instanceID == "" || len(b.expectedDigests) == 0 {
@@ -265,7 +266,7 @@ func tarOctal(b []byte) (int64, bool) {
 func validUSTAR(b []byte) bool { return validUSTARProfile(b, ArchiveLegacy) }
 
 func validUSTARProfile(b []byte, profile ArchiveProfile) bool {
-	if profile == ArchiveVerifyNPM {
+	if profile != ArchiveLegacy {
 		// Neither unused link targets nor unused header padding may carry an
 		// alternate interpretation in this profile.
 		for _, field := range [][]byte{b[157:257], b[500:512]} {
@@ -307,7 +308,7 @@ func validUSTARProfile(b []byte, profile ArchiveProfile) bool {
 		}
 	}
 	prefix := b[345:500]
-	if profile == ArchiveVerifyNPM && historicalTimestampPrefix(b) {
+	if profile != ArchiveLegacy && historicalTimestampPrefix(b, profile) {
 		prefix = b[345:476]
 	}
 	for _, field := range [][]byte{b[:100], b[157:257], b[265:297], b[297:329], prefix} {
@@ -322,11 +323,11 @@ func validUSTARProfile(b []byte, profile ArchiveProfile) bool {
 	return true
 }
 
-// historicalTimestampPrefix permits only two identical fixed-width octal
+// historicalTimestampPrefix permits only two fixed-width octal
 // timestamps after 131 zero bytes, with NUL terminators and zero unused bytes.
 // No path prefix is interpreted from these bytes; the original checksum and SRI
 // still cover them. All other metadata and header checks remain mandatory.
-func historicalTimestampPrefix(b []byte) bool {
+func historicalTimestampPrefix(b []byte, profile ArchiveProfile) bool {
 	for _, v := range b[345:476] {
 		if v != 0 {
 			return false
@@ -337,16 +338,17 @@ func historicalTimestampPrefix(b []byte) bool {
 			return false
 		}
 	}
-	if b[487] != 0 || b[499] != 0 || !bytes.Equal(b[476:488], b[488:500]) {
-		return false
-	}
-	for _, v := range b[476:487] {
-		if v < '0' || v > '7' {
+	for _, start := range [...]int{476, 488} {
+		if b[start+11] != 0 {
 			return false
 		}
+		for _, v := range b[start : start+11] {
+			if v < '0' || v > '7' {
+				return false
+			}
+		}
 	}
-	_, ok := tarOctal(b[476:488])
-	return ok
+	return profile == ArchiveVerifyNPMv2 || bytes.Equal(b[476:487], b[488:499])
 }
 
 func archiveName(raw string, dir bool, l Limits) (string, bool) {

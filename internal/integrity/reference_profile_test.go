@@ -100,6 +100,38 @@ func TestVerifyArchiveHistoricalMetadata(t *testing.T) {
 	}
 }
 
+func TestIndependentHistoricalTimestampFields(t *testing.T) {
+	base := archiveFixture(t, &tar.Header{Name: "package/a", Typeflag: tar.TypeReg, Size: 3})
+	raw := unzipFixture(t, base)
+	copy(raw[476:488], "14742053445\x00")
+	copy(raw[488:500], "14742053371\x00")
+	fixTarChecksum(raw[:512])
+	archive := zipFixture(t, raw)
+	binding := archiveBinding(t, archive)
+	for _, profile := range []ArchiveProfile{ArchiveLegacy, ArchiveVerifyNPM, ArchiveVerifyNPMv2} {
+		c, err := InspectReferenceArchiveProfile(context.Background(), binding, bytes.NewReader(archive), Limits{}, profile)
+		if profile == ArchiveVerifyNPMv2 {
+			if err != nil || !c.verified || len(c.entries) != 1 || c.entries[0].Name != "a" || c.entries[0].Size != 3 {
+				t.Fatal("invalid content projection", c, err)
+			}
+		} else if err == nil || len(c.entries) != 0 || c.verified {
+			t.Fatal("older profile widened", profile)
+		}
+	}
+	for i, value := range map[int]byte{475: 'x', 476: '8', 487: ' ', 488: 0, 498: '8', 499: '0', 500: '1'} {
+		v := bytes.Clone(raw)
+		v[i] = value
+		fixTarChecksum(v[:512])
+		b := zipFixture(t, v)
+		if c, err := InspectReferenceArchiveProfile(context.Background(), archiveBinding(t, b), bytes.NewReader(b), Limits{}, ArchiveVerifyNPMv2); err == nil || c.verified || len(c.entries) != 0 {
+			t.Fatalf("accepted malformed metadata at %d", i)
+		}
+	}
+	if c, err := InspectReferenceArchiveProfile(context.Background(), archiveBinding(t, base), bytes.NewReader(archive), Limits{}, ArchiveVerifyNPMv2); err == nil || c.verified || len(c.entries) != 0 {
+		t.Fatal("accepted changed archive under original pin")
+	}
+}
+
 func TestArchiveProfilesDifferentialHeaders(t *testing.T) {
 	base := archiveFixture(t, &tar.Header{Name: "package/a", Typeflag: tar.TypeReg})
 	for _, tc := range []struct {

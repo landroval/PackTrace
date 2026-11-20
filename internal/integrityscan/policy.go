@@ -82,7 +82,7 @@ type Reference struct {
 	Context        string `json:"context"`
 }
 
-const VerifyNPMProfile = "verify-npm-v1"
+const VerifyNPMProfile = "verify-npm-v2"
 
 type Plan struct {
 	IntegrityProfile string              `json:"integrityProfile,omitempty"`

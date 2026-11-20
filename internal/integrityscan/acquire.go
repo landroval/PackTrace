@@ -328,7 +328,7 @@ func acquireFromRoot(ctx context.Context, root, cache *nativefs.Root, prepared, 
 				if openErr == nil {
 					profile := integrity.ArchiveLegacy
 					if plan.IntegrityProfile == VerifyNPMProfile {
-						profile = integrity.ArchiveVerifyNPM
+						profile = integrity.ArchiveVerifyNPMv2
 					}
 					catalog, archiveErr := integrity.InspectReferenceArchiveProfile(ctx, binding, file, integrity.Limits{ReferenceReadBytes: referenceRemaining, AggregateExpandedBytes: expandedRemaining}, profile)
 					referenceRemaining -= catalog.CompressedRead
