@@ -85,11 +85,11 @@ mandatory pnpm gaps and incomplete coverage remain even when rows are observed.
 These Linux fixture observations do not qualify native Windows/macOS, every
 producer/layout or any release artifact.
 
-## Unpublished pnpm matrix
+## pnpm version/layout matrix
 
-This source-only extension is **not in the published v0.2.0-alpha.1 artifacts**.
-Those archives retain 9/10 hint recognition and their original producer evidence.
-The newer source recognizes canonical stable **9.x–12.x hints** for the same exact
+**v0.2.0-alpha.2 includes this matrix extension**; it is not in the older
+v0.2.0-alpha.1 artifacts, which retain 9.x/10.x recognition and their original evidence.
+The newer release recognizes canonical stable **9.x–12.x hints** for the same exact
 FORMAT9 interpretation. Concrete producer hints are not policy-format aliases or
 producer authentication; `--manager` still takes `pnpm` / `pnpm@lockfile-9`, not a
 concrete pnpm version. Unsupported formats and malformed/prerelease/future hints
@@ -120,7 +120,7 @@ CLI flag and failed too. These are **producer-adapter/configuration limitations*
 not proof of general pnpm12 lockfile or scanner incompatibility. Original failures
 are retained; a successful version query/help is not installation qualification.
 That campaign alone did not admit 12.x hints; the separate follow-up below now justifies
-stable 12.x recognition in newer source. Its MIT text and wrapper
+stable 12.x recognition in v0.2.0-alpha.2. Its MIT text and wrapper
 BSD2 notices were retained with the verified official native/wrapper pair; no
 installer, automatic tool acquisition or system installation was executed.
 
@@ -143,7 +143,7 @@ closed: no leftover or historical allowance is renewed by a repair or this table
 The initial preparer also stopped before execution at pnpm12's changed distribution;
 its native package was admitted only after the owner's separate scoped approval.
 
-### Native pnpm12 follow-up
+### Native pnpm12 follow-up (included in v0.2.0-alpha.2)
 
 A separately approved **6-call /180-second /512-MiB /zero-download** local campaign
 revalidated the existing wrapper/native archives, executable and notices. The

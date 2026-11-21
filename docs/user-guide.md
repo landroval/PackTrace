@@ -72,11 +72,11 @@ spelling looks correct. Do not weaken those checks to obtain a green result.
 
 ## 2. Build and prerequisites
 
-The [v0.2.0-alpha.1 prerelease](https://github.com/landroval/PackTrace/releases/tag/v0.2.0-alpha.1)
+The [v0.2.0-alpha.2 prerelease](https://github.com/landroval/PackTrace/releases/tag/v0.2.0-alpha.2)
 provides experimental Linux amd64 and Windows amd64 archives. Linux is exercised
 on owned fixtures; Windows is **cross-compiled only, not runtime-tested for this
 release**. Neither is production-qualified. See [verification, unsigned build
-metadata and limitations](releases/v0.2.0-alpha.1.md) before running an archive.
+metadata and limitations](releases/v0.2.0-alpha.2.md) before running an archive.
 The [versioning policy](releases/README.md) distinguishes feature releases, fixes
 and prerelease iterations; report schema 1.7 is independent.
 There is no installer or automatic configuration/data download.
@@ -495,7 +495,7 @@ The separately captured non-Git source subset does not erase that failure.
 
 ### Partial pnpm format-9 scan
 
-For v0.2.0-alpha.1 or a reviewed source build containing the pnpm increment:
+For v0.2.0-alpha.2 or a corresponding reviewed source build:
 
 ```bash
 packtrace scan --manager pnpm --format json /path/to/pnpm-project
@@ -525,13 +525,13 @@ Non-root importers, pnpm workspace/configuration semantics, catalogs, patches,
 unsupported source forms and shared stores are not newly supported. No
 `pnpm-workspace.yaml`, `.npmrc`, hook, target script or external store is discovered
 or executed. The format-profile alias is not a concrete `packageManager` hint;
-canonical stable hints identify a family only. The published v0.2.0-alpha.1 admits
-9.x/10.x hints with exact producer anchors 9.15.9/10.34.9. A **source-only extension,
-not yet released**, admits stable **9.x–12.x** hints into the same format 9.0 gate.
+canonical stable hints identify a family only. **v0.2.0-alpha.2 admits stable
+9.x–12.x hints** into the same format 9.0 gate. The older v0.2.0-alpha.1 retains
+9.x/10.x recognition with its original 9.15.9/10.34.9 producer anchors.
 Exact producer versions are sampled evidence anchors, not a patch whitelist.
 The native pnpm 12.18.0 follow-up produced isolated/hoisted copy, peer-context and actual
 hardlink-refusal cases after fixing its adapter; historical failures stay recorded.
-See the [exact matrix](inventory-compatibility.md#unpublished-pnpm-matrix).
+See the [exact matrix](inventory-compatibility.md#pnpm-versionlayout-matrix).
 No anchor qualifies every patch/layout/platform.
 Saved policies/pins are unchanged and are not silently upgraded to pnpm.
 

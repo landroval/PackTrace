@@ -1,5 +1,6 @@
 # Releases and versioning / Versiones
 
+- [v0.2.0-alpha.2](v0.2.0-alpha.2.md): partial pnpm 9.x–12.x ranges and expanded owned layout evidence.
 - [v0.2.0-alpha.1](v0.2.0-alpha.1.md): partial pnpm inventory and accumulated fixes.
 - [v0.1.0-alpha.1](v0.1.0-alpha.1.md): first numbered experimental release.
 
@@ -16,8 +17,9 @@ code. Use SemVer-shaped `MAJOR.MINOR.PATCH` with explicit prerelease suffixes:
   within the 0.2.0 experimental cycle normally become `0.2.0-alpha.2`, not a new
   patch for every fix. Once 0.2.0 is stable, compatible fixes can become 0.2.1.
 
-New pnpm capability makes this release **0.2.0-alpha.1**; smaller safety and
-correctness fixes are included in its notes. Prereleases do not imply production,
+The first pnpm capability release was **0.2.0-alpha.1**. **0.2.0-alpha.2** groups
+its broader stable9.x–12.x hint ranges, real layout evidence and stronger replay
+checks within the same experimental cycle; versions are not incremented per commit. Prereleases do not imply production,
 native-platform or security qualification. Report schema **1.7** is separate and
 changes only when its own contract requires it. Never rewrite a published tag or
 silently migrate user policies. Release publication, protected-branch integration
@@ -33,8 +35,9 @@ siendo inestable.
 
 **alpha.N** itera dentro del mismo ciclo: correcciones del ciclo experimental
 0.2.0 normalmente producen `0.2.0-alpha.2`, no un patch por cada arreglo. Después
-de 0.2.0 estable, una corrección compatible puede ser 0.2.1. PNPM justifica ahora
-**0.2.0-alpha.1**, junto con las correcciones pequeñas acumuladas.
+de 0.2.0 estable, una corrección compatible puede ser 0.2.1. La primera capacidad
+pnpm llegó en **0.2.0-alpha.1**; **0.2.0-alpha.2** agrupa los rangos estables
+9.x–12.x, las muestras reales de layouts y las pruebas reforzadas del mismo ciclo.
 
 La etiqueta preliminar no garantiza producción, seguridad ni ejecución nativa.
 El esquema de reportes **1.7** es independiente. No se reescriben tags publicados

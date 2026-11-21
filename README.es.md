@@ -12,9 +12,9 @@ Ayuda a responder:
 3. **¿Qué evidencia existe?** Lockfile, manifiesto instalado, aviso y referencia se mantienen separados.
 4. **¿Qué revisar después?** Aplicabilidad, evidencia ausente o un límite de corrección registrado por el aviso.
 
-> **v0.2.0-alpha.1 — prerelease experimental, no cualificada para producción.**
-> [Descargas](https://github.com/landroval/PackTrace/releases/tag/v0.2.0-alpha.1) ·
-> [Notas y verificación](docs/releases/v0.2.0-alpha.1.md) ·
+> **v0.2.0-alpha.2 — prerelease experimental, no cualificada para producción.**
+> [Descargas](https://github.com/landroval/PackTrace/releases/tag/v0.2.0-alpha.2) ·
+> [Notas y verificación](docs/releases/v0.2.0-alpha.2.md) ·
 > [Política de versiones](docs/releases/README.md).
 > Linux amd64 se prueba con fixtures propios; Windows amd64 solo se compila de forma
 > cruzada, sin prueba de ejecución de este release. macOS sigue aplazado. Cero
@@ -143,13 +143,12 @@ y contenidas. Los nombres opacos del almacén `.pnpm` no prueban identidad de pe
 las correspondencias son candidatos indeterminados. Hardlinks genéricos, importers
 no raíz, parches y fuentes no admitidas siguen siendo limitaciones explícitas.
 La cobertura instalada/reconciliación sigue incompleta; no añade búsquedas de avisos
-ni vínculos de integridad para pnpm. El release v0.2.0-alpha.1 tiene productores
-9.15.9/10.34.9 y reconoce pistas estables 9.x/10.x. Una **extensión de código aún
-sin release** reconoce **9.x–12.x** estables para formato 9.0. Los productores exactos
+ni vínculos de integridad para pnpm. **v0.2.0-alpha.2 reconoce pistas estables
+9.x–12.x** para formato 9.0; el release anterior v0.2.0-alpha.1 conserva 9.x/10.x. Los productores exactos
 y los casos de copias isolated/hoisted, peers y rechazo de hardlinks son anclas de
 pruebas, no una lista blanca de parches. Una campaña nativa pnpm12 separada y
 acotada resolvió los fallos anteriores del adaptador. Consulta la
-[matriz exacta de versiones/layouts](docs/inventory-compatibility.md#unpublished-pnpm-matrix);
+[matriz exacta de versiones/layouts](docs/inventory-compatibility.md#pnpm-versionlayout-matrix);
 las muestras no cualifican todos los parches, layouts o plataformas. No se ejecuta pnpm ni se leen
 `.npmrc`, hooks o configuración ejecutable del proyecto.
 Consulta el [contrato del lector](docs/increments/pnpm-v9-scan.md) y el
