@@ -1,7 +1,8 @@
 # PackTrace user manual
 
 Linux npm comparison only: [`verify-integrity`](verify-integrity.md) is a separate
-explicit pinned-reference command (unreleased); it does not change `scan`.
+explicit pinned-reference command in the local v0.3.0-alpha.1 candidate; it does not
+weaken `scan` gates. Shared negative-boundary evidence identities intentionally change.
 
 [Español](user-guide.es.md) · [Project home](../README.md)
 
@@ -72,13 +73,13 @@ spelling looks correct. Do not weaken those checks to obtain a green result.
 
 ## 2. Build and prerequisites
 
-The [v0.2.0-alpha.2 prerelease](https://github.com/landroval/PackTrace/releases/tag/v0.2.0-alpha.2)
-provides experimental Linux amd64 and Windows amd64 archives. Linux is exercised
-on owned fixtures; Windows is **cross-compiled only, not runtime-tested for this
-release**. Neither is production-qualified. See [verification, unsigned build
-metadata and limitations](releases/v0.2.0-alpha.2.md) before running an archive.
+The [v0.3.0-alpha.1 local candidate](releases/v0.3.0-alpha.1.md) targets Linux
+amd64 only. It is not published or production-qualified; it includes the inherited
+CLI, not just `verify-integrity`. No Windows/macOS qualification is claimed.
+The published [v0.2.0-alpha.2 notes](releases/v0.2.0-alpha.2.md) and their Linux
+fixture / Windows compile-only evidence remain historical, not candidate validation.
 The [versioning policy](releases/README.md) distinguishes feature releases, fixes
-and prerelease iterations; report schema 1.7 is independent.
+and prerelease iterations; current operational report schema **1.8** is independent.
 There is no installer or automatic configuration/data download.
 
 Alternatively use a reviewed checkout and an already-installed toolchain
@@ -427,7 +428,7 @@ unselected integrity checks or product qualification gaps.
 
 ### Completed advisories within one selected snapshot
 
-In unreleased schema1.8, `advisories.selectedScope` can explain completed malicious
+In candidate schema1.8, `advisories.selectedScope` can explain completed malicious
 and vulnerability checks **only within the admitted selected generation**. The
 parent independently validates original-derived catalog/index construction (or
 performs the bounded legacy original audit), selected original bindings,
@@ -495,7 +496,7 @@ The separately captured non-Git source subset does not erase that failure.
 
 ### Partial pnpm format-9 scan
 
-For v0.2.0-alpha.2 or a corresponding reviewed source build:
+For the current candidate (pnpm recognition inherited from v0.2.0-alpha.2):
 
 ```bash
 packtrace scan --manager pnpm --format json /path/to/pnpm-project
@@ -564,9 +565,9 @@ explicit designation once. A one-off scan must supply its reviewed pin separatel
 Do not mark private/unknown packages public merely to obtain eligible findings.
 Bun candidate investigation does not establish public npm origin.
 
-### Exact Bun namespace grants (development)
+### Exact Bun namespace grants (local candidate)
 
-This additive capability is not in published `v0.2.0-alpha.2`. A Bun policy may
+This candidate's additive capability is not in historical `v0.2.0-alpha.2`. A Bun policy may
 explicitly review up to64 root tuples through `bunOrigins`. Each rule requires all
 five canonical fields; for example, this is a fragment to add to a reviewed policy:
 

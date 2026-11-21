@@ -1,4 +1,7 @@
-# Offline npm integrity check (Linux, unreleased)
+# Offline npm integrity check (Linux, v0.3.0-alpha.1 local candidate)
+
+Local preparation only, not a published or qualified release. See the candidate
+notes in [English](releases/v0.3.0-alpha.1.md) / [Español](releases/v0.3.0-alpha.1.es.md).
 
 ## English
 

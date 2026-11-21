@@ -1,5 +1,8 @@
 # Releases and versioning / Versiones
 
+- **Current local candidate / candidato local actual, not published / sin publicar:**
+  v0.3.0-alpha.1 — [English](v0.3.0-alpha.1.md) / [Español](v0.3.0-alpha.1.es.md); Linux amd64 only.
+- **Historical published releases / releases publicados históricos:**
 - [v0.2.0-alpha.2](v0.2.0-alpha.2.md): partial pnpm 9.x–12.x ranges and expanded owned layout evidence.
 - [v0.2.0-alpha.1](v0.2.0-alpha.1.md): partial pnpm inventory and accumulated fixes.
 - [v0.1.0-alpha.1](v0.1.0-alpha.1.md): first numbered experimental release.
@@ -19,8 +22,12 @@ code. Use SemVer-shaped `MAJOR.MINOR.PATCH` with explicit prerelease suffixes:
 
 The first pnpm capability release was **0.2.0-alpha.1**. **0.2.0-alpha.2** groups
 its broader stable9.x–12.x hint ranges, real layout evidence and stronger replay
-checks within the same experimental cycle; versions are not incremented per commit. Prereleases do not imply production,
-native-platform or security qualification. Report schema **1.7** is separate and
+checks within the same experimental cycle. The current **0.3.0-alpha.1** local
+candidate groups the new Linux offline `verify-integrity` command and accumulated
+CLI, inventory, reporting and evidence changes; it is not a wider beta or an
+integrity-only distribution. Versions are not incremented per commit.
+Prereleases do not imply production, native-platform or security qualification.
+Current operational report schema **1.8** (published alpha.2: **1.7**) is separate and
 changes only when its own contract requires it. Never rewrite a published tag or
 silently migrate user policies. Release publication, protected-branch integration
 and local binary installation are separately authorized operations.
@@ -38,8 +45,11 @@ siendo inestable.
 de 0.2.0 estable, una corrección compatible puede ser 0.2.1. La primera capacidad
 pnpm llegó en **0.2.0-alpha.1**; **0.2.0-alpha.2** agrupa los rangos estables
 9.x–12.x, las muestras reales de layouts y las pruebas reforzadas del mismo ciclo.
+El candidato local actual **0.3.0-alpha.1** agrupa el nuevo comando Linux offline
+`verify-integrity` y cambios acumulados de CLI, inventario, reportes y evidencia;
+no es una beta ampliada ni una distribución exclusiva de integridad.
 
 La etiqueta preliminar no garantiza producción, seguridad ni ejecución nativa.
-El esquema de reportes **1.7** es independiente. No se reescriben tags publicados
+El esquema operativo actual **1.8** (alpha.2 publicado: **1.7**) es independiente. No se reescriben tags publicados
 ni se migran políticas automáticamente. Publicar, integrar en la rama protegida
 e instalar el binario local requieren autorizaciones separadas.

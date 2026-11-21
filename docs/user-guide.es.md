@@ -1,7 +1,9 @@
 # Manual de uso de PackTrace
 
 Solo comparación npm en Linux: [`verify-integrity`](verify-integrity.md#español)
-es un comando explícito separado con referencias fijadas (sin publicar); no cambia `scan`.
+es un comando explícito separado con referencias fijadas en el candidato local
+v0.3.0-alpha.1; no relaja los controles de `scan`. Las identidades compartidas de
+evidencia de límites negativos sí cambian intencionadamente.
 
 [English](user-guide.md) · [Inicio del proyecto](../README.es.md)
 
@@ -75,13 +77,14 @@ rutas aunque su texto parezca correcto. No las debilites para obtener un resulta
 
 ## 2. Compilación y requisitos
 
-La [prerelease v0.2.0-alpha.2](https://github.com/landroval/PackTrace/releases/tag/v0.2.0-alpha.2)
-ofrece archivos experimentales para Linux amd64 y Windows amd64. Linux se prueba
-con fixtures propios; Windows **solo se compila de forma cruzada, sin prueba de
-ejecución de este release**. Ninguno está cualificado para producción. Consulta
-[verificación, metadatos de compilación sin firma y limitaciones](releases/v0.2.0-alpha.2.md)
-antes de ejecutar un archivo. La [política de versiones](releases/README.md) distingue
-funciones nuevas, correcciones e iteraciones preliminares; el esquema 1.7 es independiente. No hay instalador ni descarga/configuración automática.
+El [candidato local v0.3.0-alpha.1](releases/v0.3.0-alpha.1.es.md) se prepara
+solo para Linux amd64. No está publicado ni cualificado para producción; incluye
+la CLI heredada, no solo `verify-integrity`. No cualifica Windows ni macOS.
+Las [notas publicadas de v0.2.0-alpha.2](releases/v0.2.0-alpha.2.md) y su evidencia
+Linux / compilación cruzada Windows son históricas, no validación del candidato.
+La [política de versiones](releases/README.md) distingue funciones nuevas,
+correcciones e iteraciones preliminares; el esquema operativo actual **1.8** es
+independiente. No hay instalador ni descarga/configuración automática.
 
 También puedes usar una copia revisada del repositorio y un toolchain ya instalado
 compatible con `go.mod` —Go 1.27.1—. El programa usa la biblioteca estándar y un
@@ -445,7 +448,7 @@ del producto pendiente.
 
 ### Avisos completados dentro de un snapshot seleccionado
 
-En el esquema1.8 aún no publicado, `advisories.selectedScope` puede explicar avisos
+En el esquema1.8 del candidato, `advisories.selectedScope` puede explicar avisos
 maliciosos y vulnerabilidades completados **solo dentro de la generación admitida**.
 El padre valida independientemente la construcción catálogo/índice derivada de
 originales (o realiza la auditoría histórica acotada), los vínculos originales
@@ -516,7 +519,7 @@ sin cualificarse. El subconjunto separado de fuentes no Git no borra ese fallo.
 
 ### Análisis parcial de pnpm formato 9
 
-En v0.2.0-alpha.2 o una compilación revisada correspondiente:
+En el candidato actual (reconocimiento pnpm heredado de v0.2.0-alpha.2):
 
 ```bash
 packtrace scan --manager pnpm --format json /ruta/al/proyecto-pnpm
@@ -586,9 +589,9 @@ guarda esa designación una vez; una ejecución explícita debe recibir el pin p
 separado. No declares público un paquete privado/desconocido para obtener hallazgos.
 La investigación de candidatos Bun no establece origen npm público.
 
-### Permisos exactos de namespace Bun (desarrollo)
+### Permisos exactos de namespace Bun (candidato local)
 
-Esta capacidad aditiva no está en `v0.2.0-alpha.2` publicado. Una política Bun puede
+Esta capacidad aditiva del candidato no está en el histórico `v0.2.0-alpha.2`. Una política Bun puede
 revisar hasta64 tuples raíz mediante `bunOrigins`. Cada regla requiere los cinco
 campos canónicos; este ejemplo es un fragmento para una política revisada:
 

@@ -11,13 +11,19 @@ PackTrace is a read-only, offline investigation CLI. It helps answer:
 3. **What supports that result?** Separate lockfile, installed-manifest, advisory and reference evidence.
 4. **What should I verify next?** Applicability, missing evidence, or a correction boundary recorded by the advisory.
 
-> **v0.2.0-alpha.2 — experimental prerelease, not production-qualified.**
-> [Downloads](https://github.com/landroval/PackTrace/releases/tag/v0.2.0-alpha.2) ·
-> [Release notes and verification](docs/releases/v0.2.0-alpha.2.md) ·
-> [Versioning policy](docs/releases/README.md).
-> Linux amd64 is exercised on owned fixtures; Windows amd64 is cross-compiled only,
-> not runtime-tested for this release. macOS remains deferred. Zero findings never
-> means that a project or machine is safe.
+> **v0.3.0-alpha.1 — local experimental candidate, not published or production-qualified.**
+> [Candidate notes and limits](docs/releases/v0.3.0-alpha.1.md) ·
+> [Versioning policy and historical releases](docs/releases/README.md).
+> Preparation targets Linux amd64 only; no Windows or macOS candidate is qualified.
+> The inherited CLI, including `scan`, remains present; this is not an integrity-only binary.
+> Zero findings never means that a project or machine is safe.
+
+For the separate Linux-only offline npm comparison:
+`packtrace verify-integrity --policy FILE --trusted-policy-digest SRI ROOT`.
+Use an explicitly reviewed external policy and independently trusted pin; no advisory
+checks or JSON output. Read the [command and exit meanings](docs/verify-integrity.md).
+Published [v0.2.0-alpha.2 notes](docs/releases/v0.2.0-alpha.2.md) are historical,
+not validation of this candidate.
 
 ## Start here
 

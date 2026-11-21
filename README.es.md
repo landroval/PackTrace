@@ -12,13 +12,19 @@ Ayuda a responder:
 3. **¿Qué evidencia existe?** Lockfile, manifiesto instalado, aviso y referencia se mantienen separados.
 4. **¿Qué revisar después?** Aplicabilidad, evidencia ausente o un límite de corrección registrado por el aviso.
 
-> **v0.2.0-alpha.2 — prerelease experimental, no cualificada para producción.**
-> [Descargas](https://github.com/landroval/PackTrace/releases/tag/v0.2.0-alpha.2) ·
-> [Notas y verificación](docs/releases/v0.2.0-alpha.2.md) ·
-> [Política de versiones](docs/releases/README.md).
-> Linux amd64 se prueba con fixtures propios; Windows amd64 solo se compila de forma
-> cruzada, sin prueba de ejecución de este release. macOS sigue aplazado. Cero
-> hallazgos nunca significa que un proyecto o equipo esté limpio.
+> **v0.3.0-alpha.1 — candidato experimental local, sin publicar ni cualificar para producción.**
+> [Notas y límites del candidato](docs/releases/v0.3.0-alpha.1.es.md) ·
+> [Política de versiones y releases históricos](docs/releases/README.md).
+> La preparación se limita a Linux amd64; no cualifica candidatos Windows ni macOS.
+> Conserva la CLI heredada, incluido `scan`; no es un binario exclusivo de integridad.
+> Cero hallazgos nunca significa que un proyecto o equipo esté limpio.
+
+Para la comparación npm offline separada, solo Linux:
+`packtrace verify-integrity --policy FILE --trusted-policy-digest SRI ROOT`.
+Requiere política externa revisada y pin obtenido independientemente; no consulta
+avisos ni emite JSON. Consulta el [comando y sus estados](docs/verify-integrity.md#español).
+Las [notas publicadas de v0.2.0-alpha.2](docs/releases/v0.2.0-alpha.2.md) son
+históricas, no validación de este candidato.
 
 ## Empieza aquí
 
