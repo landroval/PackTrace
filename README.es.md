@@ -194,6 +194,14 @@ sobre datos locales. Ni `scan` ni `setup` los inicializan o actualizan.
 Los valores guardados para análisis no se aplican al mantenimiento: indica el
 mismo `--state-dir` expresamente. Consulta [preparación y mantenimiento](docs/user-guide.es.md#4-prepara-y-mantén-la-inteligencia).
 
+## Licencia
+
+El código y la documentación originales de PackTrace se distribuyen bajo la
+[licencia MIT](LICENSE). Copyright (c) 2026 PackTrace contributors. El código y los
+datos de avisos de terceros conservan sus licencias y atribuciones; consulta los
+[avisos de terceros](THIRD_PARTY_NOTICES.md). Esto no relicencia a terceros ni
+concede derechos generales sobre datasets de avisos.
+
 ## Desarrollo local
 
 El módulo Go principal usa la biblioteca estándar y un único parser YAML fijado y

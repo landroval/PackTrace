@@ -184,6 +184,13 @@ local state. Neither `scan` nor `setup` initializes or refreshes it. Saved scan
 settings do not apply to these maintenance commands: pass the same `--state-dir`
 explicitly. See [data preparation and maintenance](docs/user-guide.md#4-prepare-and-maintain-intelligence).
 
+## License
+
+Original PackTrace code and documentation are licensed under the [MIT License](LICENSE).
+Copyright (c) 2026 PackTrace contributors. Third-party code and advisory data retain
+their own licenses and notices; see [third-party notices](THIRD_PARTY_NOTICES.md).
+This does not relicense third parties or grant blanket rights to advisory datasets.
+
 ## Local development
 
 The root Go module uses the standard library plus one pinned, vendored YAML parser
